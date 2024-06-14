@@ -1,0 +1,353 @@
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <stdarg.h>
+
+#include "gc.h"
+
+#include "smalltalk.h"
+#include "util.h"
+
+typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR, va_list*);
+
+
+OBJECT_PTR convert_int_to_object(int);
+int get_int_value(OBJECT_PTR);
+OBJECT_PTR get_symbol(char *);
+char *get_symbol_name(OBJECT_PTR);
+nativefn extract_native_fn(OBJECT_PTR);
+OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
+OBJECT_PTR get_class_object(OBJECT_PTR);
+
+BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
+BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR);
+
+BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
+OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
+void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
+
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR Integer;
+extern OBJECT_PTR SELF;
+
+extern binding_env_t *top_level;
+
+OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
+{
+  OBJECT_PTR cls_obj;
+  BOOLEAN is_class_object;
+
+  if(!IS_CLASS_OBJECT(obj))
+  {
+    is_class_object = false;
+    cls_obj = get_class_object(obj);
+  }
+  else
+  {
+    is_class_object = true;
+    cls_obj = obj;
+  }
+  
+  //assert(cls_obj == Integer); //temporarily assuming Integer to test compiler
+
+  class_object_t *cls_obj_int = (class_object_t *)extract_ptr(cls_obj);
+  
+  BOOLEAN method_found = false;
+  OBJECT_PTR method;
+
+  unsigned int i, n;
+
+  if(is_class_object)
+  {
+    n = cls_obj_int->nof_class_methods;
+  
+    for(i=0; i<n; i++)
+    {
+      if(cls_obj_int->class_methods[i].key == selector)
+      {
+        method_found = true;
+        method = cls_obj_int->class_methods[i].val;
+        break;
+      }
+    }    
+  }
+  else
+  {
+    n = cls_obj_int->nof_instance_methods;
+  
+    for(i=0; i<n; i++)
+    {
+      if(cls_obj_int->instance_methods[i].key == selector)
+      {
+        method_found = true;
+        method = cls_obj_int->instance_methods[i].val;
+        break;
+      }
+    }
+  }
+  
+  assert(method_found);
+
+  return method;
+}
+
+OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
+                        OBJECT_PTR receiver,
+                        OBJECT_PTR selector,
+                        ...)
+{
+  //TODO: should we save the previous value of SELF
+  //and restore it before returning from message_send?
+  put_binding_val(top_level, SELF, cons(receiver, NIL));
+  
+  va_list ap;
+  va_start(ap, selector);
+
+  //OBJECT_PTR receiver = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+  print_object(receiver);printf(" is the receiver\n");
+
+  //OBJECT_PTR selector = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+  print_object(selector); printf(" is the selector\n");
+  assert(IS_SYMBOL_OBJECT(selector));
+  
+  //OBJECT_PTR arg = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+  //print_object(arg);printf(" is the arg\n");
+  
+  //OBJECT_PTR closure = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+  //print_object(closure); printf(" is the last parameter to message_send()\n");
+  //assert(IS_CLOSURE_OBJECT(closure));
+
+  //if the selector has only a colon at the end strip it off
+  OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
+
+  OBJECT_PTR method = method_lookup(receiver, stripped_selector);
+
+  //nativefn nf = extract_native_fn(method);
+  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
+  nativefn nf = nfobj->nf;
+  assert(nf);
+
+  //TODO: the receiver and (recursively) its super's instance/class vars
+  //should also be scanned for the free vars' values
+  
+  OBJECT_PTR closed_vars = cdr(method);
+  OBJECT_PTR ret = NIL;
+  OBJECT_PTR rest = closed_vars;
+
+  while(rest != NIL)
+  {
+    //TODO: should use get_top_level_val() as we need to
+    //catch unmet dependencies
+    //OBJECT_PTR closed_val_cons;
+    //assert(get_top_level_val(car(rest), &closed_val_cons));
+    //ret = cons(car(closed_val_cons), ret);
+    OBJECT_PTR closed_val = car(rest);
+    ret = cons(get_binding_val(top_level, closed_val), ret);        
+    rest = cdr(rest);
+  }
+
+  //return nf(method, receiver, arg, closure);
+  OBJECT_PTR cons_form = cons(car(method), reverse(ret));
+  OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
+  print_object(cons_form); printf(" is the CONS form of the closure invoked by message_send\n");
+  print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
+  //nativefn1 nf1 = (nativefn1)nf;
+  //return nf(closure_form, receiver, arg, closure);
+  OBJECT_PTR retval =  nf(closure_form, &ap);
+
+  va_end(ap);
+
+  return retval;
+}
+
+OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
+			 OBJECT_PTR receiver,
+			 OBJECT_PTR selector,
+			 OBJECT_PTR count1,
+			 ...)
+{
+  //TODO: should we save the previous value of SELF
+  //and restore it before returning from message_send?
+  put_binding_val(top_level, SELF, cons(receiver, NIL));
+  
+  int count;
+  
+  va_list ap;
+  va_start(ap, count1); 
+
+  print_object(receiver);printf(" is the receiver\n");
+  print_object(selector); printf(" is the selector\n");
+
+  assert(IS_SYMBOL_OBJECT(selector));
+
+  count = get_int_value(count1);
+  
+  printf("count = %d\n", count);
+
+  //if the selector has only a colon at the end strip it off
+  OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
+
+  OBJECT_PTR method = method_lookup(receiver, stripped_selector);
+
+  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
+  nativefn nf = nfobj->nf;
+  assert(nf);
+
+  //TODO: the receiver and (recursively) its super's instance/class vars
+  //should also be scanned for the free vars' values
+  
+  OBJECT_PTR closed_vars = cdr(method);
+  OBJECT_PTR ret = NIL;
+  OBJECT_PTR rest = closed_vars;
+
+  while(rest != NIL)
+  {
+    //TODO: should use get_top_level_val() as we need to
+    //catch unmet dependencies
+    //OBJECT_PTR closed_val_cons;
+    //assert(get_top_level_val(car(rest), &closed_val_cons));
+    //ret = cons(car(closed_val_cons), ret);
+    OBJECT_PTR closed_val = car(rest);
+    ret = cons(get_binding_val(top_level, closed_val), ret);        
+    rest = cdr(rest);
+  }
+
+  OBJECT_PTR cons_form = cons(car(method), reverse(ret));
+  OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
+  print_object(cons_form); printf(" is the CONS form of the closure invoked by message_send\n");
+  print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
+  
+  uintptr_t arg1, arg2, arg3,arg4, arg5;
+  uintptr_t cont;
+
+  //order of registers - first to sixth argument
+  //%rdi, %rsi, %rdx, %rcx, %r8, %r9
+  
+  if(count == 0)
+  {
+    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(cont) : "%rsi");
+    
+    asm("call *%0\n\t" : : "m"(nf) : );
+  }
+
+  if(count == 1)
+  {
+    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
+    cont = (uintptr_t)va_arg(ap, uintptr_t);
+
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    asm("mov %0, %%rdx\n\t" : : "r"(cont) : "%rdx");
+    
+    asm("call *%0\n\t" : : "m"(nf) : );
+  }
+
+  if(count == 2)
+  {
+    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
+    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm("mov %0, %%rcx\n\t" : : "r"(cont) : "%rcx");
+    
+    asm("call *%0\n\t" : : "m"(nf) : );
+  }
+
+  if(count == 3)
+  {
+    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
+    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+    asm("mov %0, %%r8\n\t"  : : "r"(cont) : "%r8");
+   
+    asm("call *%0\n\t" : : "m"(nf) : );
+  }
+
+  if(count == 4)
+  {
+    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg4 = (uintptr_t)va_arg(ap, uintptr_t);
+    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+    asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+    asm("mov %0, %%r9\n\t"  : : "r"(cont) : "%r9");
+
+    asm("call *%0\n\t" : : "m"(nf) : );
+  }
+
+  if(count > 4)
+  {
+    int i, n;
+    
+    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg4 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg5 = (uintptr_t)va_arg(ap, uintptr_t);
+
+    printf("arg[1-5] = %lu %lu %lu %lu %lu\n", arg1, arg2, arg3, arg4, arg5);
+    
+    n = count - 4; // no of arguments that should be pushed onto the stack
+
+    uintptr_t *stack_args = (uintptr_t *)GC_MALLOC(n * sizeof(uintptr_t));
+    
+    for(i=0; i<n; i++)
+    {
+      stack_args[i] = (uintptr_t)va_arg(ap, uintptr_t);
+      printf("stack_args[%d] = %lu\n", i, stack_args[i]);
+    }
+
+    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+    asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+    asm("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
+
+    for(i=n-1; i>=0; i--)
+      asm("push %0\n\t"       : : "r"(stack_args[i]) : );
+    //asm("push %0\n\t"       : : "r"(stack_args[1]) : );
+    //asm("push %0\n\t"       : : "r"(stack_args[0]) : );
+
+    //using a for loop screws up the rdx register.
+    //so we populate rdx after the stack push operations
+    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+
+    asm("call *%0\n\t" : : "m"(nf) : );
+
+    for(i=0; i<n; i++)
+      asm("addq $8, %%rsp\n\t" : : : );
+  }
+
+  OBJECT_PTR retval = NIL;
+
+  asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
+
+  va_end(ap);
+
+  return retval;
+}
+
+OBJECT_PTR create_message_send_closure()
+{
+  return create_closure(convert_int_to_object(0), (nativefn)message_send2);
+}
+
