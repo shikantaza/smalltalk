@@ -7,7 +7,7 @@
 #include "gc.h"
 
 #include "parser_header.h"
-#include "parser.tab.h"
+#include "parser.h"
 
 %}
 
