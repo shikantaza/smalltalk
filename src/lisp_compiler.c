@@ -294,7 +294,7 @@ OBJECT_PTR intersection(OBJECT_PTR lst1, OBJECT_PTR lst2)
 
 OBJECT_PTR subexps(OBJECT_PTR exp)
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);
@@ -316,7 +316,7 @@ OBJECT_PTR subexps(OBJECT_PTR exp)
 
 OBJECT_PTR mutating_ids(OBJECT_PTR exp)
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);
@@ -393,7 +393,7 @@ OBJECT_PTR difference(OBJECT_PTR lst1, OBJECT_PTR lst2)
 {
   OBJECT_PTR ret = NIL, rest = lst1;
 
-  OBJECT_PTR last;
+  OBJECT_PTR last = NIL;
 
   while(rest != NIL)
   {
@@ -579,7 +579,7 @@ OBJECT_PTR mapsub1(OBJECT_PTR exp,
                    OBJECT_PTR (*tf)(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR),
                    OBJECT_PTR v)
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);
@@ -604,7 +604,7 @@ OBJECT_PTR mapsub1(OBJECT_PTR exp,
 
 OBJECT_PTR assignment_conversion(OBJECT_PTR exp, OBJECT_PTR ids)
 {
-  OBJECT_PTR first_exp;
+  OBJECT_PTR first_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     first_exp = first(exp);
@@ -973,7 +973,7 @@ OBJECT_PTR flatten(OBJECT_PTR lst)
 
 OBJECT_PTR free_ids_il(OBJECT_PTR exp)
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);
@@ -1279,7 +1279,7 @@ OBJECT_PTR temp5(OBJECT_PTR x,
 OBJECT_PTR mapsub(OBJECT_PTR exp, 
                   OBJECT_PTR (*tf)(OBJECT_PTR))
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);
@@ -1304,7 +1304,7 @@ OBJECT_PTR mapsub(OBJECT_PTR exp,
 
 OBJECT_PTR closure_conv_transform(OBJECT_PTR exp)
 {
-  OBJECT_PTR car_exp;
+  OBJECT_PTR car_exp = NIL;
 
   if(IS_CONS_OBJECT(exp))
     car_exp = car(exp);

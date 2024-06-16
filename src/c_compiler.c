@@ -153,9 +153,10 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
 
   len += sprintf(buf+len, ")\n{\n");
 
-  //uncomment for debugging
+#ifdef DEBUG
   len += sprintf(buf+len, "printf(\"%s\\n\");\n", fname);
-
+#endif
+  
   //uncomment for debugging
   /* rest = params; */
 

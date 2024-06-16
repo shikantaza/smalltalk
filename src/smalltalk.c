@@ -106,8 +106,10 @@ OBJECT_PTR create_class(OBJECT_PTR class, OBJECT_PTR parent_class)
   char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
   char *stripped_parent_class_name = substring(s2, 1, strlen(s2)-1);
 
+#ifdef DEBUG  
   printf("%s %s\n", stripped_class_name, stripped_parent_class_name);
-
+#endif
+  
   assert(exists_in_top_level(get_symbol(stripped_parent_class_name)));
 
   class_object_t *cls_obj;
@@ -236,8 +238,10 @@ void add_class_var(OBJECT_PTR class, OBJECT_PTR var)
   char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
   char *stripped_class_var_name = substring(s2, 1, strlen(s2)-1);
 
+#ifdef DEBUG  
   printf("%s %s\n", stripped_class_name, stripped_class_var_name);
-
+#endif
+  
   assert(exists_in_top_level(get_symbol(stripped_class_name)));
 
   OBJECT_PTR var_sym = get_symbol(stripped_class_var_name);
@@ -369,22 +373,16 @@ void add_class_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
 
   OBJECT_PTR selector_sym = get_symbol(stripped_selector_name);
 
+#ifdef DEBUG
   print_object(code); printf(" is the code for the method\n");
-
-  //adding placeholder for the receiver
-  OBJECT_PTR decorated_code = list(3,
-                                   first(code),
-                                   second(code),
-                                   list(3,
-                                        first(third(code)),
-                                        list(2, gensym(), first(second(third(code)))),
-                                        third(third(code))));
-
-  print_object(decorated_code); printf(" is the decorated code for the method\n");    
+#endif
     
   OBJECT_PTR res = apply_lisp_transforms(code);
-  print_object(res); printf("\n");
 
+#ifdef DEBUG  
+  print_object(res); printf("\n");
+#endif
+  
   void *state = compile_to_c(res);
 
   char *fname = extract_variable_string(third(first(res)), true);
@@ -416,8 +414,10 @@ void add_class_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
   
   OBJECT_PTR nfo = convert_native_fn_to_object(extract_native_fn(result_closure));
 
+#ifdef DEBUG  
   print_object(closed_vals); printf("\n");
-
+#endif
+  
   OBJECT_PTR class_object_val, class_object;
 
   assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));

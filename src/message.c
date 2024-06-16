@@ -175,15 +175,19 @@ OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
   va_list ap;
   va_start(ap, count1); 
 
+#ifdef DEBUG  
   print_object(receiver);printf(" is the receiver\n");
   print_object(selector); printf(" is the selector\n");
-
+#endif
+  
   assert(IS_SYMBOL_OBJECT(selector));
 
   count = get_int_value(count1);
-  
-  printf("count = %d\n", count);
 
+#ifdef DEBUG  
+  printf("count = %d\n", count);
+#endif
+  
   //if the selector has only a colon at the end strip it off
   OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
 
@@ -214,8 +218,11 @@ OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
 
   OBJECT_PTR cons_form = cons(car(method), reverse(ret));
   OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
+
+#ifdef DEBUG  
   print_object(cons_form); printf(" is the CONS form of the closure invoked by message_send\n");
   print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
+#endif
   
   uintptr_t arg1, arg2, arg3,arg4, arg5;
   uintptr_t cont;
@@ -303,7 +310,9 @@ OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
     arg4 = (uintptr_t)va_arg(ap, uintptr_t);
     arg5 = (uintptr_t)va_arg(ap, uintptr_t);
 
+#ifdef DEBUG    
     printf("arg[1-5] = %lu %lu %lu %lu %lu\n", arg1, arg2, arg3, arg4, arg5);
+#endif
     
     n = count - 4; // no of arguments that should be pushed onto the stack
 
@@ -312,7 +321,9 @@ OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
     for(i=0; i<n; i++)
     {
       stack_args[i] = (uintptr_t)va_arg(ap, uintptr_t);
+#ifdef DEBUG      
       printf("stack_args[%d] = %lu\n", i, stack_args[i]);
+#endif      
     }
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");

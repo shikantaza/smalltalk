@@ -33,14 +33,14 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
   
-  //print_object(receiver); printf(" is the receiver passed to plus\n");
   assert(IS_INTEGER_OBJECT(receiver));
 
-  //OBJECT_PTR arg = (OBJECT_PTR)va_arg(*ap, OBJECT_PTR);
+#ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to plus\n");
+#endif
+  
   assert(IS_INTEGER_OBJECT(arg));
 
-  //OBJECT_PTR cont = (OBJECT_PTR)va_arg(*ap, OBJECT_PTR);
   assert(IS_CLOSURE_OBJECT(cont));
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);

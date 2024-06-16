@@ -36,6 +36,7 @@ OBJECT_PTR cons(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR get_symbol(char *);
 OBJECT_PTR fifth(OBJECT_PTR);
 OBJECT_PTR sixth(OBJECT_PTR);
+OBJECT_PTR seventh(OBJECT_PTR);
 
 nativefn extract_native_fn(OBJECT_PTR);
 
@@ -921,11 +922,14 @@ int main()
     if(!yyparse())
     {
       OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
-      print_object(exp); printf("\n");
 
+#ifdef DEBUG
+      print_object(exp); printf("\n");
+#endif
+      
       if(is_create_class_exp(exp))
       {
-        create_class(fourth(third(exp)), fifth(third(exp)));
+        create_class(fifth(third(exp)), sixth(third(exp)));
       }
       else if(is_add_instance_var_exp(exp))
       {
@@ -937,16 +941,16 @@ int main()
       }
       else if(is_add_instance_method_exp(exp))
       {
-        add_instance_method(sixth(third(exp)),
-                            fourth(third(exp)),
-                            list(3, LET, NIL, fifth(third(exp))));
+        add_instance_method(seventh(third(exp)),
+                            fifth(third(exp)),
+                            list(3, LET, NIL, sixth(third(exp))));
                             
       }
       else if(is_add_class_method_exp(exp))
       {
-        add_class_method(sixth(third(exp)),
-                         fourth(third(exp)),
-                         list(3, LET, NIL, fifth(third(exp))));
+        add_class_method(seventh(third(exp)),
+                         fifth(third(exp)),
+                         list(3, LET, NIL, sixth(third(exp))));
       }
       else
         repl();
@@ -959,9 +963,12 @@ int main()
 void repl()
 {
   OBJECT_PTR res = apply_lisp_transforms(convert_exec_code_to_lisp(g_exp));
+
+#ifdef DEBUG
   print_object(res);
   printf("\n");
-
+#endif
+  
   void *state = compile_to_c(res);
 
   char *fname = extract_variable_string(third(first(res)), true);
@@ -1015,7 +1022,7 @@ BOOLEAN is_create_class_exp(OBJECT_PTR exp)
   if(!IS_CONS_OBJECT(third_obj))
     return false;
 
-  if(cons_length(third_obj) != 5)
+  if(cons_length(third_obj) != 6)
     return false;
      
   if(first(third_obj) == MESSAGE_SEND &&
@@ -1078,15 +1085,15 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
   if(!IS_CONS_OBJECT(third_obj))
     return false;
 
-  if(cons_length(third_obj) != 6)
+  if(cons_length(third_obj) != 7)
     return false;
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
      third(third_obj) == get_symbol(msg) &&
-     IS_SYMBOL_OBJECT(fourth(third_obj)) &&
-     IS_CONS_OBJECT(fifth(third_obj)) && //TODO: maybe some stronger checks?
-     IS_SYMBOL_OBJECT(sixth(third_obj)))
+     IS_SYMBOL_OBJECT(fifth(third_obj)) &&
+     IS_CONS_OBJECT(sixth(third_obj)) && //TODO: maybe some stronger checks?
+     IS_SYMBOL_OBJECT(seventh(third_obj)))
     return true;
   else
     return false;  

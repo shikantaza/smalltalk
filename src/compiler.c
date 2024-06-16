@@ -83,12 +83,13 @@ BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == TRUE_T
 BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == FALSE_TAG;          }
 BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == CLASS_OBJECT_TAG;   }
 
-OBJECT_PTR first(OBJECT_PTR x)   { return car(x); }
-OBJECT_PTR second(OBJECT_PTR x)  { return car(cdr(x)); }
-OBJECT_PTR third(OBJECT_PTR x)  { return car(cdr(cdr(x))); }
-OBJECT_PTR fourth(OBJECT_PTR x) { return car(cdr(cdr(cdr(x)))); } 
-OBJECT_PTR fifth(OBJECT_PTR x)  { return car(cdr(cdr(cdr(cdr(x))))); } 
-OBJECT_PTR sixth(OBJECT_PTR x)  { return car(cdr(cdr(cdr(cdr(cdr(x)))))); } 
+OBJECT_PTR first(OBJECT_PTR x)    { return car(x); }
+OBJECT_PTR second(OBJECT_PTR x)   { return car(cdr(x)); }
+OBJECT_PTR third(OBJECT_PTR x)    { return car(cdr(cdr(x))); }
+OBJECT_PTR fourth(OBJECT_PTR x)   { return car(cdr(cdr(cdr(x)))); } 
+OBJECT_PTR fifth(OBJECT_PTR x)    { return car(cdr(cdr(cdr(cdr(x))))); } 
+OBJECT_PTR sixth(OBJECT_PTR x)    { return car(cdr(cdr(cdr(cdr(cdr(x)))))); } 
+OBJECT_PTR seventh(OBJECT_PTR x)  { return car(cdr(cdr(cdr(cdr(cdr(cdr(x))))))); } 
 
 OBJECT_PTR CADR(OBJECT_PTR x)    { return car(cdr(x)); }
 OBJECT_PTR CDDR(OBJECT_PTR x)    { return cdr(cdr(x)); }

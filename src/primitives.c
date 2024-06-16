@@ -29,12 +29,16 @@ void save_continuation(OBJECT_PTR cont)
 void set_most_recent_closure(OBJECT_PTR clo)
 {
   //TODO
+#ifdef DEBUG  
   printf("set_most_recent_closure: "); print_object(clo); printf("\n");
+#endif
 }
 
 nativefn extract_native_fn(OBJECT_PTR closure)
 {
+#ifdef DEBUG  
   print_object(closure); printf(" is passed to extract_native_fn\n");
+#endif  
   assert(IS_CLOSURE_OBJECT(closure));
 
   //TODO: is an unmet dependencies check
@@ -49,7 +53,9 @@ nativefn extract_native_fn(OBJECT_PTR closure)
 
   assert(nf);
 
+#ifdef DEBUG  
   printf("returing from extract_native_fn\n");
+#endif
   
   return nf;  
 }
