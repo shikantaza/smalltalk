@@ -1,0 +1,1 @@
+This is an attempt at implementing an ANSI-compliant Smalltalk system by repurposing the [pLisp](https://github.com/shikantaza/pLisp/)  intrastructure. The project is in its very early days, so there is not much to see yet, except for a REPL with integer operations.
