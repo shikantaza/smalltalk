@@ -92,79 +92,10 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 }
 
 OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
-                        OBJECT_PTR receiver,
-                        OBJECT_PTR selector,
-                        ...)
-{
-  //TODO: should we save the previous value of SELF
-  //and restore it before returning from message_send?
-  put_binding_val(top_level, SELF, cons(receiver, NIL));
-  
-  va_list ap;
-  va_start(ap, selector);
-
-  //OBJECT_PTR receiver = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
-  print_object(receiver);printf(" is the receiver\n");
-
-  //OBJECT_PTR selector = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
-  print_object(selector); printf(" is the selector\n");
-  assert(IS_SYMBOL_OBJECT(selector));
-  
-  //OBJECT_PTR arg = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
-  //print_object(arg);printf(" is the arg\n");
-  
-  //OBJECT_PTR closure = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
-  //print_object(closure); printf(" is the last parameter to message_send()\n");
-  //assert(IS_CLOSURE_OBJECT(closure));
-
-  //if the selector has only a colon at the end strip it off
-  OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
-
-  OBJECT_PTR method = method_lookup(receiver, stripped_selector);
-
-  //nativefn nf = extract_native_fn(method);
-  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
-  nativefn nf = nfobj->nf;
-  assert(nf);
-
-  //TODO: the receiver and (recursively) its super's instance/class vars
-  //should also be scanned for the free vars' values
-  
-  OBJECT_PTR closed_vars = cdr(method);
-  OBJECT_PTR ret = NIL;
-  OBJECT_PTR rest = closed_vars;
-
-  while(rest != NIL)
-  {
-    //TODO: should use get_top_level_val() as we need to
-    //catch unmet dependencies
-    //OBJECT_PTR closed_val_cons;
-    //assert(get_top_level_val(car(rest), &closed_val_cons));
-    //ret = cons(car(closed_val_cons), ret);
-    OBJECT_PTR closed_val = car(rest);
-    ret = cons(get_binding_val(top_level, closed_val), ret);        
-    rest = cdr(rest);
-  }
-
-  //return nf(method, receiver, arg, closure);
-  OBJECT_PTR cons_form = cons(car(method), reverse(ret));
-  OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
-  print_object(cons_form); printf(" is the CONS form of the closure invoked by message_send\n");
-  print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
-  //nativefn1 nf1 = (nativefn1)nf;
-  //return nf(closure_form, receiver, arg, closure);
-  OBJECT_PTR retval =  nf(closure_form, &ap);
-
-  va_end(ap);
-
-  return retval;
-}
-
-OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
-			 OBJECT_PTR receiver,
-			 OBJECT_PTR selector,
-			 OBJECT_PTR count1,
-			 ...)
+			OBJECT_PTR receiver,
+			OBJECT_PTR selector,
+			OBJECT_PTR count1,
+			...)
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
@@ -359,6 +290,6 @@ OBJECT_PTR message_send2(OBJECT_PTR mesg_send_closure,
 
 OBJECT_PTR create_message_send_closure()
 {
-  return create_closure(convert_int_to_object(0), (nativefn)message_send2);
+  return create_closure(convert_int_to_object(0), (nativefn)message_send);
 }
 

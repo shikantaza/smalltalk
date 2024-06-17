@@ -48,67 +48,58 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return nf(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
 }
 
-OBJECT_PTR minus(OBJECT_PTR closure, ...)
+OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  va_list ap;
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
   
-  va_start(ap, closure);
-
-  OBJECT_PTR receiver = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_INTEGER_OBJECT(receiver));
 
-  OBJECT_PTR arg = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+#ifdef DEBUG  
+  print_object(arg); printf(" is the arg passed to minus\n");
+#endif
+  
   assert(IS_INTEGER_OBJECT(arg));
 
-  OBJECT_PTR cont = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_CLOSURE_OBJECT(cont));
   
-  va_end(ap);
-
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
   return nf(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
 }
 
-OBJECT_PTR times(OBJECT_PTR closure, ...)
+OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  va_list ap;
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
   
-  va_start(ap, closure);
-
-  OBJECT_PTR receiver = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_INTEGER_OBJECT(receiver));
 
-  OBJECT_PTR arg = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+#ifdef DEBUG  
+  print_object(arg); printf(" is the arg passed to times\n");
+#endif
+  
   assert(IS_INTEGER_OBJECT(arg));
 
-  OBJECT_PTR cont = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_CLOSURE_OBJECT(cont));
   
-  va_end(ap);
-
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
   return nf(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
 }
 
-OBJECT_PTR divided_by(OBJECT_PTR closure, ...)
+OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  va_list ap;
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
   
-  va_start(ap, closure);
-
-  OBJECT_PTR receiver = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_INTEGER_OBJECT(receiver));
 
-  OBJECT_PTR arg = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
+#ifdef DEBUG  
+  print_object(arg); printf(" is the arg passed to divide_by\n");
+#endif
+  
   assert(IS_INTEGER_OBJECT(arg));
 
-  OBJECT_PTR cont = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   assert(IS_CLOSURE_OBJECT(cont));
   
-  va_end(ap);
-
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
   return nf(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
