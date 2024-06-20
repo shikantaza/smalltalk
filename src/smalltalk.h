@@ -62,8 +62,7 @@ typedef struct
 typedef struct
 {
   OBJECT_PTR class_object;
-  unsigned int nof_instance_vars;
-  binding_t *instance_vars; //instance var name, value
+  binding_env_t *instance_vars; //instance var name, value
 } object_t;
 
 typedef struct
@@ -77,14 +76,12 @@ typedef struct
   unsigned int nof_instance_vars;
   OBJECT_PTR *inst_vars;
   
-  unsigned int nof_shared_vars;
-  binding_t *shared_vars;
+  binding_env_t *shared_vars;
   
-  unsigned int nof_instance_methods;
-  binding_t *instance_methods; //method selector and CONS of native function object and free vars 
+  binding_env_t *instance_methods; //method selector and CONS of native function object and free vars 
   
-  unsigned int nof_class_methods;
-  binding_t *class_methods;  //method selector and CONS of native function object and free vars
+  //unsigned int nof_class_methods;
+  binding_env_t *class_methods;  //method selector and CONS of native function object and free vars
   
   //note: if we are going to store the method source too,
   //the val component of the dictionary wiil be a CONS cell with the native funtion object

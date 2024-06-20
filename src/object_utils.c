@@ -372,7 +372,7 @@ OBJECT_PTR clone_object(OBJECT_PTR obj)
 {
   OBJECT_PTR ret;
 
-#ifdef DEBUG
+#ifdef DEEP_DEBUG
   print_object(obj);
   fprintf(stdout, "\n");
 #endif

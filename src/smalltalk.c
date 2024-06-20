@@ -32,6 +32,8 @@ nativefn extract_native_fn(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
 
+OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
@@ -130,14 +132,21 @@ OBJECT_PTR create_class(OBJECT_PTR class, OBJECT_PTR parent_class)
   cls_obj->nof_instance_vars = 0;
   cls_obj->inst_vars = NULL;
 
-  cls_obj->nof_shared_vars = 0;
-  cls_obj->shared_vars = NULL;
+  cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->shared_vars->count = 0;
+  cls_obj->shared_vars->bindings = NULL;
 
-  cls_obj->nof_instance_methods = 0;  
-  cls_obj->instance_methods = NULL;
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->instance_methods->count = 0;
+  cls_obj->instance_methods->bindings = NULL;
   
-  cls_obj->nof_class_methods = 0;
-  cls_obj->class_methods = NULL;
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  
+  cls_obj->class_methods->bindings[0].key = get_symbol("new");
+  cls_obj->class_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)new_object), NIL);
+  
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
@@ -185,9 +194,9 @@ void add_instance_var(OBJECT_PTR class, OBJECT_PTR var)
     }
 
   //check that the instance variable doesn't conflict with an existing class variable
-  n = cls_obj->nof_shared_vars;
+  n = cls_obj->shared_vars->count;
   for(i=0; i<n; i++)
-    if(cls_obj->shared_vars[i].key == var_sym)
+    if(cls_obj->shared_vars->bindings[i].key == var_sym)
     {
       printf("Instance variable %s conflicts with an existing class variable\n", stripped_instance_var_name);
       return;
@@ -206,22 +215,23 @@ void add_instance_var(OBJECT_PTR class, OBJECT_PTR var)
   //add the instance variable to all the existing instances of the class
 
   n = cls_obj->nof_instances;
-
+  
   for(i=0; i<n; i++)
   {
     object_t *inst = (object_t *)extract_ptr(cls_obj->instances[i]);
-    
-    inst->nof_instance_vars++;
 
+    assert(inst);
+    
     if(!inst->instance_vars)
-      inst->instance_vars = (binding_t *)GC_MALLOC(inst->nof_instance_vars * sizeof(binding_t));
+    {
+      inst->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+      inst->instance_vars->count = 0;
+    }
     else
-      inst->instance_vars = (binding_t *)GC_REALLOC(inst->instance_vars,
-                                                    inst->nof_instance_vars * sizeof(binding_t));
+      inst->instance_vars->count++;
     
-    inst->instance_vars[inst->nof_instance_vars].key = var_sym;
-    inst->instance_vars[inst->nof_instance_vars].val = NIL;
-    
+    inst->instance_vars->bindings[inst->instance_vars->count].key = var_sym;
+    inst->instance_vars->bindings[inst->instance_vars->count].val = NIL;
   }
 }
 
@@ -258,9 +268,9 @@ void add_class_var(OBJECT_PTR class, OBJECT_PTR var)
 
   //check that the class variable doesn't already exist
   unsigned int i, n;
-  n = cls_obj->nof_shared_vars;
+  n = cls_obj->shared_vars->count;
   for(i=0; i<n; i++)
-    if(cls_obj->shared_vars[i].key == var_sym)
+    if(cls_obj->shared_vars->bindings[i].key == var_sym)
     {
       printf("Class variable %s already exists\n", stripped_class_var_name);
       return;
@@ -274,15 +284,15 @@ void add_class_var(OBJECT_PTR class, OBJECT_PTR var)
       return;
     }
   
-  cls_obj->nof_shared_vars++;
-
-  if(!cls_obj->shared_vars)
-    cls_obj->shared_vars = (binding_t *)GC_MALLOC(cls_obj->nof_shared_vars * sizeof(binding_t));
+  if(!cls_obj->shared_vars->bindings)
+  {
+    cls_obj->shared_vars->bindings = (binding_t *)GC_MALLOC(sizeof(binding_t));
+    cls_obj->shared_vars->count = 1;
+  }
   else
-    cls_obj->shared_vars = (binding_t *)GC_REALLOC(cls_obj->shared_vars,
-                                                   cls_obj->nof_shared_vars * sizeof(binding_t));
-
-  cls_obj->shared_vars[cls_obj->nof_shared_vars-1].key = var_sym;
+    cls_obj->shared_vars->count++;
+  
+  cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
 }
 
 void add_instance_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
@@ -329,30 +339,34 @@ void add_instance_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
   class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
   
   unsigned int i, n;
-  n = cls_obj->nof_instance_methods;
+  n = cls_obj->instance_methods->count;
 
   BOOLEAN existing_method = false;
   
   for(i=0; i<n; i++)
-    if(cls_obj->instance_methods[i].key == selector_sym)
+    if(cls_obj->instance_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods[i].val = concat(2, list(1, nfo), closed_vals);
+      cls_obj->instance_methods->bindings[i].val = concat(2, list(1, nfo), closed_vals);
       break;
     }
 
   if(existing_method == false)
   {
-    cls_obj->nof_instance_methods++;
-
-    if(!cls_obj->instance_methods)
-      cls_obj->instance_methods = (binding_t *)GC_MALLOC(cls_obj->nof_instance_methods * sizeof(binding_t));
+    if(!cls_obj->instance_methods->bindings)
+    {
+      cls_obj->instance_methods->count = 1;
+      cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+    }
     else
-      cls_obj->instance_methods = (binding_t *)GC_REALLOC(cls_obj->instance_methods,
-                                                          cls_obj->nof_instance_methods * sizeof(binding_t));
-
-    cls_obj->instance_methods[cls_obj->nof_instance_methods - 1].key = selector_sym;
-    cls_obj->instance_methods[cls_obj->nof_instance_methods - 1].val = concat(2, list(1, nfo), closed_vals);;
+    {
+      cls_obj->instance_methods->count++;
+      cls_obj->instance_methods->bindings = (binding_t *)GC_REALLOC(cls_obj->instance_methods->bindings,
+								    cls_obj->instance_methods->count * sizeof(binding_t));
+    }
+    
+    cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
+    cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].val = concat(2, list(1, nfo), closed_vals);;
   }
 }
 
@@ -429,29 +443,63 @@ void add_class_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
   class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
   
   unsigned int i, n;
-  n = cls_obj->nof_class_methods;
+  n = cls_obj->class_methods->count;
 
   BOOLEAN existing_method = false;
   
   for(i=0; i<n; i++)
-    if(cls_obj->class_methods[i].key == selector_sym)
+    if(cls_obj->class_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods[i].val = concat(2, list(1, nfo), closed_vals);
+      cls_obj->class_methods->bindings[i].val = concat(2, list(1, nfo), closed_vals);
       break;
     }
 
   if(existing_method == false)
   {
-    cls_obj->nof_class_methods++;
-
-    if(!cls_obj->class_methods)
-      cls_obj->class_methods = (binding_t *)GC_MALLOC(cls_obj->nof_class_methods * sizeof(binding_t));
+    if(!cls_obj->class_methods->bindings)
+    {
+      cls_obj->class_methods->count = 1;
+      cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+    }
     else
-      cls_obj->class_methods = (binding_t *)GC_REALLOC(cls_obj->class_methods,
-                                                       cls_obj->nof_class_methods * sizeof(binding_t));
+    {
+      cls_obj->class_methods->count++;
+      cls_obj->class_methods->bindings = (binding_t *)GC_REALLOC(cls_obj->class_methods->bindings,
+								 cls_obj->class_methods->count * sizeof(binding_t));
+    }
 
-    cls_obj->class_methods[cls_obj->nof_class_methods - 1].key = selector_sym;
-    cls_obj->class_methods[cls_obj->nof_class_methods - 1].val = concat(2, list(1, nfo), closed_vals);;
+    cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
+    cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].val = concat(2, list(1, nfo), closed_vals);;
   }
 }
+
+OBJECT_PTR new_object(OBJECT_PTR closure,
+		      OBJECT_PTR receiver,
+		      OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLASS_OBJECT(receiver));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
+
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(receiver);
+
+  unsigned int n = cls_obj->nof_instance_vars;
+  unsigned int i;
+
+  obj->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  
+  obj->instance_vars->count = n;
+  obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
+
+  for(i=0; i<n; i++)
+  {
+    obj->instance_vars->bindings[i].key = cls_obj->inst_vars[i];
+    obj->instance_vars->bindings[i].val = NIL;
+  }
+
+  return (uintptr_t)obj + OBJECT_TAG;
+}
+  

@@ -896,6 +896,9 @@ int main()
   int nbytes = 100;
 
   memset(buf, '\0', 1024);
+
+  fprintf(stdout, "Type the Smalltalk expression at the prompt. Press Enter on an empty line\n");
+  fprintf(stdout, "(after completing the expression) to evaluate the expression, Control-C to quit.\n");
   
   while(1)
   {
@@ -933,11 +936,11 @@ int main()
       }
       else if(is_add_instance_var_exp(exp))
       {
-        add_instance_var(fifth(third(exp)), fourth(third(exp)));
+        add_instance_var(sixth(third(exp)), fifth(third(exp)));
       }
       else if(is_add_class_var_exp(exp))
       {
-        add_class_var(fifth(third(exp)), fourth(third(exp)));
+        add_class_var(sixth(third(exp)), fifth(third(exp)));
       }
       else if(is_add_instance_method_exp(exp))
       {
@@ -1048,14 +1051,14 @@ BOOLEAN is_add_var_exp(OBJECT_PTR exp, char *msg)
   if(!IS_CONS_OBJECT(third_obj))
     return false;
 
-  if(cons_length(third_obj) != 5)
+  if(cons_length(third_obj) != 6)
     return false;
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
      third(third_obj) == get_symbol(msg) &&
-     IS_SYMBOL_OBJECT(fourth(third_obj)) &&
-     IS_SYMBOL_OBJECT(fifth(third_obj)))
+     IS_SYMBOL_OBJECT(fifth(third_obj)) &&
+     IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
   else
     return false;  

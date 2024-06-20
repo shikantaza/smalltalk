@@ -125,27 +125,28 @@ void create_Integer()
   cls_obj->nof_instance_vars = 0;
   cls_obj->inst_vars = NULL;
 
-  cls_obj->nof_shared_vars = 0;
-  cls_obj->shared_vars = NULL;
+  cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->shared_vars->count = 0;
   
-  cls_obj->nof_instance_methods = 4;    
-  cls_obj->instance_methods = (binding_t *)GC_MALLOC(cls_obj->nof_instance_methods *
-                                                     sizeof(binding_t));
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods->count = 4;    
+  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods[0].key = get_symbol("+");
-  cls_obj->instance_methods[0].val = cons(convert_native_fn_to_object((nativefn)plus), NIL);
+  cls_obj->instance_methods->bindings[0].key = get_symbol("+");
+  cls_obj->instance_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)plus), NIL);
 
-  cls_obj->instance_methods[1].key = get_symbol("-");
-  cls_obj->instance_methods[1].val = cons(convert_native_fn_to_object((nativefn)minus), NIL);
+  cls_obj->instance_methods->bindings[1].key = get_symbol("-");
+  cls_obj->instance_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)minus), NIL);
 
-  cls_obj->instance_methods[2].key = get_symbol("*");
-  cls_obj->instance_methods[2].val = cons(convert_native_fn_to_object((nativefn)times), NIL);
+  cls_obj->instance_methods->bindings[2].key = get_symbol("*");
+  cls_obj->instance_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)times), NIL);
 
-  cls_obj->instance_methods[3].key = get_symbol("/");
-  cls_obj->instance_methods[3].val = cons(convert_native_fn_to_object((nativefn)divided_by), NIL);
+  cls_obj->instance_methods->bindings[3].key = get_symbol("/");
+  cls_obj->instance_methods->bindings[3].val = cons(convert_native_fn_to_object((nativefn)divided_by), NIL);
   
-  cls_obj->nof_class_methods = 0;
-  cls_obj->class_methods = NULL;
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods->count = 0;
+  cls_obj->class_methods->bindings = NULL;
 
   Integer =  convert_class_object_to_object_ptr(cls_obj);
 }

@@ -37,6 +37,11 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
   OBJECT_PTR cls_obj;
   BOOLEAN is_class_object;
 
+#ifdef DEBUG
+  print_object(obj); printf(" is the receiver passed to method_lookup()\n");
+  print_object(selector); printf(" is the selector passed to method_lookup()\n");
+#endif
+  
   if(!IS_CLASS_OBJECT(obj))
   {
     is_class_object = false;
@@ -47,9 +52,11 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
     is_class_object = true;
     cls_obj = obj;
   }
-  
-  //assert(cls_obj == Integer); //temporarily assuming Integer to test compiler
 
+#ifdef DEBUG
+  printf("method_lookup(): is_class_object = %s\n", is_class_object ? "true" : "false");
+#endif  
+  
   class_object_t *cls_obj_int = (class_object_t *)extract_ptr(cls_obj);
   
   BOOLEAN method_found = false;
@@ -59,28 +66,28 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 
   if(is_class_object)
   {
-    n = cls_obj_int->nof_class_methods;
+    n = cls_obj_int->class_methods->count;
   
     for(i=0; i<n; i++)
     {
-      if(cls_obj_int->class_methods[i].key == selector)
+      if(cls_obj_int->class_methods->bindings[i].key == selector)
       {
         method_found = true;
-        method = cls_obj_int->class_methods[i].val;
+        method = cls_obj_int->class_methods->bindings[i].val;
         break;
       }
     }    
   }
   else
   {
-    n = cls_obj_int->nof_instance_methods;
+    n = cls_obj_int->instance_methods->count;
   
     for(i=0; i<n; i++)
     {
-      if(cls_obj_int->instance_methods[i].key == selector)
+      if(cls_obj_int->instance_methods->bindings[i].key == selector)
       {
         method_found = true;
-        method = cls_obj_int->instance_methods[i].val;
+        method = cls_obj_int->instance_methods->bindings[i].val;
         break;
       }
     }
@@ -88,6 +95,10 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
   
   assert(method_found);
 
+#ifdef DEBUG
+  printf("returning from method_lookup\n");
+#endif
+  
   return method;
 }
 
