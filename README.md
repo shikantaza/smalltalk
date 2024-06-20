@@ -15,11 +15,11 @@ The target platform is x86_64 Linux for the first version.
 
 # Build Instructions
 
-Navigate to the directory where the project has been cloned and run these commands
+Navigate to the directory where the project has been cloned and run these commands:
 
 1. sh ./autogen.sh
 2. ./configure LLVMDIR=<clang 11.0 directory>
 3. make
 4. make install
 
-This will create an executable called 'smalltalk.
+This will create an executable called 'smalltalk'.
