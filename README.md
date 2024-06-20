@@ -4,7 +4,7 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
 
 The target platform is x86_64 Linux for the first version.
 
-# Prerequisites:
+# Prerequisites
 
 * Flex
 * Bison
@@ -13,7 +13,7 @@ The target platform is x86_64 Linux for the first version.
 * gcc
 * g++
 
-# Build Instructions:
+# Build Instructions
 
 Navigate to the directory where the project has been cloned and run these commands
 
