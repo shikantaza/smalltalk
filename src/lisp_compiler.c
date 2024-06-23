@@ -78,6 +78,10 @@ binding_env_t *create_binding_env()
   return env;
 }
 
+//this is to be used only within the compiler,
+//another version (where missing bindings should be
+//handled differently) should be used in places
+//like method, variable lookups
 OBJECT_PTR get_binding_val(binding_env_t *env, OBJECT_PTR key)
 {
   int i;

@@ -10,7 +10,6 @@
 
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR, va_list*);
 
-
 OBJECT_PTR convert_int_to_object(int);
 int get_int_value(OBJECT_PTR);
 OBJECT_PTR get_symbol(char *);
@@ -23,7 +22,7 @@ BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
 BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR);
 
 BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
+OBJECT_PTR get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
 void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
@@ -31,6 +30,8 @@ extern OBJECT_PTR Integer;
 extern OBJECT_PTR SELF;
 
 extern binding_env_t *top_level;
+
+BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
 
 OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 {
@@ -135,26 +136,46 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
   OBJECT_PTR method = method_lookup(receiver, stripped_selector);
 
+#ifdef DEBUG
+  print_object(method); printf(" is returned by method_lookup()\n");
+#endif  
+  
   native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
   nativefn nf = nfobj->nf;
   assert(nf);
 
-  //TODO: the receiver and (recursively) its super's instance/class vars
-  //should also be scanned for the free vars' values
-  
   OBJECT_PTR closed_vars = cdr(method);
   OBJECT_PTR ret = NIL;
   OBJECT_PTR rest = closed_vars;
 
+  binding_env_t *env = NULL;
+  
+  if(IS_CLASS_OBJECT(receiver))
+    env = ((class_object_t *)extract_ptr(receiver))->shared_vars;
+  else if(IS_OBJECT_OBJECT(receiver))
+    env = ((object_t *)extract_ptr(receiver))->instance_vars;
+  
   while(rest != NIL)
   {
-    //TODO: should use get_top_level_val() as we need to
-    //catch unmet dependencies
-    //OBJECT_PTR closed_val_cons;
-    //assert(get_top_level_val(car(rest), &closed_val_cons));
-    //ret = cons(car(closed_val_cons), ret);
-    OBJECT_PTR closed_val = car(rest);
-    ret = cons(get_binding_val(top_level, closed_val), ret);        
+    OBJECT_PTR closed_val_cons;
+
+    //TODO: the receiver's super's instance/class vars
+    //should also be scanned for the free vars' values
+    if(env) //to filter out objects like integers which are not regular objects
+    {
+      if(get_binding_val_regular(env, car(rest), &closed_val_cons))
+      {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+	continue;
+      }
+      else
+      {
+	//TODO: assert should be replaced to raise an exception
+	assert(get_top_level_val(car(rest), &closed_val_cons));
+	ret = cons(closed_val_cons, ret);
+      }
+    }
     rest = cdr(rest);
   }
 

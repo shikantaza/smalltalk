@@ -70,7 +70,6 @@ OBJECT_PTR METHOD_LOOKUP                =  (OBJECT_PTR)((17 << OBJECT_SHIFT) + S
 OBJECT_PTR SMALLTALK                    =  (OBJECT_PTR)((18 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SELF                         =  (OBJECT_PTR)((19 << OBJECT_SHIFT) + SYMBOL_TAG);
 
-
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
 
@@ -82,6 +81,7 @@ BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR x)        { return (x & BIT_MASK) == CLOSUR
 BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == TRUE_TAG;           }
 BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == FALSE_TAG;          }
 BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == CLASS_OBJECT_TAG;   }
+BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == OBJECT_TAG;   }
 
 OBJECT_PTR first(OBJECT_PTR x)    { return car(x); }
 OBJECT_PTR second(OBJECT_PTR x)   { return car(cdr(x)); }
@@ -469,7 +469,7 @@ OBJECT_PTR convert_block_constructor_to_lisp(block_constructor_t *b)
     res = concat(2, res, list(1, reverse(res1)));
   }
   else if(b->type == NO_BLOCK_ARGS)
-    res = concat(2, res, NIL);
+    res = concat(2, res, list(1,NIL));
   else
   {
     error("Unknown block constructor type: %d\n", b->type);

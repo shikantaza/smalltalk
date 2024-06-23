@@ -32,7 +32,9 @@ nativefn extract_native_fn(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
 
-OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
+
+OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
@@ -50,25 +52,31 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
   top_level->bindings[top_level->count - 1].val = val;
 }
 
-//TODO: there is a similar function in lisp_compiler.c
-//(get_binding_val()), need to do some refactoring
-BOOLEAN get_top_level_val(OBJECT_PTR sym, OBJECT_PTR *ret)
+//there is a similar function in lisp_compiler.c
+//(get_binding_val()), that has a slightly different behaviour
+BOOLEAN get_binding_val_regular(binding_env_t *env, OBJECT_PTR sym, OBJECT_PTR *ret)
 {
   assert(IS_SYMBOL_OBJECT(sym));
 
-  unsigned int i, n = top_level->count;
+  unsigned int i, n = env->count;
 
   for(i=0; i<n; i++)
   {
-    if(top_level->bindings[i].key == sym)
+    if(env->bindings[i].key == sym)
     {
-      *ret = top_level->bindings[i].val;
+      *ret = env->bindings[i].val;
       return true;
     }
   }
 
   *ret = NIL;
   return false;
+  
+}
+
+BOOLEAN get_top_level_val(OBJECT_PTR sym, OBJECT_PTR *ret)
+{
+  return get_binding_val_regular(top_level, sym, ret);
 }
 
 void initialize_top_level()
@@ -145,8 +153,7 @@ OBJECT_PTR create_class(OBJECT_PTR class, OBJECT_PTR parent_class)
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
   
   cls_obj->class_methods->bindings[0].key = get_symbol("new");
-  cls_obj->class_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)new_object), NIL);
-  
+  cls_obj->class_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)new_object), NIL);
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
@@ -167,9 +174,11 @@ void add_instance_var(OBJECT_PTR class, OBJECT_PTR var)
 
   char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
   char *stripped_instance_var_name = substring(s2, 1, strlen(s2)-1);
-  
-  printf("%s %s\n", stripped_class_name, stripped_instance_var_name);
 
+#ifdef DEBUG  
+  printf("%s %s\n", stripped_class_name, stripped_instance_var_name);
+#endif
+  
   OBJECT_PTR var_sym = get_symbol(stripped_instance_var_name);
   
   assert(exists_in_top_level(get_symbol(stripped_class_name)));
@@ -293,6 +302,8 @@ void add_class_var(OBJECT_PTR class, OBJECT_PTR var)
     cls_obj->shared_vars->count++;
   
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
+  cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = NIL;
+  
 }
 
 void add_instance_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
@@ -322,9 +333,28 @@ void add_instance_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
 
   assert(nf);
   
-  OBJECT_PTR nfo = convert_native_fn_to_object(nf);
-
   OBJECT_PTR closed_vals = CDDDR(first(res));
+
+  //closed vals are only the variable names
+  //and don't have any significance here as 
+  //they will be deferenced only when the method
+  //is invoked, at which time the correct values
+  //would have been populated
+  OBJECT_PTR lst_form = concat(2, list(1, convert_native_fn_to_object(nf)), closed_vals);
+  OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
+
+  OBJECT_PTR idclo = create_closure(convert_int_to_object(0),
+                                    (nativefn)identity_function);
+
+  assert(IS_CLOSURE_OBJECT(idclo));
+  
+  nativefn1 nf1 = (nativefn1)nf;
+    
+  OBJECT_PTR result_closure = nf1(closure_form, idclo);
+
+  assert(IS_CLOSURE_OBJECT(result_closure));
+  
+  OBJECT_PTR nfo = convert_native_fn_to_object(extract_native_fn(result_closure));
 
   print_object(closed_vals); printf("\n");
 
@@ -475,9 +505,14 @@ void add_class_method(OBJECT_PTR class, OBJECT_PTR selector, OBJECT_PTR code)
 }
 
 OBJECT_PTR new_object(OBJECT_PTR closure,
-		      OBJECT_PTR receiver,
 		      OBJECT_PTR cont)
 {
+#ifdef DEBUG
+  printf("Entering new_object()\n");
+#endif
+
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLASS_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -489,17 +524,42 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
   unsigned int n = cls_obj->nof_instance_vars;
   unsigned int i;
 
+  obj->class_object = receiver;
   obj->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  
-  obj->instance_vars->count = n;
-  obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
 
-  for(i=0; i<n; i++)
+  if(n > 0)
   {
-    obj->instance_vars->bindings[i].key = cls_obj->inst_vars[i];
-    obj->instance_vars->bindings[i].val = NIL;
+    obj->instance_vars->count = n;
+    obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
+
+    for(i=0; i<n; i++)
+    {
+      obj->instance_vars->bindings[i].key = cls_obj->inst_vars[i];
+      obj->instance_vars->bindings[i].val = cons(convert_int_to_object(42), NIL); //just for testing, revert to NIL
+    }
   }
 
-  return (uintptr_t)obj + OBJECT_TAG;
+  //TODO: call 'initialize' method if present
+  //(defined by the user)
+  
+  //add the new instance to the instances mapped to the class
+  cls_obj->nof_instances++;
+
+  if(!cls_obj->instances)
+    cls_obj->instances = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instances * sizeof(OBJECT_PTR));
+  else
+    cls_obj->instances = (OBJECT_PTR *)GC_REALLOC(cls_obj->instances, cls_obj->nof_instances * sizeof(OBJECT_PTR));
+
+  cls_obj->instances[cls_obj->nof_instances-1] = (uintptr_t)obj + OBJECT_TAG;
+  
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  OBJECT_PTR ret = nf(cont, (uintptr_t)obj + OBJECT_TAG);
+  
+#ifdef DEBUG
+  printf("Exiting new_object()\n");
+#endif
+
+  return ret;
 }
   

@@ -15,6 +15,7 @@ BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR);
 BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR);
 
 BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
+BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -329,6 +330,12 @@ void print_object(OBJECT_PTR obj_ptr)
   //fprintf(stdout, "#<CLASS %p>", (void *)obj_ptr);
   else if(IS_NATIVE_FN_OBJECT(obj_ptr))
     fprintf(stdout, "#<NATIVEFN %p> ", (void *)obj_ptr);
+  else if(IS_OBJECT_OBJECT(obj_ptr))
+  {
+    object_t *obj = (object_t *)extract_ptr(obj_ptr);
+    OBJECT_PTR cls_obj = obj->class_object;
+    fprintf(stdout, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
+  }
   else
     error("<invalid object %p>", (void *)obj_ptr);
 
