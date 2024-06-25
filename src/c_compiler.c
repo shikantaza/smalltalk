@@ -39,6 +39,8 @@ extern OBJECT_PTR CREATE_CLOSURE;
 extern OBJECT_PTR EXTRACT_NATIVE_FN;
 extern OBJECT_PTR METHOD_LOOKUP;
 extern OBJECT_PTR CAR;
+extern OBJECT_PTR SETCAR;
+extern OBJECT_PTR CONS;
 
 /* input should be the result of lift_transform()) */
 void *compile_to_c(OBJECT_PTR input)
@@ -105,6 +107,8 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   //len += sprintf(buf+len, "uintptr_t method_lookup(uintptr_t, uintptr_t);\n");
 
   len += sprintf(buf+len, "uintptr_t car(uintptr_t);\n");
+  len += sprintf(buf+len, "uintptr_t setcar(uintptr_t, uintptr_t);\n");
+  len += sprintf(buf+len, "uintptr_t cons(uintptr_t, uintptr_t);\n");
   
   len += sprintf(buf+len, "int in_error_condition();\n");
   len += sprintf(buf+len, "uintptr_t get_continuation(uintptr_t);\n");
@@ -325,6 +329,10 @@ char *extract_variable_string(OBJECT_PTR var, BOOLEAN serialize_flag)
         sprintf(s, "save_cont_to_resume");
       else if(var == CAR)
         sprintf(s, "car");
+      else if(var == SETCAR)
+        sprintf(s, "setcar");
+      else if(var == CONS)
+        sprintf(s, "cons");
       else
       {
         print_object(var);

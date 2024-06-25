@@ -36,6 +36,8 @@ OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
 
 OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
 
+OBJECT_PTR Object;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
@@ -87,6 +89,7 @@ void initialize_top_level()
   add_binding_to_top_level(MESSAGE_SEND, cons(create_message_send_closure(), NIL));
   add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
   add_binding_to_top_level(SELF, cons(NIL, NIL));
+  add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -130,8 +133,10 @@ OBJECT_PTR create_class(OBJECT_PTR class, OBJECT_PTR parent_class)
     exit(1);
   }
 
-  //TODO: initialize cls_obj->parent_class_object to Object
-  //once we define Object
+  OBJECT_PTR parent_class_object;
+  assert(get_top_level_val(get_symbol(stripped_parent_class_name), &parent_class_object));
+  
+  cls_obj->parent_class_object = car(parent_class_object);
   cls_obj->name = GC_strdup(stripped_class_name);
 
   cls_obj->nof_instances = 0;
@@ -302,7 +307,7 @@ void add_class_var(OBJECT_PTR class, OBJECT_PTR var)
     cls_obj->shared_vars->count++;
   
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
-  cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = NIL;
+  cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
   
 }
 
@@ -518,30 +523,46 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(cont));
 
   object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
-
-  class_object_t *cls_obj = (class_object_t *)extract_ptr(receiver);
-
-  unsigned int n = cls_obj->nof_instance_vars;
-  unsigned int i;
-
+  
   obj->class_object = receiver;
   obj->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
 
-  if(n > 0)
-  {
-    obj->instance_vars->count = n;
-    obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(receiver);
 
-    for(i=0; i<n; i++)
+  OBJECT_PTR current_parent = receiver;
+  
+  while(current_parent != Object)
+  {
+    class_object_t *curr_cls_obj = (class_object_t *)extract_ptr(current_parent);
+
+    unsigned int n = curr_cls_obj->nof_instance_vars;
+    unsigned int i;
+    printf("n = %d\n", n);
+    if(n > 0)
     {
-      obj->instance_vars->bindings[i].key = cls_obj->inst_vars[i];
-      obj->instance_vars->bindings[i].val = cons(convert_int_to_object(42), NIL); //just for testing, revert to NIL
+      unsigned int prev_count = obj->instance_vars->count;
+    
+      obj->instance_vars->count += n;
+
+      if(!obj->instance_vars->bindings)
+	obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
+      else
+	obj->instance_vars->bindings = (binding_t *)GC_REALLOC(obj->instance_vars->bindings,
+							       obj->instance_vars->count * sizeof(binding_t));
+    
+      for(i=prev_count; i<prev_count + n; i++)
+      {
+	obj->instance_vars->bindings[i].key = curr_cls_obj->inst_vars[prev_count - i];
+	obj->instance_vars->bindings[i].val = cons(NIL, NIL);
+      }
     }
+
+    //TODO: call 'initialize' method for parent_class if present
+    //(defined by the user)
+    
+    current_parent = curr_cls_obj->parent_class_object;
   }
 
-  //TODO: call 'initialize' method if present
-  //(defined by the user)
-  
   //add the new instance to the instances mapped to the class
   cls_obj->nof_instances++;
 
@@ -563,3 +584,22 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
   return ret;
 }
   
+void create_Object()
+{
+  class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
+  
+  cls_obj->parent_class_object = NIL;
+  cls_obj->name = GC_strdup("Object");
+
+  cls_obj->nof_instances = 0;
+  cls_obj->instances = NULL;
+  
+  cls_obj->nof_instance_vars = 0;
+  cls_obj->inst_vars = NULL;
+  
+  cls_obj->shared_vars = NULL;
+  cls_obj->instance_methods = NULL;
+  cls_obj->class_methods = NULL;
+
+  Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
+}

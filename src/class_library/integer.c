@@ -23,6 +23,7 @@ extern binding_env_t *top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 
+extern OBJECT_PTR Object;
 OBJECT_PTR Integer;
 
 //workaround for variadic function arguments
@@ -115,8 +116,7 @@ void create_Integer()
     exit(1);
   }
 
-  //TODO: initialize cls_obj->parent_class_object to Object
-  //once we define Object
+  cls_obj->parent_class_object = Object;
   cls_obj->name = GC_strdup("Integer");
 
   cls_obj->nof_instances = 0;

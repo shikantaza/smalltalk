@@ -232,6 +232,12 @@ OBJECT_PTR car(OBJECT_PTR cons_obj)
     return (OBJECT_PTR)*((OBJECT_PTR *)(extract_ptr(cons_obj)));
 }
 
+OBJECT_PTR setcar(OBJECT_PTR obj, OBJECT_PTR val)
+{
+  set_heap(extract_ptr(obj), 0, val);
+  return val;
+}
+
 OBJECT_PTR reverse(OBJECT_PTR lst)
 {
   OBJECT_PTR ret = NIL, rest = lst;

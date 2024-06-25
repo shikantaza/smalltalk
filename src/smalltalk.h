@@ -77,10 +77,7 @@ typedef struct
   OBJECT_PTR *inst_vars;
   
   binding_env_t *shared_vars;
-  
   binding_env_t *instance_methods; //method selector and CONS of native function object and free vars 
-  
-  //unsigned int nof_class_methods;
   binding_env_t *class_methods;  //method selector and CONS of native function object and free vars
   
   //note: if we are going to store the method source too,

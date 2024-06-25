@@ -29,6 +29,8 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR SELF;
 
+extern OBJECT_PTR Object;
+
 extern binding_env_t *top_level;
 
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
@@ -57,41 +59,48 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 #ifdef DEBUG
   printf("method_lookup(): is_class_object = %s\n", is_class_object ? "true" : "false");
 #endif  
-  
-  class_object_t *cls_obj_int = (class_object_t *)extract_ptr(cls_obj);
-  
+
   BOOLEAN method_found = false;
   OBJECT_PTR method;
 
   unsigned int i, n;
 
-  if(is_class_object)
-  {
-    n = cls_obj_int->class_methods->count;
+  OBJECT_PTR class = cls_obj;
   
-    for(i=0; i<n; i++)
-    {
-      if(cls_obj_int->class_methods->bindings[i].key == selector)
-      {
-        method_found = true;
-        method = cls_obj_int->class_methods->bindings[i].val;
-        break;
-      }
-    }    
-  }
-  else
+  while(!method_found && class != Object)
   {
-    n = cls_obj_int->instance_methods->count;
-  
-    for(i=0; i<n; i++)
+    class_object_t *cls_obj_int = (class_object_t *)extract_ptr(class);
+
+    if(is_class_object)
     {
-      if(cls_obj_int->instance_methods->bindings[i].key == selector)
+      n = cls_obj_int->class_methods->count;
+  
+      for(i=0; i<n; i++)
       {
-        method_found = true;
-        method = cls_obj_int->instance_methods->bindings[i].val;
-        break;
+	if(cls_obj_int->class_methods->bindings[i].key == selector)
+	{
+	  method_found = true;
+	  method = cls_obj_int->class_methods->bindings[i].val;
+	  break;
+	}
+      }    
+    }
+    else
+    {
+      n = cls_obj_int->instance_methods->count;
+  
+      for(i=0; i<n; i++)
+      {
+	if(cls_obj_int->instance_methods->bindings[i].key == selector)
+	{
+	  method_found = true;
+	  method = cls_obj_int->instance_methods->bindings[i].val;
+	  break;
+	}
       }
     }
+    
+    class = cls_obj_int->parent_class_object;
   }
   
   assert(method_found);

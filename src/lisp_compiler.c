@@ -526,7 +526,7 @@ BOOLEAN primop(OBJECT_PTR sym)
   //which will be primitive
   //return sym == SAVE_CONTINUATION || sym == METHOD_LOOKUP;
 
-  return sym == SAVE_CONTINUATION || sym == CAR;
+  return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS;
 }
 
 OBJECT_PTR temp3(OBJECT_PTR x, OBJECT_PTR v1, OBJECT_PTR v2)

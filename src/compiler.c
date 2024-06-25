@@ -99,6 +99,7 @@ OBJECT_PTR CDDDR(OBJECT_PTR x)   { return cdr(cdr(cdr(x))); }
 int add_symbol(char *);
 
 void initialize_top_level();
+void create_Object();
 void create_Integer();
 
 //this has also been defined in object_utils.c
@@ -180,6 +181,8 @@ void initialize()
   add_symbol("Smalltalk");
   add_symbol("self");
 
+  create_Object();
+  
   //this was initally after the call to
   //initialize_top_level(), but a bus error
   //was thrown in the generated code.
