@@ -42,6 +42,7 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Integer;
+extern OBJECT_PTR Transcript;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -90,6 +91,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
+  add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)

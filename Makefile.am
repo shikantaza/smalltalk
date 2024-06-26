@@ -6,7 +6,7 @@ bin_PROGRAMS = smalltalk
 
 BUILT_SOURCES = libsmalltalkjitllvm.la
 
-smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c
+smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c
 
 
 AM_CFLAGS = -g -DDEBUG -DSMALLTALKDATADIR=\"$(pkgdatadir)\" -Wall

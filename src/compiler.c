@@ -100,6 +100,7 @@ int add_symbol(char *);
 
 void initialize_top_level();
 void create_Object();
+void create_Transcript();
 void create_Integer();
 
 //this has also been defined in object_utils.c
@@ -138,28 +139,6 @@ void initialize()
   compiler_package->name = GC_strdup("CORE");
   compiler_package->nof_symbols = 0;
   
-  /*
-  compiler_package->nof_symbols = 17; 
-  compiler_package->symbols = (char **)GC_MALLOC(compiler_package->nof_symbols * sizeof(char *));
-
-  compiler_package->symbols[0]  = GC_strdup("NIL");
-  compiler_package->symbols[1]  = GC_strdup("LET");
-  compiler_package->symbols[2]  = GC_strdup("SET");
-  compiler_package->symbols[3]  = GC_strdup("RETURN");
-  compiler_package->symbols[4]  = GC_strdup("MESSAGE-SEND");
-  compiler_package->symbols[5]  = GC_strdup("LAMBDA");
-  compiler_package->symbols[6]  = GC_strdup("SETCAR");
-  compiler_package->symbols[7]  = GC_strdup("CONS");
-  compiler_package->symbols[8]  = GC_strdup("CAR");
-  compiler_package->symbols[9]  = GC_strdup("LET1");
-  compiler_package->symbols[10]  = GC_strdup("CASCADED");
-  compiler_package->symbols[11]  = GC_strdup("SAVE-CONTINUATION");
-  compiler_package->symbols[12]  = GC_strdup("GET-CONTINUATION");
-  compiler_package->symbols[13]  = GC_strdup("SAVE-CONTINUATION-TO-RESUME");
-  compiler_package->symbols[14]  = GC_strdup("NTH");
-  compiler_package->symbols[15]  = GC_strdup("CREATE-FN-CLOSURE");
-  compiler_package->symbols[16]  = GC_strdup("EXTRACT-NATIVE-FN");
-  */
   add_symbol("NIL");
   add_symbol("LET");
   add_symbol("SET");
@@ -182,6 +161,8 @@ void initialize()
   add_symbol("self");
 
   create_Object();
+
+  create_Transcript();
   
   //this was initally after the call to
   //initialize_top_level(), but a bus error

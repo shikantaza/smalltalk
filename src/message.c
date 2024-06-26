@@ -141,7 +141,8 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 #endif
   
   //if the selector has only a colon at the end strip it off
-  OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
+  //OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
+  OBJECT_PTR stripped_selector = selector;
 
   OBJECT_PTR method = method_lookup(receiver, stripped_selector);
 
