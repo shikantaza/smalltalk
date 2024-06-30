@@ -7,19 +7,21 @@
 #define SYMBOL_BITS         22
 #define OBJECT_SHIFT         4
 
-#define SYMBOL_TAG           1
-#define CHARACTER_TAG        2
-#define STRING_TAG           3
-#define INTEGER_TAG          4
-#define FLOAT_TAG            5
-#define CONS_TAG             6
-#define OBJECT_TAG           7
-#define CLASS_OBJECT_TAG     8
-#define ARRAY_TAG            9
-#define NATIVE_FN_TAG       11
-#define CLOSURE_TAG         12
-#define TRUE_TAG            13
-#define FALSE_TAG           14
+#define SYMBOL_TAG            1
+#define CHARACTER_TAG         2
+#define STRING_TAG            3
+#define INTEGER_TAG           4
+#define FLOAT_TAG             5
+#define CONS_TAG              6
+#define OBJECT_TAG            7
+#define CLASS_OBJECT_TAG      8
+#define ARRAY_TAG             9
+/* note that value 10 is unused and is available */
+#define NATIVE_FN_TAG        11
+#define CLOSURE_TAG          12
+#define TRUE_TAG             13
+#define FALSE_TAG            14
+#define SMALLTALK_SYMBOL_TAG 15
 
 typedef int BOOLEAN;
 
@@ -106,6 +108,7 @@ BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR );
 BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR);
 BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR);
 BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR);
+BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
 
 int cons_length(OBJECT_PTR);
 

@@ -29,6 +29,8 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR lift_transform(OBJECT_PTR, OBJECT_PTR);
 
+char *get_symbol_name(OBJECT_PTR);
+
 //extern declarations
 /* OBJECT_PTR gensym(); */
 /* uintptr_t extract_ptr(OBJECT_PTR); */
@@ -153,29 +155,62 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
   
   //res = list(3, first(res), second(res), expand_body(CDDR(obj)));
   res = expand_bodies(obj);
+
+#ifdef DEBUG
+  print_object(res); printf(" is returned by expand_bodies()\n");
+#endif
   
   res = assignment_conversion(res, concat(2,
                                           get_top_level_symbols(),
                                           get_free_variables(res)));
-
+#ifdef DEBUG
+  print_object(res); printf(" is returned by assignment_conversion()\n");
+#endif
+  
   res = translate_to_il(res);
 
+#ifdef DEBUG
+  print_object(res); printf(" is returned by translate_to_il()\n");
+#endif
+  
   res = desugar_il(res);
 
+#ifdef DEBUG
+  print_object(res); printf(" is returned by desugar_il()\n");
+#endif
+  
   res = ren_transform(res, create_binding_env());
 
+#ifdef DEBUG
+  print_object(res); printf(" is returned by ren_transform()\n");
+#endif
+  
   res = simplify_il(res);
-  //print_object(res); printf("\n");
+
+#ifdef DEBUG
+  print_object(res); printf(" is returned by simplify_il()\n");
+#endif
   
   //res = convert_message_sends(res);
   
   res = mcps_transform(res);
-  //print_object(res); printf("\n");
+
+#ifdef DEBUG
+  print_object(res); printf(" is returned by mcps_transform()\n");
+#endif
 
   res = closure_conv_transform(res);
 
+#ifdef DEBUG
+  print_object(res); printf(" is returned by closure_conv_transform()\n");
+#endif
+  
   res = lift_transform(res, NIL);
 
+#ifdef DEBUG
+  print_object(res); printf(" is returned by lift_transform()\n");
+#endif
+  
   return res;
 }
 

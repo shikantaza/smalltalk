@@ -16,6 +16,10 @@ BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR);
 
 BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
+BOOLEAN IS_STRING_OBJECT(OBJECT_PTR);
+BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
+
+char *get_smalltalk_symbol_name(OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -325,6 +329,8 @@ void print_object(OBJECT_PTR obj_ptr)
 {
   if(IS_SYMBOL_OBJECT(obj_ptr))
     fprintf(stdout, "%s", get_symbol_name(obj_ptr));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(obj_ptr))
+    fprintf(stdout, "#%s", get_smalltalk_symbol_name(obj_ptr));
   else if(IS_INTEGER_OBJECT(obj_ptr))
     fprintf(stdout, "%d", get_int_value(obj_ptr));
   else if(IS_CONS_OBJECT(obj_ptr))
@@ -378,18 +384,13 @@ OBJECT_PTR build_symbol_object(int symbol_index)
 BOOLEAN is_atom(OBJECT_PTR obj)
 {
   //TODO: add other atomic objects
-  return IS_SYMBOL_OBJECT(obj) || IS_INTEGER_OBJECT(obj) || IS_CLASS_OBJECT(obj);
+  return IS_SYMBOL_OBJECT(obj) || IS_INTEGER_OBJECT(obj) || IS_CLASS_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj);
 }
 
 OBJECT_PTR clone_object(OBJECT_PTR obj)
 {
   OBJECT_PTR ret;
 
-#ifdef DEEP_DEBUG
-  print_object(obj);
-  fprintf(stdout, "\n");
-#endif
-  
   if(is_atom(obj) || IS_NATIVE_FN_OBJECT(obj) || IS_CLOSURE_OBJECT(obj))
     ret = obj; //atoms are immutable and are reused
   else

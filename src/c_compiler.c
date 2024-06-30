@@ -89,7 +89,7 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
 #else
   len += sprintf(buf+len, "#include <stdint.h>\n");
 #endif
-  
+
 //#if __aarch64__
 //  len += sprintf(buf+len, "typedef uintptr_t (*nativefn)();\n");
 //#else  

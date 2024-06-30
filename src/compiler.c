@@ -8,8 +8,10 @@
 
 #include "parser_header.h"
 #include "smalltalk.h"
+#include "util.h"
 
 package_t *compiler_package;
+package_t *smalltalk_symbols;
 
 //forward declarations
 OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *);
@@ -73,15 +75,17 @@ OBJECT_PTR SELF                         =  (OBJECT_PTR)((19 << OBJECT_SHIFT) + S
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
 
-BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == SYMBOL_TAG;         }
-BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == CONS_TAG;           }
-BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)        { return (x & BIT_MASK) == INTEGER_TAG;        }
-BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR x)      { return (x & BIT_MASK) == NATIVE_FN_TAG;      }
-BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR x)        { return (x & BIT_MASK) == CLOSURE_TAG;        }
-BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == TRUE_TAG;           }
-BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == FALSE_TAG;          }
-BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR x)          { return (x & BIT_MASK) == CLASS_OBJECT_TAG;   }
-BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == OBJECT_TAG;   }
+BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
+BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
+BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
+BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR x)                { return (x & BIT_MASK) == NATIVE_FN_TAG;                }
+BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == CLOSURE_TAG;                  }
+BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == TRUE_TAG;                     }
+BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR x)                    { return (x & BIT_MASK) == FALSE_TAG;                    }
+BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR x)                    { return (x & BIT_MASK) == CLASS_OBJECT_TAG;             }
+BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == OBJECT_TAG;                   }
+BOOLEAN IS_STRING_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == STRING_TAG;                   }
+BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == SMALLTALK_SYMBOL_TAG;         }
 
 OBJECT_PTR first(OBJECT_PTR x)    { return car(x); }
 OBJECT_PTR second(OBJECT_PTR x)   { return car(cdr(x)); }
@@ -100,8 +104,11 @@ int add_symbol(char *);
 
 void initialize_top_level();
 void create_Object();
+void create_Smalltalk();
 void create_Transcript();
 void create_Integer();
+
+int extract_symbol_index(OBJECT_PTR);
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -117,6 +124,48 @@ void add_symbol(char *symbol)
   compiler_package->symbols[compiler_package->nof_symbols - 1] = GC_strdup(symbol);  
 }
 */
+
+int add_smalltalk_symbol(char *sym)
+{
+  smalltalk_symbols->nof_symbols++;
+  
+  smalltalk_symbols->symbols = (char **)GC_REALLOC(smalltalk_symbols->symbols,
+						   smalltalk_symbols->nof_symbols * sizeof(char *));
+
+  smalltalk_symbols->symbols[smalltalk_symbols->nof_symbols - 1] = GC_strdup(sym);
+
+  return smalltalk_symbols->nof_symbols - 1;
+}
+
+OBJECT_PTR get_smalltalk_symbol(char *symbol)
+{
+  unsigned int n = smalltalk_symbols->nof_symbols;
+  unsigned int i;
+
+  for(i=0; i<n; i++)
+    if(!strcmp(smalltalk_symbols->symbols[i], symbol))
+      return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + (i << OBJECT_SHIFT) + SMALLTALK_SYMBOL_TAG);
+
+  add_smalltalk_symbol(symbol);
+  
+  return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + (n << OBJECT_SHIFT) + SMALLTALK_SYMBOL_TAG);
+  
+}
+
+char *get_smalltalk_symbol_name(OBJECT_PTR smalltalk_symbol_object)
+{
+  int symbol_index;
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(smalltalk_symbol_object))
+  {
+    error("get_smalltalk_symbol_name() passed a non-smalltalk-symbol object\n");
+    exit(1);
+  }
+
+  symbol_index = extract_symbol_index(smalltalk_symbol_object);
+  
+  return smalltalk_symbols->symbols[symbol_index];
+}
 
 OBJECT_PTR get_symbol(char *symbol)
 {
@@ -138,6 +187,10 @@ void initialize()
   compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
   compiler_package->name = GC_strdup("CORE");
   compiler_package->nof_symbols = 0;
+
+  smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
+  smalltalk_symbols->name = GC_strdup("SMALLTALK");
+  smalltalk_symbols->nof_symbols = 0;
   
   add_symbol("NIL");
   add_symbol("LET");
@@ -161,7 +214,7 @@ void initialize()
   add_symbol("self");
 
   create_Object();
-
+  create_Smalltalk();
   create_Transcript();
   
   //this was initally after the call to
@@ -599,9 +652,11 @@ OBJECT_PTR convert_symbol_literal_to_atom(char *s)
 
 OBJECT_PTR convert_selector_literal_to_atom(char *s)
 {
-  //error("Not implemented yet\n");
-  //return NIL;
-  return get_symbol(s);
+  char *stripped_selector = substring(s, 1, strlen(s)-1);
+
+  //TODO: need to unify pLisp symbol objects and
+  //Smalltalk symbol objects
+  return get_smalltalk_symbol(stripped_selector);
 }
 
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)

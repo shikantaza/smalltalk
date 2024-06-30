@@ -929,7 +929,8 @@ int main()
 #ifdef DEBUG
       print_object(exp); printf("\n");
 #endif
-      
+
+      /*
       if(is_create_class_exp(exp))
       {
         create_class(fifth(third(exp)), sixth(third(exp)));
@@ -943,6 +944,8 @@ int main()
         add_class_var(sixth(third(exp)), fifth(third(exp)));
       }
       else if(is_add_instance_method_exp(exp))
+      */
+      if(is_add_instance_method_exp(exp))
       {
         add_instance_method(seventh(third(exp)),
                             fifth(third(exp)),
@@ -965,7 +968,13 @@ int main()
   
 void repl()
 {
-  OBJECT_PTR res = apply_lisp_transforms(convert_exec_code_to_lisp(g_exp));
+  OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+
+#ifdef DEBUG
+  print_object(exp); printf(" is returned by convert_exec_code_to_lisp()\n");
+#endif
+  
+  OBJECT_PTR res = apply_lisp_transforms(exp);
 
 #ifdef DEBUG
   print_object(res);
@@ -1094,9 +1103,9 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
      third(third_obj) == get_symbol(msg) &&
-     IS_SYMBOL_OBJECT(fifth(third_obj)) &&
+     IS_SMALLTALK_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_CONS_OBJECT(sixth(third_obj)) && //TODO: maybe some stronger checks?
-     IS_SYMBOL_OBJECT(seventh(third_obj)))
+     IS_SMALLTALK_SYMBOL_OBJECT(seventh(third_obj)))
     return true;
   else
     return false;  
