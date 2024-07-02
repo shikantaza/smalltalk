@@ -38,6 +38,7 @@ OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
 
 char *get_smalltalk_symbol_name(OBJECT_PTR);
+OBJECT_PTR get_smalltalk_symbol(char *);
 
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
@@ -184,6 +185,13 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   nativefn nf = (nativefn)extract_native_fn(cont);
   
   return nf(cont, class_object);
+}
+
+OBJECT_PTR create_class_no_parent_class(OBJECT_PTR closure,
+					OBJECT_PTR class_sym,
+					OBJECT_PTR cont)
+{
+  return create_class(closure, class_sym, get_smalltalk_symbol("Object"), cont);
 }
 
 OBJECT_PTR add_instance_var(OBJECT_PTR closure,
@@ -661,6 +669,24 @@ void create_Object()
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
 
+OBJECT_PTR create_global(OBJECT_PTR closure,
+			 OBJECT_PTR global_sym,
+			 OBJECT_PTR global_val,
+			 OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_SMALLTALK_SYMBOL_OBJECT(global_sym));
+  assert(IS_CLOSURE_OBJECT(cont));
+  
+  add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  OBJECT_PTR ret = nf(cont, global_val);
+
+  return ret;
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -688,7 +714,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 3;
+  cls_obj->class_methods->count = 5;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -697,11 +723,17 @@ void create_Smalltalk()
   cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:");
   cls_obj->class_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)create_class), NIL);
 
-  cls_obj->class_methods->bindings[1].key = get_symbol("addInstanceVariable:toClass:");
-  cls_obj->class_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)add_instance_var), NIL);
+  cls_obj->class_methods->bindings[1].key = get_symbol("createClass:");
+  cls_obj->class_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)create_class_no_parent_class), NIL);
+  
+  cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:");
+  cls_obj->class_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)add_instance_var), NIL);
 
-  cls_obj->class_methods->bindings[2].key = get_symbol("addClassVariable:toClass:");
-  cls_obj->class_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)add_class_var), NIL);
+  cls_obj->class_methods->bindings[3].key = get_symbol("addClassVariable:toClass:");
+  cls_obj->class_methods->bindings[3].val = cons(convert_native_fn_to_object((nativefn)add_class_var), NIL);
 
+  cls_obj->class_methods->bindings[4].key = get_symbol("createGlobal:valued:");
+  cls_obj->class_methods->bindings[4].val = cons(convert_native_fn_to_object((nativefn)create_global), NIL);
+  
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
