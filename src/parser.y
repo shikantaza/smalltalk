@@ -68,6 +68,13 @@ extern OBJECT_PTR g_test;
 
 OBJECT_PTR idclo;
 
+int set_up_new_yyin(FILE *);
+void pop_yyin();
+
+int open_square_brackets;
+
+void print_executable_code(executable_code_t *);
+
 %}
 
 %union{
@@ -124,6 +131,8 @@ OBJECT_PTR idclo;
 %token                           T_HASH
 %token                           T_MINUS
 
+%token                           END_OF_FILE
+
 %type <exec_code_value>          executable_code
 %type <temporaries_value>        temporaries
 %type <statement_value>          statements
@@ -167,8 +176,11 @@ executable_code:
       exec_code->temporaries = $1;
       exec_code->statements = $2;
       $$ = exec_code;
-      g_exp = $$;
-      YYACCEPT;
+      if(open_square_brackets == 0)
+      {
+	g_exp = $$;
+	YYACCEPT;
+      }
     }
     |
     temporaries
@@ -177,7 +189,11 @@ executable_code:
       exec_code->temporaries = $1;
       exec_code->statements = NULL;
       $$ = exec_code;
-      g_exp = $$;
+      if(open_square_brackets == 0)
+      {
+	g_exp = $$;
+	YYACCEPT;
+      }
     }
     |
     statements
@@ -186,7 +202,11 @@ executable_code:
       exec_code->temporaries = NULL;
       exec_code->statements = $1;
       $$ = exec_code;
-      g_exp = $$;
+      if(open_square_brackets == 0)
+      {
+	g_exp = $$;
+	YYACCEPT;
+      }
     }
     ;
 
@@ -376,34 +396,40 @@ primary:
     ;
 
 block_constructor:
-    T_LEFT_SQUARE_BRACKET block_argument block_arguments T_VERTICAL_BAR executable_code T_RIGHT_SQUARE_BRACKET
+    T_LEFT_SQUARE_BRACKET
+    { open_square_brackets++; }
+    block_argument block_arguments
+    T_VERTICAL_BAR
+    executable_code
+    T_RIGHT_SQUARE_BRACKET
+    { open_square_brackets--; }
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = BLOCK_ARGS;
 
-      block_arguments_t *block_args = (block_arguments_t *)GC_MALLOC((1 + $3->nof_args) *
+      block_arguments_t *block_args = (block_arguments_t *)GC_MALLOC((1 + $4->nof_args) *
                                                                      sizeof(block_arguments_t));
-      block_args->nof_args = 1 + $3->nof_args;
+      block_args->nof_args = 1 + $4->nof_args;
       block_args->identifiers = (char **)GC_MALLOC(block_args->nof_args * sizeof(char *));
       
-      block_args->identifiers[0] = GC_strdup($2);
+      block_args->identifiers[0] = GC_strdup($3);
 
       int i;
 
-      for(i=0; i<$3->nof_args; i++)
-        block_args->identifiers[i+1] = GC_strdup($3->identifiers[i]);
+      for(i=0; i<$4->nof_args; i++)
+        block_args->identifiers[i+1] = GC_strdup($4->identifiers[i]);
 
       blk_cons->block_args = block_args;
-      blk_cons->exec_code = $5;
+      blk_cons->exec_code = $6;
       $$ = blk_cons;
     }
     |
-    T_LEFT_SQUARE_BRACKET executable_code T_RIGHT_SQUARE_BRACKET
+    T_LEFT_SQUARE_BRACKET {open_square_brackets++; }executable_code T_RIGHT_SQUARE_BRACKET { open_square_brackets--; }
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = NO_BLOCK_ARGS;
       blk_cons->block_args = NULL;
-      blk_cons->exec_code = $2;
+      blk_cons->exec_code = $3;
       $$ = blk_cons;
     }
     ;
@@ -884,11 +910,128 @@ void yyerror(const char *s) {
     //exit(1);
 }
 
+void repl2()
+{
+  OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+
+#ifdef DEBUG
+  print_object(exp); printf("\n");
+#endif
+
+  /*
+    if(is_create_class_exp(exp))
+    {
+    create_class(fifth(third(exp)), sixth(third(exp)));
+    }
+    else if(is_add_instance_var_exp(exp))
+    {
+    add_instance_var(sixth(third(exp)), fifth(third(exp)));
+    }
+    else if(is_add_class_var_exp(exp))
+    {
+    add_class_var(sixth(third(exp)), fifth(third(exp)));
+    }
+    else if(is_add_instance_method_exp(exp))
+  */
+  if(is_add_instance_method_exp(exp))
+  {
+    add_instance_method(seventh(third(exp)),
+			fifth(third(exp)),
+			list(3, LET, NIL, sixth(third(exp))));
+                            
+  }
+  else if(is_add_class_method_exp(exp))
+  {
+    add_class_method(seventh(third(exp)),
+		     fifth(third(exp)),
+		     list(3, LET, NIL, sixth(third(exp))));
+  }
+  else
+    repl();
+}
+
+void parse_from_fp(FILE *fp)
+{
+  char buf[1024];
+  char *line = NULL;
+
+  unsigned int len;
+  int nbytes = 100;
+
+  BOOLEAN eof = 0;
+  
+  while(eof != -1)
+  {
+    memset(buf, '\0', 1024);
+    len = 0;
+    
+    while(1)
+    {
+      line = (char *)GC_MALLOC((nbytes + 1) * sizeof(char));
+      eof = getline(&line, (size_t *)&nbytes, fp);
+    
+      if(!strcmp(line, "\n") || eof == -1)
+	 break;
+
+      len += sprintf(buf+len, "%s", line);
+    }
+
+    if(strlen(buf) == 0)
+      break;
+    
+    yy_scan_string(buf);
+    if(!yyparse())
+    {
+      print_executable_code(g_exp); printf("\n");
+      repl2();
+    }
+
+    if(eof == -1)
+      break;
+  }
+}
+
+void load_core_library()
+{
+  printf("Loading core library...");
+
+  FILE *fp = fopen("smalltalk.st", "r");
+
+  assert(fp);
+
+  parse_from_fp(fp);
+  
+  /*
+  if(set_up_new_yyin(fp))
+  {
+    printf("set_up_new_yyin() failed\n");
+    return;
+  }
+
+  while(!yyparse()) //TODO: add check for exceptions/errors
+  {
+    print_executable_code(g_exp);printf("\n");
+    repl2();
+  }
+
+  pop_yyin();
+  */
+  
+  fclose(fp);
+  
+  printf("done.\n");
+}
+
 #ifndef LEX
 int main()
 {
   initialize();  
 
+  load_core_library();
+
+  //TODO: get this parsing too done
+  //by parser_from_fp()
+  
   char buf[1024];
   char *line = NULL;
 
@@ -924,42 +1067,8 @@ int main()
     yy_scan_string(buf);
     if(!yyparse())
     {
-      OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
-
-#ifdef DEBUG
-      print_object(exp); printf("\n");
-#endif
-
-      /*
-      if(is_create_class_exp(exp))
-      {
-        create_class(fifth(third(exp)), sixth(third(exp)));
-      }
-      else if(is_add_instance_var_exp(exp))
-      {
-        add_instance_var(sixth(third(exp)), fifth(third(exp)));
-      }
-      else if(is_add_class_var_exp(exp))
-      {
-        add_class_var(sixth(third(exp)), fifth(third(exp)));
-      }
-      else if(is_add_instance_method_exp(exp))
-      */
-      if(is_add_instance_method_exp(exp))
-      {
-        add_instance_method(seventh(third(exp)),
-                            fifth(third(exp)),
-                            list(3, LET, NIL, sixth(third(exp))));
-                            
-      }
-      else if(is_add_class_method_exp(exp))
-      {
-        add_class_method(seventh(third(exp)),
-                         fifth(third(exp)),
-                         list(3, LET, NIL, sixth(third(exp))));
-      }
-      else
-        repl();
+      print_executable_code(g_exp); printf("\n");
+      repl2();
     }
   }
 

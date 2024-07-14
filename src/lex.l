@@ -9,6 +9,45 @@
 #include "parser_header.h"
 #include "parser.h"
 
+#define MAX_INCLUDE_DEPTH 10
+
+YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
+
+int include_stack_ptr = 0;
+
+int set_up_new_yyin(FILE *fp)
+{
+  if (include_stack_ptr >= MAX_INCLUDE_DEPTH)
+  {
+    fprintf(stderr, "LOAD-FILEs nested too deeply");
+    return 1;
+  }
+
+  include_stack[include_stack_ptr] = YY_CURRENT_BUFFER;
+
+  include_stack_ptr++;
+
+  yy_switch_to_buffer(yy_create_buffer(fp, YY_BUF_SIZE));
+
+  return 0;
+}
+
+void pop_yyin()
+{
+  include_stack_ptr--;
+
+  if(include_stack_ptr == 0)
+  {
+    yyin = stdin;
+    yyrestart(yyin);
+  }
+  else
+  {
+    yy_delete_buffer(YY_CURRENT_BUFFER);
+    yy_switch_to_buffer(include_stack[include_stack_ptr]);
+  }
+}
+
 %}
 
 /* to avoid warning related to 'yyunput' being defined but not used */
