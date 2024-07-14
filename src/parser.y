@@ -75,6 +75,8 @@ int open_square_brackets;
 
 void print_executable_code(executable_code_t *);
 
+BOOLEAN loading_core_library;
+
 %}
 
 %union{
@@ -982,7 +984,6 @@ void parse_from_fp(FILE *fp)
     yy_scan_string(buf);
     if(!yyparse())
     {
-      print_executable_code(g_exp); printf("\n");
       repl2();
     }
 
@@ -993,6 +994,8 @@ void parse_from_fp(FILE *fp)
 
 void load_core_library()
 {
+  loading_core_library = true;
+  
   printf("Loading core library...");
 
   FILE *fp = fopen("smalltalk.st", "r");
@@ -1020,6 +1023,8 @@ void load_core_library()
   fclose(fp);
   
   printf("done.\n");
+
+  loading_core_library = false;
 }
 
 #ifndef LEX
@@ -1067,7 +1072,6 @@ int main()
     yy_scan_string(buf);
     if(!yyparse())
     {
-      print_executable_code(g_exp); printf("\n");
       repl2();
     }
   }
@@ -1123,9 +1127,14 @@ void repl()
 
   nativefn1 nf1 = (nativefn1)nf;
 
-  printf("\n");
-  print_object(nf1(closure_form, idclo));
-  printf("\n");
+  if(loading_core_library == false)
+  {
+    printf("\n");
+    print_object(nf1(closure_form, idclo));
+    printf("\n");
+  }
+  else
+    nf1(closure_form, idclo);    
 }
 
 //this too could have been brought under

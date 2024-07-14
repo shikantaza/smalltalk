@@ -384,7 +384,7 @@ OBJECT_PTR build_symbol_object(int symbol_index)
 BOOLEAN is_atom(OBJECT_PTR obj)
 {
   //TODO: add other atomic objects
-  return IS_SYMBOL_OBJECT(obj) || IS_INTEGER_OBJECT(obj) || IS_CLASS_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj);
+  return IS_SYMBOL_OBJECT(obj) || IS_INTEGER_OBJECT(obj) || IS_CLASS_OBJECT(obj) || IS_OBJECT_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj);
 }
 
 OBJECT_PTR clone_object(OBJECT_PTR obj)

@@ -420,8 +420,10 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   
   OBJECT_PTR nfo = convert_native_fn_to_object(extract_native_fn(result_closure));
 
+#ifdef DEBUG  
   print_object(closed_vals); printf("\n");
-
+#endif
+  
   OBJECT_PTR class_object_val, class_object;
 
   //assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));
@@ -602,7 +604,7 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
 
     unsigned int n = curr_cls_obj->nof_instance_vars;
     unsigned int i;
-    printf("n = %d\n", n);
+
     if(n > 0)
     {
       unsigned int prev_count = obj->instance_vars->count;
