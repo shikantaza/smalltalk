@@ -133,16 +133,20 @@ void create_Integer()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("+");
-  cls_obj->instance_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)plus), NIL);
+  cls_obj->instance_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)plus),
+						    cons(convert_int_to_object(1), NIL));
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("-");
-  cls_obj->instance_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)minus), NIL);
-
+  cls_obj->instance_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)minus),
+						    cons(convert_int_to_object(1), NIL));
+  
   cls_obj->instance_methods->bindings[2].key = get_symbol("*");
-  cls_obj->instance_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)times), NIL);
+  cls_obj->instance_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)times),
+						    cons(convert_int_to_object(1), NIL));
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("/");
-  cls_obj->instance_methods->bindings[3].val = cons(convert_native_fn_to_object((nativefn)divided_by), NIL);
+  cls_obj->instance_methods->bindings[3].val = cons(convert_native_fn_to_object((nativefn)divided_by),
+						    cons(convert_int_to_object(1), NIL));
   
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;

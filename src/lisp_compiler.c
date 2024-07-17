@@ -1402,3 +1402,35 @@ OBJECT_PTR lift_transform(OBJECT_PTR exp, OBJECT_PTR bindings)
                 cdr(cdr_res));
   }
 }
+
+//this function takes the result of the
+//apply_lisp_transforms() function
+//and returns the arity of the native function
+//underlying the closure represented
+//by the transform. The arity (after conversion
+//to an OBJECT_PTR) is appended to the closure
+//object (after the closed vals) and is used
+//for figuring out what type of block closure
+//the closure represents (NiladicBlock, etc.) and
+//for validating message sends.
+OBJECT_PTR extract_arity(OBJECT_PTR sexp)
+{
+  OBJECT_PTR closure_sym = third(first(sexp));
+  OBJECT_PTR lambdas = cdr(sexp);
+  OBJECT_PTR lambda;
+
+  while(lambdas != NIL)
+  {
+    lambda = car(lambdas);
+
+    if(car(lambda) == closure_sym)
+      return convert_int_to_object(cons_length(second(lambda))-2);
+    
+    lambdas = cdr(lambdas);
+  }
+
+  assert(false);
+
+  //TODO: control will not reach here actually. handle this better
+  return 0;
+}

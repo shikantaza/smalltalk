@@ -149,6 +149,11 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 #ifdef DEBUG
   print_object(method); printf(" is returned by method_lookup()\n");
 #endif  
+
+  if(count1 != car(last_cell(cdr(method))))
+  {
+    assert(false);
+  }
   
   native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
   nativefn nf = nfobj->nf;
@@ -156,7 +161,11 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
   OBJECT_PTR closed_vars = cdr(method);
   OBJECT_PTR ret = NIL;
-  OBJECT_PTR rest = closed_vars;
+  
+  //OBJECT_PTR rest = closed_vars;
+  //to discard the arity value which is at the end
+  //TODO: replace with a more efficient way
+  OBJECT_PTR rest = reverse(cdr(reverse(closed_vars)));
 
   binding_env_t *env = NULL;
   

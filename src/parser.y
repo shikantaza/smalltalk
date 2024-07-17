@@ -73,9 +73,11 @@ void pop_yyin();
 
 int open_square_brackets;
 
-void print_executable_code(executable_code_t *);
+//void print_executable_code(executable_code_t *);
 
 BOOLEAN loading_core_library;
+
+OBJECT_PTR extract_arity(OBJECT_PTR);
 
 %}
 
@@ -1116,7 +1118,7 @@ void repl()
     rest = cdr(rest);
   }  
 
-  OBJECT_PTR lst_form = concat(2, list(1, nfo), reverse(ret));
+  OBJECT_PTR lst_form = concat(3, list(1, nfo), reverse(ret), list(1, extract_arity(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   idclo = create_closure(convert_int_to_object(0),
