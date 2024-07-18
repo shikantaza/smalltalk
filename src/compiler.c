@@ -107,6 +107,7 @@ void create_Object();
 void create_Smalltalk();
 void create_Transcript();
 void create_Integer();
+void create_NiladicBlock();
 
 int extract_symbol_index(OBJECT_PTR);
 
@@ -222,6 +223,8 @@ void initialize()
   //was thrown in the generated code.
   //moving this here made that error go away.
   create_Integer();
+
+  create_NiladicBlock();
 
   initialize_top_level();
 }

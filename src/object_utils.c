@@ -32,6 +32,8 @@ extern package_t *compiler_package;
 
 extern OBJECT_PTR Integer;
 
+extern OBJECT_PTR NiladicBlock;
+
 OBJECT_PTR Symbol;
 OBJECT_PTR Boolean;
 
@@ -336,7 +338,7 @@ void print_object(OBJECT_PTR obj_ptr)
   else if(IS_CONS_OBJECT(obj_ptr))
     print_cons_object(obj_ptr);
   else if(IS_CLOSURE_OBJECT(obj_ptr))
-    fprintf(stdout, "#<CLOSURE %p> ", (void *)obj_ptr);
+    fprintf(stdout, "#<CLOSURE %p>", (void *)obj_ptr);
   else if(IS_CLASS_OBJECT(obj_ptr))
     fprintf(stdout, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
   //fprintf(stdout, "#<CLASS %p>", (void *)obj_ptr);
@@ -549,6 +551,12 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
     return Boolean;
   else if(IS_FALSE_OBJECT(obj))
     return Boolean;
+  else if(IS_CLOSURE_OBJECT(obj))
+  {
+    //TODO: once MonadicBlock and other classes are defined
+    //get arity from closure and return the correct class
+    return NiladicBlock;
+  }
   else
     return ((object_t *)extract_ptr(obj))->class_object;
 }

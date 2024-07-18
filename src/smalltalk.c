@@ -50,6 +50,7 @@ extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR Transcript;
+extern OBJECT_PTR NiladicBlock;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -100,6 +101,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
+  add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
