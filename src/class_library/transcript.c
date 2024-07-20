@@ -12,7 +12,7 @@ OBJECT_PTR convert_int_to_object(int);
 int get_int_value(OBJECT_PTR);
 
 OBJECT_PTR get_symbol(char *);
-OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
+//OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
 OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
 OBJECT_PTR convert_native_fn_to_object(nativefn);
 

@@ -101,7 +101,7 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   len += sprintf(buf+len, "void set_most_recent_closure(uintptr_t);\n");
   len += sprintf(buf+len, "nativefn extract_native_fn(uintptr_t);\n");
 
-  len += sprintf(buf+len, "uintptr_t create_closure(uintptr_t, nativefn, ...);\n");
+  len += sprintf(buf+len, "uintptr_t create_closure(uintptr_t, uintptr_t, nativefn, ...);\n");
 
   //len += sprintf(buf+len, "uintptr_t message_send(uintptr_t, uintptr_t, uintptr_t, ...);\n");  
   //len += sprintf(buf+len, "uintptr_t method_lookup(uintptr_t, uintptr_t);\n");
@@ -278,7 +278,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
         if(is_atom(car(rest)))
         {
           char *arg_name = extract_variable_string(car(rest), serialize_flag);
-          len += sprintf(buf+len, "%s%s", (i == 1 && !strcmp(var, "create_closure")) ? "(nativefn)" : "", arg_name);
+          len += sprintf(buf+len, "%s%s", (i == 2 && !strcmp(var, "create_closure")) ? "(nativefn)" : "", arg_name);
           //if(i == 1 && !strcmp(var, "create_closure"))
           //  len += sprintf(buf+len, "convert_native_fn_to_object((nativefn)%s)", arg_name);
           //else

@@ -28,7 +28,7 @@ nativefn get_function(void *, const char *);
 char *extract_variable_string(OBJECT_PTR, BOOLEAN);
 OBJECT_PTR convert_native_fn_to_object(nativefn);
 
-OBJECT_PTR create_closure(OBJECT_PTR, nativefn);
+OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn);
 nativefn extract_native_fn(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
@@ -396,7 +396,7 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
 
   void *state = compile_to_c(res);
 
-  char *fname = extract_variable_string(third(first(res)), true);
+  char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
 
@@ -412,7 +412,8 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   OBJECT_PTR lst_form = concat(2, list(1, convert_native_fn_to_object(nf)), closed_vals);
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(0),
+  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+                                    convert_int_to_object(0),
                                     (nativefn)identity_function);
 
   assert(IS_CLOSURE_OBJECT(idclo));
@@ -449,10 +450,10 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
     if(cls_obj->instance_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods->bindings[i].val = concat(3,
+      cls_obj->instance_methods->bindings[i].val = concat(2,
 							  list(1, nfo),
-							  closed_vals,
-							  list(1, convert_int_to_object(cons_length(second(third(code))))));
+							  closed_vals);
+      //list(1, convert_int_to_object(cons_length(second(third(code))))));
       break;
     }
 
@@ -472,10 +473,10 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
     
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].val =
-      concat(3,
+      concat(2,
 	     list(1, nfo),
-	     closed_vals,
-	     list(1, convert_int_to_object(cons_length(second(third(code))))));
+	     closed_vals);
+    //list(1, convert_int_to_object(cons_length(second(third(code))))));
   }
 }
 
@@ -512,7 +513,7 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   
   void *state = compile_to_c(res);
 
-  char *fname = extract_variable_string(third(first(res)), true);
+  char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
 
@@ -528,7 +529,8 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   OBJECT_PTR lst_form = concat(2, list(1, convert_native_fn_to_object(nf)), closed_vals);
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(0),
+  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+                                    convert_int_to_object(0),
                                     (nativefn)identity_function);
 
   assert(IS_CLOSURE_OBJECT(idclo));
@@ -565,10 +567,10 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
     if(cls_obj->class_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods->bindings[i].val = concat(3,
+      cls_obj->class_methods->bindings[i].val = concat(2,
 						       list(1, nfo),
-						       closed_vals,
-						       list(1, convert_int_to_object(cons_length(second(third(code))))));
+						       closed_vals);
+      //list(1, convert_int_to_object(cons_length(second(third(code))))));
       break;
     }
 
@@ -588,10 +590,10 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].val =
-      concat(3,
+      concat(2,
 	     list(1, nfo),
-	     closed_vals,
-	     list(1, convert_int_to_object(cons_length(second(third(code))))));
+	     closed_vals);
+    //list(1, convert_int_to_object(cons_length(second(third(code))))));
   }
 }
 

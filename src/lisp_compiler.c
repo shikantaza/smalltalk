@@ -1212,8 +1212,9 @@ OBJECT_PTR closure_conv_transform_abs_cont(OBJECT_PTR exp)
   OBJECT_PTR iclo = gensym();
 
   if(free_ids == NIL)
-    return concat(3,
+    return concat(4,
                   list(1, CREATE_CLOSURE),
+		  list(1, convert_int_to_object(cons_length(second(exp))-1)),
                   list(1, convert_int_to_object(0)),
                   list(1,list(4,
                               LAMBDA,
@@ -1224,8 +1225,9 @@ OBJECT_PTR closure_conv_transform_abs_cont(OBJECT_PTR exp)
                               closure_conv_transform(fourth(exp)))));
   else
   {
-    return concat(4,
+    return concat(5,
                   list(1, CREATE_CLOSURE),
+		  list(1, convert_int_to_object(cons_length(second(exp))-1)),
                   list(1, convert_int_to_object(cons_length(free_ids))),
                   list(1,
                        list(4,
@@ -1247,8 +1249,9 @@ OBJECT_PTR closure_conv_transform_abs_no_cont(OBJECT_PTR exp)
   OBJECT_PTR iclo = gensym();
 
   if(free_ids == NIL)
-    return concat(3,
+    return concat(4,
                   list(1, CREATE_CLOSURE),
+		  list(1, convert_int_to_object(cons_length(second(exp))-1)),
                   list(1, convert_int_to_object(0)),
                   list(1,list(3,
                               LAMBDA,
@@ -1258,9 +1261,10 @@ OBJECT_PTR closure_conv_transform_abs_no_cont(OBJECT_PTR exp)
                               closure_conv_transform(third(exp)))));
   else
   {
-    return concat(4,
+    return concat(5,
                   list(1, CREATE_CLOSURE),
-                  list(1, convert_int_to_object(cons_length(free_ids))),
+ 		  list(1, convert_int_to_object(cons_length(second(exp))-1)),
+		  list(1, convert_int_to_object(cons_length(free_ids))),
                   list(1,
                        list(3,
                             LAMBDA,
@@ -1282,12 +1286,16 @@ OBJECT_PTR closure_conv_transform_let(OBJECT_PTR exp)
   return list(3,
               LET1,
               list(2,
-                   list(2, icode, third(exp1)),
+                   list(2, icode, fourth(exp1)),
                    list(2, 
                         first(first(second(exp))),
                         concat(2,
-                               list(3, CREATE_CLOSURE, convert_int_to_object(cons_length(CDDDR(exp1))), icode),
-                               CDDDR(exp1)))),
+                               list(4,
+				    CREATE_CLOSURE,
+				    convert_int_to_object(cons_length(second(fourth(exp1)))-2),
+				    convert_int_to_object(cons_length(cdr(CDDDR(exp1)))),
+				    icode),
+                               cdr(CDDDR(exp1))))),
               closure_conv_transform(third(exp)));
 }
 

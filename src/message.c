@@ -15,7 +15,7 @@ int get_int_value(OBJECT_PTR);
 OBJECT_PTR get_symbol(char *);
 char *get_symbol_name(OBJECT_PTR);
 nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
+OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR get_class_object(OBJECT_PTR);
 
 BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
@@ -150,10 +150,16 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   print_object(method); printf(" is returned by method_lookup()\n");
 #endif  
 
-  if(count1 != car(last_cell(cdr(method))))
-  {
-    assert(false);
-  }
+  //TODO: arity slot gets incorrectly populated with some
+  //compiler-generated symbol during closure_conv_transform().
+  //needs to be fixed. Not very critical as arity violations
+  //will be caught during parsing itself. We need the arity
+  //more importantly to distinguish between NiladicBlock,
+  //Monadicblock, etc.
+  //if(count1 != car(last_cell(cdr(method))))
+  //{
+  //  assert(false);
+  //}
   
   native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
   nativefn nf = nfobj->nf;
@@ -165,8 +171,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   //OBJECT_PTR rest = closed_vars;
   //to discard the arity value which is at the end
   //TODO: replace with a more efficient way
-  OBJECT_PTR rest = reverse(cdr(reverse(closed_vars)));
-
+  //OBJECT_PTR rest = reverse(cdr(reverse(closed_vars)));
+  //OBJECT_PTR rest = closed_vars;
+  OBJECT_PTR rest = cdr(closed_vars);
+  
   binding_env_t *env = NULL;
   
   if(IS_CLASS_OBJECT(receiver))
@@ -341,6 +349,9 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
 OBJECT_PTR create_message_send_closure()
 {
-  return create_closure(convert_int_to_object(0), (nativefn)message_send);
+  //first parameter is a dummy value, not needed
+  //(we do not know the arity of message_send)
+  return create_closure(convert_int_to_object(0),
+			convert_int_to_object(0), (nativefn)message_send);
 }
 

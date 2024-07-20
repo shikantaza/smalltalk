@@ -338,7 +338,16 @@ void print_object(OBJECT_PTR obj_ptr)
   else if(IS_CONS_OBJECT(obj_ptr))
     print_cons_object(obj_ptr);
   else if(IS_CLOSURE_OBJECT(obj_ptr))
-    fprintf(stdout, "#<CLOSURE %p>", (void *)obj_ptr);
+  {
+    OBJECT_PTR lst_form = extract_ptr(obj_ptr) + CONS_TAG;
+    int arity = get_int_value(car(reverse(lst_form)));
+    if(arity == 0)
+      fprintf(stdout, "#<CLOSURE %p> (a NiladicBlock)", (void *)obj_ptr);
+    else if(arity == 1)
+      fprintf(stdout, "#<CLOSURE %p> (a MonadicBlock)", (void *)obj_ptr);
+    else
+      fprintf(stdout, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
+  }
   else if(IS_CLASS_OBJECT(obj_ptr))
     fprintf(stdout, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
   //fprintf(stdout, "#<CLASS %p>", (void *)obj_ptr);
@@ -499,10 +508,14 @@ OBJECT_PTR identity_function(OBJECT_PTR closure, ...)
   return ret;
 }
 
-OBJECT_PTR create_closure(OBJECT_PTR count1, nativefn fn, ...)
+OBJECT_PTR create_closure(OBJECT_PTR arg_count, OBJECT_PTR count1, nativefn fn, ...)
 {
   va_list ap;
 
+#ifdef DEBUG  
+  printf("Entering create_closure()\n");
+#endif
+  
   va_start(ap, fn);
 
   OBJECT_PTR fnobj = convert_native_fn_to_object(fn);
@@ -530,14 +543,20 @@ OBJECT_PTR create_closure(OBJECT_PTR count1, nativefn fn, ...)
     set_heap(ptr, 1, cons(closed_object, NIL));
   }
 
+  //store the arity
+  uintptr_t ptr = extract_ptr(last_cell(ret));
+  set_heap(ptr, 1, cons(arg_count, NIL));
+  
   ret = extract_ptr(ret) + CLOSURE_TAG;
 
   assert(IS_CLOSURE_OBJECT(ret));
 
   va_end(ap);
 
-  //print_object(ret); printf(" is returned by create_closure()\n");
-
+#ifdef DEBUG  
+  print_object(ret); printf(" is returned by create_closure()\n");
+#endif
+  
   return ret;  
 }
 

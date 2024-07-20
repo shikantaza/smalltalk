@@ -30,7 +30,7 @@ char *extract_variable_string(OBJECT_PTR, BOOLEAN);
 OBJECT_PTR convert_native_fn_to_object(nativefn);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
 OBJECT_PTR convert_int_to_object(int);
-OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
+OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR cons(OBJECT_PTR, OBJECT_PTR);
 
 OBJECT_PTR get_symbol(char *);
@@ -1098,7 +1098,7 @@ void repl()
   
   void *state = compile_to_c(res);
 
-  char *fname = extract_variable_string(third(first(res)), true);
+  char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
 
@@ -1106,8 +1106,9 @@ void repl()
   
   OBJECT_PTR nfo = convert_native_fn_to_object(nf);
 
-  OBJECT_PTR closed_vals = CDDDR(first(res));
-
+  //OBJECT_PTR closed_vals = CDDDR(first(res));
+  OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
+  
   OBJECT_PTR rest = closed_vals;
   OBJECT_PTR ret = NIL;
 
@@ -1118,10 +1119,11 @@ void repl()
     rest = cdr(rest);
   }  
 
-  OBJECT_PTR lst_form = concat(3, list(1, nfo), reverse(ret), list(1, extract_arity(res)));
+  OBJECT_PTR lst_form = concat(2, list(1, nfo), reverse(ret));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  idclo = create_closure(convert_int_to_object(0),
+  idclo = create_closure(convert_int_to_object(1),
+			 convert_int_to_object(0),
                          (nativefn)identity_function);
 
   assert(IS_CLOSURE_OBJECT(idclo));
