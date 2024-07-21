@@ -207,7 +207,7 @@ void initialize()
   add_symbol("SAVE-CONTINUATION");
   add_symbol("GET-CONTINUATION");
   add_symbol("SAVE-CONTINUATION-TO-RESUME");
-  add_symbol("NTH");
+  add_symbol("NTH-CLOSED-VAL");
   add_symbol("CREATE-CLOSURE");
   add_symbol("EXTRACT-NATIVE-FN");
   add_symbol("METHOD-LOOKUP");

@@ -75,12 +75,16 @@ void create_NiladicBlock()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("argumentCount");
-  cls_obj->instance_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)niladic_block_arg_count),
-						    cons(convert_int_to_object(0), NIL));
+  cls_obj->instance_methods->bindings[0].val = list(3,
+						    convert_native_fn_to_object((nativefn)niladic_block_arg_count),
+						    NIL,
+						    convert_int_to_object(0));
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("value");
-  cls_obj->instance_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)niladic_block_value),
-						    cons(convert_int_to_object(0), NIL));
+  cls_obj->instance_methods->bindings[1].val = list(3,
+						    convert_native_fn_to_object((nativefn)niladic_block_value),
+						    NIL,
+						    convert_int_to_object(0));
   
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;

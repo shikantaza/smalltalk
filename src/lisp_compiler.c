@@ -1196,6 +1196,16 @@ OBJECT_PTR nth(OBJECT_PTR n, OBJECT_PTR lst)
   }
 }
 
+//used in generated code. the symbol is NTH, but the function
+//is nth_closed_val
+OBJECT_PTR nth_closed_val(OBJECT_PTR n, OBJECT_PTR closure)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  OBJECT_PTR lst_form = extract_ptr(closure) + CONS_TAG;
+  return nth(convert_int_to_object(get_int_value(n)-1), second(lst_form));
+}
+
+
 OBJECT_PTR temp12(OBJECT_PTR x, OBJECT_PTR v1, OBJECT_PTR v2)
 {
   return list(2,

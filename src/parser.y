@@ -1119,7 +1119,7 @@ void repl()
     rest = cdr(rest);
   }  
 
-  OBJECT_PTR lst_form = concat(2, list(1, nfo), reverse(ret));
+  OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   idclo = create_closure(convert_int_to_object(1),

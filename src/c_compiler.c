@@ -96,7 +96,8 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   len += sprintf(buf+len, "typedef uintptr_t (*nativefn)(uintptr_t, ...);\n");
 //#endif
   
-  len += sprintf(buf+len, "uintptr_t nth(uintptr_t, uintptr_t);\n");
+  //len += sprintf(buf+len, "uintptr_t nth(uintptr_t, uintptr_t);\n");
+  len += sprintf(buf+len, "uintptr_t nth_closed_val(uintptr_t, uintptr_t);\n");
   len += sprintf(buf+len, "void save_continuation(uintptr_t);\n");
   len += sprintf(buf+len, "void set_most_recent_closure(uintptr_t);\n");
   len += sprintf(buf+len, "nativefn extract_native_fn(uintptr_t);\n");

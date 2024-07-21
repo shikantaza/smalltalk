@@ -533,20 +533,27 @@ OBJECT_PTR create_closure(OBJECT_PTR arg_count, OBJECT_PTR count1, nativefn fn, 
   //if(!count)
   //  return NIL;
 
-  ret = cons(fnobj, NIL);
+  //ret = cons(fnobj, NIL);
+  ret = NIL;
 
   for(i=0; i<count; i++)
   {
     closed_object = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
     //print_object(closed_object); printf("^^^^^\n");
-    uintptr_t ptr = extract_ptr(last_cell(ret));
-    set_heap(ptr, 1, cons(closed_object, NIL));
+    //uintptr_t ptr = extract_ptr(last_cell(ret));
+    //set_heap(ptr, 1, cons(closed_object, NIL));
+    ret = cons(closed_object, ret); 
   }
 
   //store the arity
-  uintptr_t ptr = extract_ptr(last_cell(ret));
-  set_heap(ptr, 1, cons(arg_count, NIL));
-  
+  //uintptr_t ptr = extract_ptr(last_cell(ret));
+  //set_heap(ptr, 1, cons(arg_count, NIL));
+
+  ret = list(3,
+	     fnobj,
+	     reverse(ret),
+	     arg_count);
+
   ret = extract_ptr(ret) + CLOSURE_TAG;
 
   assert(IS_CLOSURE_OBJECT(ret));

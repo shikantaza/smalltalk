@@ -180,8 +180,10 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
   
   cls_obj->class_methods->bindings[0].key = get_symbol("new");
-  cls_obj->class_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)new_object),
-						 cons(convert_int_to_object(0), NIL));
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)new_object),
+						 NIL,
+						 convert_int_to_object(0));
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
@@ -402,14 +404,14 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
 
   assert(nf);
   
-  OBJECT_PTR closed_vals = CDDDR(first(res));
+  OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
 
   //closed vals are only the variable names
   //and don't have any significance here as 
   //they will be deferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
-  OBJECT_PTR lst_form = concat(2, list(1, convert_native_fn_to_object(nf)), closed_vals);
+  OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
@@ -450,9 +452,10 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
     if(cls_obj->instance_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods->bindings[i].val = concat(2,
-							  list(1, nfo),
-							  closed_vals);
+      cls_obj->instance_methods->bindings[i].val = list(3,
+							nfo,
+							closed_vals,
+							second(first(res)));
       //list(1, convert_int_to_object(cons_length(second(third(code))))));
       break;
     }
@@ -473,9 +476,10 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
     
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].val =
-      concat(2,
-	     list(1, nfo),
-	     closed_vals);
+      list(3,
+	   nfo,
+	   closed_vals,
+	   second(first(res)));
     //list(1, convert_int_to_object(cons_length(second(third(code))))));
   }
 }
@@ -519,14 +523,14 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
 
   assert(nf);
 
-  OBJECT_PTR closed_vals = CDDDR(first(res));
+  OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
 
   //closed vals are only the variable names
   //and don't have any significance here as 
   //they will be deferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
-  OBJECT_PTR lst_form = concat(2, list(1, convert_native_fn_to_object(nf)), closed_vals);
+  OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
@@ -567,9 +571,10 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
     if(cls_obj->class_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods->bindings[i].val = concat(2,
-						       list(1, nfo),
-						       closed_vals);
+      cls_obj->class_methods->bindings[i].val = list(3,
+						     nfo,
+						     closed_vals,
+						     second(first(res)));
       //list(1, convert_int_to_object(cons_length(second(third(code))))));
       break;
     }
@@ -590,9 +595,10 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].val =
-      concat(2,
-	     list(1, nfo),
-	     closed_vals);
+      list(3,
+	   nfo,
+	   closed_vals,
+	   second(first(res)));
     //list(1, convert_int_to_object(cons_length(second(third(code))))));
   }
 }
@@ -744,24 +750,34 @@ void create_Smalltalk()
   //the Smalltalk class because we don't have a way to 'quote' blocks
   
   cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:");
-  cls_obj->class_methods->bindings[0].val = cons(convert_native_fn_to_object((nativefn)create_class),
-						 cons(convert_int_to_object(2), NIL));
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)create_class),
+						 NIL,
+						 convert_int_to_object(2));
 
   cls_obj->class_methods->bindings[1].key = get_symbol("createClass:");
-  cls_obj->class_methods->bindings[1].val = cons(convert_native_fn_to_object((nativefn)create_class_no_parent_class),
-						 cons(convert_int_to_object(1), NIL));
+  cls_obj->class_methods->bindings[1].val = list(3,
+						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
+						 NIL,
+						 convert_int_to_object(1));
   
   cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:");
-  cls_obj->class_methods->bindings[2].val = cons(convert_native_fn_to_object((nativefn)add_instance_var),
-						 cons(convert_int_to_object(2), NIL));
+  cls_obj->class_methods->bindings[2].val = list(3,
+						 convert_native_fn_to_object((nativefn)add_instance_var),
+						 NIL,
+						 convert_int_to_object(2));
 
   cls_obj->class_methods->bindings[3].key = get_symbol("addClassVariable:toClass:");
-  cls_obj->class_methods->bindings[3].val = cons(convert_native_fn_to_object((nativefn)add_class_var),
-						 cons(convert_int_to_object(2), NIL));
+  cls_obj->class_methods->bindings[3].val = list(3,
+						 convert_native_fn_to_object((nativefn)add_class_var),
+						 NIL,
+						 convert_int_to_object(2));
 
   cls_obj->class_methods->bindings[4].key = get_symbol("createGlobal:valued:");
-  cls_obj->class_methods->bindings[4].val = cons(convert_native_fn_to_object((nativefn)create_global),
-						 cons(convert_int_to_object(2), NIL));
+  cls_obj->class_methods->bindings[4].val = list(3,
+						 convert_native_fn_to_object((nativefn)create_global),
+						 NIL,
+						 convert_int_to_object(2));
   
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
