@@ -192,12 +192,6 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   print_object(method); printf(" is returned by method_lookup()\n");
 #endif  
 
-  //TODO: arity slot gets incorrectly populated with some
-  //compiler-generated symbol during closure_conv_transform().
-  //needs to be fixed. Not very critical as arity violations
-  //will be caught during parsing itself. We need the arity
-  //more importantly to distinguish between NiladicBlock,
-  //Monadicblock, etc.
   //if(count1 != car(last_cell(cdr(method))))
   if(count1 != third(method))
   {

@@ -466,8 +466,8 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
       cls_obj->instance_methods->bindings[i].val = list(3,
 							nfo,
 							closed_vals,
-							second(first(res)));
-      //list(1, convert_int_to_object(cons_length(second(third(code))))));
+							//second(first(res)));
+							convert_int_to_object(cons_length(second(third(code)))));
       break;
     }
 
@@ -490,8 +490,8 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
       list(3,
 	   nfo,
 	   closed_vals,
-	   second(first(res)));
-    //list(1, convert_int_to_object(cons_length(second(third(code))))));
+	   //second(first(res)));
+	   convert_int_to_object(cons_length(second(third(code)))));
   }
 }
 
@@ -585,8 +585,8 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
       cls_obj->class_methods->bindings[i].val = list(3,
 						     nfo,
 						     closed_vals,
-						     second(first(res)));
-      //list(1, convert_int_to_object(cons_length(second(third(code))))));
+						     //second(first(res)));
+						     convert_int_to_object(cons_length(second(third(code)))));
       break;
     }
 
@@ -609,8 +609,8 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
       list(3,
 	   nfo,
 	   closed_vals,
-	   second(first(res)));
-    //list(1, convert_int_to_object(cons_length(second(third(code))))));
+	   //second(first(res)));
+	   convert_int_to_object(cons_length(second(third(code)))));
   }
 }
 
