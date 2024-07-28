@@ -86,6 +86,8 @@ BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR x)                    { return (x & BIT_MASK)
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == OBJECT_TAG;                   }
 BOOLEAN IS_STRING_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == STRING_TAG;                   }
 BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == SMALLTALK_SYMBOL_TAG;         }
+BOOLEAN IS_CHARACTER_OBJECT(OBJECT_PTR x)                { return (x & BIT_MASK) == CHARACTER_TAG;                }
+BOOLEAN IS_STRING_LITERAL_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == STRING_LITERAL_TAG;           }
 
 OBJECT_PTR first(OBJECT_PTR x)    { return car(x); }
 OBJECT_PTR second(OBJECT_PTR x)   { return car(cdr(x)); }
@@ -108,8 +110,18 @@ void create_Smalltalk();
 void create_Transcript();
 void create_Integer();
 void create_NiladicBlock();
+void create_Boolean();
 
 int extract_symbol_index(OBJECT_PTR);
+
+OBJECT_PTR convert_char_to_object(char);
+
+extern OBJECT_PTR exception_environment;
+
+extern char **string_literals;
+extern unsigned int nof_string_literals;
+
+OBJECT_PTR get_string_obj(char *);
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -183,6 +195,12 @@ OBJECT_PTR get_symbol(char *symbol)
   
 }
 
+void initialize_string_literals()
+{
+  string_literals = NULL;
+  nof_string_literals = 0;
+}
+
 void initialize()
 {
   compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
@@ -214,6 +232,8 @@ void initialize()
   add_symbol("Smalltalk");
   add_symbol("self");
 
+  exception_environment = NIL;
+
   create_Object();
   create_Smalltalk();
   create_Transcript();
@@ -226,6 +246,8 @@ void initialize()
 
   create_NiladicBlock();
 
+  create_Boolean();
+  
   initialize_top_level();
 }
 
@@ -636,15 +658,12 @@ OBJECT_PTR convert_number_literal_to_atom(number_t *n)
 
 OBJECT_PTR convert_string_literal_to_atom(char *s)
 {
-  error("Not implemented yet\n");
-  return NIL;
-  
+  return get_string_obj(substring(s, 1, strlen(s)-2));
 }
 
 OBJECT_PTR convert_char_literal_to_atom(char *s)
 {
-  error("Not implemented yet\n");
-  return NIL;
+  return convert_char_to_object(s[1]);
 }
 
 OBJECT_PTR convert_symbol_literal_to_atom(char *s)
@@ -670,6 +689,12 @@ OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)
 
 OBJECT_PTR convert_identifier_to_atom(char *s)
 {
+  if(!strcmp(s, "true"))
+    return TRUE;
+
+  if(!strcmp(s, "false"))
+    return FALSE;
+  
   unsigned int i;
 
   for(i=0; i < compiler_package->nof_symbols; i++)

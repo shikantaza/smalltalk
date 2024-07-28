@@ -62,7 +62,7 @@ void create_Transcript()
 
   if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
   {
-    printf("create_Integer: Unable to allocate memory\n");
+    printf("create_Transcript(): Unable to allocate memory\n");
     exit(1);
   }
 

@@ -16,7 +16,7 @@
 #define OBJECT_TAG            7
 #define CLASS_OBJECT_TAG      8
 #define ARRAY_TAG             9
-/* note that value 10 is unused and is available */
+#define STRING_LITERAL_TAG   10
 #define NATIVE_FN_TAG        11
 #define CLOSURE_TAG          12
 #define TRUE_TAG             13

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 
 #include "gc.h"
 
@@ -18,8 +19,12 @@ BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
 BOOLEAN IS_STRING_OBJECT(OBJECT_PTR);
 BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
+BOOLEAN IS_CHARACTER_OBJECT(OBJECT_PTR);
+BOOLEAN IS_STRING_LITERAL_OBJECT(OBJECT_PTR);
 
 char *get_smalltalk_symbol_name(OBJECT_PTR);
+
+nativefn extract_native_fn(OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -35,9 +40,15 @@ extern OBJECT_PTR Integer;
 extern OBJECT_PTR NiladicBlock;
 
 OBJECT_PTR Symbol;
-OBJECT_PTR Boolean;
+extern OBJECT_PTR Boolean;
+
+extern char **string_literals;
+extern unsigned int nof_string_literals;
 
 int gen_sym_count = 0;
+
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
 
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
@@ -359,6 +370,12 @@ void print_object(OBJECT_PTR obj_ptr)
     OBJECT_PTR cls_obj = obj->class_object;
     fprintf(stdout, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
   }
+  else if(IS_CHARACTER_OBJECT(obj_ptr))
+    fprintf(stdout, "$%c", get_char_value(obj_ptr));
+  else if(IS_STRING_LITERAL_OBJECT(obj_ptr))
+    fprintf(stdout, "%s", string_literals[obj_ptr >> OBJECT_SHIFT]);
+  else if(IS_TRUE_OBJECT(obj_ptr) || IS_FALSE_OBJECT(obj_ptr))
+    fprintf(stdout, "%s", obj_ptr == TRUE ? "true" : "false");
   else
     error("<invalid object %p>", (void *)obj_ptr);
 
@@ -395,7 +412,15 @@ OBJECT_PTR build_symbol_object(int symbol_index)
 BOOLEAN is_atom(OBJECT_PTR obj)
 {
   //TODO: add other atomic objects
-  return IS_SYMBOL_OBJECT(obj) || IS_INTEGER_OBJECT(obj) || IS_CLASS_OBJECT(obj) || IS_OBJECT_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj);
+  return IS_SYMBOL_OBJECT(obj)      ||
+    IS_INTEGER_OBJECT(obj)          ||
+    IS_CLASS_OBJECT(obj)            ||
+    IS_OBJECT_OBJECT(obj)           ||
+    IS_SMALLTALK_SYMBOL_OBJECT(obj) ||
+    IS_CHARACTER_OBJECT(obj)        ||
+    IS_STRING_LITERAL_OBJECT(obj)   ||
+    IS_TRUE_OBJECT(obj)             ||
+    IS_FALSE_OBJECT(obj);
 }
 
 OBJECT_PTR clone_object(OBJECT_PTR obj)
@@ -585,4 +610,29 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
   }
   else
     return ((object_t *)extract_ptr(obj))->class_object;
+}
+
+OBJECT_PTR get_string_obj(char *s)
+{
+  unsigned int i;
+
+  for(i=0; i<nof_string_literals; i++)
+  {
+    if(!strcmp(s, string_literals[i]))
+      return (i << OBJECT_SHIFT) + STRING_LITERAL_TAG;
+  }
+
+  nof_string_literals++;
+  
+  if(!string_literals)
+    string_literals = (char **)GC_MALLOC(nof_string_literals * sizeof(char *));
+  else
+    string_literals = (char **)GC_REALLOC(string_literals, nof_string_literals * sizeof(char *));
+
+  string_literals[nof_string_literals-1] = GC_strdup(s);
+
+  return ((nof_string_literals - 1) << OBJECT_SHIFT) + STRING_LITERAL_TAG;
+
+
+  
 }

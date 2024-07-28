@@ -45,12 +45,19 @@ OBJECT_PTR extract_arity(OBJECT_PTR);
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
 
+char **string_literals = NULL;
+unsigned int nof_string_literals = 0;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR Transcript;
 extern OBJECT_PTR NiladicBlock;
+extern OBJECT_PTR Boolean;
+
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -102,6 +109,10 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
   add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
+  add_binding_to_top_level(get_symbol("Boolean"), cons(Boolean, NIL));
+
+  add_binding_to_top_level(get_symbol("true"), cons(TRUE, NIL));
+  add_binding_to_top_level(get_symbol("false"), cons(FALSE, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -149,7 +160,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 
   if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
   {
-    printf("create_Integer: Unable to allocate memory\n");
+    printf("create_class(): Unable to allocate memory\n");
     exit(1);
   }
 
@@ -722,7 +733,7 @@ void create_Smalltalk()
 
   if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
   {
-    printf("create_Integer: Unable to allocate memory\n");
+    printf("create_Smalltalk(): Unable to allocate memory\n");
     exit(1);
   }
 

@@ -1,3 +1,25 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+#include <string.h>
+
+#include "gc.h"
+#include "smalltalk.h"
+#include "util.h"
+
+//list of exception handlers;
+//an exception handler is a list of
+//a) exception selector, b) exception action,
+//and c) closure object that is the continuation
+//that the protected block (which is mapped to
+//the exception handler) is to call when it
+//exits normally
+OBJECT_PTR exception_environment;
+
+/* code below this point is earlier code; will be
+   incoporated if found relevant */
+
 /* these protocols need to be implemented for the
    first cut implementation:
 
@@ -48,6 +70,10 @@
      selector
 
 */
+
+/** commenting out earlier code **/
+
+/*
 
 OBJECT_PTR zero_divide_dividend(OBJECT_PTR receiver)
 {
@@ -100,7 +126,7 @@ OBJECT_PTR create_FailedMessage()
   return cls_obj;
 }
 
-/** <exceptionDescription protocol **/
+/-* <exceptionDescription protocol *-/
 //defaultAction is implemented in the MessageNotUnderstood class
 
 OBJECT_PTR mnu_description(OBJECT_PTR receiver)
@@ -132,28 +158,28 @@ OBJECT_PTR mnu_tag(OBJECT_PTR receiver)
   //as this is an exception that is signalled internally
   return mnu_description(receiver);
 }
-/** end of <exceptionDescription protocol **/
+/-* end of <exceptionDescription protocol *-/
 
-/** <signaledException> protocol **/
+/-* <signaledException> protocol *-/
 
-/** end of <signaledException> protocol **/
+/-* end of <signaledException> protocol *-/
 
-/** <exceptionBuilder> protocol **/
+/-* <exceptionBuilder> protocol *-/
 OBJECT_PTR mnu_message_text(OBJECT_PTR receiver, OBJECT_PTR signaler_text)
 {
   set_inst_var(receiver, get_symbol("messageText"), signaler_text);
   return receiver;
 }
-/** end of <exceptionBuilder protocol **/
+/-* end of <exceptionBuilder protocol *-/
 
-/** <exceptionSignaler> protocol **/
+/-* <exceptionSignaler> protocol *-/
 OBJECT_PTR mnu_signal(OBJECT_PTR receiver)
 {
   
 }
-/** end of <exceptionSignaler> protocol **/
+/-* end of <exceptionSignaler> protocol *-/
 
-/** <Error> protocol **/
+/-* <Error> protocol *-/
 OBJECT_PTR mnu_default_action(OBJECT_PTR receiver)
 {
   printf("Error: MessageNotUnderstood: %s\n", get_symbol_name(failed_msg_selector(mnu_message(receiver))));
@@ -161,9 +187,9 @@ OBJECT_PTR mnu_default_action(OBJECT_PTR receiver)
 }
 
 // isResumable is defined in the MessageNotunderstood subclass
-/** end of <Error> protocol **/
+/-* end of <Error> protocol *-/
 
-/** <MessageNotUnderstood> protocol **/
+/-* <MessageNotUnderstood> protocol *-/
 OBJECT_PTR mnu_message(OBJECT_PTR receiver)
 {
   //TODO: ensure that the receiver, i.e., instance of MessageNotUnderstood,
@@ -215,6 +241,9 @@ OBJECT_PTR create_MessageNotUnderstood()
 
   return cls_obj;
 }
-/** end of <MessageNotunderstood> protocol **/
+/-* end of <MessageNotunderstood> protocol *-/
 
+*/
+
+/** end of commented out earlier code **/
 

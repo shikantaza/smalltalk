@@ -22,6 +22,8 @@ extern binding_env_t *top_level;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
 OBJECT_PTR Integer;
@@ -106,6 +108,25 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return nf(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
 }
 
+OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_INTEGER_OBJECT(receiver));
+
+#ifdef DEBUG
+  print_object(arg); printf(" is the arg passed to divide_by\n");
+#endif
+
+  assert(IS_INTEGER_OBJECT(arg));
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  return nf(cont, (receiver == arg) ? TRUE : FALSE );
+}
+
 void create_Integer()
 {
   class_object_t *cls_obj;
@@ -129,7 +150,7 @@ void create_Integer()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 4;    
+  cls_obj->instance_methods->count = 5;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("+");
@@ -157,6 +178,12 @@ void create_Integer()
 						    NIL,
 						    convert_int_to_object(1));
   
+  cls_obj->instance_methods->bindings[4].key = get_symbol("=");
+  cls_obj->instance_methods->bindings[4].val = list(3,
+						    convert_native_fn_to_object((nativefn)eq),
+						    NIL,
+						    convert_int_to_object(1));
+
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;

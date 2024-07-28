@@ -22,7 +22,33 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 
 extern OBJECT_PTR Object;
+
+extern OBJECT_PTR exception_environment;
+
 OBJECT_PTR NiladicBlock;
+
+/*
+
+These two methods to be included in
+the class library (smalltalk.st)
+
+Smalltalk addInstanceMethod: #ensure: withBody:
+  [ :ensureBlock |
+    | result |
+    result := self ifCurtailed: ensureBlock.
+    ensureBlock value.
+    ^result ]
+  toClass: #NiladicBlock
+
+Smalltalk addInstanceMethod: #ifCurtailed: withBody:
+  [ :curtailBlock |
+    | result curtailed |
+    curtailed := true.
+    [result := self value. curtailed := false] ensure: [curtailed ifTrue: [curtailBlock value]]
+    ^result]
+  toClass: #NiladicBlock
+
+ */
 
 OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
 {
@@ -48,13 +74,30 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
   return nf(receiver, cont);
 }
 
+OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
+			       OBJECT_PTR exception_selector,
+			       OBJECT_PTR exception_action,
+			       OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(receiver));
+  assert(IS_SMALLTALK_SYMBOL_OBJECT(exception_selector));
+  assert(IS_CLOSURE_OBJECT(exception_action));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  exception_environment = cons(list(3, exception_selector, exception_action, cont), exception_environment);
+
+  return niladic_block_value(closure, cont);
+}
+
 void create_NiladicBlock()
 {
   class_object_t *cls_obj;
 
   if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
   {
-    printf("create_Integer: Unable to allocate memory\n");
+    printf("create_NiladicBlock(): Unable to allocate memory\n");
     exit(1);
   }
 
@@ -71,7 +114,7 @@ void create_NiladicBlock()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 2;    
+  cls_obj->instance_methods->count = 3;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("argumentCount");
@@ -85,6 +128,12 @@ void create_NiladicBlock()
 						    convert_native_fn_to_object((nativefn)niladic_block_value),
 						    NIL,
 						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[2].key = get_symbol("on:do:");
+  cls_obj->instance_methods->bindings[2].val = list(3,
+						    convert_native_fn_to_object((nativefn)niladic_block_on_do),
+						    NIL,
+						    convert_int_to_object(2));
   
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;

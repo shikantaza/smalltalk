@@ -35,6 +35,10 @@ extern binding_env_t *top_level;
 
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
 
+extern OBJECT_PTR exception_environment;
+
+OBJECT_PTR get_smalltalk_symbol(char *);
+
 OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 {
   OBJECT_PTR cls_obj;
@@ -103,13 +107,16 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
     class = cls_obj_int->parent_class_object;
   }
   
-  assert(method_found);
+  //assert(method_found);
 
 #ifdef DEBUG
   printf("returning from method_lookup\n");
 #endif
-  
-  return method;
+
+  if(method_found)
+    return method;
+  else
+    return NIL;
 }
 
 OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
@@ -145,6 +152,41 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   OBJECT_PTR stripped_selector = selector;
 
   OBJECT_PTR method = method_lookup(receiver, stripped_selector);
+
+  if(method == NIL)
+  {
+    print_object(exception_environment); printf(" is the exception environment\n");
+    print_object(selector); printf(" is the selector\n");
+
+    OBJECT_PTR env = exception_environment;
+
+    while(env != NIL)
+    {
+      OBJECT_PTR handler = car(env);
+      print_object(handler); printf(" is the handler\n");
+      print_object(car(handler)); printf(" is the exception name\n");
+      if(car(handler) == get_smalltalk_symbol("MessageNotUnderstood"))
+      {
+	printf("here\n");
+	OBJECT_PTR action = second(handler);
+	assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
+
+	nativefn nf = (nativefn)extract_native_fn(action);
+
+	//pop the handler (and all later handlers (is ths correct?))
+	exception_environment = cdr(env);
+
+	//TODO; passing NIL for the time being, this
+	//should be a MessageNotUnderstood exception object 
+	return nf(action, NIL, third(handler));
+      }
+
+      env = cdr(env);
+    }
+
+    //there are no handlers
+    assert(false); //TODO
+  }
 
 #ifdef DEBUG
   print_object(method); printf(" is returned by method_lookup()\n");
@@ -208,7 +250,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     rest = cdr(rest);
   }
 
-  OBJECT_PTR cons_form = cons(car(method), reverse(ret));
+  OBJECT_PTR cons_form = list(3, car(method), reverse(ret), count1);
   OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
 #ifdef DEBUG  
@@ -281,7 +323,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     arg3 = (uintptr_t)va_arg(ap, uintptr_t);
     arg4 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
-    
+
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
