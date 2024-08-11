@@ -58,6 +58,8 @@ extern OBJECT_PTR SAVE_CONTINUATION;
 extern OBJECT_PTR CREATE_CLOSURE;
 extern OBJECT_PTR EXTRACT_NATIVE_FN;
 extern OBJECT_PTR METHOD_LOOKUP;
+extern OBJECT_PTR RETURN_FROM;
+extern OBJECT_PTR GET_CONTINUATION;
 
 OBJECT_PTR get_top_level_symbols()
 {
@@ -141,6 +143,10 @@ OBJECT_PTR build_selectors_list(OBJECT_PTR res)
                   build_selectors_list(second(res)),
                   list(1, third(res)),
                   build_selectors_list(CDDDR(res)));
+  else if(car(res) == RETURN_FROM)
+    return concat(2,
+		  list(1, second(res)),
+		  build_selectors_list(cdr(cdr(res))));
 
   return concat(2,
                 build_selectors_list(car(res)),
@@ -561,7 +567,7 @@ BOOLEAN primop(OBJECT_PTR sym)
   //which will be primitive
   //return sym == SAVE_CONTINUATION || sym == METHOD_LOOKUP;
 
-  return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS;
+  return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS || sym == RETURN_FROM || sym == GET_CONTINUATION;
 }
 
 OBJECT_PTR temp3(OBJECT_PTR x, OBJECT_PTR v1, OBJECT_PTR v2)
@@ -1041,6 +1047,8 @@ OBJECT_PTR free_ids_il(OBJECT_PTR exp)
   //Also, MESSAGE_SEND itself is going to be a top level closure.
   else if(car_exp == MESSAGE_SEND)
     return concat(2, list(1, MESSAGE_SEND), difference(free_ids_il(cdr(exp)), list(1, third(exp))));
+  else if(car_exp == RETURN_FROM)
+    return difference(free_ids_il(cdr(cdr(exp))), list(1, second(exp)));
   else
     return flatten(cons(free_ids_il(car(exp)),
                         free_ids_il(cdr(exp))));

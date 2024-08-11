@@ -37,9 +37,11 @@ typedef struct metacont_closure
 extern OBJECT_PTR LAMBDA;
 extern OBJECT_PTR LET;
 extern OBJECT_PTR NIL;
+extern OBJECT_PTR CAR;
 
-/*
 extern OBJECT_PTR RETURN_FROM;
+extern OBJECT_PTR THIS_CONTEXT;
+/*
 extern OBJECT_PTR THROW;
 extern OBJECT_PTR CALL_CC;
 extern OBJECT_PTR BREAK;
@@ -480,6 +482,7 @@ OBJECT_PTR ret_from_fn2(reg_closure_t *cls, OBJECT_PTR val)
   return list(2,
               list(2, GET_CONTINUATION, v1),
               val);
+  //return list(2, list(2, CAR, THIS_CONTEXT), val);
 }
 
 reg_closure_t *create_reg_ret_from_closure2(OBJECT_PTR val)
@@ -642,8 +645,7 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
 
   if(primop(car_exp))
   {
-    //TODO: RETURN needs to be handled (similar to RETURN_FROM?)
-    /*
+
     if(car_exp == RETURN_FROM)
     {
       metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
@@ -657,6 +659,7 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
     
       return mcls;      
     }
+    /*
     else if(car_exp == THROW)
     {
       metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
@@ -694,8 +697,8 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
     
       return mcls;      
       } */   
-    //else
-    //{
+    else
+    {
       metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
 
       mcls->mfn             = primop_metacont_fn;
@@ -707,7 +710,7 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
       mcls->closed_vals[1]  = cdr(exp); //operands
     
       return mcls;
-    //}
+    }
   }
 
   /*

@@ -54,7 +54,7 @@ OBJECT_PTR lift_transform(OBJECT_PTR);
 OBJECT_PTR NIL                          =  (OBJECT_PTR)(                      SYMBOL_TAG);
 OBJECT_PTR LET                          =  (OBJECT_PTR)((1 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SET                          =  (OBJECT_PTR)((2 << OBJECT_SHIFT) + SYMBOL_TAG);
-OBJECT_PTR RETURN                       =  (OBJECT_PTR)((3 << OBJECT_SHIFT) + SYMBOL_TAG);
+OBJECT_PTR RETURN_FROM                  =  (OBJECT_PTR)((3 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR MESSAGE_SEND                 =  (OBJECT_PTR)((4 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR LAMBDA                       =  (OBJECT_PTR)((5 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SETCAR                       =  (OBJECT_PTR)((6 << OBJECT_SHIFT) + SYMBOL_TAG);
@@ -71,6 +71,7 @@ OBJECT_PTR EXTRACT_NATIVE_FN            =  (OBJECT_PTR)((16 << OBJECT_SHIFT) + S
 OBJECT_PTR METHOD_LOOKUP                =  (OBJECT_PTR)((17 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SMALLTALK                    =  (OBJECT_PTR)((18 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SELF                         =  (OBJECT_PTR)((19 << OBJECT_SHIFT) + SYMBOL_TAG);
+OBJECT_PTR THIS_CONTEXT                 =  (OBJECT_PTR)((20 << OBJECT_SHIFT) + SYMBOL_TAG);
 
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
@@ -122,6 +123,8 @@ extern char **string_literals;
 extern unsigned int nof_string_literals;
 
 OBJECT_PTR get_string_obj(char *);
+
+extern OBJECT_PTR compile_time_method_selector;
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -214,7 +217,7 @@ void initialize()
   add_symbol("NIL");
   add_symbol("LET");
   add_symbol("SET");
-  add_symbol("RETURN");
+  add_symbol("RETURN-FROM");
   add_symbol("MESSAGE-SEND");
   add_symbol("LAMBDA");
   add_symbol("SETCAR");
@@ -231,6 +234,7 @@ void initialize()
   add_symbol("METHOD-LOOKUP");
   add_symbol("Smalltalk");
   add_symbol("self");
+  add_symbol("THIS-CONTEXT");
 
   exception_environment = NIL;
 
@@ -349,9 +353,9 @@ OBJECT_PTR convert_statements_to_lisp(statement_t *s)
 OBJECT_PTR convert_ret_stmt_to_lisp(return_statement_t *r)
 {
   if(!r)
-    return cons(RETURN, NIL);
+    return list(3, RETURN_FROM, compile_time_method_selector, NIL);
 
-  return list(2, RETURN, convert_exp_to_lisp(r->exp));
+  return list(3, RETURN_FROM, compile_time_method_selector, convert_exp_to_lisp(r->exp));
 }
 
 OBJECT_PTR convert_exp_to_lisp(expression_t *e)

@@ -36,6 +36,7 @@ OBJECT_PTR identity_function(OBJECT_PTR, ...);
 OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
 
 OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
+void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 
 char *get_smalltalk_symbol_name(OBJECT_PTR);
 OBJECT_PTR get_smalltalk_symbol(char *);
@@ -48,6 +49,10 @@ OBJECT_PTR Smalltalk;
 char **string_literals = NULL;
 unsigned int nof_string_literals = 0;
 
+OBJECT_PTR compile_time_method_selector;
+
+OBJECT_PTR replace_method_selector(OBJECT_PTR, OBJECT_PTR);
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
@@ -58,6 +63,10 @@ extern OBJECT_PTR Boolean;
 
 extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
+
+extern OBJECT_PTR THIS_CONTEXT;
+
+extern OBJECT_PTR RETURN_FROM;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -113,6 +122,8 @@ void initialize_top_level()
 
   add_binding_to_top_level(get_symbol("true"), cons(TRUE, NIL));
   add_binding_to_top_level(get_symbol("false"), cons(FALSE, NIL));
+
+  add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //idclo will be set at each repl loop start
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -391,6 +402,8 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
+  compile_time_method_selector = selector;
+
   /*
   char *s1 = get_symbol_name(class);
   char *s2 = get_symbol_name(selector);
@@ -405,7 +418,7 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   //OBJECT_PTR selector_sym = get_symbol(stripped_selector_name);
   OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
   
-  OBJECT_PTR res = apply_lisp_transforms(code);
+  OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
 
   void *state = compile_to_c(res);
 
@@ -430,6 +443,8 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
                                     (nativefn)identity_function);
 
   assert(IS_CLOSURE_OBJECT(idclo));
+
+  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
   
   nativefn1 nf1 = (nativefn1)nf;
     
@@ -495,6 +510,24 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   }
 }
 
+//replaces the first parameter to RETURN_FROM with the correct
+//method selector (from add_class_method() and add_instance_method()).
+//needed because the method definition/compilation (via these
+//methods) happens after the conversion to Lisp code in repl2()
+OBJECT_PTR replace_method_selector(OBJECT_PTR code, OBJECT_PTR selector)
+{
+  if(is_atom(code))
+    return code;
+  else
+  {
+    if(car(code) == RETURN_FROM)
+      return concat(2, list(2, RETURN_FROM, selector), replace_method_selector(cdr(cdr(code)), selector));
+    else
+      return cons(replace_method_selector(car(code), selector),
+		  replace_method_selector(cdr(code), selector));
+  }
+}
+
 void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code)
 {
   assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
@@ -517,10 +550,10 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
 
 #ifdef DEBUG
-  print_object(code); printf(" is the code for the method\n");
+  print_object(replace_method_selector(code, selector_sym)); printf(" is the code for the method\n");
 #endif
     
-  OBJECT_PTR res = apply_lisp_transforms(code);
+  OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
 
 #ifdef DEBUG  
   print_object(res); printf("\n");
@@ -549,6 +582,8 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
                                     (nativefn)identity_function);
 
   assert(IS_CLOSURE_OBJECT(idclo));
+
+  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
   
   nativefn1 nf1 = (nativefn1)nf;
     

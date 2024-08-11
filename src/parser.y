@@ -79,6 +79,12 @@ BOOLEAN loading_core_library;
 
 OBJECT_PTR extract_arity(OBJECT_PTR);
 
+void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
+
+extern OBJECT_PTR THIS_CONTEXT;
+
+OBJECT_PTR method_call_stack;
+
 %}
 
 %union{
@@ -918,6 +924,8 @@ void repl2()
 {
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
+  method_call_stack = NIL;
+
 #ifdef DEBUG
   print_object(exp); printf("\n");
 #endif
@@ -1128,6 +1136,8 @@ void repl()
 
   assert(IS_CLOSURE_OBJECT(idclo));
   //print_object(idclo); printf("#####\n");
+
+  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
 
   nativefn1 nf1 = (nativefn1)nf;
 

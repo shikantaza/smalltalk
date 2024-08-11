@@ -14,6 +14,8 @@ OBJECT_PTR last_cell(OBJECT_PTR);
 
 extern OBJECT_PTR NIL;
 
+extern OBJECT_PTR method_call_stack;
+
 /* OBJECT_PTR message_send(OBJECT_PTR receiver, ...) */
 /* { */
 /*   //TODO: */
@@ -23,14 +25,16 @@ extern OBJECT_PTR NIL;
 void save_continuation(OBJECT_PTR cont)
 {
   //TODO
-  //printf("save_continuation: "); print_object(cont); printf("\n");
+  //printf("pushing: "); print_object(car(cont)); printf("\n");
 }
+
+nativefn extract_native_fn(OBJECT_PTR);
 
 void set_most_recent_closure(OBJECT_PTR clo)
 {
   //TODO
 #ifdef DEBUG  
-  printf("set_most_recent_closure: "); print_object(clo); printf("\n");
+  printf("popping: %p\n", extract_native_fn(clo));
 #endif
 }
 
@@ -95,10 +99,26 @@ OBJECT_PTR get_exception_handler()
   return NIL;
 }
 
-OBJECT_PTR get_continuation(OBJECT_PTR clo)
+OBJECT_PTR get_continuation(OBJECT_PTR selector)
 {
-  //TODO:
-  return NIL;
+  OBJECT_PTR rest = method_call_stack;
+  OBJECT_PTR cont = NIL;
+
+  while(rest != NIL)
+  {
+    if(car(car(rest)) == selector)
+    {
+       cont = cdr(car(rest));
+       method_call_stack = cdr(rest);
+       break;
+    }
+    rest = cdr(rest);
+  }
+
+  assert(cont != NIL);
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  return cont;
 }
 
 int in_error_condition()

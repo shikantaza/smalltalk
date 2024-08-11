@@ -39,6 +39,10 @@ extern OBJECT_PTR exception_environment;
 
 OBJECT_PTR get_smalltalk_symbol(char *);
 
+extern OBJECT_PTR THIS_CONTEXT;
+
+extern OBJECT_PTR method_call_stack;
+
 OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 {
   OBJECT_PTR cls_obj;
@@ -128,7 +132,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
   put_binding_val(top_level, SELF, cons(receiver, NIL));
-  
+
   int count;
   
   va_list ap;
@@ -261,6 +265,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   if(count == 0)
   {
     cont = (uintptr_t)va_arg(ap, uintptr_t);
+
+    method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
     
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(cont) : "%rsi");
@@ -272,6 +280,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   {
     arg1 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
+
+    method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -286,6 +298,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     arg2 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
+    method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
@@ -301,6 +317,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     arg3 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
+    method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
@@ -317,6 +337,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     arg3 = (uintptr_t)va_arg(ap, uintptr_t);
     arg4 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
+
+    method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -353,6 +377,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
       printf("stack_args[%d] = %lu\n", i, stack_args[i]);
 #endif      
     }
+
+    method_call_stack = cons(cons(selector,stack_args[n-1]), method_call_stack);
+
+    put_binding_val(top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");

@@ -71,12 +71,12 @@ void *compile_functions(OBJECT_PTR lambda_forms)
 
   assert(len <= MAX_C_SOURCE_SIZE);
 
-  /* uncomment for debugging */
-  
+#ifdef DEBUG
   FILE *out = fopen("debug.c", "a");
   fprintf(out, "%s\n", str);
   fclose(out);
-    
+#endif
+
   return compile_functions_from_string(str);
 }
 
