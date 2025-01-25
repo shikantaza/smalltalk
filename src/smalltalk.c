@@ -68,6 +68,8 @@ extern OBJECT_PTR THIS_CONTEXT;
 
 extern OBJECT_PTR RETURN_FROM;
 
+extern OBJECT_PTR Exception;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   top_level->count++;
@@ -124,6 +126,8 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("false"), cons(FALSE, NIL));
 
   add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //idclo will be set at each repl loop start
+
+  //add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -535,6 +539,8 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
+  compile_time_method_selector = selector;
+  
   /*
   char *s1 = get_symbol_name(class);
   char *s2 = get_symbol_name(selector);

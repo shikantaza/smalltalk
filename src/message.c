@@ -43,6 +43,8 @@ extern OBJECT_PTR THIS_CONTEXT;
 
 extern OBJECT_PTR method_call_stack;
 
+OBJECT_PTR handle_exception(OBJECT_PTR);
+
 OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 {
   OBJECT_PTR cls_obj;
@@ -159,6 +161,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
   if(method == NIL)
   {
+    /*
     print_object(exception_environment); printf(" is the exception environment\n");
     print_object(selector); printf(" is the selector\n");
 
@@ -190,6 +193,8 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
     //there are no handlers
     assert(false); //TODO
+    */
+    return handle_exception(get_smalltalk_symbol("MessageNotUnderstood"));
   }
 
 #ifdef DEBUG
@@ -217,19 +222,59 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   OBJECT_PTR rest = closed_vars;
   //OBJECT_PTR rest = cdr(closed_vars);
   
-  binding_env_t *env = NULL;
+  //binding_env_t *env = NULL;
+  binding_env_t *inst_vars = NULL;
+  binding_env_t *shared_vars = NULL;
   
   if(IS_CLASS_OBJECT(receiver))
-    env = ((class_object_t *)extract_ptr(receiver))->shared_vars;
+  {
+    shared_vars = ((class_object_t *)extract_ptr(receiver))->shared_vars;
+  }
   else if(IS_OBJECT_OBJECT(receiver))
-    env = ((object_t *)extract_ptr(receiver))->instance_vars;
+  {
+    shared_vars = ((class_object_t *)extract_ptr(get_class_object(receiver)))->shared_vars;
+    inst_vars = ((object_t *)extract_ptr(receiver))->instance_vars;
+  }
   
   while(rest != NIL)
   {
     OBJECT_PTR closed_val_cons;
 
-    //TODO: the receiver's super's instance/class vars
-    //should also be scanned for the free vars' values
+    if(IS_OBJECT_OBJECT(receiver) && inst_vars)
+    {
+      if(get_binding_val_regular(inst_vars, car(rest), &closed_val_cons))
+      {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+	continue;
+      }
+    }
+
+    if(IS_OBJECT_OBJECT(receiver) && shared_vars)
+    {
+      if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
+      {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+	continue;
+      }
+    }
+
+    if(IS_CLASS_OBJECT(receiver) && shared_vars)
+    {
+      if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
+      {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+	continue;
+      }
+    }
+
+    //TODO: assert should be replaced to raise an exception
+    assert(get_top_level_val(car(rest), &closed_val_cons));
+    ret = cons(closed_val_cons, ret);
+    
+    /*
     if(env) //to filter out objects like integers which are not regular objects
     {
       if(get_binding_val_regular(env, car(rest), &closed_val_cons))
@@ -245,6 +290,8 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 	ret = cons(closed_val_cons, ret);
       }
     }
+    */
+    
     rest = cdr(rest);
   }
 

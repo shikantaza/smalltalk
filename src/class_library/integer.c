@@ -28,6 +28,9 @@ extern OBJECT_PTR FALSE;
 extern OBJECT_PTR Object;
 OBJECT_PTR Integer;
 
+OBJECT_PTR handle_exception(OBJECT_PTR);
+OBJECT_PTR get_smalltalk_symbol(char *);
+
 //workaround for variadic function arguments
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
@@ -102,6 +105,9 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   assert(IS_INTEGER_OBJECT(arg));
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  if(get_int_value(arg) == 0)
+    return handle_exception(get_smalltalk_symbol("ZeroDivide"));
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 

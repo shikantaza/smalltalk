@@ -137,9 +137,9 @@ OBJECT_PTR save_cont_to_resume(OBJECT_PTR cont)
 
 //needn't return an OBJECT_PTR; kept so
 //since we do it that way in pLisp
-OBJECT_PTR handle_exception()
-{
+//OBJECT_PTR handle_exception()
+//{
   //TODO
-  return NIL;
-}
+//  return NIL;
+//}
 

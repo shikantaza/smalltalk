@@ -85,6 +85,11 @@ extern OBJECT_PTR THIS_CONTEXT;
 
 OBJECT_PTR method_call_stack;
 
+extern OBJECT_PTR compile_time_method_selector;
+
+OBJECT_PTR get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
+char *get_symbol_name(OBJECT_PTR);
+
 %}
 
 %union{
@@ -922,10 +927,12 @@ void yyerror(const char *s) {
 
 void repl2()
 {
-  OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
-
   method_call_stack = NIL;
 
+  compile_time_method_selector = NIL;
+
+  OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+  
 #ifdef DEBUG
   print_object(exp); printf("\n");
 #endif
@@ -1123,8 +1130,19 @@ void repl()
   while(rest != NIL)
   {
     OBJECT_PTR closed_val = car(rest);
-    ret = cons(get_binding_val(top_level, closed_val), ret);    
-    rest = cdr(rest);
+    OBJECT_PTR closed_val_cons;
+    if(get_binding_val_regular(top_level, closed_val, &closed_val_cons))
+    {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+    }
+    else
+    {
+      printf("Unbound variable: %s\n", get_symbol_name(closed_val));
+      return;
+    }
+    //ret = cons(get_binding_val(top_level, closed_val), ret);    
+    //rest = cdr(rest);
   }  
 
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));

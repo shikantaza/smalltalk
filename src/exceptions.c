@@ -17,6 +17,37 @@
 //exits normally
 OBJECT_PTR exception_environment;
 
+OBJECT_PTR curtailed_blocks_list;
+
+OBJECT_PTR get_symbol(char *);
+char *get_smalltalk_symbol_name(OBJECT_PTR);
+nativefn extract_native_fn(OBJECT_PTR);
+OBJECT_PTR convert_int_to_object(int);
+OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
+
+OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
+OBJECT_PTR convert_native_fn_to_object(nativefn);
+OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
+
+extern binding_env_t *top_level;
+
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
+
+extern OBJECT_PTR Object;
+OBJECT_PTR Exception;
+
+//global object that captures the exception
+//environment that was in play when the exception
+//handler was created by the execution of an on:do:
+//method
+OBJECT_PTR handler_environment;
+
+OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
+OBJECT_PTR identity_function(OBJECT_PTR, ...);
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -247,3 +278,148 @@ OBJECT_PTR create_MessageNotUnderstood()
 
 /** end of commented out earlier code **/
 
+/* return type is void because we
+   discard the return value of the curtailed
+   blocks' execution */
+void invoke_curtailed_blocks()
+{
+  OBJECT_PTR rest = curtailed_blocks_list;
+  OBJECT_PTR blk;
+  
+  while(rest != NIL)
+  {
+    blk = car(rest);
+
+    assert(IS_CLOSURE_OBJECT(blk));
+
+    //TODO: a global idclo object
+    OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+				      convert_int_to_object(0),
+				      (nativefn)identity_function);
+  
+    nativefn nf = (nativefn)extract_native_fn(blk);
+    OBJECT_PTR discarded_ret = nf(blk, idclo);
+    
+    rest = cdr(rest);
+  }
+
+  curtailed_blocks_list = NIL;
+}
+
+OBJECT_PTR handle_exception(OBJECT_PTR exception)
+{
+  //TODO: exception is just a selector for the time
+  //being, this will be converted to a full exception
+  //object later
+
+  OBJECT_PTR env = exception_environment;
+
+  while(env != NIL)
+  {
+    OBJECT_PTR handler = car(env);
+
+    OBJECT_PTR ret;
+    
+#ifdef DEBUG
+    print_object(handler); printf(" is the handler\n");
+    print_object(car(handler)); printf(" is the exception name\n");
+#endif
+    
+    if(car(handler) == exception)
+    {   
+      OBJECT_PTR action = second(handler);
+      assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
+
+      handler_environment = third(handler);
+      
+      nativefn nf = (nativefn)extract_native_fn(action);
+
+      //pop the handler (and all later handlers (is ths correct?))
+      exception_environment = cdr(env);
+
+      ret =  nf(action, exception, fourth(handler));
+
+      invoke_curtailed_blocks();
+
+      return ret;
+    }
+
+    env = cdr(env);
+  }  
+
+  
+  printf("Unhandled exception: %s\n", get_smalltalk_symbol_name(exception));
+
+  invoke_curtailed_blocks();
+  
+  return NIL;
+}
+
+OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR env = handler_environment;
+
+  nativefn nf = (nativefn)extract_native_fn(cont);
+  
+  while(env != NIL)
+  {
+    OBJECT_PTR handler = car(env);
+    
+    if(car(handler) == receiver)
+      return nf(cont, TRUE);
+    else
+      return nf(cont, FALSE);
+  }
+
+  return nf(cont, FALSE);
+}
+
+void create_Exception()
+{
+  class_object_t *cls_obj;
+
+  if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
+  {
+    printf("create_Exception: Unable to allocate memory\n");
+    exit(1);
+  }
+
+  cls_obj->parent_class_object = Object; //TODO: check whether this is OK
+  cls_obj->name = GC_strdup("Exception");
+
+  cls_obj->nof_instances = 0;
+  cls_obj->instances = NULL;
+  
+  cls_obj->nof_instance_vars = 0;
+  cls_obj->inst_vars = NULL;
+
+  cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->shared_vars->count = 0;
+  
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods->count = 0;
+  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+
+  /* cls_obj->instance_methods->bindings[0].key = get_symbol("nested"); */
+  /* cls_obj->instance_methods->bindings[0].val = list(3, */
+  /* 						    convert_native_fn_to_object((nativefn)exception_is_nested), */
+  /* 						    NIL, */
+  /* 						    convert_int_to_object(0)); */
+
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));;
+
+  cls_obj->class_methods->bindings[0].key = get_symbol("new");
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)new_object),
+						 NIL,
+						 convert_int_to_object(0));
+  
+  Exception =  convert_class_object_to_object_ptr(cls_obj);
+}

@@ -112,12 +112,14 @@ void create_Transcript();
 void create_Integer();
 void create_NiladicBlock();
 void create_Boolean();
+void create_Exception();
 
 int extract_symbol_index(OBJECT_PTR);
 
 OBJECT_PTR convert_char_to_object(char);
 
 extern OBJECT_PTR exception_environment;
+extern OBJECT_PTR curtailed_blocks_list;
 
 extern char **string_literals;
 extern unsigned int nof_string_literals;
@@ -237,7 +239,8 @@ void initialize()
   add_symbol("THIS-CONTEXT");
 
   exception_environment = NIL;
-
+  curtailed_blocks_list = NIL;
+  
   create_Object();
   create_Smalltalk();
   create_Transcript();
@@ -251,6 +254,8 @@ void initialize()
   create_NiladicBlock();
 
   create_Boolean();
+
+  create_Exception();
   
   initialize_top_level();
 }
