@@ -9,6 +9,7 @@
 #include "parser_header.h"
 #include "smalltalk.h"
 #include "util.h"
+#include "stack.h"
 
 package_t *compiler_package;
 package_t *smalltalk_symbols;
@@ -113,6 +114,7 @@ void create_Integer();
 void create_NiladicBlock();
 void create_Boolean();
 void create_Exception();
+void create_MonadicBlock();
 
 int extract_symbol_index(OBJECT_PTR);
 
@@ -127,6 +129,13 @@ extern unsigned int nof_string_literals;
 OBJECT_PTR get_string_obj(char *);
 
 extern OBJECT_PTR compile_time_method_selector;
+
+stack_type *call_chain;
+
+OBJECT_PTR idclo;
+
+OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
+OBJECT_PTR identity_function(OBJECT_PTR, ...);
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -206,6 +215,13 @@ void initialize_string_literals()
   nof_string_literals = 0;
 }
 
+void create_idclo()
+{
+  idclo = create_closure(convert_int_to_object(1),
+			 convert_int_to_object(0),
+			 (nativefn)identity_function);
+}
+
 void initialize()
 {
   compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
@@ -252,12 +268,17 @@ void initialize()
   create_Integer();
 
   create_NiladicBlock();
+  create_MonadicBlock();
 
   create_Boolean();
 
   create_Exception();
   
   initialize_top_level();
+
+  call_chain = stack_create();
+
+  create_idclo();
 }
 
 void error(const char *fmt, ...)

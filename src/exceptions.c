@@ -7,6 +7,7 @@
 #include "gc.h"
 #include "smalltalk.h"
 #include "util.h"
+#include "stack.h"
 
 //list of exception handlers;
 //an exception handler is a list of
@@ -47,6 +48,17 @@ OBJECT_PTR handler_environment;
 
 OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
+
+extern stack_type *call_chain;
+
+BOOLEAN curtailed_block_in_progress;
+
+OBJECT_PTR active_handler;
+
+OBJECT_PTR get_class_object(OBJECT_PTR);
+uintptr_t extract_ptr(OBJECT_PTR);
+
+extern OBJECT_PTR idclo;
 
 /* code below this point is earlier code; will be
    incoporated if found relevant */
@@ -283,6 +295,7 @@ OBJECT_PTR create_MessageNotUnderstood()
    blocks' execution */
 void invoke_curtailed_blocks()
 {
+  /*
   OBJECT_PTR rest = curtailed_blocks_list;
   OBJECT_PTR blk;
   
@@ -304,15 +317,46 @@ void invoke_curtailed_blocks()
   }
 
   curtailed_blocks_list = NIL;
+  */
+
+  //this global variable ensures that the call chain
+  //updates are suspended during the execution
+  //of the termination blocks of 'ifCurtailed' executions
+  curtailed_block_in_progress = true;
+
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
+  unsigned int nof_entries = stack_count(call_chain);
+
+  //TODO: a global idclo object
+  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+  //				    convert_int_to_object(0),
+  //				    (nativefn)identity_function);
+
+  int i;
+  OBJECT_PTR termination_blk;
+  BOOLEAN flag;
+
+  for(i=nof_entries-1; i >=0; i--)
+  {
+    termination_blk = entries[i]->termination_blk_closure;
+    flag = entries[i]->termination_blk_invoked;
+    if(termination_blk != NIL && flag == false)
+    {
+      nativefn nf = (nativefn)extract_native_fn(termination_blk);
+      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
+      entries[i]->termination_blk_invoked = true;
+    }
+  }
+
+  curtailed_block_in_progress = false;
 }
 
-OBJECT_PTR handle_exception(OBJECT_PTR exception)
+OBJECT_PTR signal_exception(OBJECT_PTR exception)
 {
-  //TODO: exception is just a selector for the time
-  //being, this will be converted to a full exception
-  //object later
-
   OBJECT_PTR env = exception_environment;
+
+  OBJECT_PTR cls_obj = get_class_object(exception);
+  class_object_t *cls_obj_int = (class_object_t *)extract_ptr((cls_obj));
 
   while(env != NIL)
   {
@@ -324,9 +368,12 @@ OBJECT_PTR handle_exception(OBJECT_PTR exception)
     print_object(handler); printf(" is the handler\n");
     print_object(car(handler)); printf(" is the exception name\n");
 #endif
-    
-    if(car(handler) == exception)
-    {   
+
+    //if(car(handler) == exception)
+    if(!strcmp(get_smalltalk_symbol_name(car(handler)), cls_obj_int->name))
+    {
+      active_handler = handler;
+
       OBJECT_PTR action = second(handler);
       assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
 
@@ -346,9 +393,8 @@ OBJECT_PTR handle_exception(OBJECT_PTR exception)
 
     env = cdr(env);
   }  
-
   
-  printf("Unhandled exception: %s\n", get_smalltalk_symbol_name(exception));
+  printf("Unhandled exception: %s\n", cls_obj_int->name);
 
   invoke_curtailed_blocks();
   
@@ -379,6 +425,38 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
   return nf(cont, FALSE);
 }
 
+OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR handler_cont = fourth(active_handler);
+
+  assert(IS_CLOSURE_OBJECT(handler_cont));
+
+  nativefn nf = (nativefn)extract_native_fn(handler_cont);
+
+  return nf(handler_cont, NIL);
+}
+
+OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR handler_cont = fourth(active_handler);
+
+  assert(IS_CLOSURE_OBJECT(handler_cont));
+
+  nativefn nf = (nativefn)extract_native_fn(handler_cont);
+
+  return nf(handler_cont, val, NIL);
+}
+
 void create_Exception()
 {
   class_object_t *cls_obj;
@@ -402,7 +480,7 @@ void create_Exception()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 0;
+  cls_obj->instance_methods->count = 2;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   /* cls_obj->instance_methods->bindings[0].key = get_symbol("nested"); */
@@ -410,6 +488,19 @@ void create_Exception()
   /* 						    convert_native_fn_to_object((nativefn)exception_is_nested), */
   /* 						    NIL, */
   /* 						    convert_int_to_object(0)); */
+
+  cls_obj->instance_methods->bindings[0].key = get_symbol("return");
+  cls_obj->instance_methods->bindings[0].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_return),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[1].key = get_symbol("return:");
+  cls_obj->instance_methods->bindings[1].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_return_val),
+						    NIL,
+						    convert_int_to_object(1));
+
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;

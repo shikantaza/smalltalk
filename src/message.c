@@ -7,6 +7,7 @@
 
 #include "smalltalk.h"
 #include "util.h"
+#include "stack.h"
 
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR, va_list*);
 
@@ -42,8 +43,32 @@ OBJECT_PTR get_smalltalk_symbol(char *);
 extern OBJECT_PTR THIS_CONTEXT;
 
 extern OBJECT_PTR method_call_stack;
+extern stack_type *call_chain;
+extern BOOLEAN curtailed_block_in_progress;
 
-OBJECT_PTR handle_exception(OBJECT_PTR);
+OBJECT_PTR signal_exception(OBJECT_PTR);
+
+call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
+					  OBJECT_PTR selector,
+					  OBJECT_PTR closure,
+					  unsigned int nof_args,
+					  OBJECT_PTR *args,
+					  OBJECT_PTR cont,
+					  OBJECT_PTR termination_blk_closure,
+					  BOOLEAN termination_blk_invoked)
+{
+  call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
+
+  entry->receiver                = receiver;
+  entry->selector                = selector;
+  entry->closure                 = closure;
+  entry->nof_args                = nof_args;
+  entry->cont                    = cont;
+  entry->termination_blk_closure = termination_blk_closure;
+  entry->termination_blk_invoked = termination_blk_invoked;
+
+  return entry;
+}
 
 OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 {
@@ -194,7 +219,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     //there are no handlers
     assert(false); //TODO
     */
-    return handle_exception(get_smalltalk_symbol("MessageNotUnderstood"));
+    return signal_exception(get_smalltalk_symbol("MessageNotUnderstood"));
   }
 
 #ifdef DEBUG
@@ -308,12 +333,15 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
   //order of registers - first to sixth argument
   //%rdi, %rsi, %rdx, %rcx, %r8, %r9
-  
+
   if(count == 0)
   {
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
     method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 0, NULL, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
     
@@ -329,6 +357,9 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
     method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, &arg1, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -346,6 +377,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
     method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    OBJECT_PTR args[2]; args[0] = arg1; args[1] = arg2;
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 2, args, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -365,6 +400,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
     method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    OBJECT_PTR args[3]; args[0] = arg1; args[1] = arg2; args[2] = arg3;
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 3, args, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -386,6 +425,10 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
     method_call_stack = cons(cons(selector,cont), method_call_stack);
+
+    OBJECT_PTR args[4]; args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 4, args, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -426,6 +469,20 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     }
 
     method_call_stack = cons(cons(selector,stack_args[n-1]), method_call_stack);
+
+    OBJECT_PTR *args; (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
+
+    args[0] = arg1;
+    args[1] = arg2;
+    args[2] = arg3;
+    args[3] = arg4;
+    args[4] = arg5;
+
+    for(i=0; i<n; i++)
+      args[i+5] = stack_args[i];
+
+    if(!curtailed_block_in_progress)
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, count, args, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 

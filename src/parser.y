@@ -8,6 +8,7 @@
   
 #include "parser_header.h"
 #include "smalltalk.h"
+#include "stack.h"
 
 //workaround for variadic function arguments
 //getting clobbered in ARM64
@@ -66,7 +67,7 @@ extern binding_env_t *top_level;
 
 extern OBJECT_PTR g_test;
 
-OBJECT_PTR idclo;
+extern OBJECT_PTR idclo;
 
 int set_up_new_yyin(FILE *);
 void pop_yyin();
@@ -89,6 +90,8 @@ extern OBJECT_PTR compile_time_method_selector;
 
 OBJECT_PTR get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
 char *get_symbol_name(OBJECT_PTR);
+
+extern stack_type *call_chain;
 
 %}
 
@@ -929,6 +932,8 @@ void repl2()
 {
   method_call_stack = NIL;
 
+  stack_empty(call_chain);
+
   compile_time_method_selector = NIL;
 
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
@@ -1148,11 +1153,11 @@ void repl()
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  idclo = create_closure(convert_int_to_object(1),
-			 convert_int_to_object(0),
-                         (nativefn)identity_function);
+  //idclo = create_closure(convert_int_to_object(1),
+  //			 convert_int_to_object(0),
+  //                       (nativefn)identity_function);
 
-  assert(IS_CLOSURE_OBJECT(idclo));
+  //assert(IS_CLOSURE_OBJECT(idclo));
   //print_object(idclo); printf("#####\n");
 
   put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));

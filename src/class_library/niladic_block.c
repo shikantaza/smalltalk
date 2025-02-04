@@ -6,6 +6,7 @@
 #include "gc.h"
 
 #include "../smalltalk.h"
+#include "../stack.h"
 
 nativefn extract_native_fn(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
@@ -29,7 +30,13 @@ extern OBJECT_PTR Object;
 extern OBJECT_PTR exception_environment;
 extern OBJECT_PTR curtailed_blocks_list;
 
+extern stack_type *call_chain;
+
 OBJECT_PTR NiladicBlock;
+
+extern void print_call_chain();
+
+extern OBJECT_PTR idclo;
 
 /*
 
@@ -111,9 +118,9 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(cont));
 
   //TODO: a global idclo object
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-				    convert_int_to_object(0),
-				    (nativefn)identity_function);
+  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+  //				    convert_int_to_object(0),
+  //				    (nativefn)identity_function);
   
   nativefn nf1 = (nativefn)extract_native_fn(receiver);
   OBJECT_PTR ret = nf1(receiver, idclo);
@@ -135,15 +142,26 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(curtailed_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  curtailed_blocks_list = cons(curtailed_block, curtailed_blocks_list);
+  //OBJECT_PTR orig_curtailed_blocks_list = curtailed_blocks_list;
+  //curtailed_blocks_list = cons(curtailed_block, curtailed_blocks_list);
+
+  //print_call_chain();
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
+  entry->termination_blk_closure = curtailed_block;
+  entry->termination_blk_invoked = false;
   
   //TODO: a global idclo object
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-				    convert_int_to_object(0),
-				    (nativefn)identity_function);
+  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+  //				    convert_int_to_object(0),
+  //				    (nativefn)identity_function);
   
   nativefn nf1 = (nativefn)extract_native_fn(receiver);
   OBJECT_PTR ret = nf1(receiver, idclo);
+
+  //to remove the curtailed block added in case it
+  //was not triggered (owing to no exception having occurred)
+  //curtailed_blocks_list = orig_curtailed_blocks_list;
 
   nativefn nf2 = (nativefn)extract_native_fn(cont);
   return nf2(cont, ret);

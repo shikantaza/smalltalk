@@ -38,6 +38,7 @@ extern package_t *compiler_package;
 extern OBJECT_PTR Integer;
 
 extern OBJECT_PTR NiladicBlock;
+extern OBJECT_PTR MonadicBlock;
 
 OBJECT_PTR Symbol;
 extern OBJECT_PTR Boolean;
@@ -604,9 +605,14 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
     return Boolean;
   else if(IS_CLOSURE_OBJECT(obj))
   {
-    //TODO: once MonadicBlock and other classes are defined
-    //get arity from closure and return the correct class
-    return NiladicBlock;
+    OBJECT_PTR lst_form = extract_ptr(obj) + CONS_TAG;
+    int arity = get_int_value(car(reverse(lst_form)));
+    if(arity == 0)
+      return NiladicBlock;
+    else if(arity == 1)
+      return MonadicBlock;
+    else
+      assert(false);//TODO
   }
   else
     return ((object_t *)extract_ptr(obj))->class_object;

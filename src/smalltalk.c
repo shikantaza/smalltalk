@@ -7,6 +7,7 @@
 
 #include "smalltalk.h"
 #include "util.h"
+#include "stack.h"
 
 //workaround for variadic function arguments
 //getting clobbered in ARM64
@@ -59,6 +60,7 @@ extern OBJECT_PTR SELF;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR Transcript;
 extern OBJECT_PTR NiladicBlock;
+extern OBJECT_PTR MonadicBlock;
 extern OBJECT_PTR Boolean;
 
 extern OBJECT_PTR TRUE;
@@ -69,6 +71,10 @@ extern OBJECT_PTR THIS_CONTEXT;
 extern OBJECT_PTR RETURN_FROM;
 
 extern OBJECT_PTR Exception;
+
+extern stack_type *call_chain;
+
+extern OBJECT_PTR idclo;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -120,6 +126,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
   add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
+  add_binding_to_top_level(get_symbol("MonadicBlock"), cons(MonadicBlock, NIL));
   add_binding_to_top_level(get_symbol("Boolean"), cons(Boolean, NIL));
 
   add_binding_to_top_level(get_symbol("true"), cons(TRUE, NIL));
@@ -127,7 +134,7 @@ void initialize_top_level()
 
   add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //idclo will be set at each repl loop start
 
-  //add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
+  add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -167,7 +174,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 #ifdef DEBUG  
   /* printf("%s %s\n", stripped_class_name, stripped_parent_class_name); */
 #endif
-  
+
   //assert(exists_in_top_level(get_symbol(stripped_parent_class_name)));
   assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(parent_class_sym))));
 
@@ -442,11 +449,11 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-                                    convert_int_to_object(0),
-                                    (nativefn)identity_function);
+  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
+  //                                  convert_int_to_object(0),
+  //                                  (nativefn)identity_function);
 
-  assert(IS_CLOSURE_OBJECT(idclo));
+  //assert(IS_CLOSURE_OBJECT(idclo));
 
   put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
   
@@ -655,14 +662,18 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   }
 }
 
-OBJECT_PTR new_object(OBJECT_PTR closure,
-		      OBJECT_PTR cont)
+//we need to create objects internally too (not through
+//message sends in Smalltalk code -- e.g., exception
+//objects)
+OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
+			       OBJECT_PTR closure,
+			       OBJECT_PTR cont)
 {
 #ifdef DEBUG
-  printf("Entering new_object()\n");
+  printf("Entering new_object_internal()\n");
 #endif
 
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  //OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
   
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLASS_OBJECT(receiver));
@@ -724,10 +735,16 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
   OBJECT_PTR ret = nf(cont, (uintptr_t)obj + OBJECT_TAG);
   
 #ifdef DEBUG
-  printf("Exiting new_object()\n");
+  printf("Exiting new_object_internal()\n");
 #endif
 
   return ret;
+}
+
+OBJECT_PTR new_object(OBJECT_PTR closure,
+		      OBJECT_PTR cont)
+{
+  return new_object_internal(car(get_binding_val(top_level, SELF)), closure, cont);
 }
   
 void create_Object()
@@ -832,4 +849,29 @@ void create_Smalltalk()
 						 convert_int_to_object(2));
   
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
+}
+
+void print_call_chain()
+{
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
+  unsigned int count = stack_count(call_chain);
+  int i;
+
+  printf("***\n");
+  for(i = 0; i <count; i++)
+  {
+    print_object(entries[i]->selector); printf("\n");
+  }
+  printf("---\n");
+}
+
+//utility function to convert zero-arg nativefn's to closures
+OBJECT_PTR convert_fn_to_closure(nativefn fn)
+{
+  OBJECT_PTR lst = list(3,
+			convert_native_fn_to_object(fn),
+			NIL,
+			convert_int_to_object(0));
+
+  return extract_ptr(lst) + CLOSURE_TAG;
 }

@@ -116,7 +116,7 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
 
   len += sprintf(buf+len, "uintptr_t save_cont_to_resume(uintptr_t);\n");
 
-  len += sprintf(buf+len, "uintptr_t handle_exception();\n");  
+  len += sprintf(buf+len, "uintptr_t signal_exception();\n");
 
   //since integers are not boxed objects (unlike in pLisp),
   //we can pass them directly, there is no need for convert_int_to_object().
@@ -300,7 +300,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
     {
       len += sprintf(buf+len, ";\n");
       if(primitive_call || car(exp) == EXTRACT_NATIVE_FN)
-        len += sprintf(buf+len, "if(in_error_condition()==1)return handle_exception();\n");
+        len += sprintf(buf+len, "if(in_error_condition()==1)return signal_exception();\n");
     }
   }
 

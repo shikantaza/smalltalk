@@ -28,8 +28,23 @@ extern OBJECT_PTR FALSE;
 extern OBJECT_PTR Object;
 OBJECT_PTR Integer;
 
-OBJECT_PTR handle_exception(OBJECT_PTR);
+OBJECT_PTR signal_exception(OBJECT_PTR);
 OBJECT_PTR get_smalltalk_symbol(char *);
+
+BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
+
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
+OBJECT_PTR create_message_send_closure();
+
+extern OBJECT_PTR idclo;
+
+OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR convert_fn_to_closure(nativefn fn);
 
 //workaround for variadic function arguments
 //getting clobbered in ARM64
@@ -107,7 +122,17 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(cont));
 
   if(get_int_value(arg) == 0)
-    return handle_exception(get_smalltalk_symbol("ZeroDivide"));
+  {
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("ZeroDivide"), &ret));
+
+    OBJECT_PTR zero_divide_class_obj = car(ret);
+
+    OBJECT_PTR exception_obj = new_object_internal(zero_divide_class_obj,
+						   convert_fn_to_closure((nativefn)new_object_internal),
+						   idclo);
+    return signal_exception(exception_obj);
+  }
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
