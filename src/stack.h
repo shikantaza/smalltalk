@@ -17,6 +17,9 @@
   along with <smalltalk>.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
+#ifndef STACK_H
+#define STACK_H
+
 typedef struct {
   unsigned int count;
   void **data;
@@ -32,3 +35,5 @@ void stack_empty(stack_type *);
 
 //non-stack behavior (for convenience)
 void **stack_data(stack_type *);
+
+#endif

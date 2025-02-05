@@ -120,7 +120,7 @@ int extract_symbol_index(OBJECT_PTR);
 
 OBJECT_PTR convert_char_to_object(char);
 
-extern OBJECT_PTR exception_environment;
+extern stack_type *exception_environment;
 extern OBJECT_PTR curtailed_blocks_list;
 
 extern char **string_literals;
@@ -254,7 +254,7 @@ void initialize()
   add_symbol("self");
   add_symbol("THIS-CONTEXT");
 
-  exception_environment = NIL;
+  exception_environment = stack_create();
   curtailed_blocks_list = NIL;
   
   create_Object();

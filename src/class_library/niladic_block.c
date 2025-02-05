@@ -27,7 +27,8 @@ extern OBJECT_PTR SELF;
 
 extern OBJECT_PTR Object;
 
-extern OBJECT_PTR exception_environment;
+extern stack_type *exception_environment;
+
 extern OBJECT_PTR curtailed_blocks_list;
 
 extern stack_type *call_chain;
@@ -37,6 +38,12 @@ OBJECT_PTR NiladicBlock;
 extern void print_call_chain();
 
 extern OBJECT_PTR idclo;
+
+exception_handler_t *create_exception_handler(OBJECT_PTR,
+					      OBJECT_PTR,
+					      OBJECT_PTR,
+					      stack_type *,
+					      OBJECT_PTR);
 
 /*
 
@@ -97,12 +104,12 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(exception_action));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  exception_environment = cons(list(4,
-				    exception_selector,
-				    exception_action,
-				    exception_environment, //this is the 'handler_environment'
-				    cont),
-			       exception_environment);
+  exception_handler_t *eh = create_exception_handler(receiver,
+						     exception_selector,
+						     exception_action,
+						     exception_environment,
+						     cont);
+  stack_push(exception_environment, eh);
 
   return niladic_block_value(closure, cont);
 }
@@ -117,11 +124,6 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(ensure_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //TODO: a global idclo object
-  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-  //				    convert_int_to_object(0),
-  //				    (nativefn)identity_function);
-  
   nativefn nf1 = (nativefn)extract_native_fn(receiver);
   OBJECT_PTR ret = nf1(receiver, idclo);
   
@@ -150,11 +152,6 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
   entry->termination_blk_closure = curtailed_block;
   entry->termination_blk_invoked = false;
-  
-  //TODO: a global idclo object
-  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-  //				    convert_int_to_object(0),
-  //				    (nativefn)identity_function);
   
   nativefn nf1 = (nativefn)extract_native_fn(receiver);
   OBJECT_PTR ret = nf1(receiver, idclo);

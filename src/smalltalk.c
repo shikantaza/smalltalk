@@ -449,12 +449,6 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-  //                                  convert_int_to_object(0),
-  //                                  (nativefn)identity_function);
-
-  //assert(IS_CLOSURE_OBJECT(idclo));
-
   put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
   
   nativefn1 nf1 = (nativefn1)nf;
@@ -589,12 +583,6 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   //would have been populated
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
-
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-                                    convert_int_to_object(0),
-                                    (nativefn)identity_function);
-
-  assert(IS_CLOSURE_OBJECT(idclo));
 
   put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
   
@@ -874,4 +862,21 @@ OBJECT_PTR convert_fn_to_closure(nativefn fn)
 			convert_int_to_object(0));
 
   return extract_ptr(lst) + CLOSURE_TAG;
+}
+
+exception_handler_t *create_exception_handler(OBJECT_PTR protected_block,
+					      OBJECT_PTR selector,
+					      OBJECT_PTR exception_action,
+					      stack_type *env,
+					      OBJECT_PTR cont)
+{
+  exception_handler_t *eh = (exception_handler_t *)GC_MALLOC(sizeof(exception_handler_t));
+
+  eh->protected_block       = protected_block;
+  eh->selector              = selector;
+  eh->exception_action      = exception_action;
+  eh->exception_environment = env;
+  eh->cont                  = cont;
+
+  return eh;
 }

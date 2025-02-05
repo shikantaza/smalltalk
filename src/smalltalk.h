@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#include "stack.h"
+
 #define TWO_RAISED_TO_SYMBOL_BITS_MINUS_1 0x3FFFFF
 
 #define BIT_MASK 15
@@ -105,6 +107,15 @@ typedef struct
   OBJECT_PTR termination_blk_closure;
   BOOLEAN termination_blk_invoked;
 } call_chain_entry_t;
+
+typedef struct exception_handler
+{
+  OBJECT_PTR protected_block;
+  OBJECT_PTR selector;
+  OBJECT_PTR exception_action;
+  stack_type *exception_environment;
+  OBJECT_PTR cont;
+} exception_handler_t;
 
 OBJECT_PTR list(int, ...);
 OBJECT_PTR reverse(OBJECT_PTR);

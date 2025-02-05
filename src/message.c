@@ -36,7 +36,7 @@ extern binding_env_t *top_level;
 
 BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
 
-extern OBJECT_PTR exception_environment;
+extern stack_type *exception_environment;
 
 OBJECT_PTR get_smalltalk_symbol(char *);
 

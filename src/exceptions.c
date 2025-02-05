@@ -9,14 +9,15 @@
 #include "util.h"
 #include "stack.h"
 
-//list of exception handlers;
-//an exception handler is a list of
-//a) exception selector, b) exception action,
-//and c) closure object that is the continuation
-//that the protected block (which is mapped to
-//the exception handler) is to call when it
-//exits normally
-OBJECT_PTR exception_environment;
+//stack of exception handlers;
+//an exception handler is a list of tuples,
+//each tuple comprising:
+// a) the protected_block to which the handler is attached
+// b) the exception selector which the handler handles
+// c) the action to be performed by the handler for the exception
+// d) the exception environment existing at the time of execution of the on:do:
+// e) the continuation to call on successful execution of the protected block
+stack_type *exception_environment;
 
 OBJECT_PTR curtailed_blocks_list;
 
@@ -44,7 +45,7 @@ OBJECT_PTR Exception;
 //environment that was in play when the exception
 //handler was created by the execution of an on:do:
 //method
-OBJECT_PTR handler_environment;
+stack_type *handler_environment;
 
 OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
@@ -53,7 +54,7 @@ extern stack_type *call_chain;
 
 BOOLEAN curtailed_block_in_progress;
 
-OBJECT_PTR active_handler;
+exception_handler_t *active_handler;
 
 OBJECT_PTR get_class_object(OBJECT_PTR);
 uintptr_t extract_ptr(OBJECT_PTR);
@@ -327,11 +328,6 @@ void invoke_curtailed_blocks()
   call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
   unsigned int nof_entries = stack_count(call_chain);
 
-  //TODO: a global idclo object
-  //OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-  //				    convert_int_to_object(0),
-  //				    (nativefn)identity_function);
-
   int i;
   OBJECT_PTR termination_blk;
   BOOLEAN flag;
@@ -353,45 +349,48 @@ void invoke_curtailed_blocks()
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
 {
-  OBJECT_PTR env = exception_environment;
+  exception_handler_t **entries = (exception_handler_t **)stack_data(exception_environment);
+  int count = stack_count(exception_environment);
+  int i = count - 1;
 
   OBJECT_PTR cls_obj = get_class_object(exception);
   class_object_t *cls_obj_int = (class_object_t *)extract_ptr((cls_obj));
 
-  while(env != NIL)
+  while(i >= 0)
   {
-    OBJECT_PTR handler = car(env);
+    exception_handler_t *handler = entries[i];
 
     OBJECT_PTR ret;
+
+    char *exception_name = get_smalltalk_symbol_name(handler->selector);
     
 #ifdef DEBUG
-    print_object(handler); printf(" is the handler\n");
-    print_object(car(handler)); printf(" is the exception name\n");
+    printf("%s is the exception name\n", exception_name);
 #endif
 
-    //if(car(handler) == exception)
-    if(!strcmp(get_smalltalk_symbol_name(car(handler)), cls_obj_int->name))
+    if(!strcmp(exception_name, cls_obj_int->name))  
     {
       active_handler = handler;
 
-      OBJECT_PTR action = second(handler);
+      OBJECT_PTR action = handler->exception_action;
+      
       assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
 
-      handler_environment = third(handler);
+      handler_environment = handler->exception_environment;
       
       nativefn nf = (nativefn)extract_native_fn(action);
 
       //pop the handler (and all later handlers (is ths correct?))
-      exception_environment = cdr(env);
+      //stack_pop(exception_environment); //don't think the env should be popped
 
-      ret =  nf(action, exception, fourth(handler));
+      ret =  nf(action, exception, handler->cont);
 
       invoke_curtailed_blocks();
 
       return ret;
     }
 
-    env = cdr(env);
+    i--;
   }  
   
   printf("Unhandled exception: %s\n", cls_obj_int->name);
@@ -408,18 +407,29 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR env = handler_environment;
+  stack_type *env = handler_environment;
 
   nativefn nf = (nativefn)extract_native_fn(cont);
+
+  exception_handler_t **entries = (exception_handler_t **)stack_data(handler_environment);
+  int count = stack_count(handler_environment);
+  int i = count - 1;
+
+  OBJECT_PTR cls_obj = get_class_object(receiver);
+  class_object_t *cls_obj_int = (class_object_t *)extract_ptr((cls_obj));
   
-  while(env != NIL)
+  while(i >= 0)
   {
-    OBJECT_PTR handler = car(env);
+    exception_handler_t *handler = entries[i];
+
+    char *exception_name = get_smalltalk_symbol_name(handler->selector);
     
-    if(car(handler) == receiver)
+    if(!strcmp(exception_name, cls_obj_int->name))
       return nf(cont, TRUE);
     else
       return nf(cont, FALSE);
+
+    i--;
   }
 
   return nf(cont, FALSE);
@@ -432,7 +442,7 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = fourth(active_handler);
+  OBJECT_PTR handler_cont = active_handler->cont;
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
@@ -448,13 +458,48 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = fourth(active_handler);
+  OBJECT_PTR handler_cont = active_handler->cont;
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
   return nf(handler_cont, val, NIL);
+}
+
+OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR handler_cont = active_handler->cont;
+  assert(IS_CLOSURE_OBJECT(handler_cont));
+
+  OBJECT_PTR protected_block = active_handler->protected_block;
+
+  nativefn nf = (nativefn)extract_native_fn(protected_block);
+
+  return nf(protected_block, handler_cont);
+}
+
+OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
+				 OBJECT_PTR another_protected_blk,
+				 OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(another_protected_blk));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR handler_cont = active_handler->cont;
+  assert(IS_CLOSURE_OBJECT(handler_cont));
+
+  nativefn nf = (nativefn)extract_native_fn(another_protected_blk);
+  
+  return nf(another_protected_blk, handler_cont);
 }
 
 void create_Exception()
@@ -480,7 +525,7 @@ void create_Exception()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 2;
+  cls_obj->instance_methods->count = 4;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   /* cls_obj->instance_methods->bindings[0].key = get_symbol("nested"); */
@@ -501,6 +546,17 @@ void create_Exception()
 						    NIL,
 						    convert_int_to_object(1));
 
+  cls_obj->instance_methods->bindings[2].key = get_symbol("retry");
+  cls_obj->instance_methods->bindings[2].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_retry),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[3].key = get_symbol("retryUsing:");
+  cls_obj->instance_methods->bindings[3].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_retry_using),
+						    NIL,
+						    convert_int_to_object(1));
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;

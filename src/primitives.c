@@ -26,6 +26,8 @@ OBJECT_PTR identity_function(OBJECT_PTR, ...);
 
 extern void print_call_chain();
 
+extern OBJECT_PTR idclo;
+
 /* OBJECT_PTR message_send(OBJECT_PTR receiver, ...) */
 /* { */
 /*   //TODO: */
@@ -137,11 +139,6 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   assert(!stack_is_empty(call_chain));
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(call_chain);
-
-  //TODO: a global idclo object
-  OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-				    convert_int_to_object(0),
-				    (nativefn)identity_function);
 
   while(entry->selector != selector)
   {

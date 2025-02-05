@@ -93,6 +93,8 @@ char *get_symbol_name(OBJECT_PTR);
 
 extern stack_type *call_chain;
 
+extern stack_type *exception_environment;
+
 %}
 
 %union{
@@ -934,6 +936,8 @@ void repl2()
 
   stack_empty(call_chain);
 
+  stack_empty(exception_environment);
+
   compile_time_method_selector = NIL;
 
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
@@ -1152,13 +1156,6 @@ void repl()
 
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
-
-  //idclo = create_closure(convert_int_to_object(1),
-  //			 convert_int_to_object(0),
-  //                       (nativefn)identity_function);
-
-  //assert(IS_CLOSURE_OBJECT(idclo));
-  //print_object(idclo); printf("#####\n");
 
   put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
 
