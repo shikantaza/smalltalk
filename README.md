@@ -20,7 +20,7 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
 
 * Integer operations (+, -, *, /)
 * `Transcript>>show:` and `Transcript>>cr` for printing strings to the REPL
-* Exception handling (`signal/return/resume/pass/outer/resignalAs`)
+* Exception handling (`signal/return/resume/retry/pass/outer/resignalAs`)
 * Basic block operations (`value, value:, on:do, ensure:, ifCurtailed:`)
 
 (Note: use Control-Backspace to delete stuff from the REPL)
