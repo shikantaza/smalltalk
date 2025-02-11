@@ -43,6 +43,8 @@ OBJECT_PTR create_message_send_closure();
 
 extern OBJECT_PTR idclo;
 
+extern stack_type *exception_contexts;
+
 OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR convert_fn_to_closure(nativefn fn);
 
@@ -123,6 +125,8 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   if(get_int_value(arg) == 0)
   {
+    stack_push(exception_contexts, (void *)cont);
+
     OBJECT_PTR ret;
     assert(get_top_level_val(get_symbol("ZeroDivide"), &ret));
 

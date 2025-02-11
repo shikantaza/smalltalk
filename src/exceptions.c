@@ -19,6 +19,8 @@
 // e) the continuation to call on successful execution of the protected block
 stack_type *exception_environment;
 
+stack_type *signalling_environment;
+
 OBJECT_PTR curtailed_blocks_list;
 
 OBJECT_PTR get_symbol(char *);
@@ -60,6 +62,8 @@ OBJECT_PTR get_class_object(OBJECT_PTR);
 uintptr_t extract_ptr(OBJECT_PTR);
 
 extern OBJECT_PTR idclo;
+
+stack_type *exception_contexts;
 
 /* code below this point is earlier code; will be
    incoporated if found relevant */
@@ -349,6 +353,8 @@ void invoke_curtailed_blocks()
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
 {
+  signalling_environment = exception_environment;
+
   exception_handler_t **entries = (exception_handler_t **)stack_data(exception_environment);
   int count = stack_count(exception_environment);
   int i = count - 1;
@@ -400,6 +406,16 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
   return NIL;
 }
 
+OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  return signal_exception(receiver);
+}
+
 OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
@@ -448,6 +464,8 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
+  stack_pop(exception_contexts);
+
   return nf(handler_cont, NIL);
 }
 
@@ -463,6 +481,8 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
+
+  stack_pop(exception_contexts);
 
   return nf(handler_cont, val, NIL);
 }
@@ -502,6 +522,117 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
   return nf(another_protected_blk, handler_cont);
 }
 
+OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  assert(!stack_is_empty(exception_contexts));
+  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
+
+  assert(IS_CLOSURE_OBJECT(exception_context));
+
+  nativefn nf = (nativefn)extract_native_fn(exception_context);
+
+  return nf(exception_context, NIL);
+}
+
+OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  assert(!stack_is_empty(exception_contexts));
+  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
+
+  assert(IS_CLOSURE_OBJECT(exception_context));
+
+  nativefn nf = (nativefn)extract_native_fn(exception_context);
+
+  return nf(exception_context, val);
+}
+
+OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  exception_handler_t **entries = (exception_handler_t **)stack_data(exception_environment);
+  int count = stack_count(exception_environment);
+  int i = count - 1;
+
+  OBJECT_PTR cls_obj = get_class_object(receiver);
+  class_object_t *cls_obj_int = (class_object_t *)extract_ptr((cls_obj));
+
+  while(i >= 0)
+  {
+    exception_handler_t *handler = entries[i];
+
+    OBJECT_PTR ret;
+
+    char *exception_name = get_smalltalk_symbol_name(handler->selector);
+
+#ifdef DEBUG
+    printf("%s is the exception name\n", exception_name);
+#endif
+
+    if(!strcmp(exception_name, cls_obj_int->name) && handler != active_handler)
+    {
+      active_handler = handler;
+
+      OBJECT_PTR action = handler->exception_action;
+
+      assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
+
+      handler_environment = handler->exception_environment;
+
+      nativefn nf = (nativefn)extract_native_fn(action);
+
+      //pop the handler (and all later handlers (is ths correct?))
+      //stack_pop(exception_environment); //don't think the env should be popped
+
+      ret =  nf(action, receiver, handler->cont);
+
+      invoke_curtailed_blocks();
+
+      return ret;
+    }
+
+    i--;
+  }
+
+  printf("Unhandled exception: %s\n", cls_obj_int->name);
+
+  invoke_curtailed_blocks();
+
+  return NIL;
+}
+
+OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  stack_push(exception_contexts, (void *)cont);
+
+  return exception_pass(closure, cont);
+}
+
+OBJECT_PTR exception_resignal_as(OBJECT_PTR closure, OBJECT_PTR new_exception, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  exception_environment = signalling_environment;
+
+  return signal_exception(new_exception);
+}
+
 void create_Exception()
 {
   class_object_t *cls_obj;
@@ -525,7 +656,7 @@ void create_Exception()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 4;
+  cls_obj->instance_methods->count = 10;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   /* cls_obj->instance_methods->bindings[0].key = get_symbol("nested"); */
@@ -555,6 +686,42 @@ void create_Exception()
   cls_obj->instance_methods->bindings[3].key = get_symbol("retryUsing:");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_retry_using),
+						    NIL,
+						    convert_int_to_object(1));
+
+  cls_obj->instance_methods->bindings[4].key = get_symbol("resume");
+  cls_obj->instance_methods->bindings[4].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_resume),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[5].key = get_symbol("resume:");
+  cls_obj->instance_methods->bindings[5].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_resume_with_val),
+						    NIL,
+						    convert_int_to_object(1));
+
+  cls_obj->instance_methods->bindings[6].key = get_symbol("pass");
+  cls_obj->instance_methods->bindings[6].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_pass),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[7].key = get_symbol("outer");
+  cls_obj->instance_methods->bindings[7].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_outer),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[8].key = get_symbol("signal");
+  cls_obj->instance_methods->bindings[8].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_signal),
+						    NIL,
+						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[9].key = get_symbol("resignalAs:");
+  cls_obj->instance_methods->bindings[9].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_resignal_as),
 						    NIL,
 						    convert_int_to_object(1));
 

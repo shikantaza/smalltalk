@@ -69,6 +69,8 @@ extern OBJECT_PTR g_test;
 
 extern OBJECT_PTR idclo;
 
+extern stack_type *exception_contexts;
+
 int set_up_new_yyin(FILE *);
 void pop_yyin();
 
@@ -937,6 +939,8 @@ void repl2()
   stack_empty(call_chain);
 
   stack_empty(exception_environment);
+
+  stack_empty(exception_contexts);
 
   compile_time_method_selector = NIL;
 

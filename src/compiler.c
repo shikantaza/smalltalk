@@ -134,6 +134,8 @@ stack_type *call_chain;
 
 OBJECT_PTR idclo;
 
+extern stack_type *exception_contexts;
+
 OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
 
@@ -279,6 +281,8 @@ void initialize()
   call_chain = stack_create();
 
   create_idclo();
+
+  exception_contexts = stack_create();
 }
 
 void error(const char *fmt, ...)
