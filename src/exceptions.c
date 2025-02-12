@@ -368,13 +368,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
     OBJECT_PTR ret;
 
-    char *exception_name = get_smalltalk_symbol_name(handler->selector);
-    
-#ifdef DEBUG
-    printf("%s is the exception name\n", exception_name);
-#endif
-
-    if(!strcmp(exception_name, cls_obj_int->name))  
+    if(cls_obj == handler->selector)
     {
       active_handler = handler;
 
@@ -576,13 +570,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
     OBJECT_PTR ret;
 
-    char *exception_name = get_smalltalk_symbol_name(handler->selector);
-
-#ifdef DEBUG
-    printf("%s is the exception name\n", exception_name);
-#endif
-
-    if(!strcmp(exception_name, cls_obj_int->name) && handler != active_handler)
+    if(cls_obj == handler->selector && handler != active_handler)
     {
       active_handler = handler;
 
