@@ -51,6 +51,8 @@ int gen_sym_count = 0;
 extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 
+extern OBJECT_PTR Object;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -638,7 +640,31 @@ OBJECT_PTR get_string_obj(char *s)
   string_literals[nof_string_literals-1] = GC_strdup(s);
 
   return ((nof_string_literals - 1) << OBJECT_SHIFT) + STRING_LITERAL_TAG;
+}
 
+OBJECT_PTR get_parent_class(OBJECT_PTR cls)
+{
+  assert(IS_CLASS_OBJECT(cls));
+  return ((class_object_t *)extract_ptr(cls))->parent_class_object;
+}
 
+BOOLEAN is_super_class(OBJECT_PTR cls1, OBJECT_PTR cls2)
+{
+  assert(IS_CLASS_OBJECT(cls1));
+  assert(IS_CLASS_OBJECT(cls2));
+
+  if(cls1 == Object)
+    return true;
   
+  OBJECT_PTR parent_cls = get_parent_class(cls2);
+
+  while(parent_cls != Object)
+  {
+    if(cls1 == parent_cls)
+      return true;
+
+    parent_cls = get_parent_class(parent_cls);
+  }
+
+  return false;
 }

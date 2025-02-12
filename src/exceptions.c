@@ -65,6 +65,8 @@ extern OBJECT_PTR idclo;
 
 stack_type *exception_contexts;
 
+BOOLEAN is_super_class(OBJECT_PTR, OBJECT_PTR);
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -368,7 +370,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
     OBJECT_PTR ret;
 
-    if(cls_obj == handler->selector)
+    if(cls_obj == handler->selector || is_super_class(handler->selector, cls_obj))
     {
       active_handler = handler;
 
@@ -570,7 +572,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
     OBJECT_PTR ret;
 
-    if(cls_obj == handler->selector && handler != active_handler)
+    if((cls_obj == handler->selector || is_super_class(handler->selector, cls_obj)) && handler != active_handler)
     {
       active_handler = handler;
 
