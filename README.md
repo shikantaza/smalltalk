@@ -12,7 +12,8 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
   
   `Smalltalk createClass: #Fact`
   
-  `Smalltalk addClassMethod: #fact: toClass: #Fact withBody: [ :n | (n = 0) ifTrue: [ ^ 1]. ^ (n * (self fact: (n - 1))) ]`
+  `Smalltalk addClassMethod: #fact: toClass: #Fact withBody:
+      [ :n | (n = 0) ifTrue: [ ^ 1]. ^ (n * (self fact: (n - 1))) ]`
   
 * Global objects
  
@@ -21,7 +22,7 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
 * Integer operations (+, -, *, /)
 * `Transcript>>show:` and `Transcript>>cr` for printing strings to the REPL
 * Exception handling (`signal/return/resume/retry/pass/outer/resignalAs`)
-* Basic block operations (`value, value:, on:do, ensure:, ifCurtailed:`)
+* Basic block operations (`value, value:, on:do:, ensure:, ifCurtailed:`)
 
 (Note: use Control-Backspace to delete stuff from the REPL)
 
