@@ -8,11 +8,11 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
   
   `Smalltalk createClass: #MyClass parentClass: #ParentClass`
   
-  `Smalltalk addClassMethod: #hello withBody: [ 42 ] toClass: #MyClass`
+  `Smalltalk addClassMethod: #hello toClass: #MyClass withBody: [ 42 ]`
   
   `Smalltalk createClass: #Fact`
   
-  `Smalltalk addClassMethod: #fact: withBody: [ :n | (n = 0) ifTrue: [ ^ 1]. ^ (n * (self fact: (n - 1))) ] toClass: #Fact`
+  `Smalltalk addClassMethod: #fact: toClass: #Fact withBody: [ :n | (n = 0) ifTrue: [ ^ 1]. ^ (n * (self fact: (n - 1))) ]`
   
 * Global objects
  
