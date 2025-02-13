@@ -152,7 +152,7 @@ BOOLEAN exists_in_top_level(OBJECT_PTR sym)
 
 OBJECT_PTR create_class(OBJECT_PTR closure,
 			OBJECT_PTR class_sym,
-			OBJECT_PTR parent_class_sym,
+			OBJECT_PTR parent_class_object,
 			OBJECT_PTR cont)
 {
   //TODO: what to do if the class to be created
@@ -160,23 +160,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(parent_class_sym));
+  assert(IS_CLASS_OBJECT(parent_class_object));
   assert(IS_CLOSURE_OBJECT(cont));
-
-  /*
-  char *s1 = get_symbol_name(class);
-  char *s2 = get_symbol_name(parent_class);
-  
-  char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
-  char *stripped_parent_class_name = substring(s2, 1, strlen(s2)-1);
-  */
-  
-#ifdef DEBUG  
-  /* printf("%s %s\n", stripped_class_name, stripped_parent_class_name); */
-#endif
-
-  //assert(exists_in_top_level(get_symbol(stripped_parent_class_name)));
-  assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(parent_class_sym))));
 
   class_object_t *cls_obj;
 
@@ -185,13 +170,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
     printf("create_class(): Unable to allocate memory\n");
     exit(1);
   }
-
-  OBJECT_PTR parent_class_object;
-  //assert(get_top_level_val(get_symbol(stripped_parent_class_name), &parent_class_object));
-  assert(get_top_level_val(get_symbol(get_smalltalk_symbol_name(parent_class_sym)), &parent_class_object));
   
-  cls_obj->parent_class_object = car(parent_class_object);
-  //cls_obj->name = GC_strdup(stripped_class_name);
+  cls_obj->parent_class_object = parent_class_object;
   cls_obj->name = GC_strdup(get_smalltalk_symbol_name(class_sym));
 
   cls_obj->nof_instances = 0;
@@ -231,48 +211,24 @@ OBJECT_PTR create_class_no_parent_class(OBJECT_PTR closure,
 					OBJECT_PTR class_sym,
 					OBJECT_PTR cont)
 {
-  return create_class(closure, class_sym, get_smalltalk_symbol("Object"), cont);
+  return create_class(closure, class_sym, Object, cont);
 }
 
 OBJECT_PTR add_instance_var(OBJECT_PTR closure,
 			    OBJECT_PTR var,
-			    OBJECT_PTR class_sym,
+			    OBJECT_PTR class_obj,
 			    OBJECT_PTR cont)
 {
   //TODO: add a default value for the variable?
 
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
+  assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(var));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  /*
-  char *s1 = get_symbol_name(class);
-  char *s2 = get_symbol_name(var);
-
-  char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
-  char *stripped_instance_var_name = substring(s2, 1, strlen(s2)-1);
-  */
-  
-#ifdef DEBUG  
-  printf("%s %s\n", get_smalltalk_symbol_name(class_sym), get_smalltalk_symbol_name(var)); 
-#endif
-  
-  //OBJECT_PTR var_sym = get_symbol(stripped_instance_var_name);
   OBJECT_PTR var_sym = get_symbol(get_smalltalk_symbol_name(var));
   
-  //assert(exists_in_top_level(get_symbol(stripped_class_name)));
-  assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(class_sym))));
-
-  OBJECT_PTR class_object_val, class_object;
-
-  //assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));
-  assert(get_top_level_val(get_symbol(get_smalltalk_symbol_name(class_sym)), &class_object_val));
-    
-  class_object = car(class_object_val);
-  assert(IS_CLASS_OBJECT(class_object));
-
-  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
 
   unsigned int i, n;
 
@@ -333,44 +289,23 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
 
 OBJECT_PTR add_class_var(OBJECT_PTR closure,
 			 OBJECT_PTR var,
-			 OBJECT_PTR class_sym,
+			 OBJECT_PTR class_obj,
 			 OBJECT_PTR cont)
 {
   //TODO: add a default value for the variable?
 
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
+  assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(var));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  /*
-  char *s1 = get_symbol_name(class);
-  char *s2 = get_symbol_name(var);
-  
-  char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
-  char *stripped_class_var_name = substring(s2, 1, strlen(s2)-1);
-  */
-  
 #ifdef DEBUG  
-  printf("%s %s\n", get_smalltalk_symbol_name(class_sym), get_smalltalk_symbol_name(var));
+  printf("%s\n", get_smalltalk_symbol_name(var));
 #endif
   
-  //assert(exists_in_top_level(get_symbol(stripped_class_name)));
-  assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(class_sym))));
-
-  //OBJECT_PTR var_sym = get_symbol(stripped_class_var_name);
   OBJECT_PTR var_sym = get_symbol(get_smalltalk_symbol_name(var));
   
-  OBJECT_PTR class_object_val, class_object;
-
-  //assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));
-  assert(get_top_level_val(get_symbol(get_smalltalk_symbol_name(class_sym)), &class_object_val));
-
-  class_object = car(class_object_val);
-  
-  assert(IS_CLASS_OBJECT(class_object));
-
-  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
 
   //check that the class variable doesn't already exist
   unsigned int i, n;
@@ -402,31 +337,19 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
 
   nativefn nf = (nativefn)extract_native_fn(cont);
-  
+
   return nf(cont, NIL);
 }
 
-void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code)
+void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
+  assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = selector;
 
-  /*
-  char *s1 = get_symbol_name(class);
-  char *s2 = get_symbol_name(selector);
-  
-  char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
-  char *stripped_selector_name = substring(s2, 1, strlen(s2)-1);
-  */
-  
-  //assert(exists_in_top_level(get_symbol(stripped_class_name)));
-  assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(class_sym))));
-
-  //OBJECT_PTR selector_sym = get_symbol(stripped_selector_name);
   OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
   
   OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
@@ -463,16 +386,7 @@ void add_instance_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR c
   print_object(closed_vals); printf("\n");
 #endif
   
-  OBJECT_PTR class_object_val, class_object;
-
-  //assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));
-  assert(get_top_level_val(get_symbol(get_smalltalk_symbol_name(class_sym)), &class_object_val));
-
-  class_object = car(class_object_val);
-  
-  assert(IS_CLASS_OBJECT(class_object));
-
-  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
   
   unsigned int i, n;
   n = cls_obj->instance_methods->count;
@@ -533,27 +447,15 @@ OBJECT_PTR replace_method_selector(OBJECT_PTR code, OBJECT_PTR selector)
   }
 }
 
-void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code)
+void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
+  assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = selector;
   
-  /*
-  char *s1 = get_symbol_name(class);
-  char *s2 = get_symbol_name(selector);
-  
-  char *stripped_class_name = substring(s1, 1, strlen(s1)-1);
-  char *stripped_selector_name = substring(s2, 1, strlen(s2)-1);
-  */
-  
-  //assert(exists_in_top_level(get_symbol(stripped_class_name)));
-  assert(exists_in_top_level(get_symbol(get_smalltalk_symbol_name(class_sym))));
-
-  //OBJECT_PTR selector_sym = get_symbol(stripped_selector_name);
   OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
 
 #ifdef DEBUG
@@ -598,16 +500,7 @@ void add_class_method(OBJECT_PTR class_sym, OBJECT_PTR selector, OBJECT_PTR code
   print_object(closed_vals); printf("\n");
 #endif
   
-  OBJECT_PTR class_object_val, class_object;
-
-  //assert(get_top_level_val(get_symbol(stripped_class_name), &class_object_val));
-  assert(get_top_level_val(get_symbol(get_smalltalk_symbol_name(class_sym)), &class_object_val));
-
-  class_object = car(class_object_val);
-  
-  assert(IS_CLASS_OBJECT(class_object));
-
-  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
   
   unsigned int i, n;
   n = cls_obj->class_methods->count;
@@ -763,7 +656,7 @@ OBJECT_PTR create_global(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(global_sym));
   assert(IS_CLOSURE_OBJECT(cont));
-  
+
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
 
   nativefn1 nf = (nativefn1)extract_native_fn(cont);

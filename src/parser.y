@@ -79,6 +79,7 @@ int open_square_brackets;
 //void print_executable_code(executable_code_t *);
 
 BOOLEAN loading_core_library;
+BOOLEAN running_tests;
 
 OBJECT_PTR extract_arity(OBJECT_PTR);
 
@@ -96,6 +97,8 @@ char *get_symbol_name(OBJECT_PTR);
 extern stack_type *call_chain;
 
 extern stack_type *exception_environment;
+
+BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
 
 %}
 
@@ -967,16 +970,26 @@ void repl2()
   */
   if(is_add_instance_method_exp(exp))
   {
-    add_instance_method(seventh(third(exp)),
+    OBJECT_PTR class_object_val, class_object;
+    assert(get_top_level_val(sixth(third(exp)), &class_object_val));
+    class_object = car(class_object_val);
+    assert(IS_CLASS_OBJECT(class_object));
+
+    add_instance_method(class_object,
 			fifth(third(exp)),
-			list(3, LET, NIL, sixth(third(exp))));
+			list(3, LET, NIL, seventh(third(exp))));
                             
   }
   else if(is_add_class_method_exp(exp))
   {
-    add_class_method(seventh(third(exp)),
+    OBJECT_PTR class_object_val, class_object;
+    assert(get_top_level_val(sixth(third(exp)), &class_object_val));
+    class_object = car(class_object_val);
+    assert(IS_CLASS_OBJECT(class_object));
+
+    add_class_method(class_object,
 		     fifth(third(exp)),
-		     list(3, LET, NIL, sixth(third(exp))));
+		     list(3, LET, NIL, seventh(third(exp))));
   }
   else
     repl();
@@ -988,7 +1001,7 @@ void parse_from_fp(FILE *fp)
   char *line = NULL;
 
   unsigned int len;
-  int nbytes = 100;
+  int nbytes = 200;
 
   BOOLEAN eof = 0;
   
@@ -1010,8 +1023,9 @@ void parse_from_fp(FILE *fp)
 
     if(strlen(buf) == 0)
       break;
-    
+
     yy_scan_string(buf);
+
     if(!yyparse())
     {
       repl2();
@@ -1022,39 +1036,30 @@ void parse_from_fp(FILE *fp)
   }
 }
 
+void load_file(char *file_name)
+{
+  FILE *fp = fopen(file_name, "r");
+  assert(fp);
+  parse_from_fp(fp);
+  fclose(fp);
+}
+
 void load_core_library()
 {
   loading_core_library = true;
-  
   printf("Loading core library...");
-
-  FILE *fp = fopen("smalltalk.st", "r");
-
-  assert(fp);
-
-  parse_from_fp(fp);
-  
-  /*
-  if(set_up_new_yyin(fp))
-  {
-    printf("set_up_new_yyin() failed\n");
-    return;
-  }
-
-  while(!yyparse()) //TODO: add check for exceptions/errors
-  {
-    print_executable_code(g_exp);printf("\n");
-    repl2();
-  }
-
-  pop_yyin();
-  */
-  
-  fclose(fp);
-  
+  load_file("smalltalk.st");
   printf("done.\n");
-
   loading_core_library = false;
+}
+
+void load_tests()
+{
+  running_tests = true;
+  printf("Running tests...");
+  load_file("tests.st");
+  printf("done.\n");
+  running_tests = false;
 }
 
 #ifndef LEX
@@ -1064,6 +1069,7 @@ int main()
 
   load_core_library();
 
+  load_tests();
   //TODO: get this parsing too done
   //by parser_from_fp()
   
@@ -1165,7 +1171,7 @@ void repl()
 
   nativefn1 nf1 = (nativefn1)nf;
 
-  if(loading_core_library == false)
+  if(loading_core_library == false && running_tests == false)
   {
     printf("\n");
     print_object(nf1(closure_form, idclo));
@@ -1260,8 +1266,9 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
      second(third_obj) == SMALLTALK &&
      third(third_obj) == get_symbol(msg) &&
      IS_SMALLTALK_SYMBOL_OBJECT(fifth(third_obj)) &&
-     IS_CONS_OBJECT(sixth(third_obj)) && //TODO: maybe some stronger checks?
-     IS_SMALLTALK_SYMBOL_OBJECT(seventh(third_obj)))
+     IS_CONS_OBJECT(seventh(third_obj)) && //TODO: maybe some stronger checks?
+     //IS_SMALLTALK_SYMBOL_OBJECT(seventh(third_obj)))
+     IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
   else
     return false;  
@@ -1269,12 +1276,12 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
 
 BOOLEAN is_add_instance_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addInstanceMethod:withBody:toClass:");
+  return is_add_method_exp(exp, "addInstanceMethod:toClass:withBody:");
 }
 
 BOOLEAN is_add_class_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addClassMethod:withBody:toClass:");
+  return is_add_method_exp(exp, "addClassMethod:toClass:withBody:");
 }
 
 #endif
