@@ -33,6 +33,9 @@ The target platform is x86_64 Linux for the first version.
 * Flex
 * Bison
 * autoconf
+* libtool
+* libgc-dev
+* libncurses-dev
 * [LLVM/Clang](https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz)
 * gcc
 * g++
