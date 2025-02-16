@@ -1171,7 +1171,7 @@ void repl()
 
   nativefn1 nf1 = (nativefn1)nf;
 
-  if(loading_core_library == false && running_tests == false)
+  if(loading_core_library == false)
   {
     printf("\n");
     print_object(nf1(closure_form, idclo));

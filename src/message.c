@@ -470,7 +470,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
     method_call_stack = cons(cons(selector,stack_args[n-1]), method_call_stack);
 
-    OBJECT_PTR *args; (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
 
     args[0] = arg1;
     args[1] = arg2;
@@ -478,7 +478,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     args[3] = arg4;
     args[4] = arg5;
 
-    for(i=0; i<n; i++)
+    for(i=0; i<n-1; i++)
       args[i+5] = stack_args[i];
 
     if(!curtailed_block_in_progress)
@@ -495,8 +495,6 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
     for(i=n-1; i>=0; i--)
       asm("push %0\n\t"       : : "r"(stack_args[i]) : );
-    //asm("push %0\n\t"       : : "r"(stack_args[1]) : );
-    //asm("push %0\n\t"       : : "r"(stack_args[0]) : );
 
     //using a for loop screws up the rdx register.
     //so we populate rdx after the stack push operations

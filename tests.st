@@ -41,29 +41,6 @@ Smalltalk addClassMethod: #fact: toClass: Fact withBody:
 ifFalse:
   [failedCases := failedCases + 1]
 
-Smalltalk createClass: #TestIfCurtailed
-
-Smalltalk addClassMethod: #test: toClass: TestIfCurtailed withBody:
-  [ :x |
-  [ (x = 0) ifTrue: [^ 0].
-    Transcript show: 'not zero'; cr. ^ 42]
-  ifCurtailed:
-    [Transcript show: 'curtailed'; cr]]
-
-| x |
-x := TestIfCurtailed test: 0.
-(x = 0) ifTrue:
-  [ passedCases := passedCases + 1]
-ifFalse:
-  [ failedCases := failedCases + 1]
-
-| x |
-x := TestIfCurtailed test: 1.
-(x = 42) ifTrue:
-  [ passedCases := passedCases + 1]
-ifFalse:
-  [ failedCases := failedCases + 1]
-
 Smalltalk createClass: #MyClass3
 
 Smalltalk addInstanceVariable: #x toClass: MyClass3
@@ -90,3 +67,93 @@ MyClass4 x: 42.
 
 (([1/0. 42] on: ZeroDivide do: [ :ex | passedCases := passedCases + 1. ex return: 1]) = 42) ifTrue: [ failedCases := failedCases + 1]
 
+| x |
+x := 0.
+[(x = 0) ifTrue: [ Exception new signal]] on: Exception do: [ :ex | x := 42].
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x |
+x := 0.
+[(x = 0) ifTrue: [ ZeroDivide new signal]] on: ZeroDivide do: [ :ex | x := 42].
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x |
+x := 0.
+[(x = 0) ifTrue: [ ZeroDivide new signal]] on: Error do: [ :ex | x := 42].
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x |
+x := 0.
+[(x = 0) ifTrue: [ ZeroDivide new signal]] on: Exception do: [ :ex | x := 42].
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[y := 10/x] on: ZeroDivide do: [ :ex | x := 2. ex retry].
+(y = 5) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[y := 10/x] on: ZeroDivide do: [ :ex | x := 2. ex retryUsing: [y := 42]].
+(y = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[y := 1/x] on: ZeroDivide do: [ :ex | ex resume: 42].
+(y = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[[y := 1/x] on: ZeroDivide do: [:ex | ex pass]] on: Exception do: [ :ex | ex resume: 42].
+(y = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[[y := 1/x] on: ZeroDivide do: [:ex | ex outer. y := 33 ]] on: Exception do: [ :ex | ex resume].
+(y = 33) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[[y := 1/x] on: ZeroDivide do: [ :ex | ex resignalAs: (Error new)]] on: Exception do: [ :ex | y := 42].
+(y = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y |
+x := 0.
+[[y := 1/x] on: ZeroDivide do: [ :ex | ex resignalAs: (Exception new)]] on: Exception do: [ :ex | y := 42].
+(y = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y z|
+x := 0.
+[[y := 1/x] on: ZeroDivide do: [ :ex | y := 33]] ensure: [ z := 42].
+((y = 33) & (z = 42)) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y z|
+x := 0.
+[[y := 1/x] ifCurtailed: [ z := 42]] on: ZeroDivide do: [:ex | ex resume: 33].
+((y = 33) & (z = 42)) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk createClass: #ArgTest
+
+Smalltalk addClassMethod: #test1: toClass: ArgTest withBody: [:x | x ]
+
+((ArgTest test1: 42) = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #p1:p2: toClass: ArgTest withBody: [:x1 :x2 | x1 + x2 ]
+
+((ArgTest p1: 1 p2: 2) = 3) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #p1:p2:p3: toClass: ArgTest withBody: [:x1 :x2 :x3 | x1 + x2 + x3]
+
+((ArgTest p1: 1 p2: 2 p3: 3) = 6) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #p1:p2:p3:p4: toClass: ArgTest withBody: [:x1 :x2 :x3 :x4 | x1 + x2 + x3 + x4]
+
+((ArgTest p1: 1 p2: 2 p3: 3 p4: 4) = 10) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #p1:p2:p3:p4:p5: toClass: ArgTest withBody: [:x1 :x2 :x3 :x4 :x5 | x1 + x2 + x3 + x4 + x5]
+
+((ArgTest p1: 1 p2: 2 p3: 3 p4: 4 p5: 5) = 15) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Transcript show: 'Passed test cases = '. passedCases
+
+Transcript show: 'Failed test cases = '. failedCases
