@@ -48,6 +48,10 @@ extern BOOLEAN curtailed_block_in_progress;
 
 OBJECT_PTR signal_exception(OBJECT_PTR);
 
+OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR convert_fn_to_closure(nativefn fn);
+extern OBJECT_PTR idclo;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 					  OBJECT_PTR selector,
 					  OBJECT_PTR closure,
@@ -186,40 +190,15 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
   if(method == NIL)
   {
-    /*
-    print_object(exception_environment); printf(" is the exception environment\n");
-    print_object(selector); printf(" is the selector\n");
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("MessageNotUnderstood"), &ret));
 
-    OBJECT_PTR env = exception_environment;
+    OBJECT_PTR mnu_class_obj = car(ret);
 
-    while(env != NIL)
-    {
-      OBJECT_PTR handler = car(env);
-      print_object(handler); printf(" is the handler\n");
-      print_object(car(handler)); printf(" is the exception name\n");
-      if(car(handler) == get_smalltalk_symbol("MessageNotUnderstood"))
-      {
-	printf("here\n");
-	OBJECT_PTR action = second(handler);
-	assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
-
-	nativefn nf = (nativefn)extract_native_fn(action);
-
-	//pop the handler (and all later handlers (is ths correct?))
-	exception_environment = cdr(env);
-
-	//TODO; passing NIL for the time being, this
-	//should be a MessageNotUnderstood exception object 
-	return nf(action, NIL, third(handler));
-      }
-
-      env = cdr(env);
-    }
-
-    //there are no handlers
-    assert(false); //TODO
-    */
-    return signal_exception(get_smalltalk_symbol("MessageNotUnderstood"));
+    OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
+						   convert_fn_to_closure((nativefn)new_object_internal),
+						   idclo);
+    return signal_exception(exception_obj);
   }
 
 #ifdef DEBUG
@@ -356,10 +335,13 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     arg1 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(sizeof(OBJECT_PTR));
+    *args = arg1;
+
     method_call_stack = cons(cons(selector,cont), method_call_stack);
 
     if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, &arg1, cont, NIL, false));
+      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, args, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -378,7 +360,9 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     
     method_call_stack = cons(cons(selector,cont), method_call_stack);
 
-    OBJECT_PTR args[2]; args[0] = arg1; args[1] = arg2;
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(2 * sizeof(OBJECT_PTR));
+    args[0] = arg1; args[1] = arg2;
+
     if(!curtailed_block_in_progress)
       stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 2, args, cont, NIL, false));
 
@@ -401,7 +385,9 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
     
     method_call_stack = cons(cons(selector,cont), method_call_stack);
 
-    OBJECT_PTR args[3]; args[0] = arg1; args[1] = arg2; args[2] = arg3;
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(3 * sizeof(OBJECT_PTR));
+    args[0] = arg1; args[1] = arg2; args[2] = arg3;
+
     if(!curtailed_block_in_progress)
       stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 3, args, cont, NIL, false));
 
@@ -426,7 +412,9 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
 
     method_call_stack = cons(cons(selector,cont), method_call_stack);
 
-    OBJECT_PTR args[4]; args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(4 * sizeof(OBJECT_PTR));
+    args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
+
     if(!curtailed_block_in_progress)
       stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 4, args, cont, NIL, false));
 

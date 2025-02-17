@@ -58,10 +58,7 @@ void pop_yyin()
 
 %%
 
-\"[^\"]*\" {
-  yylval.default_value = GC_strdup(yytext);
-  return T_COMMENT;
-}
+\"[^\"]*\"   /* ignore comments */
 
 [a-zA-Z_][a-zA-Z_0-9]* {
   yylval.default_value = GC_strdup(yytext);

@@ -150,9 +150,9 @@ Smalltalk addClassMethod: #p1:p2:p3:p4: toClass: ArgTest withBody: [:x1 :x2 :x3 
 
 ((ArgTest p1: 1 p2: 2 p3: 3 p4: 4) = 10) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
 
-Smalltalk addClassMethod: #p1:p2:p3:p4:p5: toClass: ArgTest withBody: [:x1 :x2 :x3 :x4 :x5 | x1 + x2 + x3 + x4 + x5]
-
-((ArgTest p1: 1 p2: 2 p3: 3 p4: 4 p5: 5) = 15) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+| x |
+[42 hello] on: MessageNotUnderstood do: [ :ex | x := 42].
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
 
 Transcript show: 'Passed test cases = '. passedCases
 

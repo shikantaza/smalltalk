@@ -698,7 +698,7 @@ void create_Smalltalk()
 
   //addInstanceMethod and addClassMethod cannot be brought into
   //the Smalltalk class because we don't have a way to 'quote' blocks
-  
+
   cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_class),
@@ -710,7 +710,7 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
 						 NIL,
 						 convert_int_to_object(1));
-  
+
   cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:");
   cls_obj->class_methods->bindings[2].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_instance_var),
@@ -728,7 +728,7 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)create_global),
 						 NIL,
 						 convert_int_to_object(2));
-  
+
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
 
