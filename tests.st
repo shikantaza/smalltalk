@@ -154,6 +154,86 @@ Smalltalk addClassMethod: #p1:p2:p3:p4: toClass: ArgTest withBody: [:x1 :x2 :x3 
 [42 hello] on: MessageNotUnderstood do: [ :ex | x := 42].
 (x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
 
+Smalltalk createClass: #Class3
+
+Smalltalk addClassMethod: #m3 toClass: Class3 withBody: [1/0]
+
+Smalltalk createClass: #Class2
+
+Smalltalk addClassMethod: #m2 toClass: Class2 withBody: [ [Class3 m3] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
+
+Smalltalk createClass: #Class1
+
+Smalltalk addClassMethod: #m1 toClass: Class1 withBody: [ [Class2 m2] on: ZeroDivide do: [ :ex | ex resume]]
+
+Smalltalk addClassMethod: #m12 toClass: Class1 withBody: [ [Class2 m2] on: ZeroDivide do: [ :ex | ex resume: 42]]
+
+| x |
+x := Class1 m12.
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Class1 m1
+
+Smalltalk createGlobal: #g1 valued: 0
+
+Smalltalk createGlobal: #g2 valued: 0
+
+Smalltalk createClass: #Class6
+
+Smalltalk addClassMethod: #m6 toClass: Class6 withBody: [g1 := 10 / g2]
+
+Smalltalk createClass: #Class5
+
+Smalltalk addClassMethod: #m5 toClass: Class5 withBody: [ [Class6 m6] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
+
+Smalltalk createClass: #Class4
+
+Smalltalk addClassMethod: #m4 toClass: Class4 withBody: [ [Class5 m5] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
+
+Class4 m4
+
+(g1 = 2) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m41 toClass: Class4 withBody: [ [Class5 m5] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. Class5 m5]]]
+
+g2 := 0
+
+Class4 m41
+
+(g1 = 2) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m42 toClass: Class4 withBody: [ [Class5 m5] on: ZeroDivide do: [ :ex | ex return]]
+
+g1 := 0
+
+g2 := 0
+
+Class4 m42
+
+(g1 = 0) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m43 toClass: Class4 withBody: [ [g1 := Class5 m5] on: ZeroDivide do: [ :ex | ex return: 42]]
+
+g1 := 0
+
+g2 := 0
+
+Class4 m43
+
+(g1 = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk createClass: #Class7
+
+Smalltalk addClassMethod: #m7 toClass: Class7 withBody: [[ ^ 42] ifCurtailed: [g1 := 33]]
+
+Class7 m7
+
+(g1 = 33) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+| x y|
+[[x := 1/0. y := x + 32] on: ZeroDivide do: [ :ex | ex resume: 10]] ifCurtailed: [ y := 14].
+((x = 10) & (y = 42)) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
 Transcript show: 'Passed test cases = '. passedCases
 
 Transcript show: 'Failed test cases = '. failedCases

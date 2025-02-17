@@ -67,6 +67,14 @@ stack_type *exception_contexts;
 
 BOOLEAN is_super_class(OBJECT_PTR, OBJECT_PTR);
 
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
+OBJECT_PTR create_message_send_closure();
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -300,32 +308,8 @@ OBJECT_PTR create_MessageNotUnderstood()
 /* return type is void because we
    discard the return value of the curtailed
    blocks' execution */
-void invoke_curtailed_blocks()
+void invoke_curtailed_blocks_old()
 {
-  /*
-  OBJECT_PTR rest = curtailed_blocks_list;
-  OBJECT_PTR blk;
-  
-  while(rest != NIL)
-  {
-    blk = car(rest);
-
-    assert(IS_CLOSURE_OBJECT(blk));
-
-    //TODO: a global idclo object
-    OBJECT_PTR idclo = create_closure(convert_int_to_object(1),
-				      convert_int_to_object(0),
-				      (nativefn)identity_function);
-  
-    nativefn nf = (nativefn)extract_native_fn(blk);
-    OBJECT_PTR discarded_ret = nf(blk, idclo);
-    
-    rest = cdr(rest);
-  }
-
-  curtailed_blocks_list = NIL;
-  */
-
   //this global variable ensures that the call chain
   //updates are suspended during the execution
   //of the termination blocks of 'ifCurtailed' executions
@@ -351,6 +335,31 @@ void invoke_curtailed_blocks()
   }
 
   curtailed_block_in_progress = false;
+}
+
+void invoke_curtailed_blocks(OBJECT_PTR cont)
+{
+  assert(!stack_is_empty(call_chain));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(call_chain);
+
+  while(entry->cont != cont)
+  {
+    OBJECT_PTR termination_blk = entry->termination_blk_closure;
+
+    if(termination_blk != NIL &&
+       entry->termination_blk_invoked == false)
+    {
+      nativefn nf = (nativefn)extract_native_fn(termination_blk);
+      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
+
+      //this is not really neded
+      //as we are popping the entry
+      entry->termination_blk_invoked = true;
+    }
+
+    entry = (call_chain_entry_t *)stack_pop(call_chain);
+  }
 }
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
@@ -387,8 +396,6 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
       ret =  nf(action, exception, handler->cont);
 
-      invoke_curtailed_blocks();
-
       return ret;
     }
 
@@ -397,8 +404,6 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
   
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  invoke_curtailed_blocks();
-  
   return NIL;
 }
 
@@ -458,6 +463,8 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
+  invoke_curtailed_blocks(handler_cont);
+
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
   stack_pop(exception_contexts);
@@ -476,6 +483,8 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
+  invoke_curtailed_blocks(handler_cont);
+
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
   stack_pop(exception_contexts);
@@ -493,11 +502,20 @@ OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
   OBJECT_PTR handler_cont = active_handler->cont;
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
+  invoke_curtailed_blocks(handler_cont);
+
   OBJECT_PTR protected_block = active_handler->protected_block;
 
-  nativefn nf = (nativefn)extract_native_fn(protected_block);
+  //nativefn nf = (nativefn)extract_native_fn(protected_block);
 
-  return nf(protected_block, handler_cont);
+  //return nf(protected_block, handler_cont);
+  return message_send(create_message_send_closure(),
+		      protected_block,
+		      get_symbol("on:do:"),
+		      convert_int_to_object(2),
+		      active_handler->selector,
+		      active_handler->exception_action,
+		      active_handler->cont);
 }
 
 OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
@@ -513,9 +531,18 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
   OBJECT_PTR handler_cont = active_handler->cont;
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
-  nativefn nf = (nativefn)extract_native_fn(another_protected_blk);
+  invoke_curtailed_blocks(handler_cont);
+
+  //nativefn nf = (nativefn)extract_native_fn(another_protected_blk);
   
-  return nf(another_protected_blk, handler_cont);
+  //return nf(another_protected_blk, handler_cont);
+  return message_send(create_message_send_closure(),
+		      another_protected_blk,
+		      get_symbol("on:do:"),
+		      convert_int_to_object(2),
+		      active_handler->selector,
+		      active_handler->exception_action,
+		      active_handler->cont);
 }
 
 OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -524,6 +551,8 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  invoke_curtailed_blocks(active_handler->cont);
 
   assert(!stack_is_empty(exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
@@ -541,6 +570,8 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  invoke_curtailed_blocks(active_handler->cont);
 
   assert(!stack_is_empty(exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
@@ -589,8 +620,6 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
       ret =  nf(action, receiver, handler->cont);
 
-      invoke_curtailed_blocks();
-
       return ret;
     }
 
@@ -598,8 +627,6 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
   }
 
   printf("Unhandled exception: %s\n", cls_obj_int->name);
-
-  invoke_curtailed_blocks();
 
   return NIL;
 }
