@@ -124,11 +124,21 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(ensure_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
+  entry->termination_blk_closure = ensure_block;
+  entry->termination_blk_invoked = false;
+  
   nativefn nf1 = (nativefn)extract_native_fn(receiver);
   OBJECT_PTR ret = nf1(receiver, idclo);
-  
-  nativefn nf2 = (nativefn)extract_native_fn(ensure_block);
-  OBJECT_PTR discarded_ret = nf2(ensure_block, idclo);
+
+  //if the ensure: block has already been invoked because
+  //of an exception unwinding, don't invoke it again
+  if(entry->termination_blk_invoked == false)
+  {
+    nativefn nf2 = (nativefn)extract_native_fn(ensure_block);
+    OBJECT_PTR discarded_ret = nf2(ensure_block, idclo);
+    entry->termination_blk_invoked == true;
+  }
 
   nativefn nf3 = (nativefn)extract_native_fn(cont);
   return nf3(cont, ret);

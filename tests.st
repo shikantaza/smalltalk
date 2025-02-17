@@ -234,6 +234,74 @@ Class7 m7
 [[x := 1/0. y := x + 32] on: ZeroDivide do: [ :ex | ex resume: 10]] ifCurtailed: [ y := 14].
 ((x = 10) & (y = 42)) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
 
+Smalltalk createClass: #Class10
+
+Smalltalk addClassMethod: #m10 toClass: Class10 withBody: [1/0]
+
+Smalltalk createClass: #Class9
+
+Smalltalk addClassMethod: #m9 toClass: Class9 withBody: [ [Class10 m10] ensure: [ Transcript show: 'ensure'; cr]]
+
+Smalltalk createClass: #Class8
+
+Smalltalk addClassMethod: #m8 toClass: Class8 withBody: [ [Class9 m9] on: ZeroDivide do: [ :ex | ex resume]]
+
+Smalltalk addClassMethod: #m82 toClass: Class8 withBody: [ [Class9 m9] on: ZeroDivide do: [ :ex | ex resume: 42]]
+
+| x |
+x := Class8 m82.
+(x = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Class8 m8
+
+g1 := 0
+
+g2 := 0
+
+Smalltalk createClass: #Class13
+
+Smalltalk addClassMethod: #m13 toClass: Class13 withBody: [g1 := 10 / g2]
+
+Smalltalk createClass: #Class12
+
+Smalltalk addClassMethod: #m12 toClass: Class12 withBody: [ [Class13 m13] ensure: [ Transcript show: 'ensure'; cr]]
+
+Smalltalk createClass: #Class11
+
+Smalltalk addClassMethod: #m11 toClass: Class11 withBody: [ [Class12 m12] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
+
+Class11 m11
+
+(g1 = 2) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m111 toClass: Class11 withBody: [ [Class12 m12] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. Class12 m12]]]
+
+g2 := 0
+
+Class11 m111
+
+(g1 = 2) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m112 toClass: Class11 withBody: [ [Class12 m12] on: ZeroDivide do: [ :ex | ex return]]
+
+g1 := 0
+
+g2 := 0
+
+Class11 m112
+
+(g1 = 0) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+Smalltalk addClassMethod: #m113 toClass: Class11 withBody: [ [g1 := Class12 m12] on: ZeroDivide do: [ :ex | ex return: 42]]
+
+g1 := 0
+
+g2 := 0
+
+Class11 m113
+
+(g1 = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
 Transcript show: 'Passed test cases = '. passedCases
 
 Transcript show: 'Failed test cases = '. failedCases
