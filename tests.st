@@ -302,6 +302,28 @@ Class11 m113
 
 (g1 = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
 
+Smalltalk createClass: #Class14
+
+Smalltalk addInstanceVariable: #x toClass: Class14
+
+Smalltalk addInstanceMethod: #set toClass: Class14 withBody: [ x := 33]
+
+Smalltalk addInstanceMethod: #get toClass: Class14 withBody: [ ^x ]
+
+Smalltalk createClass: #Class15 parentClass: Class14
+
+Smalltalk addInstanceMethod: #set toClass: Class15 withBody: [ x := 42]
+
+Smalltalk addInstanceMethod: #test toClass: Class15 withBody: [ super set]
+
+|obj|
+obj := Class15 new. obj test.
+((obj get) = 33) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
+|obj|
+obj := Class15 new. obj set.
+((obj get) = 42) ifTrue: [passedCases := passedCases + 1] ifFalse: [failedCases := failedCases + 1]
+
 Transcript show: 'Passed test cases = '. passedCases
 
 Transcript show: 'Failed test cases = '. failedCases

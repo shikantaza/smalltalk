@@ -76,6 +76,10 @@ extern stack_type *call_chain;
 
 extern OBJECT_PTR idclo;
 
+extern OBJECT_PTR MESSAGE_SEND_SUPER;
+
+OBJECT_PTR create_message_send_super_closure();
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   top_level->count++;
@@ -120,6 +124,7 @@ void initialize_top_level()
   top_level->count = 0;
 
   add_binding_to_top_level(MESSAGE_SEND, cons(create_message_send_closure(), NIL));
+  add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(create_message_send_super_closure(), NIL));
   add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
@@ -351,7 +356,7 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
   compile_time_method_selector = selector;
 
   OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
-  
+
   OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
 
   void *state = compile_to_c(res);

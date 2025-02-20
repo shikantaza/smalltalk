@@ -61,6 +61,9 @@ extern OBJECT_PTR METHOD_LOOKUP;
 extern OBJECT_PTR RETURN_FROM;
 extern OBJECT_PTR GET_CONTINUATION;
 
+extern OBJECT_PTR SUPER;
+extern OBJECT_PTR MESSAGE_SEND_SUPER;
+
 OBJECT_PTR get_top_level_symbols()
 {
   //TODO: global objects to be added
@@ -164,6 +167,12 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
 
 #ifdef DEBUG
   print_object(res); printf(" is returned by expand_bodies()\n");
+#endif
+
+  res = convert_message_sends(res);
+
+#ifdef DEBUG
+  print_object(res); printf(" is returned by convert_message_sends()\n");
 #endif
   
   res = assignment_conversion(res, concat(2,
@@ -552,7 +561,7 @@ OBJECT_PTR map2_fn(OBJECT_PTR (*f)(OBJECT_PTR,
 
 BOOLEAN is_vararg_primop(OBJECT_PTR sym)
 {
-  return sym == MESSAGE_SEND;
+  return sym == MESSAGE_SEND || sym == MESSAGE_SEND_SUPER;
   //return false; //TODO: to be confirmed whether MESSAGE_SEND can be considered non-vararg
 }
 
@@ -1047,6 +1056,8 @@ OBJECT_PTR free_ids_il(OBJECT_PTR exp)
   //Also, MESSAGE_SEND itself is going to be a top level closure.
   else if(car_exp == MESSAGE_SEND)
     return concat(2, list(1, MESSAGE_SEND), difference(free_ids_il(cdr(exp)), list(1, third(exp))));
+  else if(car_exp == MESSAGE_SEND_SUPER)
+    return concat(2, list(1, MESSAGE_SEND_SUPER), difference(free_ids_il(cdr(exp)), list(1, third(exp))));
   else if(car_exp == RETURN_FROM)
     return difference(free_ids_il(cdr(cdr(exp))), list(1, second(exp)));
   else
@@ -1128,6 +1139,7 @@ OBJECT_PTR simplify_il(OBJECT_PTR exp)
 
 OBJECT_PTR convert_message_sends(OBJECT_PTR exp)
 {
+  /*
   if(is_atom(exp))
     return exp;
   else if(car(exp) == MESSAGE_SEND)
@@ -1145,6 +1157,21 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR exp)
   else
     return cons(convert_message_sends(car(exp)),
                 convert_message_sends(cdr(exp)));
+  */
+  if(is_atom(exp))
+    return exp;
+  else if(car(exp) == MESSAGE_SEND && second(exp) == SUPER)
+  {
+    return concat(2,
+		  list(2, MESSAGE_SEND_SUPER, SUPER),
+		  map(convert_message_sends,(CDDR(exp))));
+  }
+  else
+  {
+    OBJECT_PTR ret = cons(convert_message_sends(car(exp)),
+			  convert_message_sends(cdr(exp)));
+    return ret;
+  }
 }
 
 OBJECT_PTR add_ints(OBJECT_PTR count1, ...)

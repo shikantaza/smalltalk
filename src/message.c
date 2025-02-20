@@ -29,6 +29,7 @@ void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR SELF;
+extern OBJECT_PTR SUPER;
 
 extern OBJECT_PTR Object;
 
@@ -52,6 +53,8 @@ OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR convert_fn_to_closure(nativefn fn);
 extern OBJECT_PTR idclo;
 
+OBJECT_PTR get_parent_class(OBJECT_PTR);
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 					  OBJECT_PTR selector,
 					  OBJECT_PTR closure,
@@ -74,7 +77,7 @@ call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
   return entry;
 }
 
-OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
+OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
 {
   OBJECT_PTR cls_obj;
   BOOLEAN is_class_object;
@@ -104,7 +107,13 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
 
   unsigned int i, n;
 
-  OBJECT_PTR class = cls_obj;
+  //OBJECT_PTR class = cls_obj;
+  OBJECT_PTR class;
+
+  if(super)
+    class = get_parent_class(cls_obj);
+  else
+    class = cls_obj;
   
   while(!method_found && class != Object)
   {
@@ -154,20 +163,21 @@ OBJECT_PTR method_lookup(OBJECT_PTR obj, OBJECT_PTR selector)
     return NIL;
 }
 
-OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
-			OBJECT_PTR receiver,
-			OBJECT_PTR selector,
-			OBJECT_PTR count1,
-			...)
+OBJECT_PTR message_send_internal(BOOLEAN super,
+				 OBJECT_PTR receiver,
+				 OBJECT_PTR selector,
+				 OBJECT_PTR count1,
+				 va_list ap)
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
   put_binding_val(top_level, SELF, cons(receiver, NIL));
+  put_binding_val(top_level, SUPER, cons(receiver, NIL));
 
   int count;
   
-  va_list ap;
-  va_start(ap, count1); 
+  //va_list ap;
+  //va_start(ap, count1); 
 
 #ifdef DEBUG  
   print_object(receiver);printf(" is the receiver\n");
@@ -186,7 +196,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   //OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
   OBJECT_PTR stripped_selector = selector;
 
-  OBJECT_PTR method = method_lookup(receiver, stripped_selector);
+  OBJECT_PTR method = method_lookup(super, receiver, stripped_selector);
 
   if(method == NIL)
   {
@@ -323,7 +333,7 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
       stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 0, NULL, cont, NIL, false));
 
     put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
-    
+
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(cont) : "%rsi");
     
@@ -503,6 +513,38 @@ OBJECT_PTR message_send(OBJECT_PTR mesg_send_closure,
   return retval;
 }
 
+OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
+			OBJECT_PTR receiver,
+			OBJECT_PTR selector,
+			OBJECT_PTR count1,
+			...)
+{
+  va_list ap;
+  va_start(ap, count1);
+
+  OBJECT_PTR ret = message_send_internal(false, receiver, selector, count1, ap);
+
+  va_end(ap);
+
+  return ret;
+}
+
+OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
+			      OBJECT_PTR receiver,
+			      OBJECT_PTR selector,
+			      OBJECT_PTR count1,
+			      ...)
+{
+  va_list ap;
+  va_start(ap, count1);
+
+  OBJECT_PTR ret = message_send_internal(true, receiver, selector, count1, ap);
+
+  va_end(ap);
+
+  return ret;
+}
+
 OBJECT_PTR create_message_send_closure()
 {
   //first parameter is a dummy value, not needed
@@ -511,3 +553,10 @@ OBJECT_PTR create_message_send_closure()
 			convert_int_to_object(0), (nativefn)message_send);
 }
 
+OBJECT_PTR create_message_send_super_closure()
+{
+  //first parameter is a dummy value, not needed
+  //(we do not know the arity of message_send)
+  return create_closure(convert_int_to_object(0),
+			convert_int_to_object(0), (nativefn)message_send_super);
+}

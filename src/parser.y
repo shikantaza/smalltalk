@@ -978,7 +978,6 @@ void repl2()
     add_instance_method(class_object,
 			fifth(third(exp)),
 			list(3, LET, NIL, seventh(third(exp))));
-                            
   }
   else if(is_add_class_method_exp(exp))
   {

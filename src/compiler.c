@@ -73,6 +73,8 @@ OBJECT_PTR METHOD_LOOKUP                =  (OBJECT_PTR)((17 << OBJECT_SHIFT) + S
 OBJECT_PTR SMALLTALK                    =  (OBJECT_PTR)((18 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SELF                         =  (OBJECT_PTR)((19 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR THIS_CONTEXT                 =  (OBJECT_PTR)((20 << OBJECT_SHIFT) + SYMBOL_TAG);
+OBJECT_PTR SUPER                        =  (OBJECT_PTR)((21 << OBJECT_SHIFT) + SYMBOL_TAG);
+OBJECT_PTR MESSAGE_SEND_SUPER           =  (OBJECT_PTR)((22 << OBJECT_SHIFT) + SYMBOL_TAG);
 
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
@@ -233,12 +235,18 @@ void initialize()
   smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
   smalltalk_symbols->name = GC_strdup("SMALLTALK");
   smalltalk_symbols->nof_symbols = 0;
+
+  //IMPORTANT: the order of these
+  //additions should match the sequence
+  //numbers in the respective symbol
+  //definitions at the top of this file
   
   add_symbol("NIL");
   add_symbol("LET");
   add_symbol("SET");
   add_symbol("RETURN-FROM");
   add_symbol("MESSAGE-SEND");
+
   add_symbol("LAMBDA");
   add_symbol("SETCAR");
   add_symbol("CONS");
@@ -255,6 +263,8 @@ void initialize()
   add_symbol("Smalltalk");
   add_symbol("self");
   add_symbol("THIS-CONTEXT");
+  add_symbol("super");
+  add_symbol("MESSAGE-SEND-SUPER");
 
   exception_environment = stack_create();
   curtailed_blocks_list = NIL;
