@@ -41,6 +41,7 @@ extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
 
 OBJECT_PTR Symbol;
+extern OBJECT_PTR nil;
 extern OBJECT_PTR Boolean;
 
 extern char **string_literals;
@@ -258,6 +259,12 @@ OBJECT_PTR setcar(OBJECT_PTR obj, OBJECT_PTR val)
   return val;
 }
 
+OBJECT_PTR setcdr(OBJECT_PTR obj, OBJECT_PTR val)
+{
+  set_heap(extract_ptr(obj), 1, val);
+  return val;
+}
+
 OBJECT_PTR reverse(OBJECT_PTR lst)
 {
   OBJECT_PTR ret = NIL, rest = lst;
@@ -343,7 +350,9 @@ void print_cons_object(OBJECT_PTR obj)
 
 void print_object(OBJECT_PTR obj_ptr)
 {
-  if(IS_SYMBOL_OBJECT(obj_ptr))
+  if(obj_ptr == nil)
+    fprintf(stdout, "nil");
+  else if(IS_SYMBOL_OBJECT(obj_ptr))
     fprintf(stdout, "%s", get_symbol_name(obj_ptr));
   else if(IS_SMALLTALK_SYMBOL_OBJECT(obj_ptr))
     fprintf(stdout, "#%s", get_smalltalk_symbol_name(obj_ptr));
@@ -597,7 +606,9 @@ OBJECT_PTR create_closure(OBJECT_PTR arg_count, OBJECT_PTR count1, nativefn fn, 
 
 OBJECT_PTR get_class_object(OBJECT_PTR obj)
 {
-  if(IS_SYMBOL_OBJECT(obj))
+  if(obj == NIL)
+    return nil;
+  else if(IS_SYMBOL_OBJECT(obj))
     return Symbol;
   else if(IS_INTEGER_OBJECT(obj))
     return Integer;

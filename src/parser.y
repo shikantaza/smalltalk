@@ -100,6 +100,8 @@ extern stack_type *exception_environment;
 
 BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
 
+OBJECT_PTR decorate_message_selectors(OBJECT_PTR);
+
 %}
 
 %union{
@@ -948,7 +950,9 @@ void repl2()
   compile_time_method_selector = NIL;
 
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
-  
+
+  exp = decorate_message_selectors(exp);
+    
 #ifdef DEBUG
   print_object(exp); printf("\n");
 #endif
@@ -1118,6 +1122,8 @@ void repl()
 {
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
+  exp = decorate_message_selectors(exp);
+  
 #ifdef DEBUG
   print_object(exp); printf(" is returned by convert_exec_code_to_lisp()\n");
 #endif
@@ -1200,7 +1206,7 @@ BOOLEAN is_create_class_exp(OBJECT_PTR exp)
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
-     third(third_obj) == get_symbol("createClass:parentClass:") &&
+     third(third_obj) == get_symbol("createClass:parentClass:_") &&
      IS_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
@@ -1237,12 +1243,12 @@ BOOLEAN is_add_var_exp(OBJECT_PTR exp, char *msg)
 
 BOOLEAN is_add_instance_var_exp(OBJECT_PTR exp)
 {
-  return is_add_var_exp(exp, "addInstanceVariable:toClass:");
+  return is_add_var_exp(exp, "addInstanceVariable:toClass:_");
 }
 
 BOOLEAN is_add_class_var_exp(OBJECT_PTR exp)
 {
-  return is_add_var_exp(exp, "addClassVariable:toClass:");
+  return is_add_var_exp(exp, "addClassVariable:toClass:_");
 }
 
 BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
@@ -1275,12 +1281,12 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
 
 BOOLEAN is_add_instance_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addInstanceMethod:toClass:withBody:");
+  return is_add_method_exp(exp, "addInstanceMethod:toClass:withBody:_");
 }
 
 BOOLEAN is_add_class_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addClassMethod:toClass:withBody:");
+  return is_add_method_exp(exp, "addClassMethod:toClass:withBody:_");
 }
 
 #endif

@@ -27,6 +27,15 @@ OBJECT_PTR identity_function(OBJECT_PTR, ...);
 extern void print_call_chain();
 
 extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
+
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
+OBJECT_PTR get_symbol(char *);
 
 /* OBJECT_PTR message_send(OBJECT_PTR receiver, ...) */
 /* { */
@@ -136,9 +145,15 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
 
   //print_call_chain();
 
+  //if(stack_is_empty(call_chain))
+  //  return idclo;
+  
+  assert(IS_SYMBOL_OBJECT(selector));
+  //print_object(selector); printf(" is the selector\n");
+  //print_call_chain();
   assert(!stack_is_empty(call_chain));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(call_chain);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
 
   while(entry->selector != selector)
   {
@@ -148,21 +163,39 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
        entry->termination_blk_invoked == false)
     {
       nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
-
+      //OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
+      OBJECT_PTR discarded_ret = message_send(msg_snd_closure,
+					      termination_blk,
+					      get_symbol("value_"),
+					      convert_int_to_object(0),
+					      idclo);
       //this is not really neded
       //as we are popping the entry
       entry->termination_blk_invoked = true;
     }
 
+    //TODO: this assert shouldn't get triggered because
+    //the call chain cannot be empty when we are returning
+    //from a method. need to convert this into an exception
+    //to handle returns from anonymous blocks
+    assert(!stack_is_empty(call_chain));
+    //if(stack_is_empty(call_chain))
+    //   return idclo;
+    
     entry = (call_chain_entry_t *)stack_pop(call_chain);
   }
 
   //pop the entry corresponding to the method
   //we are returning from
-  if(!stack_is_empty(call_chain))
-    stack_pop(call_chain);
+  //if(!stack_is_empty(call_chain))
+  //  stack_pop(call_chain);
 
+  //printf("Call chain after get_continuation(): begin\n");
+  //print_call_chain();
+  //printf("end\n");
+
+  //print_object(entry->cont); printf(" is the continuation being returned to\n");
+  
   return entry->cont;
 }
 

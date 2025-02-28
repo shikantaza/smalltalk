@@ -200,3 +200,22 @@ char *strip_last_colon(char *s)
   else
     return s;
 }
+
+//appends a character to a string. used
+//for decorating message selectors
+//(decorate_message_selectors())
+char *append_char(char *s, char a)
+{
+  unsigned int n;
+
+  n = strlen(s);
+
+  char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
+
+  strcpy(ret, s);
+
+  ret[n] = a;
+  ret[n+1] = '\0';
+
+  return ret;
+}

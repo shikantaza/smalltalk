@@ -115,7 +115,7 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   else
     class = cls_obj;
   
-  while(!method_found && class != Object)
+  while(!method_found && class != NIL)
   {
     class_object_t *cls_obj_int = (class_object_t *)extract_ptr(class);
 
@@ -180,7 +180,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   //va_start(ap, count1); 
 
 #ifdef DEBUG  
-  print_object(receiver);printf(" is the receiver\n");
+  print_object(receiver);printf(" is the receiver; ");
   print_object(selector); printf(" is the selector\n");
 #endif
   
@@ -201,6 +201,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   if(method == NIL)
   {
     OBJECT_PTR ret;
+#ifdef DEBUG    
+    print_object(stripped_selector); printf(" is not understood by "); print_object(receiver); printf("\n");
+    getchar();
+#endif
     assert(get_top_level_val(get_symbol("MessageNotUnderstood"), &ret));
 
     OBJECT_PTR mnu_class_obj = car(ret);
@@ -510,6 +514,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   va_end(ap);
 
+#ifdef DEBUG  
+  printf("message_send returning "); print_object(retval); printf("\n");
+#endif
+  
   return retval;
 }
 
@@ -545,18 +553,3 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
   return ret;
 }
 
-OBJECT_PTR create_message_send_closure()
-{
-  //first parameter is a dummy value, not needed
-  //(we do not know the arity of message_send)
-  return create_closure(convert_int_to_object(0),
-			convert_int_to_object(0), (nativefn)message_send);
-}
-
-OBJECT_PTR create_message_send_super_closure()
-{
-  //first parameter is a dummy value, not needed
-  //(we do not know the arity of message_send)
-  return create_closure(convert_int_to_object(0),
-			convert_int_to_object(0), (nativefn)message_send_super);
-}

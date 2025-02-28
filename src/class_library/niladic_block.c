@@ -38,6 +38,7 @@ OBJECT_PTR NiladicBlock;
 extern void print_call_chain();
 
 extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
 
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,
@@ -45,6 +46,13 @@ exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      stack_type *,
 					      OBJECT_PTR);
 
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
+extern BOOLEAN curtailed_block_in_progress;
 /*
 
 These two methods to be included in
@@ -127,21 +135,29 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
   entry->termination_blk_closure = ensure_block;
   entry->termination_blk_invoked = false;
-  
-  nativefn nf1 = (nativefn)extract_native_fn(receiver);
-  OBJECT_PTR ret = nf1(receiver, idclo);
+
+  //nativefn nf1 = (nativefn)extract_native_fn(receiver);
+  //OBJECT_PTR ret = nf1(receiver, idclo);
+  OBJECT_PTR ret = message_send(msg_snd_closure,
+				receiver,
+				get_symbol("value_"),
+				convert_int_to_object(0),
+				idclo);
 
   //if the ensure: block has already been invoked because
   //of an exception unwinding, don't invoke it again
   if(entry->termination_blk_invoked == false)
   {
     nativefn nf2 = (nativefn)extract_native_fn(ensure_block);
+    curtailed_block_in_progress = true;
     OBJECT_PTR discarded_ret = nf2(ensure_block, idclo);
+    curtailed_block_in_progress = false;
     entry->termination_blk_invoked == true;
   }
 
   nativefn nf3 = (nativefn)extract_native_fn(cont);
   return nf3(cont, ret);
+  //return ret;
 }
 
 OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
@@ -154,24 +170,21 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(curtailed_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //OBJECT_PTR orig_curtailed_blocks_list = curtailed_blocks_list;
-  //curtailed_blocks_list = cons(curtailed_block, curtailed_blocks_list);
-
-  //print_call_chain();
-
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
   entry->termination_blk_closure = curtailed_block;
   entry->termination_blk_invoked = false;
   
-  nativefn nf1 = (nativefn)extract_native_fn(receiver);
-  OBJECT_PTR ret = nf1(receiver, idclo);
-
-  //to remove the curtailed block added in case it
-  //was not triggered (owing to no exception having occurred)
-  //curtailed_blocks_list = orig_curtailed_blocks_list;
-
-  nativefn nf2 = (nativefn)extract_native_fn(cont);
-  return nf2(cont, ret);
+  //nativefn nf1 = (nativefn)extract_native_fn(receiver);
+  //OBJECT_PTR ret = nf1(receiver, idclo);
+  OBJECT_PTR ret = message_send(msg_snd_closure,
+				receiver,
+				get_symbol("value_"),
+				convert_int_to_object(0),
+				cont);
+  
+  //nativefn nf2 = (nativefn)extract_native_fn(cont);
+  //return nf2(cont, ret);
+  return ret;
 }
 
 void create_NiladicBlock()
@@ -206,25 +219,25 @@ void create_NiladicBlock()
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("value");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("value_");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_value),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("on:do:");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("on:do:_");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_on_do),
 						    NIL,
 						    convert_int_to_object(2));
   
-  cls_obj->instance_methods->bindings[3].key = get_symbol("ensure:");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("ensure:_");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_ensure),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("ifCurtailed:");
+  cls_obj->instance_methods->bindings[4].key = get_symbol("ifCurtailed:_");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_ifcurtailed),
 						    NIL,

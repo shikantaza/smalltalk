@@ -111,6 +111,7 @@ int add_symbol(char *);
 void initialize_top_level();
 void create_Object();
 void create_Smalltalk();
+void create_nil();
 void create_Transcript();
 void create_Integer();
 void create_NiladicBlock();
@@ -135,11 +136,26 @@ extern OBJECT_PTR compile_time_method_selector;
 stack_type *call_chain;
 
 OBJECT_PTR idclo;
+OBJECT_PTR msg_snd_closure;
+OBJECT_PTR msg_snd_super_closure;
 
 extern stack_type *exception_contexts;
 
 OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 OBJECT_PTR identity_function(OBJECT_PTR, ...);
+
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
+OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
+			      OBJECT_PTR receiver,
+			      OBJECT_PTR selector,
+			      OBJECT_PTR count1,
+			      ...);
+extern OBJECT_PTR nil;
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -226,6 +242,24 @@ void create_idclo()
 			 (nativefn)identity_function);
 }
 
+void create_message_send_closure()
+{
+  //first parameter is a dummy value, not needed
+  //(we do not know the arity of message_send)
+  msg_snd_closure = create_closure(convert_int_to_object(0),
+				   convert_int_to_object(0),
+				   (nativefn)message_send);
+}
+
+void create_message_send_super_closure()
+{
+  //first parameter is a dummy value, not needed
+  //(we do not know the arity of message_send)
+  msg_snd_super_closure = create_closure(convert_int_to_object(0),
+					 convert_int_to_object(0),
+					 (nativefn)message_send_super);
+}
+
 void initialize()
 {
   compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
@@ -266,11 +300,16 @@ void initialize()
   add_symbol("super");
   add_symbol("MESSAGE-SEND-SUPER");
 
+  create_idclo();
+  create_message_send_closure();
+  create_message_send_super_closure();
+  
   exception_environment = stack_create();
   curtailed_blocks_list = NIL;
   
   create_Object();
   create_Smalltalk();
+  create_nil();
   create_Transcript();
   
   //this was initally after the call to
@@ -289,8 +328,6 @@ void initialize()
   initialize_top_level();
 
   call_chain = stack_create();
-
-  create_idclo();
 
   exception_contexts = stack_create();
 }
@@ -326,10 +363,10 @@ OBJECT_PTR convert_exec_code_to_lisp(executable_code_t *e)
     return NIL;
 
   return concat(2,
-                list(2,
-                     LET,
-                     convert_temporaries_to_lisp(e->temporaries)),
-                remove_cascaded_tag(convert_statements_to_lisp(e->statements)));
+		list(2,
+		     LET,
+		     convert_temporaries_to_lisp(e->temporaries)),
+		remove_cascaded_tag(convert_statements_to_lisp(e->statements)));
 }
 
 OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *t)
@@ -342,7 +379,7 @@ OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *t)
   OBJECT_PTR res = NIL;
 
   for(i=0; i < t->nof_temporaries; i++)
-    res = cons(list(1, convert_identifier_to_atom(t->temporaries[i])), res);
+    res = cons(list(2, convert_identifier_to_atom(t->temporaries[i]), nil), res);
 
   return reverse(res);
 }

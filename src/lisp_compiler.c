@@ -64,6 +64,9 @@ extern OBJECT_PTR GET_CONTINUATION;
 extern OBJECT_PTR SUPER;
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
+char *append_char();
+OBJECT_PTR get_symbol(char *);
+
 OBJECT_PTR get_top_level_symbols()
 {
   //TODO: global objects to be added
@@ -156,10 +159,35 @@ OBJECT_PTR build_selectors_list(OBJECT_PTR res)
                 build_selectors_list(cdr(res)));
 }
 
+//add an underscore to message selectors to distinguish
+//them from instance/class variables of the same name.
+//otherwise these variables get filtered while building
+//the free variables list
+OBJECT_PTR decorate_message_selectors(OBJECT_PTR res)
+{
+  if(is_atom(res))
+    return res;
+  else if(car(res) == MESSAGE_SEND)
+    return concat(2,
+		  list(3,
+		       MESSAGE_SEND,
+		       decorate_message_selectors(second(res)),
+		       get_symbol(append_char(get_symbol_name(third(res)),'_'))),
+		  map(decorate_message_selectors,CDDDR(res)));
+  else
+    return map(decorate_message_selectors, res);
+}
+
 OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
 {
   OBJECT_PTR res;
 
+  //obj = decorate_message_selectors(obj1);
+
+#ifdef DEBUG
+  print_object(obj); printf(" is returned by decorate_message_selectors()\n");
+#endif
+  
   message_selectors = build_selectors_list(obj);
   
   //res = list(3, first(res), second(res), expand_body(CDDR(obj)));
@@ -168,7 +196,7 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
 #ifdef DEBUG
   print_object(res); printf(" is returned by expand_bodies()\n");
 #endif
-
+  
   res = convert_message_sends(res);
 
 #ifdef DEBUG

@@ -93,7 +93,7 @@ OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJ
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
 }
 
@@ -125,7 +125,7 @@ OBJECT_PTR boolean_if_false(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR c
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
     return nf(cont, NIL);
@@ -145,13 +145,13 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, false_operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, false_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, true_operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, true_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
 }
 
@@ -168,7 +168,7 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
     return nf(cont, NIL);
@@ -188,13 +188,13 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, true_operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, true_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, false_operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, false_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
 }
 
@@ -228,7 +228,7 @@ OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJE
   {
     OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    return nf1(msg_send, operand, get_symbol("value"), convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
 }
 
@@ -296,7 +296,7 @@ void create_Boolean()
   cls_obj->instance_methods->count = 12;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("&");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("&_");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_and),
 						    NIL,
@@ -332,13 +332,13 @@ void create_Boolean()
 						    NIL,
 						    convert_int_to_object(2));
   
-  cls_obj->instance_methods->bindings[6].key = get_symbol("ifTrue:");
+  cls_obj->instance_methods->bindings[6].key = get_symbol("ifTrue:_");
   cls_obj->instance_methods->bindings[6].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_if_true),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[7].key = get_symbol("ifTrue:ifFalse:");
+  cls_obj->instance_methods->bindings[7].key = get_symbol("ifTrue:ifFalse:_");
   cls_obj->instance_methods->bindings[7].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_if_true_if_false),
 						    NIL,

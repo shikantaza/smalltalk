@@ -62,6 +62,7 @@ OBJECT_PTR get_class_object(OBJECT_PTR);
 uintptr_t extract_ptr(OBJECT_PTR);
 
 extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
 
 stack_type *exception_contexts;
 
@@ -73,8 +74,9 @@ OBJECT_PTR message_send(OBJECT_PTR,
 			OBJECT_PTR,
 			...);
 
-OBJECT_PTR create_message_send_closure();
-
+void print_call_chain();
+void print_exception_contexts();
+  
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -339,8 +341,10 @@ void invoke_curtailed_blocks_old()
 
 void invoke_curtailed_blocks(OBJECT_PTR cont)
 {
+  //print_call_chain();
   assert(!stack_is_empty(call_chain));
 
+  /*
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(call_chain);
 
   while(entry->cont != cont)
@@ -358,8 +362,41 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
       entry->termination_blk_invoked = true;
     }
 
+    if(stack_is_empty(call_chain))
+      break;
+    
     entry = (call_chain_entry_t *)stack_pop(call_chain);
   }
+  */
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
+  int count = stack_count(call_chain);
+  //printf("count = %d\n", count);
+  int i = count - 1;
+
+  while(i >= 0)
+  {
+    //printf("i = %d\n",i);
+    call_chain_entry_t *entry = entries[i];
+
+    if(entry->cont == cont)
+      break;
+    
+    OBJECT_PTR termination_blk = entry->termination_blk_closure;
+
+    if(termination_blk != NIL &&
+       entry->termination_blk_invoked == false)
+    {
+      nativefn nf = (nativefn)extract_native_fn(termination_blk);
+      curtailed_block_in_progress = true;
+      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
+      curtailed_block_in_progress = false;
+      //printf("after invoking the termination block\n");
+      entry->termination_blk_invoked = true;
+    }
+    
+    i--;
+  }
+ 
 }
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
@@ -467,6 +504,7 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
+  assert(!stack_is_empty(exception_contexts));
   stack_pop(exception_contexts);
 
   return nf(handler_cont, NIL);
@@ -487,9 +525,10 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
+  assert(!stack_is_empty(exception_contexts));
   stack_pop(exception_contexts);
 
-  return nf(handler_cont, val, NIL);
+  return nf(handler_cont, val);
 }
 
 OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -509,9 +548,9 @@ OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
   //nativefn nf = (nativefn)extract_native_fn(protected_block);
 
   //return nf(protected_block, handler_cont);
-  return message_send(create_message_send_closure(),
+  return message_send(msg_snd_closure,
 		      protected_block,
-		      get_symbol("on:do:"),
+		      get_symbol("on:do:_"),
 		      convert_int_to_object(2),
 		      active_handler->selector,
 		      active_handler->exception_action,
@@ -536,9 +575,9 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
   //nativefn nf = (nativefn)extract_native_fn(another_protected_blk);
   
   //return nf(another_protected_blk, handler_cont);
-  return message_send(create_message_send_closure(),
+  return message_send(msg_snd_closure,
 		      another_protected_blk,
-		      get_symbol("on:do:"),
+		      get_symbol("on:do:_"),
 		      convert_int_to_object(2),
 		      active_handler->selector,
 		      active_handler->exception_action,
@@ -561,6 +600,9 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 
   nativefn nf = (nativefn)extract_native_fn(exception_context);
 
+  //TODO: check if the exception object is resumable,
+  //if it is, return the default resumption value
+
   return nf(exception_context, NIL);
 }
 
@@ -573,6 +615,8 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
 
   invoke_curtailed_blocks(active_handler->cont);
 
+  //print_exception_contexts();
+  
   assert(!stack_is_empty(exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
 
@@ -682,61 +726,61 @@ void create_Exception()
   /* 						    NIL, */
   /* 						    convert_int_to_object(0)); */
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("return");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("return_");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_return),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("return:");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("return:_");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_return_val),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("retry");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("retry_");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_retry),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("retryUsing:");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("retryUsing:_");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_retry_using),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[4].key = get_symbol("resume");
+  cls_obj->instance_methods->bindings[4].key = get_symbol("resume_");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_resume),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("resume:");
+  cls_obj->instance_methods->bindings[5].key = get_symbol("resume:_");
   cls_obj->instance_methods->bindings[5].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_resume_with_val),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[6].key = get_symbol("pass");
+  cls_obj->instance_methods->bindings[6].key = get_symbol("pass_");
   cls_obj->instance_methods->bindings[6].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_pass),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[7].key = get_symbol("outer");
+  cls_obj->instance_methods->bindings[7].key = get_symbol("outer_");
   cls_obj->instance_methods->bindings[7].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_outer),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[8].key = get_symbol("signal");
+  cls_obj->instance_methods->bindings[8].key = get_symbol("signal_");
   cls_obj->instance_methods->bindings[8].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_signal),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[9].key = get_symbol("resignalAs:");
+  cls_obj->instance_methods->bindings[9].key = get_symbol("resignalAs:_");
   cls_obj->instance_methods->bindings[9].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_resignal_as),
 						    NIL,
@@ -746,7 +790,7 @@ void create_Exception()
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));;
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("new");
+  cls_obj->class_methods->bindings[0].key = get_symbol("new_");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)new_object),
 						 NIL,

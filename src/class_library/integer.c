@@ -39,14 +39,15 @@ OBJECT_PTR message_send(OBJECT_PTR,
 			OBJECT_PTR,
 			...);
 
-OBJECT_PTR create_message_send_closure();
-
 extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
 
 extern stack_type *exception_contexts;
 
 OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR convert_fn_to_closure(nativefn fn);
+
+void print_exception_contexts();
 
 //workaround for variadic function arguments
 //getting clobbered in ARM64
@@ -126,6 +127,8 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   if(get_int_value(arg) == 0)
   {
     stack_push(exception_contexts, (void *)cont);
+    //print_object(cont); printf(" is pushed onto the exception context\n");
+    //print_exception_contexts();
 
     OBJECT_PTR ret;
     assert(get_top_level_val(get_symbol("ZeroDivide"), &ret));
@@ -135,7 +138,12 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
     OBJECT_PTR exception_obj = new_object_internal(zero_divide_class_obj,
 						   convert_fn_to_closure((nativefn)new_object_internal),
 						   idclo);
-    return signal_exception(exception_obj);
+    //return signal_exception(exception_obj);
+    return message_send(msg_snd_closure,
+			exception_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
   }
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
@@ -143,6 +151,7 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return nf(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
 }
 
+//TODO: this can be subsumed by Object>>=
 OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
@@ -150,7 +159,7 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   assert(IS_INTEGER_OBJECT(receiver));
 
 #ifdef DEBUG
-  print_object(arg); printf(" is the arg passed to divide_by\n");
+  print_object(arg); printf(" is the arg passed to eq\n");
 #endif
 
   assert(IS_INTEGER_OBJECT(arg));
@@ -188,32 +197,32 @@ void create_Integer()
   cls_obj->instance_methods->count = 5;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("+");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("+_");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)plus),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("-");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("-_");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)minus),
 						    NIL,
 						    convert_int_to_object(1));
 					
   
-  cls_obj->instance_methods->bindings[2].key = get_symbol("*");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("*_");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)times),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("/");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("/_");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)divided_by),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("=");
+  cls_obj->instance_methods->bindings[4].key = get_symbol("=_");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)eq),
 						    NIL,

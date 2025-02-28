@@ -15,7 +15,6 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
 binding_env_t *top_level;
 
-OBJECT_PTR create_message_send_closure();
 char *get_symbol_name(OBJECT_PTR);
 OBJECT_PTR get_symbol(char *);
 OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
@@ -46,6 +45,7 @@ OBJECT_PTR extract_arity(OBJECT_PTR);
 
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
+OBJECT_PTR nil;
 
 char **string_literals = NULL;
 unsigned int nof_string_literals = 0;
@@ -53,6 +53,10 @@ unsigned int nof_string_literals = 0;
 OBJECT_PTR compile_time_method_selector;
 
 OBJECT_PTR replace_method_selector(OBJECT_PTR, OBJECT_PTR);
+
+OBJECT_PTR setcdr(OBJECT_PTR, OBJECT_PTR);
+
+char *append_char(char *, char);
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
@@ -75,10 +79,12 @@ extern OBJECT_PTR Exception;
 extern stack_type *call_chain;
 
 extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
+extern OBJECT_PTR msg_snd_super_closure;
 
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
-OBJECT_PTR create_message_send_super_closure();
+extern stack_type *exception_contexts;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -123,12 +129,13 @@ void initialize_top_level()
   top_level = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   top_level->count = 0;
 
-  add_binding_to_top_level(MESSAGE_SEND, cons(create_message_send_closure(), NIL));
-  add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(create_message_send_super_closure(), NIL));
+  add_binding_to_top_level(MESSAGE_SEND, cons(msg_snd_closure, NIL));
+  add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(msg_snd_super_closure, NIL));
   add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
+  add_binding_to_top_level(get_symbol("nil"), cons(nil, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
   add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
   add_binding_to_top_level(get_symbol("MonadicBlock"), cons(MonadicBlock, NIL));
@@ -197,7 +204,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
   
-  cls_obj->class_methods->bindings[0].key = get_symbol("new");
+  cls_obj->class_methods->bindings[0].key = get_symbol("new_");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)new_object),
 						 NIL,
@@ -208,7 +215,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
 
   nativefn nf = (nativefn)extract_native_fn(cont);
-  
+
   return nf(cont, class_object);
 }
 
@@ -353,11 +360,18 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  compile_time_method_selector = selector;
+  compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  //compile_time_method_selector = get_symbol(get_smalltalk_symbol_name(selector));
 
-  OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
+  OBJECT_PTR selector_sym = compile_time_method_selector;
 
-  OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
+  OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
+
+  //OBJECT_PTR last_stmt = last_cell(third(third(code1)));
+  //if(car(last_stmt) != RETURN_FROM)
+  //  setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
+
+  OBJECT_PTR res = apply_lisp_transforms(code1);
 
   void *state = compile_to_c(res);
 
@@ -406,7 +420,7 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
 							nfo,
 							closed_vals,
 							//second(first(res)));
-							convert_int_to_object(cons_length(second(third(code)))));
+							convert_int_to_object(cons_length(second(third(code1)))));
       break;
     }
 
@@ -430,7 +444,7 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
 	   nfo,
 	   closed_vals,
 	   //second(first(res)));
-	   convert_int_to_object(cons_length(second(third(code)))));
+	   convert_int_to_object(cons_length(second(third(code1)))));
   }
 }
 
@@ -459,20 +473,19 @@ void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code
 
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  compile_time_method_selector = selector;
+  compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  //compile_time_method_selector = get_symbol(get_smalltalk_symbol_name(selector));
   
-  OBJECT_PTR selector_sym = get_symbol(get_smalltalk_symbol_name(selector));
+  OBJECT_PTR selector_sym = compile_time_method_selector;
 
-#ifdef DEBUG
-  print_object(replace_method_selector(code, selector_sym)); printf(" is the code for the method\n");
-#endif
-    
-  OBJECT_PTR res = apply_lisp_transforms(replace_method_selector(code, selector_sym));
+  OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
 
-#ifdef DEBUG  
-  print_object(res); printf("\n");
-#endif
-  
+  //OBJECT_PTR last_stmt = last_cell(third(third(code1)));
+  //if(car(last_stmt) != RETURN_FROM)
+  //  setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
+
+  OBJECT_PTR res = apply_lisp_transforms(code1);
+
   void *state = compile_to_c(res);
 
   char *fname = extract_variable_string(fourth(first(res)), true);
@@ -632,7 +645,22 @@ OBJECT_PTR new_object(OBJECT_PTR closure,
 {
   return new_object_internal(car(get_binding_val(top_level, SELF)), closure, cont);
 }
-  
+
+OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+#ifdef DEBUG
+  print_object(arg); printf(" is the arg passed to eq\n");
+#endif
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  return nf(cont, (receiver == arg) ? TRUE : FALSE );
+}
+
 void create_Object()
 {
   class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
@@ -647,16 +675,28 @@ void create_Object()
   cls_obj->inst_vars = NULL;
   
   cls_obj->shared_vars = NULL;
-  cls_obj->instance_methods = NULL;
-  cls_obj->class_methods = NULL;
+
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->instance_methods->count = 0;
+  cls_obj->instance_methods->bindings = NULL;
+  
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+
+  cls_obj->class_methods->bindings[0].key = get_symbol("=_");
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)object_eq),
+						 NIL,
+						 convert_int_to_object(1));  
 
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
 
-OBJECT_PTR create_global(OBJECT_PTR closure,
-			 OBJECT_PTR global_sym,
-			 OBJECT_PTR global_val,
-			 OBJECT_PTR cont)
+OBJECT_PTR create_global_valued(OBJECT_PTR closure,
+				OBJECT_PTR global_sym,
+				OBJECT_PTR global_val,
+				OBJECT_PTR cont)
 {
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(global_sym));
@@ -669,6 +709,13 @@ OBJECT_PTR create_global(OBJECT_PTR closure,
   OBJECT_PTR ret = nf(cont, global_val);
 
   return ret;
+}
+
+OBJECT_PTR create_global(OBJECT_PTR closure,
+			 OBJECT_PTR global_sym,
+			 OBJECT_PTR cont)
+{
+  return create_global_valued(closure, global_sym, nil, cont);
 }
 
 void create_Smalltalk()
@@ -698,41 +745,47 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 5;
+  cls_obj->class_methods->count = 6;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
   //the Smalltalk class because we don't have a way to 'quote' blocks
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:");
+  cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:_");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_class),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[1].key = get_symbol("createClass:");
+  cls_obj->class_methods->bindings[1].key = get_symbol("createClass:_");
   cls_obj->class_methods->bindings[1].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
 						 NIL,
 						 convert_int_to_object(1));
 
-  cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:");
+  cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:_");
   cls_obj->class_methods->bindings[2].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_instance_var),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[3].key = get_symbol("addClassVariable:toClass:");
+  cls_obj->class_methods->bindings[3].key = get_symbol("addClassVariable:toClass:_");
   cls_obj->class_methods->bindings[3].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_class_var),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[4].key = get_symbol("createGlobal:valued:");
+  cls_obj->class_methods->bindings[4].key = get_symbol("createGlobal:valued:_");
   cls_obj->class_methods->bindings[4].val = list(3,
-						 convert_native_fn_to_object((nativefn)create_global),
+						 convert_native_fn_to_object((nativefn)create_global_valued),
 						 NIL,
 						 convert_int_to_object(2));
+
+  cls_obj->class_methods->bindings[5].key = get_symbol("createGlobal:_");
+  cls_obj->class_methods->bindings[5].val = list(3,
+						 convert_native_fn_to_object((nativefn)create_global),
+						 NIL,
+						 convert_int_to_object(1));
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
@@ -746,7 +799,21 @@ void print_call_chain()
   printf("***\n");
   for(i = 0; i <count; i++)
   {
-    print_object(entries[i]->selector); printf("\n");
+    print_object(entries[i]->selector); printf(" "); print_object(entries[i]->cont); printf("\n");
+  }
+  printf("---\n");
+}
+
+void print_exception_contexts()
+{
+  OBJECT_PTR *contexts = (OBJECT_PTR *)stack_data(exception_contexts);
+  unsigned int count = stack_count(exception_contexts);
+  int i;
+
+  printf("***\n");
+  for(i = 0; i <count; i++)
+  {
+    print_object(contexts[i]); printf("\n");
   }
   printf("---\n");
 }
@@ -777,4 +844,51 @@ exception_handler_t *create_exception_handler(OBJECT_PTR protected_block,
   eh->cont                  = cont;
 
   return eh;
+}
+
+OBJECT_PTR nil_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  //TODO: revisit after addding strings
+  printf("nil");
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+  return nf(cont, nil);
+}
+
+void create_nil()
+{
+  class_object_t *cls_obj;
+
+  if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
+  {
+    printf("create_nil(): Unable to allocate memory\n");
+    exit(1);
+  }
+
+  cls_obj->parent_class_object = Object;
+  cls_obj->name = GC_strdup("Nil");
+
+  cls_obj->nof_instances = 0;
+  cls_obj->instances = NULL;
+  
+  cls_obj->nof_instance_vars = 0;
+  cls_obj->inst_vars = NULL;
+
+  cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->shared_vars->count = 0;
+  
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods->count = 0;    
+  cls_obj->instance_methods->bindings = NULL;
+
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+
+  cls_obj->class_methods->bindings[0].key = get_symbol("printString_");
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)nil_print_string),
+						 NIL,
+						 convert_int_to_object(0));
+
+  nil =  convert_class_object_to_object_ptr(cls_obj);
 }
