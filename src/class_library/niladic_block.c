@@ -153,11 +153,13 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
     OBJECT_PTR discarded_ret = nf2(ensure_block, idclo);
     curtailed_block_in_progress = false;
     entry->termination_blk_invoked == true;
+
+    nativefn nf3 = (nativefn)extract_native_fn(cont);
+    return nf3(cont, ret);
+
   }
 
-  nativefn nf3 = (nativefn)extract_native_fn(cont);
-  return nf3(cont, ret);
-  //return ret;
+  return ret;
 }
 
 OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,

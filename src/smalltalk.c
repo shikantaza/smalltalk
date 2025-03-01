@@ -343,7 +343,11 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
     cls_obj->shared_vars->count = 1;
   }
   else
+  {
     cls_obj->shared_vars->count++;
+    cls_obj->shared_vars->bindings = (binding_t *)GC_REALLOC(cls_obj->shared_vars->bindings,
+							     cls_obj->shared_vars->count * sizeof(binding_t));
+  }
   
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
@@ -367,9 +371,9 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
 
   OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
 
-  //OBJECT_PTR last_stmt = last_cell(third(third(code1)));
+  OBJECT_PTR last_stmt = last_cell(third(third(code1)));
   //if(car(last_stmt) != RETURN_FROM)
-  //  setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
+    setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
@@ -480,9 +484,9 @@ void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code
 
   OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
 
-  //OBJECT_PTR last_stmt = last_cell(third(third(code1)));
+  OBJECT_PTR last_stmt = last_cell(third(third(code1)));
   //if(car(last_stmt) != RETURN_FROM)
-  //  setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
+    setcdr(last_stmt, cons(list(3, RETURN_FROM, selector_sym, SELF), NIL));
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
