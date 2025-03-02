@@ -62,6 +62,8 @@ extern OBJECT_PTR idclo;
 extern stack_type *call_chain;
 extern BOOLEAN curtailed_block_in_progress;
 
+extern OBJECT_PTR nil;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR,
 					    OBJECT_PTR,
 					    OBJECT_PTR,
@@ -810,7 +812,10 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	if(!curtailed_block_in_progress)
 	  stack_push(call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, idclo, NIL, false));
 
-	OBJECT_PTR discarded_ret = nf(closure_form, idclo);
+	OBJECT_PTR ret1 = nf(closure_form, idclo);
+
+	if(ret1 == nil)
+	  return nil;
 
 	break;
       }

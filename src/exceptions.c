@@ -76,7 +76,9 @@ OBJECT_PTR message_send(OBJECT_PTR,
 
 void print_call_chain();
 void print_exception_contexts();
-  
+
+extern OBJECT_PTR nil;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -441,7 +443,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
   
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  return NIL;
+  return nil;
 }
 
 OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -672,7 +674,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  return NIL;
+  return nil;
 }
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)

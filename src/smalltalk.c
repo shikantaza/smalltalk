@@ -88,6 +88,8 @@ extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
 extern stack_type *exception_contexts;
 
+extern OBJECT_PTR nil;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   top_level->count++;
@@ -627,7 +629,10 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   OBJECT_PTR obj_ptr = (uintptr_t)obj + OBJECT_TAG;
 
-  initialize_object(obj_ptr);
+  OBJECT_PTR ret1 = initialize_object(obj_ptr);
+
+  if(ret1 == nil)
+    return nil;
 
   //add the new instance to the instances mapped to the class
   cls_obj->nof_instances++;

@@ -394,4 +394,15 @@ Smalltalk addInstanceMethod: #y toClass: InitializeTestChildClass withBody: [ ^ 
 
 | a | a := InitializeTestChildClass new. UnitTestFramework runTestCase: [((a x) = 42 & ((a y) = 33))] withID: 42
 
+Smalltalk createClass: #YAC
+
+Smalltalk addInstanceVariable: #x toClass: YAC
+
+Smalltalk addInstanceMethod: #x toClass: YAC withBody: [ ^ x ]
+
+Smalltalk addInstanceMethod: #initialize toClass: YAC withBody: [ [1/0] on: ZeroDivide do: [ :ex | ex resume: 42]. x := 33 ]
+
+| a | a := YAC new.
+UnitTestFramework runTestCase: [(a x) = 33] withID: 43
+
 UnitTestFramework reportStatus

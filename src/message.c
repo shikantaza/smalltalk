@@ -55,6 +55,8 @@ extern OBJECT_PTR idclo;
 
 OBJECT_PTR get_parent_class(OBJECT_PTR);
 
+extern OBJECT_PTR nil;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 					  OBJECT_PTR selector,
 					  OBJECT_PTR closure,
@@ -508,7 +510,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       asm("addq $8, %%rsp\n\t" : : : );
   }
 
-  OBJECT_PTR retval = NIL;
+  OBJECT_PTR retval = nil;
 
   asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
 
