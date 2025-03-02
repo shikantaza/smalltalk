@@ -405,4 +405,34 @@ Smalltalk addInstanceMethod: #initialize toClass: YAC withBody: [ [1/0] on: Zero
 | a | a := YAC new.
 UnitTestFramework runTestCase: [(a x) = 33] withID: 43
 
+UnitTestFramework runExceptionTestCase: [1 + false] exception: InvalidArgument withID: 44
+
+UnitTestFramework runExceptionTestCase: [1 - false] exception: InvalidArgument withID: 45
+
+UnitTestFramework runExceptionTestCase: [1 * false] exception: InvalidArgument withID: 46
+
+UnitTestFramework runExceptionTestCase: [1 / false] exception: InvalidArgument withID: 47
+
+UnitTestFramework runTestCase: [1 = 1] withID: 48
+
+UnitTestFramework runNegativeTestCase: [1 = Transcript] withID: 49
+
+UnitTestFramework runExceptionTestCase: [Smalltalk createClass: 1] exception: InvalidArgument withID: 50
+
+UnitTestFramework runExceptionTestCase: [Smalltalk createClass: #SomeClass parentClass: 1] exception: InvalidArgument withID: 51
+
+Smalltalk createClass: #SomeClass
+
+UnitTestFramework runExceptionTestCase: [Smalltalk addInstanceVariable: 1 toClass: SomeClass] exception: InvalidArgument withID: 52
+
+UnitTestFramework runExceptionTestCase: [Smalltalk addInstanceVariable: #x toClass: 1] exception: InvalidArgument withID: 53
+
+UnitTestFramework runExceptionTestCase: [Smalltalk addClassVariable: 1 toClass: SomeClass] exception: InvalidArgument withID: 54
+
+UnitTestFramework runExceptionTestCase: [Smalltalk addClassVariable: #x toClass: 1] exception: InvalidArgument withID: 55
+
+UnitTestFramework runExceptionTestCase: [Smalltalk createGlobal: 1 valued: 10] exception: InvalidArgument withID: 56
+
+UnitTestFramework runExceptionTestCase: [Smalltalk createGlobal: 1] exception: InvalidArgument withID: 57
+
 UnitTestFramework reportStatus

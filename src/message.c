@@ -185,7 +185,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   print_object(receiver);printf(" is the receiver; ");
   print_object(selector); printf(" is the selector\n");
 #endif
-  
+
+  //TODO: should this be converted to an exception?
   assert(IS_SYMBOL_OBJECT(selector));
 
   count = get_int_value(count1);

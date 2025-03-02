@@ -90,6 +90,15 @@ extern stack_type *exception_contexts;
 
 extern OBJECT_PTR nil;
 
+OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR convert_fn_to_closure(nativefn fn);
+
+OBJECT_PTR message_send(OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			OBJECT_PTR,
+			...);
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   top_level->count++;
@@ -175,8 +184,45 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   //already exists?
 
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(class_sym));
-  assert(IS_CLASS_OBJECT(parent_class_object));
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(class_sym))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
+  if(!IS_CLASS_OBJECT(parent_class_object))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
   assert(IS_CLOSURE_OBJECT(cont));
 
   class_object_t *cls_obj;
@@ -238,8 +284,45 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
   //TODO: add a default value for the variable?
 
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_CLASS_OBJECT(class_obj));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(var));
+
+  if(!IS_CLASS_OBJECT(class_obj))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(var))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
   assert(IS_CLOSURE_OBJECT(cont));
 
   OBJECT_PTR var_sym = get_symbol(get_smalltalk_symbol_name(var));
@@ -311,8 +394,45 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   //TODO: add a default value for the variable?
 
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_CLASS_OBJECT(class_obj));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(var));
+
+  if(!IS_CLASS_OBJECT(class_obj))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(var))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
   assert(IS_CLOSURE_OBJECT(cont));
 
 #ifdef DEBUG  
@@ -363,6 +483,9 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
 
 void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
+  //TODO: these asserts can't be converted to
+  //exceptions in a straightforward manner yet,
+  //as there is no continuation to return to.
   assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
 
@@ -476,6 +599,9 @@ OBJECT_PTR replace_method_selector(OBJECT_PTR code, OBJECT_PTR selector)
 
 void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
+  //TODO: these asserts can't be converted to
+  //exceptions in a straightforward manner yet,
+  //as there is no continuation to return to.
   assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
 
@@ -714,7 +840,26 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 				OBJECT_PTR cont)
 {
   assert(IS_CLOSURE_OBJECT(closure));
-  assert(IS_SMALLTALK_SYMBOL_OBJECT(global_sym));
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(global_sym))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
   assert(IS_CLOSURE_OBJECT(cont));
 
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));

@@ -63,7 +63,24 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to plus\n");
 #endif
   
-  assert(IS_INTEGER_OBJECT(arg));
+  if(!IS_INTEGER_OBJECT(arg))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
 
   assert(IS_CLOSURE_OBJECT(cont));
   
@@ -82,7 +99,24 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to minus\n");
 #endif
   
-  assert(IS_INTEGER_OBJECT(arg));
+  if(!IS_INTEGER_OBJECT(arg))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
 
   assert(IS_CLOSURE_OBJECT(cont));
   
@@ -101,7 +135,24 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to times\n");
 #endif
   
-  assert(IS_INTEGER_OBJECT(arg));
+  if(!IS_INTEGER_OBJECT(arg))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
 
   assert(IS_CLOSURE_OBJECT(cont));
   
@@ -120,7 +171,24 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to divide_by\n");
 #endif
   
-  assert(IS_INTEGER_OBJECT(arg));
+  if(!IS_INTEGER_OBJECT(arg))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -161,8 +229,6 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to eq\n");
 #endif
-
-  assert(IS_INTEGER_OBJECT(arg));
 
   assert(IS_CLOSURE_OBJECT(cont));
 

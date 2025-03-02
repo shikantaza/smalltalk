@@ -975,6 +975,9 @@ void repl2()
   if(is_add_instance_method_exp(exp))
   {
     OBJECT_PTR class_object_val, class_object;
+
+    //TODO: figure out how to convert these
+    //asserts into exceptions
     assert(get_top_level_val(sixth(third(exp)), &class_object_val));
     class_object = car(class_object_val);
     assert(IS_CLASS_OBJECT(class_object));
@@ -986,6 +989,9 @@ void repl2()
   else if(is_add_class_method_exp(exp))
   {
     OBJECT_PTR class_object_val, class_object;
+
+    //TODO: figure out how to convert these
+    //asserts into exceptions
     assert(get_top_level_val(sixth(third(exp)), &class_object_val));
     class_object = car(class_object_val);
     assert(IS_CLASS_OBJECT(class_object));
