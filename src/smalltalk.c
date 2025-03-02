@@ -58,6 +58,8 @@ OBJECT_PTR setcdr(OBJECT_PTR, OBJECT_PTR);
 
 char *append_char(char *, char);
 
+OBJECT_PTR initialize_object();
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
@@ -623,6 +625,10 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
     current_parent = curr_cls_obj->parent_class_object;
   }
 
+  OBJECT_PTR obj_ptr = (uintptr_t)obj + OBJECT_TAG;
+
+  initialize_object(obj_ptr);
+
   //add the new instance to the instances mapped to the class
   cls_obj->nof_instances++;
 
@@ -631,11 +637,11 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   else
     cls_obj->instances = (OBJECT_PTR *)GC_REALLOC(cls_obj->instances, cls_obj->nof_instances * sizeof(OBJECT_PTR));
 
-  cls_obj->instances[cls_obj->nof_instances-1] = (uintptr_t)obj + OBJECT_TAG;
+  cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
-  OBJECT_PTR ret = nf(cont, (uintptr_t)obj + OBJECT_TAG);
+  OBJECT_PTR ret = nf(cont, obj_ptr);
   
 #ifdef DEBUG
   printf("Exiting new_object_internal()\n");

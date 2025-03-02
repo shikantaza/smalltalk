@@ -10,10 +10,15 @@ Smalltalk addClassMethod: #initialize toClass: UnitTestFramework withBody: [
 
 Smalltalk addClassMethod: #runTestCase:withID: toClass: UnitTestFramework withBody: [
   :blk :id |
-  Transcript show: 'Running test case '; show: id; cr.
-  (blk value) ifTrue: [
-    passedCases := passedCases + 1 ]
-  ifFalse: [
+  [
+    Transcript show: 'Running test case '; show: id; cr.
+    (blk value) ifTrue: [
+      passedCases := passedCases + 1 ]
+    ifFalse: [
+      Transcript show: id; show: ' failed!'; cr.
+      failedCases := failedCases + 1
+    ]
+  ] on: Exception do: [ :ex |
     Transcript show: id; show: ' failed!'; cr.
     failedCases := failedCases + 1
   ]
@@ -21,22 +26,32 @@ Smalltalk addClassMethod: #runTestCase:withID: toClass: UnitTestFramework withBo
 
 Smalltalk addClassMethod: #runNegativeTestCase:withID: toClass: UnitTestFramework withBody: [
   :blk :id |
-  Transcript show: 'Running test case '; show: id; cr.
-  (blk value) ifTrue: [
+  [
+    Transcript show: 'Running test case '; show: id; cr.
+    (blk value) ifTrue: [
+      Transcript show: id; show: ' failed!'; cr.
+      failedCases := failedCases + 1 ]
+    ifFalse: [
+      passedCases := passedCases + 1
+    ]
+  ] on: Exception do: [ :ex |
     Transcript show: id; show: ' failed!'; cr.
-    failedCases := failedCases + 1 ]
-  ifFalse: [
-    passedCases := passedCases + 1
+    failedCases := failedCases + 1
   ]
 ]
 
 Smalltalk addClassMethod: #runExceptionTestCase:exception:withID: toClass: UnitTestFramework withBody: [
   :blk :ex :id |
-  Transcript show: 'Running test case '; show: id; cr.
-  [ blk on: ex do: [ :ex1 | passedCases := passedCases + 1. ^ self ]] on: Exception do: [
+  [
+    Transcript show: 'Running test case '; show: id; cr.
+    [ blk on: ex do: [ :ex1 | passedCases := passedCases + 1. ^ self ]] on: Exception do: [
+      Transcript show: id; show: ' failed!'; cr.
+      failedCases := failedCases + 1.
+      ^ self
+    ]
+  ] on: Exception do: [ :ex1 |
     Transcript show: id; show: ' failed!'; cr.
-    failedCases := failedCases + 1.
-    ^ self
+    failedCases := failedCases + 1
   ]
 ]
 
@@ -358,5 +373,25 @@ UnitTestFramework runTestCase: [(obj get) = 33] withID: 39
 |obj|
 obj := Class15 new. obj set.
 UnitTestFramework runTestCase: [(obj get) = 42] withID: 40
+
+Smalltalk createClass: #InitializeTestClass
+
+Smalltalk addInstanceVariable: #x toClass: InitializeTestClass
+
+Smalltalk addInstanceMethod: #initialize toClass: InitializeTestClass withBody: [ x := 42]
+
+Smalltalk addInstanceMethod: #x toClass: InitializeTestClass withBody: [ ^ x ]
+
+| a | a := InitializeTestClass new. UnitTestFramework runTestCase: [ (a x) = 42 ] withID: 41
+
+Smalltalk createClass: #InitializeTestChildClass parentClass: InitializeTestClass
+
+Smalltalk addInstanceVariable: #y toClass: InitializeTestChildClass
+
+Smalltalk addInstanceMethod: #initialize toClass: InitializeTestChildClass withBody: [ y := 33]
+
+Smalltalk addInstanceMethod: #y toClass: InitializeTestChildClass withBody: [ ^ y ]
+
+| a | a := InitializeTestChildClass new. UnitTestFramework runTestCase: [((a x) = 42 & ((a y) = 33))] withID: 42
 
 UnitTestFramework reportStatus

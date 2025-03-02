@@ -54,6 +54,22 @@ extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
 
+BOOLEAN get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
+BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
+
+extern OBJECT_PTR idclo;
+
+extern stack_type *call_chain;
+extern BOOLEAN curtailed_block_in_progress;
+
+call_chain_entry_t *create_call_chain_entry(OBJECT_PTR,
+					    OBJECT_PTR,
+					    OBJECT_PTR,
+					    unsigned int,
+					    OBJECT_PTR *,
+					    OBJECT_PTR,
+					    OBJECT_PTR,
+					    BOOLEAN);
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -678,4 +694,128 @@ BOOLEAN is_super_class(OBJECT_PTR cls1, OBJECT_PTR cls2)
   }
 
   return false;
+}
+
+stack_type *get_class_hierarchy(OBJECT_PTR class_object)
+{
+  assert(IS_CLASS_OBJECT(class_object));
+
+  stack_type* hier = stack_create();
+
+  //the current class is also part of the hierarchy
+
+  OBJECT_PTR current_parent = class_object;
+
+  while(current_parent != NIL)
+  {
+    stack_push(hier, (void *)current_parent);
+
+    class_object_t *curr_cls_obj = (class_object_t *)extract_ptr(current_parent);
+
+    current_parent = curr_cls_obj->parent_class_object;
+  }
+
+  return hier;
+}
+
+OBJECT_PTR initialize_object(OBJECT_PTR obj)
+{
+  stack_type *hier = get_class_hierarchy(get_class_object(obj));
+
+  OBJECT_PTR *classes = (OBJECT_PTR *)stack_data(hier);
+  int count = stack_count(hier);
+  int i;
+
+  unsigned int j, n;
+
+  OBJECT_PTR cls, method;
+
+  OBJECT_PTR selector = get_symbol("initialize_");
+
+  //we are iterating in FIFO so that more
+  //'senior' classes are processed first
+  for(i=0; i<count; i++)
+  {
+    cls = classes[i];
+
+    class_object_t *cls_obj_int = (class_object_t *)extract_ptr(cls);
+
+    n = cls_obj_int->instance_methods->count;
+
+    for(j=0; j<n; j++)
+    {
+      if(cls_obj_int->instance_methods->bindings[j].key == selector)
+      {
+	method = cls_obj_int->instance_methods->bindings[j].val;
+
+	native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
+	nativefn nf = nfobj->nf;
+	assert(nf);
+
+	OBJECT_PTR closed_vars = second(method);
+	OBJECT_PTR ret = NIL;
+
+	OBJECT_PTR rest = closed_vars;
+  
+	binding_env_t *inst_vars = NULL;
+	binding_env_t *shared_vars = NULL;
+
+	shared_vars = ((class_object_t *)extract_ptr(get_class_object(obj)))->shared_vars;
+	inst_vars = ((object_t *)extract_ptr(obj))->instance_vars;
+
+	while(rest != NIL)
+	{
+	  OBJECT_PTR closed_val_cons;
+
+	  if(IS_OBJECT_OBJECT(obj) && inst_vars)
+	  {
+	    if(get_binding_val_regular(inst_vars, car(rest), &closed_val_cons))
+	    {
+	      ret = cons(closed_val_cons, ret);
+	      rest = cdr(rest);
+	      continue;
+	    }
+	  }
+
+	  if(IS_OBJECT_OBJECT(obj) && shared_vars)
+	  {
+	    if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
+	    {
+	      ret = cons(closed_val_cons, ret);
+	      rest = cdr(rest);
+	      continue;
+	    }
+	  }
+
+	  if(IS_CLASS_OBJECT(obj) && shared_vars)
+	  {
+	    if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
+	    {
+	      ret = cons(closed_val_cons, ret);
+	      rest = cdr(rest);
+	      continue;
+	    }
+	  }
+
+	  //TODO: assert should be replaced to raise an exception
+	  assert(get_top_level_val(car(rest), &closed_val_cons));
+	  ret = cons(closed_val_cons, ret);
+
+	  rest = cdr(rest);
+	}
+
+	OBJECT_PTR cons_form = list(3, car(method), reverse(ret), convert_int_to_object(0));
+	OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
+
+	if(!curtailed_block_in_progress)
+	  stack_push(call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, idclo, NIL, false));
+
+	OBJECT_PTR discarded_ret = nf(closure_form, idclo);
+
+	break;
+      }
+    }
+  }
+
+  return obj;
 }
