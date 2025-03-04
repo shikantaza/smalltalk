@@ -383,7 +383,7 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
 
   nativefn nf = (nativefn)extract_native_fn(cont);
   
-  return nf(cont, NIL);
+  return nf(cont, class_obj);
 }
 
 OBJECT_PTR add_class_var(OBJECT_PTR closure,
@@ -478,17 +478,15 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
 
   nativefn nf = (nativefn)extract_native_fn(cont);
 
-  return nf(cont, NIL);
+  return nf(cont, class_obj);
 }
 
-void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
+OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
-  //TODO: these asserts can't be converted to
-  //exceptions in a straightforward manner yet,
-  //as there is no continuation to return to.
+  //these asserts are redundant since the checks
+  //are being done in repl() now
   assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
-
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
@@ -577,6 +575,8 @@ void add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR c
 	   //second(first(res)));
 	   convert_int_to_object(cons_length(second(third(code1)))));
   }
+
+  return class_obj;
 }
 
 //replaces the first parameter to RETURN_FROM with the correct
@@ -597,14 +597,12 @@ OBJECT_PTR replace_method_selector(OBJECT_PTR code, OBJECT_PTR selector)
   }
 }
 
-void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
+OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
 {
-  //TODO: these asserts can't be converted to
-  //exceptions in a straightforward manner yet,
-  //as there is no continuation to return to.
+  //these asserts are redundant since the checks
+  //are being done in repl() now
   assert(IS_CLASS_OBJECT(class_obj));
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
-
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
@@ -693,6 +691,8 @@ void add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code
 	   //second(first(res)));
 	   convert_int_to_object(cons_length(second(third(code)))));
   }
+
+  return class_obj;
 }
 
 //we need to create objects internally too (not through

@@ -42,11 +42,8 @@ OBJECT_PTR seventh(OBJECT_PTR);
 nativefn extract_native_fn(OBJECT_PTR);
 
 void repl();
-OBJECT_PTR create_class(OBJECT_PTR, OBJECT_PTR);
-void add_instance_var(OBJECT_PTR, OBJECT_PTR);
-void add_class_var(OBJECT_PTR, OBJECT_PTR);
-void add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
-void add_class_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_class_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 BOOLEAN is_create_class_exp(OBJECT_PTR);
 BOOLEAN is_add_var_exp(OBJECT_PTR, char *);
@@ -957,48 +954,103 @@ void repl2()
   print_object(exp); printf("\n");
 #endif
 
-  /*
-    if(is_create_class_exp(exp))
-    {
-    create_class(fifth(third(exp)), sixth(third(exp)));
-    }
-    else if(is_add_instance_var_exp(exp))
-    {
-    add_instance_var(sixth(third(exp)), fifth(third(exp)));
-    }
-    else if(is_add_class_var_exp(exp))
-    {
-    add_class_var(sixth(third(exp)), fifth(third(exp)));
-    }
-    else if(is_add_instance_method_exp(exp))
-  */
-  if(is_add_instance_method_exp(exp))
+  if(first(third(exp)) == MESSAGE_SEND &&
+     second(third(exp)) == SMALLTALK &&
+     third(third(exp)) == get_symbol("addInstanceMethod:toClass:withBody:_"))
   {
+    if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
+    {
+      printf("Invalid method selector passed to Smalltalk>>addInstanceMethod\n");
+      return;
+    }
+
     OBJECT_PTR class_object_val, class_object;
 
     //TODO: figure out how to convert these
     //asserts into exceptions
-    assert(get_top_level_val(sixth(third(exp)), &class_object_val));
-    class_object = car(class_object_val);
-    assert(IS_CLASS_OBJECT(class_object));
 
-    add_instance_method(class_object,
-			fifth(third(exp)),
-			list(3, LET, NIL, seventh(third(exp))));
+    if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
+    {
+      printf("Smalltalk>>addInstanceMethod: Invalid class name\n");
+      return;
+    }
+
+    if(!get_top_level_val(sixth(third(exp)), &class_object_val))
+    {
+      printf("Smalltalk>>addInstanceMethod: Class does not exist\n");
+      return;
+    }
+
+    class_object = car(class_object_val);
+
+    if(!IS_CLASS_OBJECT(class_object))
+    {
+      printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
+      return;
+    }
+
+    if(!IS_CONS_OBJECT(seventh(third(exp))))
+    {
+      printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
+      return;
+    }
+
+    OBJECT_PTR ret = add_instance_method(class_object,
+					 fifth(third(exp)),
+					 list(3, LET, NIL, seventh(third(exp))));
+
+    printf("\n");
+    print_object(ret);
+    printf("\n");
   }
-  else if(is_add_class_method_exp(exp))
+  else if(first(third(exp)) == MESSAGE_SEND &&
+	  second(third(exp)) == SMALLTALK &&
+	  third(third(exp)) == get_symbol("addClassMethod:toClass:withBody:_"))
   {
+    if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
+    {
+      printf("Invalid method selector passed to Smalltalk>>addClassMethod\n");
+      return;
+    }
+
     OBJECT_PTR class_object_val, class_object;
 
     //TODO: figure out how to convert these
     //asserts into exceptions
-    assert(get_top_level_val(sixth(third(exp)), &class_object_val));
-    class_object = car(class_object_val);
-    assert(IS_CLASS_OBJECT(class_object));
 
-    add_class_method(class_object,
-		     fifth(third(exp)),
-		     list(3, LET, NIL, seventh(third(exp))));
+    if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
+    {
+      printf("Smalltalk>>addClassMethod: Invalid class name\n");
+      return;
+    }
+
+    if(!get_top_level_val(sixth(third(exp)), &class_object_val))
+    {
+      printf("Smalltalk>>addClassMethod: Class does not exist\n");
+      return;
+    }
+
+    class_object = car(class_object_val);
+
+    if(!IS_CLASS_OBJECT(class_object))
+    {
+      printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
+      return;
+    }
+
+    if(!IS_CONS_OBJECT(seventh(third(exp))))
+    {
+      printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
+      return;
+    }
+
+    OBJECT_PTR ret = add_class_method(class_object,
+				      fifth(third(exp)),
+				      list(3, LET, NIL, seventh(third(exp))));
+
+    printf("\n");
+    print_object(ret);
+    printf("\n");
   }
   else
     repl();
