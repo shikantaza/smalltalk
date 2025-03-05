@@ -6,4 +6,5 @@ Smalltalk createClass: #ZeroDivide parentClass: Error
 
 Smalltalk createClass: #InvalidArgument parentClass: Error
 
+Smalltalk createClass: #IndexOutofBounds parentClass: Error
 

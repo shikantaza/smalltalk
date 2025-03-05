@@ -92,6 +92,7 @@ BOOLEAN IS_STRING_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK)
 BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR x)         { return (x & BIT_MASK) == SMALLTALK_SYMBOL_TAG;         }
 BOOLEAN IS_CHARACTER_OBJECT(OBJECT_PTR x)                { return (x & BIT_MASK) == CHARACTER_TAG;                }
 BOOLEAN IS_STRING_LITERAL_OBJECT(OBJECT_PTR x)           { return (x & BIT_MASK) == STRING_LITERAL_TAG;           }
+BOOLEAN IS_ARRAY_OBJECT(OBJECT_PTR x)                    { return (x & BIT_MASK) == ARRAY_TAG;                    }
 
 OBJECT_PTR first(OBJECT_PTR x)    { return car(x); }
 OBJECT_PTR second(OBJECT_PTR x)   { return car(cdr(x)); }
@@ -118,6 +119,7 @@ void create_NiladicBlock();
 void create_Boolean();
 void create_Exception();
 void create_MonadicBlock();
+void create_Array();
 
 int extract_symbol_index(OBJECT_PTR);
 
@@ -324,6 +326,8 @@ void initialize()
   create_Boolean();
 
   create_Exception();
+
+  create_Array();
   
   initialize_top_level();
 

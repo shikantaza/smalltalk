@@ -21,6 +21,7 @@ BOOLEAN IS_STRING_OBJECT(OBJECT_PTR);
 BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
 BOOLEAN IS_CHARACTER_OBJECT(OBJECT_PTR);
 BOOLEAN IS_STRING_LITERAL_OBJECT(OBJECT_PTR);
+BOOLEAN IS_ARRAY_OBJECT(OBJECT_PTR);
 
 char *get_smalltalk_symbol_name(OBJECT_PTR);
 
@@ -63,6 +64,8 @@ extern stack_type *call_chain;
 extern BOOLEAN curtailed_block_in_progress;
 
 extern OBJECT_PTR nil;
+
+extern OBJECT_PTR Array;
 
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR,
 					    OBJECT_PTR,
@@ -406,6 +409,8 @@ void print_object(OBJECT_PTR obj_ptr)
     fprintf(stdout, "%s", string_literals[obj_ptr >> OBJECT_SHIFT]);
   else if(IS_TRUE_OBJECT(obj_ptr) || IS_FALSE_OBJECT(obj_ptr))
     fprintf(stdout, "%s", obj_ptr == TRUE ? "true" : "false");
+  else if(IS_ARRAY_OBJECT(obj_ptr))
+    fprintf(stdout, "#<OBJECT %p> (instance of Array)", (void *)obj_ptr);
   else
     error("<invalid object %p>", (void *)obj_ptr);
 
@@ -645,6 +650,8 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
     else
       assert(false);//TODO
   }
+  else if(IS_ARRAY_OBJECT(obj))
+    return Array;
   else
     return ((object_t *)extract_ptr(obj))->class_object;
 }

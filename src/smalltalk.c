@@ -47,6 +47,8 @@ OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
 OBJECT_PTR nil;
 
+extern OBJECT_PTR Array;
+
 char **string_literals = NULL;
 unsigned int nof_string_literals = 0;
 
@@ -160,6 +162,8 @@ void initialize_top_level()
   add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //idclo will be set at each repl loop start
 
   add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
+
+  add_binding_to_top_level(get_symbol("Array"), cons(Array, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)

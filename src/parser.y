@@ -954,9 +954,17 @@ void repl2()
   print_object(exp); printf("\n");
 #endif
 
-  if(first(third(exp)) == MESSAGE_SEND &&
-     second(third(exp)) == SMALLTALK &&
-     third(third(exp)) == get_symbol("addInstanceMethod:toClass:withBody:_"))
+  //awkward conditionals because of
+  //absence of shortcirtuing for && (confirm)
+  if(!IS_CONS_OBJECT(exp))
+    repl();
+  else if(cons_length(exp) != 3)
+    repl();
+  else if(!IS_CONS_OBJECT(third(exp)))
+    repl();
+  else if(first(third(exp)) == MESSAGE_SEND &&
+	  second(third(exp)) == SMALLTALK &&
+	  third(third(exp)) == get_symbol("addInstanceMethod:toClass:withBody:_"))
   {
     if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
     {

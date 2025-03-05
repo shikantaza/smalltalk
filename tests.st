@@ -435,4 +435,31 @@ UnitTestFramework runExceptionTestCase: [Smalltalk createGlobal: 1 valued: 10] e
 
 UnitTestFramework runExceptionTestCase: [Smalltalk createGlobal: 1] exception: InvalidArgument withID: 57
 
+| a | a := Array new: 3.
+UnitTestFramework runTestCase: [((a at: 1) = nil) & ((a at: 2) = nil) & ((a at: 3) = nil) ] withID: 58
+
+| a | a := Array new: 3. a at: 1 put: 42.
+UnitTestFramework runTestCase: [((a at: 1) = 42) & ((a at: 2) = nil) & ((a at: 3) = nil) ] withID: 59
+
+| a | a := Array new: 3.
+UnitTestFramework runTestCase: [((a size) = 3) ] withID: 60
+
+| a | a := Array new: 3.
+UnitTestFramework runExceptionTestCase: [a at: 4 put: 42] exception: IndexOutofBounds withID: 61
+
+| a | a := Array new: 3.
+UnitTestFramework runExceptionTestCase: [a at: #a put: 42] exception: InvalidArgument withID: 62
+
+| a | a := Array new: 3.
+UnitTestFramework runExceptionTestCase: [a at: 4] exception: IndexOutofBounds withID: 63
+
+| a | a := Array new: 3.
+UnitTestFramework runExceptionTestCase: [a at: #a] exception: InvalidArgument withID: 64
+
+UnitTestFramework runExceptionTestCase: [Array new: #a] exception: InvalidArgument withID: 65
+
+UnitTestFramework runExceptionTestCase: [Array new: -1] exception: InvalidArgument withID: 66
+
+UnitTestFramework runExceptionTestCase: [Array new: 0] exception: InvalidArgument withID: 67
+
 UnitTestFramework reportStatus
