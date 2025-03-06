@@ -237,6 +237,40 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return nf(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
+OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  if(!IS_INTEGER_OBJECT(arg))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
+#ifdef DEBUG
+  print_object(arg); printf(" is the arg passed to lt\n");
+#endif
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  return nf(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
+}
+
 void create_Integer()
 {
   class_object_t *cls_obj;
@@ -260,7 +294,7 @@ void create_Integer()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 5;
+  cls_obj->instance_methods->count = 6;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("+_");
@@ -291,6 +325,12 @@ void create_Integer()
   cls_obj->instance_methods->bindings[4].key = get_symbol("=_");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)eq),
+						    NIL,
+						    convert_int_to_object(1));
+
+  cls_obj->instance_methods->bindings[5].key = get_symbol("<_");
+  cls_obj->instance_methods->bindings[5].val = list(3,
+						    convert_native_fn_to_object((nativefn)lt),
 						    NIL,
 						    convert_int_to_object(1));
 

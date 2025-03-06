@@ -462,4 +462,57 @@ UnitTestFramework runExceptionTestCase: [Array new: -1] exception: InvalidArgume
 
 UnitTestFramework runExceptionTestCase: [Array new: 0] exception: InvalidArgument withID: 67
 
+| a | a := Array new: 3. a at: 1 put: 1. a at: 2 put: 2. a at: 3 put: 3.
+UnitTestFramework runExceptionTestCase: [a do: 1] exception: InvalidArgument withID: 68
+
+| a x |
+x := 0.
+a := Array new: 3. a at: 1 put: 1. a at: 2 put: 2. a at: 3 put: 3.
+a do: [ :v | x := x + v].
+UnitTestFramework runTestCase: [ x = 6] withID: 69
+
+Smalltalk createClass: #MutualRecurTest
+
+Smalltalk addClassMethod: #isOdd: toClass: MutualRecurTest withBody: [
+  :v |
+  (v < 0) ifTrue: [Error new signal].
+  (v = 0) ifTrue: [
+    ^false
+  ]
+  ifFalse: [
+    ^self isEven: (v - 1)
+  ]
+]
+
+Smalltalk addClassMethod: #isEven: toClass: MutualRecurTest withBody: [
+  :v |
+  (v < 0) ifTrue: [Error new signal].
+  (v = 0) ifTrue: [
+    ^true
+  ]
+  ifFalse: [
+    ^self isOdd: (v - 1)
+  ]
+]
+
+UnitTestFramework runTestCase: [MutualRecurTest isOdd: 1] withID: 70
+
+UnitTestFramework runTestCase: [MutualRecurTest isOdd: 7] withID: 71
+
+UnitTestFramework runNegativeTestCase: [MutualRecurTest isOdd: 0] withID: 72
+
+UnitTestFramework runNegativeTestCase: [MutualRecurTest isOdd: 8] withID: 73
+
+UnitTestFramework runTestCase: [MutualRecurTest isEven: 0] withID: 74
+
+UnitTestFramework runTestCase: [MutualRecurTest isEven: 8] withID: 75
+
+UnitTestFramework runNegativeTestCase: [MutualRecurTest isEven: 1] withID: 76
+
+UnitTestFramework runNegativeTestCase: [MutualRecurTest isEven: 7] withID: 77
+
+UnitTestFramework runExceptionTestCase: [MutualRecurTest isOdd: -42] exception: Error withID: 78
+
+UnitTestFramework runExceptionTestCase: [MutualRecurTest isEven: -42] exception: Error withID: 79
+
 UnitTestFramework reportStatus

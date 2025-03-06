@@ -239,6 +239,52 @@ OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
   return nf(cont, convert_int_to_object((int)(obj->nof_elements)));
 }
 
+OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+
+  array_object_t *obj = (array_object_t *)extract_ptr(receiver);
+
+  if(!IS_CLOSURE_OBJECT(operation))
+  {
+    stack_push(exception_contexts, (void *)cont);
+
+    OBJECT_PTR ret;
+    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+
+    OBJECT_PTR invalid_arg_class_obj = car(ret);
+
+    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
+							  convert_fn_to_closure((nativefn)new_object_internal),
+							  idclo);
+    return message_send(msg_snd_closure,
+			invalid_arg_excp_obj,
+			get_symbol("signal_"),
+			convert_int_to_object(0),
+			cont);
+  }
+
+  unsigned int size = obj->nof_elements;
+
+  int i;
+
+  for(i=0; i<size; i++)
+  {
+    message_send(msg_snd_closure,
+                 operation,
+		 get_symbol("value:_"),
+		 convert_int_to_object(1),
+		 obj->elements[i],
+		 idclo);
+  }
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  return nf(cont, receiver);
+}
+
 void create_Array()
 {
   class_object_t *cls_obj;
@@ -262,7 +308,7 @@ void create_Array()
   cls_obj->shared_vars->count = 0;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 3;
+  cls_obj->instance_methods->count = 4;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("at:put:_");
@@ -282,6 +328,12 @@ void create_Array()
 						    convert_native_fn_to_object((nativefn)array_size),
 						    NIL,
 						    convert_int_to_object(0));
+
+  cls_obj->instance_methods->bindings[3].key = get_symbol("do:_");
+  cls_obj->instance_methods->bindings[3].val = list(3,
+						    convert_native_fn_to_object((nativefn)array_do),
+						    NIL,
+						    convert_int_to_object(1));
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;
