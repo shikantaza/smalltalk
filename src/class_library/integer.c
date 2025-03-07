@@ -5,7 +5,7 @@
 
 #include "gc.h"
 
-#include "../smalltalk.h"
+#include "../global_decls.h"
 
 nativefn extract_native_fn(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
@@ -31,8 +31,6 @@ OBJECT_PTR Integer;
 OBJECT_PTR signal_exception(OBJECT_PTR);
 OBJECT_PTR get_smalltalk_symbol(char *);
 
-BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
-
 OBJECT_PTR message_send(OBJECT_PTR,
 			OBJECT_PTR,
 			OBJECT_PTR,
@@ -53,6 +51,9 @@ void print_exception_contexts();
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
+extern OBJECT_PTR ZeroDivide;
+extern OBJECT_PTR InvalidArgument;
+
 OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
@@ -64,26 +65,10 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
   
   if(!IS_INTEGER_OBJECT(arg))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
-  
+
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
   return nf(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
@@ -100,23 +85,7 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
   
   if(!IS_INTEGER_OBJECT(arg))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
   
@@ -136,23 +105,7 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
   
   if(!IS_INTEGER_OBJECT(arg))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
   
@@ -172,47 +125,12 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
   
   if(!IS_INTEGER_OBJECT(arg))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
   if(get_int_value(arg) == 0)
-  {
-    stack_push(exception_contexts, (void *)cont);
-    //print_object(cont); printf(" is pushed onto the exception context\n");
-    //print_exception_contexts();
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("ZeroDivide"), &ret));
-
-    OBJECT_PTR zero_divide_class_obj = car(ret);
-
-    OBJECT_PTR exception_obj = new_object_internal(zero_divide_class_obj,
-						   convert_fn_to_closure((nativefn)new_object_internal),
-						   idclo);
-    //return signal_exception(exception_obj);
-    return message_send(msg_snd_closure,
-			exception_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(ZeroDivide, cont);
   
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 
@@ -242,23 +160,7 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(arg))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to lt\n");

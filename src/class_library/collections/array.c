@@ -5,7 +5,7 @@
 
 #include "gc.h"
 
-#include "../../smalltalk.h"
+#include "../../global_decls.h"
 #include "../../util.h"
 
 nativefn extract_native_fn(OBJECT_PTR);
@@ -28,6 +28,9 @@ extern OBJECT_PTR SELF;
 
 extern OBJECT_PTR Object;
 extern OBJECT_PTR nil;
+
+extern OBJECT_PTR InvalidArgument;
+extern OBJECT_PTR IndexOutofBounds;
 
 OBJECT_PTR signal_exception(OBJECT_PTR);
 OBJECT_PTR get_smalltalk_symbol(char *);
@@ -59,44 +62,12 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
   assert(receiver == Array);
 
   if(!IS_INTEGER_OBJECT(size))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   int count = get_int_value(size);
 
   if(count <= 0)
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
 
@@ -123,46 +94,14 @@ OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OB
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(index))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   int idx = get_int_value(index);
 
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
   if(idx <= 0 || idx > obj->nof_elements)
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("IndexOutofBounds"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(IndexOutofBounds, cont);
 
   obj->elements[idx-1] = val;
 
@@ -178,46 +117,14 @@ OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
   OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(index))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   int idx = get_int_value(index);
 
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
   if(idx <= 0 || idx > obj->nof_elements)
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("IndexOutofBounds"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(IndexOutofBounds, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -246,23 +153,7 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
   if(!IS_CLOSURE_OBJECT(operation))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = obj->nof_elements;
 

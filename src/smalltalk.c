@@ -5,7 +5,8 @@
 
 #include "gc.h"
 
-#include "smalltalk.h"
+#include "global_decls.h"
+
 #include "util.h"
 #include "stack.h"
 
@@ -48,6 +49,7 @@ OBJECT_PTR Smalltalk;
 OBJECT_PTR nil;
 
 extern OBJECT_PTR Array;
+extern OBJECT_PTR InvalidArgument;
 
 char **string_literals = NULL;
 unsigned int nof_string_literals = 0;
@@ -190,42 +192,10 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
 
   if(!IS_SMALLTALK_SYMBOL_OBJECT(class_sym))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   if(!IS_CLASS_OBJECT(parent_class_object))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -290,42 +260,10 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
 
   if(!IS_CLASS_OBJECT(class_obj))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   if(!IS_SMALLTALK_SYMBOL_OBJECT(var))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -400,42 +338,10 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
 
   if(!IS_CLASS_OBJECT(class_obj))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   if(!IS_SMALLTALK_SYMBOL_OBJECT(var))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -846,23 +752,7 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
 
   if(!IS_SMALLTALK_SYMBOL_OBJECT(global_sym))
-  {
-    stack_push(exception_contexts, (void *)cont);
-
-    OBJECT_PTR ret;
-    assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
-
-    OBJECT_PTR invalid_arg_class_obj = car(ret);
-
-    OBJECT_PTR invalid_arg_excp_obj = new_object_internal(invalid_arg_class_obj,
-							  convert_fn_to_closure((nativefn)new_object_internal),
-							  idclo);
-    return message_send(msg_snd_closure,
-			invalid_arg_excp_obj,
-			get_symbol("signal_"),
-			convert_int_to_object(0),
-			cont);
-  }
+    return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 

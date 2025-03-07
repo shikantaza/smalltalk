@@ -5,9 +5,10 @@
 #include <assert.h>
   
 #include "gc.h"
+
+#include "global_decls.h"
   
 #include "parser_header.h"
-#include "smalltalk.h"
 #include "stack.h"
 
 //workaround for variadic function arguments
@@ -1137,6 +1138,8 @@ int main()
   initialize();  
 
   load_core_library();
+
+  initialize_pass2();
 
   load_tests();
   //TODO: get this parsing too done

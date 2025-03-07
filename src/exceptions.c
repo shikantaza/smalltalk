@@ -5,7 +5,8 @@
 #include <string.h>
 
 #include "gc.h"
-#include "smalltalk.h"
+
+#include "global_decls.h"
 #include "util.h"
 #include "stack.h"
 
@@ -32,6 +33,12 @@ OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
 OBJECT_PTR convert_native_fn_to_object(nativefn);
 OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
+
+OBJECT_PTR Error;
+OBJECT_PTR MessageNotUnderstood;
+OBJECT_PTR ZeroDivide;
+OBJECT_PTR InvalidArgument;
+OBJECT_PTR IndexOutofBounds;
 
 extern binding_env_t *top_level;
 
@@ -799,4 +806,25 @@ void create_Exception()
 						 convert_int_to_object(0));
   
   Exception =  convert_class_object_to_object_ptr(cls_obj);
+}
+
+//call this function to signal exceptions from Smalltalk methods
+//implemented as primitives.
+OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR excp_cont)
+{
+  assert(IS_CLASS_OBJECT(excp_class_obj));
+  assert(excp_class_obj == Exception || is_super_class(Exception, excp_class_obj));
+
+  assert(IS_CLOSURE_OBJECT(excp_cont));
+
+  stack_push(exception_contexts, (void *)excp_cont);
+
+  OBJECT_PTR excp_obj = new_object_internal(excp_class_obj,
+					    convert_fn_to_closure((nativefn)new_object_internal),
+					    idclo);
+  return message_send(msg_snd_closure,
+		      excp_obj,
+		      get_symbol("signal_"),
+		      convert_int_to_object(0),
+		      excp_cont);
 }

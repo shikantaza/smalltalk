@@ -6,8 +6,8 @@
 
 #include "gc.h"
 
+#include "global_decls.h"
 #include "parser_header.h"
-#include "smalltalk.h"
 #include "util.h"
 #include "stack.h"
 
@@ -158,6 +158,12 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
 			      OBJECT_PTR count1,
 			      ...);
 extern OBJECT_PTR nil;
+
+extern OBJECT_PTR Error;
+extern OBJECT_PTR MessageNotUnderstood;
+extern OBJECT_PTR ZeroDivide;
+extern OBJECT_PTR InvalidArgument;
+extern OBJECT_PTR IndexOutofBounds;
 
 //this has also been defined in object_utils.c
 //use that version (that version returns the
@@ -334,6 +340,28 @@ void initialize()
   call_chain = stack_create();
 
   exception_contexts = stack_create();
+}
+
+//this is used to initialize globals
+//that are created by load_library()
+void initialize_pass2()
+{
+  OBJECT_PTR ret;
+
+  assert(get_top_level_val(get_symbol("Error"), &ret));
+  Error = car(ret);
+
+  assert(get_top_level_val(get_symbol("MessageNotUnderstood"), &ret));
+  MessageNotUnderstood = car(ret);
+
+  assert(get_top_level_val(get_symbol("ZeroDivide"), &ret));
+  ZeroDivide = car(ret);
+
+  assert(get_top_level_val(get_symbol("InvalidArgument"), &ret));
+  InvalidArgument = car(ret);
+
+  assert(get_top_level_val(get_symbol("IndexOutofBounds"), &ret));
+  IndexOutofBounds = car(ret);
 }
 
 void error(const char *fmt, ...)
