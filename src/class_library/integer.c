@@ -7,17 +7,17 @@
 
 #include "../global_decls.h"
 
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-int get_int_value(OBJECT_PTR);
+//workaround for variadic function arguments
+//getting clobbered in ARM64
+typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
-OBJECT_PTR get_symbol(char *);
-//OBJECT_PTR create_closure(OBJECT_PTR, nativefn, ...);
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
+OBJECT_PTR Integer;
 
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-
+extern OBJECT_PTR ZeroDivide;
+extern OBJECT_PTR InvalidArgument;
+extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
+extern stack_type *exception_contexts;
 extern binding_env_t *top_level;
 
 extern OBJECT_PTR NIL;
@@ -26,33 +26,6 @@ extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
-OBJECT_PTR Integer;
-
-OBJECT_PTR signal_exception(OBJECT_PTR);
-OBJECT_PTR get_smalltalk_symbol(char *);
-
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
-
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
-
-extern stack_type *exception_contexts;
-
-OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
-OBJECT_PTR convert_fn_to_closure(nativefn fn);
-
-void print_exception_contexts();
-
-//workaround for variadic function arguments
-//getting clobbered in ARM64
-typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
-
-extern OBJECT_PTR ZeroDivide;
-extern OBJECT_PTR InvalidArgument;
 
 OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {

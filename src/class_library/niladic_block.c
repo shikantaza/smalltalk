@@ -5,54 +5,22 @@
 
 #include "gc.h"
 
-#include "../smalltalk.h"
+#include "../global_decls.h"
 #include "../stack.h"
-
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-
-OBJECT_PTR get_symbol(char *);
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-  
-extern binding_env_t *top_level;
-
-extern OBJECT_PTR NIL;
-extern OBJECT_PTR SELF;
-
-extern OBJECT_PTR Object;
-
-extern stack_type *exception_environment;
-
-extern OBJECT_PTR curtailed_blocks_list;
-
-extern stack_type *call_chain;
 
 OBJECT_PTR NiladicBlock;
 
-extern void print_call_chain();
-
+extern binding_env_t *top_level;
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR Object;
+extern stack_type *exception_environment;
+extern OBJECT_PTR curtailed_blocks_list;
+extern stack_type *call_chain;
 extern OBJECT_PTR idclo;
 extern OBJECT_PTR msg_snd_closure;
-
-exception_handler_t *create_exception_handler(OBJECT_PTR,
-					      OBJECT_PTR,
-					      OBJECT_PTR,
-					      stack_type *,
-					      OBJECT_PTR);
-
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
-
 extern BOOLEAN curtailed_block_in_progress;
+
 /*
 
 These two methods to be included in

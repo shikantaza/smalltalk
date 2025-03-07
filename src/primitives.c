@@ -2,46 +2,15 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "smalltalk.h"
+#include "global_decls.h"
 #include "stack.h"
 
-BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR);
-BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR);
-uintptr_t extract_ptr(OBJECT_PTR);
-int get_int_value(OBJECT_PTR);
-void set_heap(uintptr_t, unsigned int, OBJECT_PTR);
-uintptr_t object_alloc(int, int);
-OBJECT_PTR last_cell(OBJECT_PTR);
-
-void invoke_curtailed_blocks();
-
 extern OBJECT_PTR NIL;
-
 extern OBJECT_PTR method_call_stack;
 extern stack_type *call_chain;
-
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR convert_int_to_object(int);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-
 extern void print_call_chain();
-
 extern OBJECT_PTR idclo;
 extern OBJECT_PTR msg_snd_closure;
-
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
-
-OBJECT_PTR get_symbol(char *);
-
-/* OBJECT_PTR message_send(OBJECT_PTR receiver, ...) */
-/* { */
-/*   //TODO: */
-/*   return NIL; */
-/* } */
 
 void save_continuation(OBJECT_PTR cont)
 {
@@ -95,7 +64,6 @@ nativefn extract_native_fn1(OBJECT_PTR closure)
   //TODO: is an unmet dependencies check
   //needed here?
          
-  //OBJECT_PTR nativefn_obj = (OBJECT_PTR)*((OBJECT_PTR *)extract_ptr(closure));
   OBJECT_PTR nativefn_obj = car(closure);
   
   assert(IS_NATIVE_FN_OBJECT(nativefn_obj));
@@ -109,8 +77,6 @@ nativefn extract_native_fn1(OBJECT_PTR closure)
   
   assert(nf);
 
-  //printf("returning from extract_native_fn\n");
-  
   return nf;
 }
 
@@ -122,35 +88,7 @@ OBJECT_PTR get_exception_handler()
 
 OBJECT_PTR get_continuation(OBJECT_PTR selector)
 {
-  /*
-  OBJECT_PTR rest = method_call_stack;
-  OBJECT_PTR cont = NIL;
-
-  while(rest != NIL)
-  {
-    if(car(car(rest)) == selector)
-    {
-       cont = cdr(car(rest));
-       method_call_stack = cdr(rest);
-       break;
-    }
-    rest = cdr(rest);
-  }
-
-  assert(cont != NIL);
-  assert(IS_CLOSURE_OBJECT(cont));
-
-  return cont;
-  */
-
-  //print_call_chain();
-
-  //if(stack_is_empty(call_chain))
-  //  return idclo;
-  
   assert(IS_SYMBOL_OBJECT(selector));
-  //print_object(selector); printf(" is the selector\n");
-  //print_call_chain();
   assert(!stack_is_empty(call_chain));
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
@@ -163,7 +101,6 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
        entry->termination_blk_invoked == false)
     {
       nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      //OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
       OBJECT_PTR discarded_ret = message_send(msg_snd_closure,
 					      termination_blk,
 					      get_symbol("value_"),
@@ -179,23 +116,10 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
     //from a method. need to convert this into an exception
     //to handle returns from anonymous blocks
     assert(!stack_is_empty(call_chain));
-    //if(stack_is_empty(call_chain))
-    //   return idclo;
     
     entry = (call_chain_entry_t *)stack_pop(call_chain);
   }
 
-  //pop the entry corresponding to the method
-  //we are returning from
-  //if(!stack_is_empty(call_chain))
-  //  stack_pop(call_chain);
-
-  //printf("Call chain after get_continuation(): begin\n");
-  //print_call_chain();
-  //printf("end\n");
-
-  //print_object(entry->cont); printf(" is the continuation being returned to\n");
-  
   return entry->cont;
 }
 

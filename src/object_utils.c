@@ -6,26 +6,10 @@
 
 #include "gc.h"
 
-#include "smalltalk.h"
+#include "global_decls.h"
 
-OBJECT_PTR clone_object(OBJECT_PTR);
-OBJECT_PTR get_symbol(char *);
-BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR);
-BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR);
-BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR);
-BOOLEAN IS_FALSE_OBJECT(OBJECT_PTR);
-
-BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
-BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
-BOOLEAN IS_STRING_OBJECT(OBJECT_PTR);
-BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
-BOOLEAN IS_CHARACTER_OBJECT(OBJECT_PTR);
-BOOLEAN IS_STRING_LITERAL_OBJECT(OBJECT_PTR);
-BOOLEAN IS_ARRAY_OBJECT(OBJECT_PTR);
-
-char *get_smalltalk_symbol_name(OBJECT_PTR);
-
-nativefn extract_native_fn(OBJECT_PTR);
+int gen_sym_count = 0;
+OBJECT_PTR Symbol;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -33,30 +17,21 @@ extern OBJECT_PTR SET;
 extern OBJECT_PTR RETURN;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR LAMBDA;
-
 extern package_t *compiler_package;
-
 extern OBJECT_PTR Integer;
-
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
 
-OBJECT_PTR Symbol;
 extern OBJECT_PTR nil;
 extern OBJECT_PTR Boolean;
 
 extern char **string_literals;
 extern unsigned int nof_string_literals;
 
-int gen_sym_count = 0;
-
 extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
-
-BOOLEAN get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
-BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
 
 extern OBJECT_PTR idclo;
 
@@ -67,14 +42,6 @@ extern OBJECT_PTR nil;
 
 extern OBJECT_PTR Array;
 
-call_chain_entry_t *create_call_chain_entry(OBJECT_PTR,
-					    OBJECT_PTR,
-					    OBJECT_PTR,
-					    unsigned int,
-					    OBJECT_PTR *,
-					    OBJECT_PTR,
-					    OBJECT_PTR,
-					    BOOLEAN);
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -527,7 +494,6 @@ OBJECT_PTR convert_native_fn_to_object(nativefn nf)
 {
   uintptr_t ptr = object_alloc(1, NATIVE_FN_TAG);
 
-  //*((nativefn *)ptr) = nf;
   native_fn_obj_t *nfobj = (native_fn_obj_t *)GC_MALLOC(sizeof(native_fn_obj_t));
   nfobj->nf = nf;
   *((native_fn_obj_t *)ptr) = *nfobj;
@@ -537,10 +503,6 @@ OBJECT_PTR convert_native_fn_to_object(nativefn nf)
 
 OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *cls_obj)
 {
-  //uintptr_t ptr = object_alloc(1, CLASS_OBJECT_TAG);
-  //*((class_object_t *)ptr) = *cls_obj;
-  //return ptr + CLASS_OBJECT_TAG;
-
   return (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
 
@@ -599,15 +561,8 @@ OBJECT_PTR create_closure(OBJECT_PTR arg_count, OBJECT_PTR count1, nativefn fn, 
   for(i=0; i<count; i++)
   {
     closed_object = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
-    //print_object(closed_object); printf("^^^^^\n");
-    //uintptr_t ptr = extract_ptr(last_cell(ret));
-    //set_heap(ptr, 1, cons(closed_object, NIL));
     ret = cons(closed_object, ret); 
   }
-
-  //store the arity
-  //uintptr_t ptr = extract_ptr(last_cell(ret));
-  //set_heap(ptr, 1, cons(arg_count, NIL));
 
   ret = list(3,
 	     fnobj,

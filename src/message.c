@@ -5,56 +5,22 @@
 
 #include "gc.h"
 
-#include "smalltalk.h"
+#include "global_decls.h"
 #include "util.h"
 #include "stack.h"
 
-typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR, va_list*);
-
-OBJECT_PTR convert_int_to_object(int);
-int get_int_value(OBJECT_PTR);
-OBJECT_PTR get_symbol(char *);
-char *get_symbol_name(OBJECT_PTR);
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR get_class_object(OBJECT_PTR);
-
-BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
-BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR);
-
-BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
-OBJECT_PTR get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
-void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
-
+extern OBJECT_PTR idclo;
+extern OBJECT_PTR THIS_CONTEXT;
+extern OBJECT_PTR method_call_stack;
+extern stack_type *call_chain;
+extern BOOLEAN curtailed_block_in_progress;
+extern stack_type *exception_environment;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR SUPER;
-
 extern OBJECT_PTR Object;
-
 extern binding_env_t *top_level;
-
-BOOLEAN IS_OBJECT_OBJECT(OBJECT_PTR);
-
-extern stack_type *exception_environment;
-
-OBJECT_PTR get_smalltalk_symbol(char *);
-
-extern OBJECT_PTR THIS_CONTEXT;
-
-extern OBJECT_PTR method_call_stack;
-extern stack_type *call_chain;
-extern BOOLEAN curtailed_block_in_progress;
-
-OBJECT_PTR signal_exception(OBJECT_PTR);
-
-OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
-OBJECT_PTR convert_fn_to_closure(nativefn fn);
-extern OBJECT_PTR idclo;
-
-OBJECT_PTR get_parent_class(OBJECT_PTR);
-
 extern OBJECT_PTR nil;
 
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,

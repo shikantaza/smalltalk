@@ -7,44 +7,19 @@
 #include "gc.h"
 
 #include "global_decls.h"
-  
-#include "parser_header.h"
 #include "stack.h"
 
-//workaround for variadic function arguments
-//getting clobbered in ARM64
-typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
-  
+// declarations specific to parser,
+// so they have not been moved
+// to global_decls.h
 void yyerror(const char *);
 int yylex(void);
-extern int yy_scan_string(char *);
+int set_up_new_yyin(FILE *);
+void pop_yyin();
+int yy_scan_string(char *);
 
 void initialize();
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-OBJECT_PTR reverse(OBJECT_PTR);
-
-OBJECT_PTR convert_exec_code_to_lisp(executable_code_t *);
-OBJECT_PTR apply_lisp_transforms(OBJECT_PTR);
-void print_object(OBJECT_PTR);
-void *compile_to_c(OBJECT_PTR);
-nativefn get_function(void *, const char *);
-char *extract_variable_string(OBJECT_PTR, BOOLEAN);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-OBJECT_PTR convert_int_to_object(int);
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR cons(OBJECT_PTR, OBJECT_PTR);
-
-OBJECT_PTR get_symbol(char *);
-OBJECT_PTR fifth(OBJECT_PTR);
-OBJECT_PTR sixth(OBJECT_PTR);
-OBJECT_PTR seventh(OBJECT_PTR);
-
-nativefn extract_native_fn(OBJECT_PTR);
-
-void repl();
-OBJECT_PTR add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
-OBJECT_PTR add_class_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+void initialize_pass2();
 
 BOOLEAN is_create_class_exp(OBJECT_PTR);
 BOOLEAN is_add_var_exp(OBJECT_PTR, char *);
@@ -54,51 +29,24 @@ BOOLEAN is_add_method_exp(OBJECT_PTR, char *);
 BOOLEAN is_add_instance_method_exp(OBJECT_PTR);
 BOOLEAN is_add_class_method_exp(OBJECT_PTR);
 
+executable_code_t *g_exp;
+int open_square_brackets;
+BOOLEAN loading_core_library;
+BOOLEAN running_tests;
+OBJECT_PTR method_call_stack;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SMALLTALK;
 extern OBJECT_PTR LET;
-
-executable_code_t *g_exp;
-
 extern binding_env_t *top_level;
-
 extern OBJECT_PTR g_test;
-
 extern OBJECT_PTR idclo;
-
 extern stack_type *exception_contexts;
-
-int set_up_new_yyin(FILE *);
-void pop_yyin();
-
-int open_square_brackets;
-
-//void print_executable_code(executable_code_t *);
-
-BOOLEAN loading_core_library;
-BOOLEAN running_tests;
-
-OBJECT_PTR extract_arity(OBJECT_PTR);
-
-void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
-
 extern OBJECT_PTR THIS_CONTEXT;
-
-OBJECT_PTR method_call_stack;
-
 extern OBJECT_PTR compile_time_method_selector;
-
-OBJECT_PTR get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
-char *get_symbol_name(OBJECT_PTR);
-
 extern stack_type *call_chain;
-
 extern stack_type *exception_environment;
-
-BOOLEAN get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
-
-OBJECT_PTR decorate_message_selectors(OBJECT_PTR);
 
 %}
 
@@ -932,7 +880,6 @@ array_element:
 
 void yyerror(const char *s) {
     fprintf(stderr, "Parse error: %s\n", s);
-    //exit(1);
 }
 
 void repl2()
@@ -1214,7 +1161,6 @@ void repl()
   
   OBJECT_PTR nfo = convert_native_fn_to_object(nf);
 
-  //OBJECT_PTR closed_vals = CDDDR(first(res));
   OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
   
   OBJECT_PTR rest = closed_vals;
@@ -1234,8 +1180,6 @@ void repl()
       printf("Unbound variable: %s\n", get_symbol_name(closed_val));
       return;
     }
-    //ret = cons(get_binding_val(top_level, closed_val), ret);    
-    //rest = cdr(rest);
   }  
 
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
@@ -1341,7 +1285,6 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
      third(third_obj) == get_symbol(msg) &&
      IS_SMALLTALK_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_CONS_OBJECT(seventh(third_obj)) && //TODO: maybe some stronger checks?
-     //IS_SMALLTALK_SYMBOL_OBJECT(seventh(third_obj)))
      IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
   else

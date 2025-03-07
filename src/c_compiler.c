@@ -5,7 +5,7 @@
 #include "gc.h"
 
 #include "util.h"
-#include "smalltalk.h"
+#include "global_decls.h"
 
 #define MAX_C_SOURCE_SIZE 524288
 
@@ -15,15 +15,6 @@ unsigned int build_fn_prototypes(char *, unsigned int);
 unsigned int build_c_string(OBJECT_PTR, char *, BOOLEAN);
 unsigned int build_c_fragment(OBJECT_PTR, char *, BOOLEAN, BOOLEAN);
 char *extract_variable_string(OBJECT_PTR, BOOLEAN);
-
-OBJECT_PTR CADR(OBJECT_PTR);
-OBJECT_PTR third(OBJECT_PTR);
-BOOLEAN primop(OBJECT_PTR);
-
-char *get_symbol_name(OBJECT_PTR);
-int get_int_value(OBJECT_PTR);
-
-BOOLEAN exists(OBJECT_PTR, OBJECT_PTR);
 
 extern OBJECT_PTR message_selectors;
 
@@ -96,16 +87,12 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   len += sprintf(buf+len, "typedef uintptr_t (*nativefn)(uintptr_t, ...);\n");
 //#endif
   
-  //len += sprintf(buf+len, "uintptr_t nth(uintptr_t, uintptr_t);\n");
   len += sprintf(buf+len, "uintptr_t nth_closed_val(uintptr_t, uintptr_t);\n");
   len += sprintf(buf+len, "void save_continuation(uintptr_t);\n");
   len += sprintf(buf+len, "void set_most_recent_closure(uintptr_t);\n");
   len += sprintf(buf+len, "nativefn extract_native_fn(uintptr_t);\n");
 
   len += sprintf(buf+len, "uintptr_t create_closure(uintptr_t, uintptr_t, nativefn, ...);\n");
-
-  //len += sprintf(buf+len, "uintptr_t message_send(uintptr_t, uintptr_t, uintptr_t, ...);\n");  
-  //len += sprintf(buf+len, "uintptr_t method_lookup(uintptr_t, uintptr_t);\n");
 
   len += sprintf(buf+len, "uintptr_t car(uintptr_t);\n");
   len += sprintf(buf+len, "uintptr_t setcar(uintptr_t, uintptr_t);\n");
@@ -122,8 +109,6 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   //we can pass them directly, there is no need for convert_int_to_object().
   //uncomment this once the compiler has been tested thoroughly.
   len += sprintf(buf+len, "uintptr_t convert_int_to_object(int);\n");
-
-  //len += sprintf(buf+len, "uintptr_t convert_native_fn_to_object(nativefn);\n");
 
   return len;
 }
@@ -280,10 +265,6 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
         {
           char *arg_name = extract_variable_string(car(rest), serialize_flag);
           len += sprintf(buf+len, "%s%s", (i == 2 && !strcmp(var, "create_closure")) ? "(nativefn)" : "", arg_name);
-          //if(i == 1 && !strcmp(var, "create_closure"))
-          //  len += sprintf(buf+len, "convert_native_fn_to_object((nativefn)%s)", arg_name);
-          //else
-          //  len += sprintf(buf+len, "%s", arg_name);
         }
         else
           len += build_c_fragment(car(rest), buf+len, true, serialize_flag);
@@ -318,11 +299,7 @@ char *extract_variable_string(OBJECT_PTR var, BOOLEAN serialize_flag)
     if(primop(var))
     {
       char *s = (char *)GC_MALLOC(40*sizeof(char));
-      //if(var == MESSAGE_SEND)
-      //  sprintf(s,"message_send");
-      //if(var == METHOD_LOOKUP)
-      //  sprintf(s,"method_lookup");
-      /* else*/ if(var == SAVE_CONTINUATION)
+      if(var == SAVE_CONTINUATION)
         sprintf(s, "save_continuation");
       else if(var == GET_CONTINUATION)
         sprintf(s, "get_continuation");

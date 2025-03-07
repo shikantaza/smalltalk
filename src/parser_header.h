@@ -1,3 +1,6 @@
+#ifndef PARSER_HEADER_H
+#define PARSER_HEADER_H
+
 #include <string.h>
 
 /* forward declarations */
@@ -309,3 +312,5 @@ void print_keyword_argument(keyword_argument_t *);
 void print_array_elements(array_elements_t *);
 void print_array_element(array_element_t *);
 void print_literal(literal_t *);
+
+#endif

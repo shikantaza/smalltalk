@@ -24,31 +24,12 @@ stack_type *signalling_environment;
 
 OBJECT_PTR curtailed_blocks_list;
 
-OBJECT_PTR get_symbol(char *);
-char *get_smalltalk_symbol_name(OBJECT_PTR);
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
-
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-
+OBJECT_PTR Exception;
 OBJECT_PTR Error;
 OBJECT_PTR MessageNotUnderstood;
 OBJECT_PTR ZeroDivide;
 OBJECT_PTR InvalidArgument;
 OBJECT_PTR IndexOutofBounds;
-
-extern binding_env_t *top_level;
-
-extern OBJECT_PTR NIL;
-extern OBJECT_PTR SELF;
-extern OBJECT_PTR TRUE;
-extern OBJECT_PTR FALSE;
-
-extern OBJECT_PTR Object;
-OBJECT_PTR Exception;
 
 //global object that captures the exception
 //environment that was in play when the exception
@@ -56,34 +37,22 @@ OBJECT_PTR Exception;
 //method
 stack_type *handler_environment;
 
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-
-extern stack_type *call_chain;
-
 BOOLEAN curtailed_block_in_progress;
 
 exception_handler_t *active_handler;
 
-OBJECT_PTR get_class_object(OBJECT_PTR);
-uintptr_t extract_ptr(OBJECT_PTR);
-
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
-
 stack_type *exception_contexts;
 
-BOOLEAN is_super_class(OBJECT_PTR, OBJECT_PTR);
+extern binding_env_t *top_level;
 
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
-
-void print_call_chain();
-void print_exception_contexts();
-
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
+extern OBJECT_PTR Object;
+extern stack_type *call_chain;
+extern OBJECT_PTR idclo;
+extern OBJECT_PTR msg_snd_closure;
 extern OBJECT_PTR nil;
 
 /* code below this point is earlier code; will be
@@ -350,33 +319,8 @@ void invoke_curtailed_blocks_old()
 
 void invoke_curtailed_blocks(OBJECT_PTR cont)
 {
-  //print_call_chain();
   assert(!stack_is_empty(call_chain));
 
-  /*
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(call_chain);
-
-  while(entry->cont != cont)
-  {
-    OBJECT_PTR termination_blk = entry->termination_blk_closure;
-
-    if(termination_blk != NIL &&
-       entry->termination_blk_invoked == false)
-    {
-      nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
-
-      //this is not really neded
-      //as we are popping the entry
-      entry->termination_blk_invoked = true;
-    }
-
-    if(stack_is_empty(call_chain))
-      break;
-    
-    entry = (call_chain_entry_t *)stack_pop(call_chain);
-  }
-  */
   call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
   int count = stack_count(call_chain);
   //printf("count = %d\n", count);
@@ -399,7 +343,6 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
       curtailed_block_in_progress = true;
       OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
       curtailed_block_in_progress = false;
-      //printf("after invoking the termination block\n");
       entry->termination_blk_invoked = true;
     }
     
@@ -554,9 +497,6 @@ OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
 
   OBJECT_PTR protected_block = active_handler->protected_block;
 
-  //nativefn nf = (nativefn)extract_native_fn(protected_block);
-
-  //return nf(protected_block, handler_cont);
   return message_send(msg_snd_closure,
 		      protected_block,
 		      get_symbol("on:do:_"),
@@ -581,9 +521,6 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 
   invoke_curtailed_blocks(handler_cont);
 
-  //nativefn nf = (nativefn)extract_native_fn(another_protected_blk);
-  
-  //return nf(another_protected_blk, handler_cont);
   return message_send(msg_snd_closure,
 		      another_protected_blk,
 		      get_symbol("on:do:_"),
@@ -624,8 +561,6 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
 
   invoke_curtailed_blocks(active_handler->cont);
 
-  //print_exception_contexts();
-  
   assert(!stack_is_empty(exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
 
@@ -728,12 +663,6 @@ void create_Exception()
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
   cls_obj->instance_methods->count = 10;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
-
-  /* cls_obj->instance_methods->bindings[0].key = get_symbol("nested"); */
-  /* cls_obj->instance_methods->bindings[0].val = list(3, */
-  /* 						    convert_native_fn_to_object((nativefn)exception_is_nested), */
-  /* 						    NIL, */
-  /* 						    convert_int_to_object(0)); */
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("return_");
   cls_obj->instance_methods->bindings[0].val = list(3,

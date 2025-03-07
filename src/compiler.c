@@ -11,9 +11,6 @@
 #include "util.h"
 #include "stack.h"
 
-package_t *compiler_package;
-package_t *smalltalk_symbols;
-
 //forward declarations
 OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *);
 OBJECT_PTR convert_identifier_to_atom(char *);
@@ -30,7 +27,7 @@ OBJECT_PTR convert_char_literal_to_atom(char *);
 OBJECT_PTR convert_symbol_literal_to_atom(char *);
 OBJECT_PTR convert_selector_literal_to_atom(char *);
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *);
-OBJECT_PTR convert_block_constructor_to_lisp(block_constructor_t *);
+
 OBJECT_PTR convert_msg(primary_t *,
                        unary_messages_t *,
                        binary_messages_t *,
@@ -51,6 +48,21 @@ OBJECT_PTR simplify_il(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR closure_conv_transform(OBJECT_PTR);
 OBJECT_PTR lift_transform(OBJECT_PTR);
+
+void initialize_top_level();
+void create_Object();
+void create_Smalltalk();
+void create_nil();
+void create_Transcript();
+void create_Integer();
+void create_NiladicBlock();
+void create_Boolean();
+void create_Exception();
+void create_MonadicBlock();
+void create_Array();
+
+package_t *compiler_package;
+package_t *smalltalk_symbols;
 
 OBJECT_PTR NIL                          =  (OBJECT_PTR)(                      SYMBOL_TAG);
 OBJECT_PTR LET                          =  (OBJECT_PTR)((1 << OBJECT_SHIFT) + SYMBOL_TAG);
@@ -79,6 +91,24 @@ OBJECT_PTR MESSAGE_SEND_SUPER           =  (OBJECT_PTR)((22 << OBJECT_SHIFT) + S
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
 
+stack_type *call_chain;
+OBJECT_PTR idclo;
+OBJECT_PTR msg_snd_closure;
+OBJECT_PTR msg_snd_super_closure;
+
+extern stack_type *exception_contexts;
+extern OBJECT_PTR compile_time_method_selector;
+extern stack_type *exception_environment;
+extern OBJECT_PTR curtailed_blocks_list;
+extern char **string_literals;
+extern unsigned int nof_string_literals;
+extern OBJECT_PTR nil;
+extern OBJECT_PTR Error;
+extern OBJECT_PTR MessageNotUnderstood;
+extern OBJECT_PTR ZeroDivide;
+extern OBJECT_PTR InvalidArgument;
+extern OBJECT_PTR IndexOutofBounds;
+
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
@@ -106,79 +136,6 @@ OBJECT_PTR CADR(OBJECT_PTR x)    { return car(cdr(x)); }
 OBJECT_PTR CDDR(OBJECT_PTR x)    { return cdr(cdr(x)); }
 OBJECT_PTR CAAR(OBJECT_PTR x)    { return car(car(x)); }
 OBJECT_PTR CDDDR(OBJECT_PTR x)   { return cdr(cdr(cdr(x))); }
-
-int add_symbol(char *);
-
-void initialize_top_level();
-void create_Object();
-void create_Smalltalk();
-void create_nil();
-void create_Transcript();
-void create_Integer();
-void create_NiladicBlock();
-void create_Boolean();
-void create_Exception();
-void create_MonadicBlock();
-void create_Array();
-
-int extract_symbol_index(OBJECT_PTR);
-
-OBJECT_PTR convert_char_to_object(char);
-
-extern stack_type *exception_environment;
-extern OBJECT_PTR curtailed_blocks_list;
-
-extern char **string_literals;
-extern unsigned int nof_string_literals;
-
-OBJECT_PTR get_string_obj(char *);
-
-extern OBJECT_PTR compile_time_method_selector;
-
-stack_type *call_chain;
-
-OBJECT_PTR idclo;
-OBJECT_PTR msg_snd_closure;
-OBJECT_PTR msg_snd_super_closure;
-
-extern stack_type *exception_contexts;
-
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
-
-OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
-			      OBJECT_PTR receiver,
-			      OBJECT_PTR selector,
-			      OBJECT_PTR count1,
-			      ...);
-extern OBJECT_PTR nil;
-
-extern OBJECT_PTR Error;
-extern OBJECT_PTR MessageNotUnderstood;
-extern OBJECT_PTR ZeroDivide;
-extern OBJECT_PTR InvalidArgument;
-extern OBJECT_PTR IndexOutofBounds;
-
-//this has also been defined in object_utils.c
-//use that version (that version returns the
-//package index, we ignore it)
-/*
-void add_symbol(char *symbol)
-{
-  compiler_package->nof_symbols++; 
-  compiler_package->symbols = (char **)GC_MALLOC(compiler_package->nof_symbols * sizeof(char *));
-
-  assert(compiler_package->symbols);
-
-  compiler_package->symbols[compiler_package->nof_symbols - 1] = GC_strdup(symbol);  
-}
-*/
 
 int add_smalltalk_symbol(char *sym)
 {
@@ -632,7 +589,6 @@ OBJECT_PTR convert_block_constructor_to_lisp(block_constructor_t *b)
       unsigned int nof_args = args->nof_args;
       if(nof_args > 0)
       {
-        //res1 = NIL;
         unsigned int i;
         for(i=0; i < nof_args; i++)
         {
@@ -750,16 +706,6 @@ OBJECT_PTR convert_number_literal_to_atom(number_t *n)
     //TODO : check that the value is within the permitted
     //range for Integer?
 
-    /*
-    int i = atoi(n->val);
-    long l = i; // i may not be necessary
-
-    uintptr_t ptr;
-
-    ptr = (l << 32) + INTEGER_TAG;
-
-    return ptr;
-    */
     return convert_int_to_object(atoi(n->val));
   }
   else

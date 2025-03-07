@@ -16,54 +16,17 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
 binding_env_t *top_level;
 
-char *get_symbol_name(OBJECT_PTR);
-OBJECT_PTR get_symbol(char *);
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-
-BOOLEAN IS_CLASS_OBJECT(OBJECT_PTR);
-BOOLEAN IS_SMALLTALK_SYMBOL_OBJECT(OBJECT_PTR);
-
-OBJECT_PTR apply_lisp_transforms(OBJECT_PTR);
-void *compile_to_c(OBJECT_PTR);
-nativefn get_function(void *, const char *);
-char *extract_variable_string(OBJECT_PTR, BOOLEAN);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn);
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-OBJECT_PTR identity_function(OBJECT_PTR, ...);
-
-OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
-
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-void put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
-
-char *get_smalltalk_symbol_name(OBJECT_PTR);
-OBJECT_PTR get_smalltalk_symbol(char *);
-
-OBJECT_PTR extract_arity(OBJECT_PTR);
-
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
 OBJECT_PTR nil;
-
-extern OBJECT_PTR Array;
-extern OBJECT_PTR InvalidArgument;
 
 char **string_literals = NULL;
 unsigned int nof_string_literals = 0;
 
 OBJECT_PTR compile_time_method_selector;
 
-OBJECT_PTR replace_method_selector(OBJECT_PTR, OBJECT_PTR);
-
-OBJECT_PTR setcdr(OBJECT_PTR, OBJECT_PTR);
-
-char *append_char(char *, char);
-
-OBJECT_PTR initialize_object();
-
+extern OBJECT_PTR Array;
+extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
@@ -77,7 +40,6 @@ extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR THIS_CONTEXT;
-
 extern OBJECT_PTR RETURN_FROM;
 
 extern OBJECT_PTR Exception;
@@ -93,15 +55,6 @@ extern OBJECT_PTR MESSAGE_SEND_SUPER;
 extern stack_type *exception_contexts;
 
 extern OBJECT_PTR nil;
-
-OBJECT_PTR new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
-OBJECT_PTR convert_fn_to_closure(nativefn fn);
-
-OBJECT_PTR message_send(OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			OBJECT_PTR,
-			...);
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -400,7 +353,6 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
-  //compile_time_method_selector = get_symbol(get_smalltalk_symbol_name(selector));
 
   OBJECT_PTR selector_sym = compile_time_method_selector;
 
@@ -516,7 +468,6 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
   compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
-  //compile_time_method_selector = get_symbol(get_smalltalk_symbol_name(selector));
   
   OBJECT_PTR selector_sym = compile_time_method_selector;
 
@@ -574,7 +525,6 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
       cls_obj->class_methods->bindings[i].val = list(3,
 						     nfo,
 						     closed_vals,
-						     //second(first(res)));
 						     convert_int_to_object(cons_length(second(third(code)))));
       break;
     }
@@ -657,9 +607,6 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
       }
     }
 
-    //TODO: call 'initialize' method for parent_class if present
-    //(defined by the user)
-    
     current_parent = curr_cls_obj->parent_class_object;
   }
 

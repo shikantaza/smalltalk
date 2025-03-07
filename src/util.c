@@ -6,7 +6,7 @@
 
 #include "gc.h"
 
-#include "smalltalk.h"
+#include "global_decls.h"
 
 char *get_symbol_name(OBJECT_PTR);
 

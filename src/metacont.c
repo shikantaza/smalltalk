@@ -41,11 +41,7 @@ extern OBJECT_PTR CAR;
 
 extern OBJECT_PTR RETURN_FROM;
 extern OBJECT_PTR THIS_CONTEXT;
-/*
-extern OBJECT_PTR THROW;
-extern OBJECT_PTR CALL_CC;
-extern OBJECT_PTR BREAK;
-*/
+
 extern OBJECT_PTR SAVE_CONTINUATION;
 extern OBJECT_PTR GET_CONTINUATION;
 extern OBJECT_PTR SAVE_CONTINUATION_TO_RESUME;
@@ -112,54 +108,6 @@ OBJECT_PTR mc_to_exp(reg_closure_t *cls)
               cls->fn(cls, i_temp));
 }
 
-/*
-OBJECT_PTR if_reg_cont_fn(reg_closure_t *cls, OBJECT_PTR test_val)
-{
-  OBJECT_PTR i_kif = gensym();  
-
-  reg_closure_t *cls1 = (reg_closure_t *)cls->data;
-
-  OBJECT_PTR then_exp = cls->closed_vals[0];
-  OBJECT_PTR else_exp = cls->closed_vals[1];
-  
-  metacont_closure_t *then_mcls = mcps(then_exp);
-  metacont_closure_t *else_mcls = mcps(else_exp);
-
-  reg_closure_t *kif_cls = id_to_mc(i_kif);
-  
-  return list(3,
-              LET,
-              list(1, list(2, i_kif, mc_to_exp(cls1))),
-              list(4,
-                   IF,
-                   test_val,
-                   then_mcls->mfn(then_mcls, kif_cls),
-                   else_mcls->mfn(else_mcls, kif_cls)));
-}
-
-OBJECT_PTR if_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls1)
-{
-  OBJECT_PTR test_exp = mcls->closed_vals[0];
-  OBJECT_PTR then_exp = mcls->closed_vals[1];
-  OBJECT_PTR else_exp = mcls->closed_vals[2];
-
-  metacont_closure_t *test_mcls = mcps(test_exp);
-
-  reg_closure_t *cls = (reg_closure_t *)GC_MALLOC(sizeof(reg_closure_t));
-
-  cls->fn              = if_reg_cont_fn;
-  cls->nof_closed_vals = 2;
-  cls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(cls->nof_closed_vals * sizeof(OBJECT_PTR));
-
-  cls->closed_vals[0]  = then_exp;
-  cls->closed_vals[1]  = else_exp;
-
-  cls->data = cls1;
-  
-  return test_mcls->mfn(test_mcls, cls);
-}
-*/
-
 OBJECT_PTR let_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
 {
   OBJECT_PTR bindings      = cls->closed_vals[0];
@@ -184,11 +132,8 @@ OBJECT_PTR let_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
 
 OBJECT_PTR let_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
 {
-  //OBJECT_PTR bindings      = cls->closed_vals[0];
   OBJECT_PTR full_bindings = cls->closed_vals[1];
   OBJECT_PTR body          = cls->closed_vals[2];
-
-  //assert(cons_length(full_bindings) == cls->nof_closed_vals - 3);
 
   OBJECT_PTR reversed_full_bindings = reverse(full_bindings);
   
@@ -247,19 +192,7 @@ reg_closure_t *create_reg_let_closure(OBJECT_PTR    bindings,
 
 OBJECT_PTR lit_id_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
 {
-  /*
-  if(is_quoted_expression(mcls->closed_vals[0]))
-  {
-    OBJECT_PTR i_sym = gensym();
-    
-    return list(3,
-                LET,
-                list(1, list(2, i_sym, mcls->closed_vals[0])),
-                cls->fn(cls, i_sym));
-  }
-  else
-  */
-    return cls->fn(cls, mcls->closed_vals[0]);
+  return cls->fn(cls, mcls->closed_vals[0]);
 }
 
 OBJECT_PTR lambda_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
@@ -284,17 +217,6 @@ OBJECT_PTR lambda_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
                              mcls1->mfn(mcls1, id_to_mc(i_kcall))))),
               cls->fn(cls, i_abs));  
 }
-
-/*
-OBJECT_PTR error_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
-{
-#ifdef WIN32
-  return list(2, ERROR1, mcls->closed_vals[0]);
-#else  
-  return list(2, ERROR, mcls->closed_vals[0]);
-#endif
-}
-*/
 
 OBJECT_PTR let_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
 {
@@ -333,7 +255,6 @@ OBJECT_PTR primop_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
 OBJECT_PTR primop_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
 {
   OBJECT_PTR operator      = cls->closed_vals[0];
-  //OBJECT_PTR operands      = cls->closed_vals[1];
 
   OBJECT_PTR i_ans = gensym();
 
@@ -418,8 +339,6 @@ OBJECT_PTR app_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
 
 OBJECT_PTR app_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
 {
-  //OBJECT_PTR exp = cls->closed_vals[0];
-
   OBJECT_PTR i_k = gensym();
 
   OBJECT_PTR ret = NIL;
@@ -482,7 +401,6 @@ OBJECT_PTR ret_from_fn2(reg_closure_t *cls, OBJECT_PTR val)
   return list(2,
               list(2, GET_CONTINUATION, v1),
               val);
-  //return list(2, list(2, CAR, THIS_CONTEXT), val);
 }
 
 reg_closure_t *create_reg_ret_from_closure2(OBJECT_PTR val)
@@ -494,7 +412,6 @@ reg_closure_t *create_reg_ret_from_closure2(OBJECT_PTR val)
   ret_from_cls->nof_closed_vals = 1;
   ret_from_cls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(ret_from_cls->nof_closed_vals * sizeof(OBJECT_PTR));
   ret_from_cls->closed_vals[0]  = val;
-  //ret_from_cls->data            = cls;
 
   return ret_from_cls;  
 }
@@ -533,34 +450,6 @@ OBJECT_PTR return_from_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   
   return mcls1->mfn(mcls1, create_reg_ret_from_closure1(ret_exp, cls));  
 }
-
-/*
-OBJECT_PTR throw_reg_fn(reg_closure_t *cls, OBJECT_PTR val)
-{
-  return list(2, THROW, val);
-}
-
-reg_closure_t *create_throw_reg_closure()
-{
-  reg_closure_t *cls = (reg_closure_t *)GC_MALLOC(sizeof(reg_closure_t));
-
-  cls->fn              = throw_reg_fn;
-  cls->nof_closed_vals = 0;
-  cls->closed_vals     = NULL;
-  cls->data            = NULL;
-
-  return cls;
-}
-
-OBJECT_PTR throw_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
-{
-  OBJECT_PTR throw_exp = mcls->closed_vals[0];
-
-  metacont_closure_t *mcls1 = mcps(throw_exp);
-
-  return mcls1->mfn(mcls1, create_throw_reg_closure());
-}
-*/
 
 OBJECT_PTR call_cc_reg_fn(reg_closure_t *cls, OBJECT_PTR val)
 {
@@ -659,44 +548,6 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
     
       return mcls;      
     }
-    /*
-    else if(car_exp == THROW)
-    {
-      metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
-
-      mcls->mfn             = throw_metacont_fn;
-
-      mcls->nof_closed_vals = 1;
-      mcls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(mcls->nof_closed_vals * sizeof(OBJECT_PTR));
-
-      mcls->closed_vals[0]  = second(exp);
-    
-      return mcls;      
-    }
-    else if(car_exp == CALL_CC)
-    {
-      metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
-
-      mcls->mfn             = call_cc_metacont_fn;
-
-      mcls->nof_closed_vals = 1;
-      mcls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(mcls->nof_closed_vals * sizeof(OBJECT_PTR));
-
-      mcls->closed_vals[0]  = second(exp);
-    
-      return mcls;      
-    }
-    else if(car_exp == BREAK)
-    {
-      metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
-
-      mcls->mfn             = break_metacont_fn;
-
-      mcls->nof_closed_vals = 0;
-      mcls->closed_vals     = NULL;
-    
-      return mcls;      
-      } */   
     else
     {
       metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
@@ -712,42 +563,6 @@ metacont_closure_t *mcps(OBJECT_PTR exp)
       return mcls;
     }
   }
-
-  /*
-  if(car_exp == IF)
-  {
-    metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
-
-    mcls->mfn             = if_metacont_fn;
-
-    mcls->nof_closed_vals = 3;
-    mcls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(mcls->nof_closed_vals * sizeof(OBJECT_PTR));
-
-    mcls->closed_vals[0]  = second(exp);
-    mcls->closed_vals[1]  = third(exp);
-    mcls->closed_vals[2]  = fourth(exp);
-    
-    return mcls;    
-  }
-
-#ifdef WIN32
-  if(car_exp == ERROR1)
-#else
-  if(car_exp == ERROR)
-#endif    
-  {
-    metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));
-
-    mcls->mfn             = error_metacont_fn;
-
-    mcls->nof_closed_vals = 1;
-    mcls->closed_vals     = (OBJECT_PTR *)GC_MALLOC(mcls->nof_closed_vals * sizeof(OBJECT_PTR));
-
-    mcls->closed_vals[0]  = second(exp);
-    
-    return mcls;
-  }
-  */
     
   //it is an application
   metacont_closure_t *mcls = (metacont_closure_t *)GC_MALLOC(sizeof(metacont_closure_t));

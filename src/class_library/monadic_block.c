@@ -5,27 +5,14 @@
 
 #include "gc.h"
 
-#include "../smalltalk.h"
-
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-
-OBJECT_PTR get_symbol(char *);
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-
-OBJECT_PTR create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-
-extern binding_env_t *top_level;
-
-extern OBJECT_PTR NIL;
-extern OBJECT_PTR SELF;
-
-extern OBJECT_PTR Object;
+#include "../global_decls.h"
 
 OBJECT_PTR MonadicBlock;
+
+extern binding_env_t *top_level;
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR Object;
 
 OBJECT_PTR monadic_block_value(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {

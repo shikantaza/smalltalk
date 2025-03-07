@@ -5,34 +5,17 @@
 
 #include "gc.h"
 
-#include "../smalltalk.h"
-
-nativefn extract_native_fn(OBJECT_PTR);
-OBJECT_PTR convert_int_to_object(int);
-
-OBJECT_PTR get_symbol(char *);
-OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *);
-OBJECT_PTR convert_native_fn_to_object(nativefn);
-
-OBJECT_PTR get_binding_val(binding_env_t *, OBJECT_PTR);
-
-OBJECT_PTR niladic_block_value(OBJECT_PTR, OBJECT_PTR);
-
-OBJECT_PTR get_string_obj(char *);
-
-extern binding_env_t *top_level;
-
-extern OBJECT_PTR NIL;
-extern OBJECT_PTR SELF;
-
-extern OBJECT_PTR TRUE;
-extern OBJECT_PTR FALSE;
-
-extern OBJECT_PTR Object;
-
-extern OBJECT_PTR MESSAGE_SEND;
+#include "../global_decls.h"
 
 OBJECT_PTR Boolean;
+
+extern binding_env_t *top_level;
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR TRUE;
+extern OBJECT_PTR FALSE;
+extern OBJECT_PTR Object;
+extern OBJECT_PTR MESSAGE_SEND;
 
 OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {

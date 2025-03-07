@@ -5,7 +5,7 @@
 
 #include "gc.h"
 
-#include "smalltalk.h"
+#include "global_decls.h"
 
 //forward declarations
 OBJECT_PTR assignment_conversion(OBJECT_PTR, OBJECT_PTR);
@@ -29,21 +29,6 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR lift_transform(OBJECT_PTR, OBJECT_PTR);
 
-char *get_symbol_name(OBJECT_PTR);
-
-//extern declarations
-/* OBJECT_PTR gensym(); */
-/* uintptr_t extract_ptr(OBJECT_PTR); */
-/* OBJECT_PTR clone_object(OBJECT_PTR); */
-/* OBJECT_PTR last_cell(OBJECT_PTR); */
-/* void set_heap(uintptr_t, unsigned int, OBJECT_PTR); */
-/* OBJECT_PTR third(OBJECT_PTR); */
-/* OBJECT_PTR CADR(OBJECT_PTR); */
-/* OBJECT_PTR fourth(OBJECT_PTR); */
-/* OBJECT_PTR CAAR(OBJECT_PTR); */
-/* OBJECT_PTR fourth(OBJECT_PTR); */
-/* OBJECT_PTR CDDDR(OBJECT_PTR); */
-
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
 extern OBJECT_PTR LAMBDA;
@@ -63,9 +48,6 @@ extern OBJECT_PTR GET_CONTINUATION;
 
 extern OBJECT_PTR SUPER;
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
-
-char *append_char();
-OBJECT_PTR get_symbol(char *);
 
 OBJECT_PTR get_top_level_symbols()
 {
@@ -427,7 +409,6 @@ OBJECT_PTR mutating_ids(OBJECT_PTR exp)
 OBJECT_PTR partition(OBJECT_PTR ids, OBJECT_PTR exps)
 {
   OBJECT_PTR mids = union_single_list(map(mutating_ids, exps));
-  //OBJECT_PTR mids = flatten(flatten(union1(1, map(mutating_ids, exps))));
 
   OBJECT_PTR ret = cons(intersection(ids, mids),
                         difference(ids, mids));
@@ -595,15 +576,6 @@ BOOLEAN is_vararg_primop(OBJECT_PTR sym)
 
 BOOLEAN primop(OBJECT_PTR sym)
 {
-  //TODO: add other primitive ops if required (CALL_CC?)
-  //return sym == MESSAGE_SEND || sym == SAVE_CONTINUATION;
-
-  //MESSAGE-SEND is not considered a primitive;
-  //we are introducing a compiler pass that converts
-  //MESSAGE-SENDs into a LET involving METHOD-LOOKUP,
-  //which will be primitive
-  //return sym == SAVE_CONTINUATION || sym == METHOD_LOOKUP;
-
   return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS || sym == RETURN_FROM || sym == GET_CONTINUATION;
 }
 
@@ -1167,25 +1139,6 @@ OBJECT_PTR simplify_il(OBJECT_PTR exp)
 
 OBJECT_PTR convert_message_sends(OBJECT_PTR exp)
 {
-  /*
-  if(is_atom(exp))
-    return exp;
-  else if(car(exp) == MESSAGE_SEND)
-  {
-    OBJECT_PTR sym = gensym();
-
-    return list(3,
-                LET,
-                list(1,list(2, sym, list (3,
-                                          METHOD_LOOKUP,
-                                          convert_message_sends(second(exp)),
-                                          convert_message_sends(third(exp))))),
-                concat(2, list(1, sym), convert_message_sends(CDDDR(exp))));
-  }
-  else
-    return cons(convert_message_sends(car(exp)),
-                convert_message_sends(cdr(exp)));
-  */
   if(is_atom(exp))
     return exp;
   else if(car(exp) == MESSAGE_SEND && second(exp) == SUPER)
