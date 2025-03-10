@@ -29,6 +29,8 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR lift_transform(OBJECT_PTR, OBJECT_PTR);
 
+OBJECT_PTR g_message_selector;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
 extern OBJECT_PTR LAMBDA;
@@ -115,8 +117,6 @@ void put_binding_val(binding_env_t *env, OBJECT_PTR key, OBJECT_PTR val)
   }
 }
 
-OBJECT_PTR message_selectors;
-
 //Return the message selectors in the given expression.
 //Used for filtering selectors from
 //the free variables list in the downstream
@@ -170,7 +170,7 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
   print_object(obj); printf(" is returned by decorate_message_selectors()\n");
 #endif
   
-  message_selectors = build_selectors_list(obj);
+  g_message_selector = build_selectors_list(obj);
   
   //res = list(3, first(res), second(res), expand_body(CDDR(obj)));
   res = expand_bodies(obj);
@@ -1234,7 +1234,7 @@ OBJECT_PTR temp12(OBJECT_PTR x, OBJECT_PTR v1, OBJECT_PTR v2)
 
 OBJECT_PTR closure_conv_transform_abs_cont(OBJECT_PTR exp)
 {
-  OBJECT_PTR free_ids = difference(free_ids_il(exp), message_selectors);
+  OBJECT_PTR free_ids = difference(free_ids_il(exp), g_message_selector);
   OBJECT_PTR iclo = gensym();
 
   if(free_ids == NIL)
@@ -1271,7 +1271,7 @@ OBJECT_PTR closure_conv_transform_abs_cont(OBJECT_PTR exp)
 
 OBJECT_PTR closure_conv_transform_abs_no_cont(OBJECT_PTR exp)
 {
-  OBJECT_PTR free_ids = difference(free_ids_il(exp), message_selectors);
+  OBJECT_PTR free_ids = difference(free_ids_il(exp), g_message_selector);
   OBJECT_PTR iclo = gensym();
 
   if(free_ids == NIL)

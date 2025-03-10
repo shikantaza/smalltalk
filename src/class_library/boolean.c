@@ -9,7 +9,7 @@
 
 OBJECT_PTR Boolean;
 
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR TRUE;
@@ -19,7 +19,7 @@ extern OBJECT_PTR MESSAGE_SEND;
 
 OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -41,7 +41,7 @@ OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 
 OBJECT_PTR boolean_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -63,7 +63,7 @@ OBJECT_PTR boolean_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 
 OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -74,7 +74,7 @@ OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJ
     return nf(cont, FALSE);
   else
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -82,7 +82,7 @@ OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJ
 
 OBJECT_PTR boolean_equiv(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -97,7 +97,7 @@ OBJECT_PTR boolean_equiv(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont
 
 OBJECT_PTR boolean_if_false(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -106,7 +106,7 @@ OBJECT_PTR boolean_if_false(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR c
 
   if(receiver == FALSE)
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -119,20 +119,20 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
 				    OBJECT_PTR true_operand,
 				    OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
   
   if(receiver == FALSE)
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, false_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, true_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -140,7 +140,7 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
 
 OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -149,7 +149,7 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
 
   if(receiver == TRUE)
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -162,20 +162,20 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
 				    OBJECT_PTR false_operand,
 				    OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
   
   if(receiver == TRUE)
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, true_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
   else
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, false_operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -183,7 +183,7 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
 
 OBJECT_PTR boolean_not(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -198,7 +198,7 @@ OBJECT_PTR boolean_not(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -209,7 +209,7 @@ OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJE
     return nf(cont, TRUE);
   else
   {
-    OBJECT_PTR msg_send = car(get_binding_val(top_level, MESSAGE_SEND));
+    OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     return nf1(msg_send, operand, get_symbol("value_"), convert_int_to_object(0), cont);
   }
@@ -217,7 +217,7 @@ OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJE
 
 OBJECT_PTR boolean_xor(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -242,7 +242,7 @@ OBJECT_PTR boolean_xor(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 
 OBJECT_PTR boolean_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));

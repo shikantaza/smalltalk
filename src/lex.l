@@ -13,19 +13,19 @@
 
 YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
 
-int include_stack_ptr = 0;
+int g_include_stack_ptr = 0;
 
 int set_up_new_yyin(FILE *fp)
 {
-  if (include_stack_ptr >= MAX_INCLUDE_DEPTH)
+  if (g_include_stack_ptr >= MAX_INCLUDE_DEPTH)
   {
     fprintf(stderr, "LOAD-FILEs nested too deeply");
     return 1;
   }
 
-  include_stack[include_stack_ptr] = YY_CURRENT_BUFFER;
+  include_stack[g_include_stack_ptr] = YY_CURRENT_BUFFER;
 
-  include_stack_ptr++;
+  g_include_stack_ptr++;
 
   yy_switch_to_buffer(yy_create_buffer(fp, YY_BUF_SIZE));
 
@@ -34,9 +34,9 @@ int set_up_new_yyin(FILE *fp)
 
 void pop_yyin()
 {
-  include_stack_ptr--;
+  g_include_stack_ptr--;
 
-  if(include_stack_ptr == 0)
+  if(g_include_stack_ptr == 0)
   {
     yyin = stdin;
     yyrestart(yyin);
@@ -44,7 +44,7 @@ void pop_yyin()
   else
   {
     yy_delete_buffer(YY_CURRENT_BUFFER);
-    yy_switch_to_buffer(include_stack[include_stack_ptr]);
+    yy_switch_to_buffer(include_stack[g_include_stack_ptr]);
   }
 }
 

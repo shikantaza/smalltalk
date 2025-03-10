@@ -14,16 +14,13 @@
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
-binding_env_t *top_level;
+binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
 OBJECT_PTR nil;
 
-char **string_literals = NULL;
-unsigned int nof_string_literals = 0;
-
-OBJECT_PTR compile_time_method_selector;
+OBJECT_PTR g_compile_time_method_selector;
 
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
@@ -44,27 +41,27 @@ extern OBJECT_PTR RETURN_FROM;
 
 extern OBJECT_PTR Exception;
 
-extern stack_type *call_chain;
+extern stack_type *g_call_chain;
 
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
-extern OBJECT_PTR msg_snd_super_closure;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR g_msg_snd_closure;
+extern OBJECT_PTR g_msg_snd_super_closure;
 
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
-extern stack_type *exception_contexts;
+extern stack_type *g_exception_contexts;
 
 extern OBJECT_PTR nil;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
-  top_level->count++;
+  g_top_level->count++;
 
-  top_level->bindings = (binding_t *)GC_REALLOC(top_level->bindings,
-                                                top_level->count * sizeof(binding_t));
+  g_top_level->bindings = (binding_t *)GC_REALLOC(g_top_level->bindings,
+                                                g_top_level->count * sizeof(binding_t));
 
-  top_level->bindings[top_level->count - 1].key = sym;
-  top_level->bindings[top_level->count - 1].val = val;
+  g_top_level->bindings[g_top_level->count - 1].key = sym;
+  g_top_level->bindings[g_top_level->count - 1].val = val;
 }
 
 //there is a similar function in lisp_compiler.c
@@ -91,16 +88,16 @@ BOOLEAN get_binding_val_regular(binding_env_t *env, OBJECT_PTR sym, OBJECT_PTR *
 
 BOOLEAN get_top_level_val(OBJECT_PTR sym, OBJECT_PTR *ret)
 {
-  return get_binding_val_regular(top_level, sym, ret);
+  return get_binding_val_regular(g_top_level, sym, ret);
 }
 
 void initialize_top_level()
 {
-  top_level = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  top_level->count = 0;
+  g_top_level = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  g_top_level->count = 0;
 
-  add_binding_to_top_level(MESSAGE_SEND, cons(msg_snd_closure, NIL));
-  add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(msg_snd_super_closure, NIL));
+  add_binding_to_top_level(MESSAGE_SEND, cons(g_msg_snd_closure, NIL));
+  add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(g_msg_snd_super_closure, NIL));
   add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
@@ -114,7 +111,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("true"), cons(TRUE, NIL));
   add_binding_to_top_level(get_symbol("false"), cons(FALSE, NIL));
 
-  add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //idclo will be set at each repl loop start
+  add_binding_to_top_level(THIS_CONTEXT, cons(NIL, NIL)); //g_idclo will be set at each repl loop start
 
   add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
 
@@ -125,10 +122,10 @@ BOOLEAN exists_in_top_level(OBJECT_PTR sym)
 {
   assert(IS_SYMBOL_OBJECT(sym));
 
-  unsigned int i, n = top_level->count;
+  unsigned int i, n = g_top_level->count;
 
   for(i=0; i<n; i++)
-    if(top_level->bindings[i].key == sym)
+    if(g_top_level->bindings[i].key == sym)
       return true;
 
   return false;
@@ -352,9 +349,9 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  g_compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
 
-  OBJECT_PTR selector_sym = compile_time_method_selector;
+  OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
   OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
 
@@ -382,11 +379,11 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
+  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
   nativefn1 nf1 = (nativefn1)nf;
     
-  OBJECT_PTR result_closure = nf1(closure_form, idclo);
+  OBJECT_PTR result_closure = nf1(closure_form, g_idclo);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -467,9 +464,9 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  g_compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
   
-  OBJECT_PTR selector_sym = compile_time_method_selector;
+  OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
   OBJECT_PTR code1 = replace_method_selector(code, selector_sym);
 
@@ -497,11 +494,11 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
+  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
   nativefn1 nf1 = (nativefn1)nf;
     
-  OBJECT_PTR result_closure = nf1(closure_form, idclo);
+  OBJECT_PTR result_closure = nf1(closure_form, g_idclo);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -566,7 +563,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   printf("Entering new_object_internal()\n");
 #endif
 
-  //OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  //OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLASS_OBJECT(receiver));
@@ -641,12 +638,12 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 OBJECT_PTR new_object(OBJECT_PTR closure,
 		      OBJECT_PTR cont)
 {
-  return new_object_internal(car(get_binding_val(top_level, SELF)), closure, cont);
+  return new_object_internal(car(get_binding_val(g_top_level, SELF)), closure, cont);
 }
 
 OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to eq\n");
@@ -791,10 +788,10 @@ void create_Smalltalk()
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
 
-void print_call_chain()
+void print_g_call_chain()
 {
-  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
-  unsigned int count = stack_count(call_chain);
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  unsigned int count = stack_count(g_call_chain);
   int i;
 
   printf("***\n");
@@ -807,8 +804,8 @@ void print_call_chain()
 
 void print_exception_contexts()
 {
-  OBJECT_PTR *contexts = (OBJECT_PTR *)stack_data(exception_contexts);
-  unsigned int count = stack_count(exception_contexts);
+  OBJECT_PTR *contexts = (OBJECT_PTR *)stack_data(g_exception_contexts);
+  unsigned int count = stack_count(g_exception_contexts);
   int i;
 
   printf("***\n");

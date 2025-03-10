@@ -10,16 +10,15 @@
 
 OBJECT_PTR NiladicBlock;
 
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
-extern stack_type *exception_environment;
-extern OBJECT_PTR curtailed_blocks_list;
-extern stack_type *call_chain;
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
-extern BOOLEAN curtailed_block_in_progress;
+extern stack_type *g_exception_environment;
+extern stack_type *g_call_chain;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR g_msg_snd_closure;
+extern BOOLEAN g_curtailed_block_in_progress;
 
 /*
 
@@ -46,7 +45,7 @@ Smalltalk addInstanceMethod: #ifCurtailed: withBody:
 
 OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -58,7 +57,7 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -73,7 +72,7 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
 			       OBJECT_PTR exception_action,
 			       OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLASS_OBJECT(exception_selector));
@@ -83,9 +82,9 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
   exception_handler_t *eh = create_exception_handler(receiver,
 						     exception_selector,
 						     exception_action,
-						     exception_environment,
+						     g_exception_environment,
 						     cont);
-  stack_push(exception_environment, eh);
+  stack_push(g_exception_environment, eh);
 
   return niladic_block_value(closure, cont);
 }
@@ -94,32 +93,32 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 				OBJECT_PTR ensure_block,
 				OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(ensure_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
   entry->termination_blk_closure = ensure_block;
   entry->termination_blk_invoked = false;
 
   //nativefn nf1 = (nativefn)extract_native_fn(receiver);
-  //OBJECT_PTR ret = nf1(receiver, idclo);
-  OBJECT_PTR ret = message_send(msg_snd_closure,
+  //OBJECT_PTR ret = nf1(receiver, g_idclo);
+  OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
 				get_symbol("value_"),
 				convert_int_to_object(0),
-				idclo);
+				g_idclo);
 
   //if the ensure: block has already been invoked because
   //of an exception unwinding, don't invoke it again
   if(entry->termination_blk_invoked == false)
   {
     nativefn nf2 = (nativefn)extract_native_fn(ensure_block);
-    curtailed_block_in_progress = true;
-    OBJECT_PTR discarded_ret = nf2(ensure_block, idclo);
-    curtailed_block_in_progress = false;
+    g_curtailed_block_in_progress = true;
+    OBJECT_PTR discarded_ret = nf2(ensure_block, g_idclo);
+    g_curtailed_block_in_progress = false;
     entry->termination_blk_invoked == true;
 
     nativefn nf3 = (nativefn)extract_native_fn(cont);
@@ -134,19 +133,19 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
 				     OBJECT_PTR curtailed_block,
 				     OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(curtailed_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
   entry->termination_blk_closure = curtailed_block;
   entry->termination_blk_invoked = false;
   
   //nativefn nf1 = (nativefn)extract_native_fn(receiver);
-  //OBJECT_PTR ret = nf1(receiver, idclo);
-  OBJECT_PTR ret = message_send(msg_snd_closure,
+  //OBJECT_PTR ret = nf1(receiver, g_idclo);
+  OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
 				get_symbol("value_"),
 				convert_int_to_object(0),

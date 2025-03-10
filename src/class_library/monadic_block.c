@@ -9,14 +9,14 @@
 
 OBJECT_PTR MonadicBlock;
 
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
 
 OBJECT_PTR monadic_block_value(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));

@@ -12,20 +12,19 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
 OBJECT_PTR Array;
 
-extern OBJECT_PTR msg_snd_closure;
-extern stack_type *exception_contexts;
-extern binding_env_t *top_level;
+extern OBJECT_PTR g_msg_snd_closure;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
 extern OBJECT_PTR nil;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
-extern OBJECT_PTR idclo;
+extern OBJECT_PTR g_idclo;
 
 OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(receiver == Array);
 
@@ -59,7 +58,7 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 
 OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(index))
     return create_and_signal_exception(InvalidArgument, cont);
@@ -82,7 +81,7 @@ OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OB
 
 OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(index))
     return create_and_signal_exception(InvalidArgument, cont);
@@ -103,7 +102,7 @@ OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 
 OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
@@ -116,7 +115,7 @@ OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
@@ -129,12 +128,12 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 
   for(i=0; i<size; i++)
   {
-    message_send(msg_snd_closure,
+    message_send(g_msg_snd_closure,
                  operation,
 		 get_symbol("value:_"),
 		 convert_int_to_object(1),
 		 obj->elements[i],
-		 idclo);
+		 g_idclo);
   }
 
   assert(IS_CLOSURE_OBJECT(cont));

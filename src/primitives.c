@@ -5,12 +5,13 @@
 #include "global_decls.h"
 #include "stack.h"
 
+void print_call_chain();
+
 extern OBJECT_PTR NIL;
-extern OBJECT_PTR method_call_stack;
-extern stack_type *call_chain;
-extern void print_call_chain();
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
+
+extern stack_type *g_call_chain;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR g_msg_snd_closure;
 
 void save_continuation(OBJECT_PTR cont)
 {
@@ -89,9 +90,9 @@ OBJECT_PTR get_exception_handler()
 OBJECT_PTR get_continuation(OBJECT_PTR selector)
 {
   assert(IS_SYMBOL_OBJECT(selector));
-  assert(!stack_is_empty(call_chain));
+  assert(!stack_is_empty(g_call_chain));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(call_chain);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   while(entry->selector != selector)
   {
@@ -101,11 +102,11 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
        entry->termination_blk_invoked == false)
     {
       nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = message_send(msg_snd_closure,
+      OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					      termination_blk,
 					      get_symbol("value_"),
 					      convert_int_to_object(0),
-					      idclo);
+					      g_idclo);
       //this is not really neded
       //as we are popping the entry
       entry->termination_blk_invoked = true;
@@ -115,9 +116,9 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
     //the call chain cannot be empty when we are returning
     //from a method. need to convert this into an exception
     //to handle returns from anonymous blocks
-    assert(!stack_is_empty(call_chain));
+    assert(!stack_is_empty(g_call_chain));
     
-    entry = (call_chain_entry_t *)stack_pop(call_chain);
+    entry = (call_chain_entry_t *)stack_pop(g_call_chain);
   }
 
   return entry->cont;

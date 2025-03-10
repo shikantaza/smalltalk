@@ -61,8 +61,11 @@ void create_Exception();
 void create_MonadicBlock();
 void create_Array();
 
-package_t *compiler_package;
-package_t *smalltalk_symbols;
+package_t *g_compiler_package;
+package_t *g_smalltalk_symbols;
+
+char **g_string_literals = NULL;
+unsigned int g_nof_string_literals = 0;
 
 OBJECT_PTR NIL                          =  (OBJECT_PTR)(                      SYMBOL_TAG);
 OBJECT_PTR LET                          =  (OBJECT_PTR)((1 << OBJECT_SHIFT) + SYMBOL_TAG);
@@ -91,17 +94,15 @@ OBJECT_PTR MESSAGE_SEND_SUPER           =  (OBJECT_PTR)((22 << OBJECT_SHIFT) + S
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
 
-stack_type *call_chain;
-OBJECT_PTR idclo;
-OBJECT_PTR msg_snd_closure;
-OBJECT_PTR msg_snd_super_closure;
+stack_type *g_call_chain;
+OBJECT_PTR g_idclo;
+OBJECT_PTR g_msg_snd_closure;
+OBJECT_PTR g_msg_snd_super_closure;
 
-extern stack_type *exception_contexts;
-extern OBJECT_PTR compile_time_method_selector;
-extern stack_type *exception_environment;
-extern OBJECT_PTR curtailed_blocks_list;
-extern char **string_literals;
-extern unsigned int nof_string_literals;
+extern stack_type *g_exception_contexts;
+extern OBJECT_PTR g_compile_time_method_selector;
+extern stack_type *g_exception_environment;
+extern char **g_string_literals;
 extern OBJECT_PTR nil;
 extern OBJECT_PTR Error;
 extern OBJECT_PTR MessageNotUnderstood;
@@ -139,23 +140,23 @@ OBJECT_PTR CDDDR(OBJECT_PTR x)   { return cdr(cdr(cdr(x))); }
 
 int add_smalltalk_symbol(char *sym)
 {
-  smalltalk_symbols->nof_symbols++;
+  g_smalltalk_symbols->nof_symbols++;
   
-  smalltalk_symbols->symbols = (char **)GC_REALLOC(smalltalk_symbols->symbols,
-						   smalltalk_symbols->nof_symbols * sizeof(char *));
+  g_smalltalk_symbols->symbols = (char **)GC_REALLOC(g_smalltalk_symbols->symbols,
+						     g_smalltalk_symbols->nof_symbols * sizeof(char *));
 
-  smalltalk_symbols->symbols[smalltalk_symbols->nof_symbols - 1] = GC_strdup(sym);
+  g_smalltalk_symbols->symbols[g_smalltalk_symbols->nof_symbols - 1] = GC_strdup(sym);
 
-  return smalltalk_symbols->nof_symbols - 1;
+  return g_smalltalk_symbols->nof_symbols - 1;
 }
 
 OBJECT_PTR get_smalltalk_symbol(char *symbol)
 {
-  unsigned int n = smalltalk_symbols->nof_symbols;
+  unsigned int n = g_smalltalk_symbols->nof_symbols;
   unsigned int i;
 
   for(i=0; i<n; i++)
-    if(!strcmp(smalltalk_symbols->symbols[i], symbol))
+    if(!strcmp(g_smalltalk_symbols->symbols[i], symbol))
       return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + (i << OBJECT_SHIFT) + SMALLTALK_SYMBOL_TAG);
 
   add_smalltalk_symbol(symbol);
@@ -176,16 +177,16 @@ char *get_smalltalk_symbol_name(OBJECT_PTR smalltalk_symbol_object)
 
   symbol_index = extract_symbol_index(smalltalk_symbol_object);
   
-  return smalltalk_symbols->symbols[symbol_index];
+  return g_smalltalk_symbols->symbols[symbol_index];
 }
 
 OBJECT_PTR get_symbol(char *symbol)
 {
-  unsigned int n = compiler_package->nof_symbols;
+  unsigned int n = g_compiler_package->nof_symbols;
   unsigned int i;
 
   for(i=0; i<n; i++)
-    if(!strcmp(compiler_package->symbols[i], symbol))
+    if(!strcmp(g_compiler_package->symbols[i], symbol))
       return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + (i << OBJECT_SHIFT) + SYMBOL_TAG);
 
   add_symbol(symbol);
@@ -196,13 +197,13 @@ OBJECT_PTR get_symbol(char *symbol)
 
 void initialize_string_literals()
 {
-  string_literals = NULL;
-  nof_string_literals = 0;
+  g_string_literals = NULL;
+  g_nof_string_literals = 0;
 }
 
 void create_idclo()
 {
-  idclo = create_closure(convert_int_to_object(1),
+  g_idclo = create_closure(convert_int_to_object(1),
 			 convert_int_to_object(0),
 			 (nativefn)identity_function);
 }
@@ -211,29 +212,29 @@ void create_message_send_closure()
 {
   //first parameter is a dummy value, not needed
   //(we do not know the arity of message_send)
-  msg_snd_closure = create_closure(convert_int_to_object(0),
-				   convert_int_to_object(0),
-				   (nativefn)message_send);
+  g_msg_snd_closure = create_closure(convert_int_to_object(0),
+				     convert_int_to_object(0),
+				     (nativefn)message_send);
 }
 
 void create_message_send_super_closure()
 {
   //first parameter is a dummy value, not needed
   //(we do not know the arity of message_send)
-  msg_snd_super_closure = create_closure(convert_int_to_object(0),
-					 convert_int_to_object(0),
-					 (nativefn)message_send_super);
+  g_msg_snd_super_closure = create_closure(convert_int_to_object(0),
+					   convert_int_to_object(0),
+					   (nativefn)message_send_super);
 }
 
 void initialize()
 {
-  compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
-  compiler_package->name = GC_strdup("CORE");
-  compiler_package->nof_symbols = 0;
+  g_compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
+  g_compiler_package->name = GC_strdup("CORE");
+  g_compiler_package->nof_symbols = 0;
 
-  smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
-  smalltalk_symbols->name = GC_strdup("SMALLTALK");
-  smalltalk_symbols->nof_symbols = 0;
+  g_smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
+  g_smalltalk_symbols->name = GC_strdup("SMALLTALK");
+  g_smalltalk_symbols->nof_symbols = 0;
 
   //IMPORTANT: the order of these
   //additions should match the sequence
@@ -269,8 +270,7 @@ void initialize()
   create_message_send_closure();
   create_message_send_super_closure();
   
-  exception_environment = stack_create();
-  curtailed_blocks_list = NIL;
+  g_exception_environment = stack_create();
   
   create_Object();
   create_Smalltalk();
@@ -294,9 +294,9 @@ void initialize()
   
   initialize_top_level();
 
-  call_chain = stack_create();
+  g_call_chain = stack_create();
 
-  exception_contexts = stack_create();
+  g_exception_contexts = stack_create();
 }
 
 //this is used to initialize globals
@@ -419,9 +419,9 @@ OBJECT_PTR convert_statements_to_lisp(statement_t *s)
 OBJECT_PTR convert_ret_stmt_to_lisp(return_statement_t *r)
 {
   if(!r)
-    return list(3, RETURN_FROM, compile_time_method_selector, NIL);
+    return list(3, RETURN_FROM, g_compile_time_method_selector, NIL);
 
-  return list(3, RETURN_FROM, compile_time_method_selector, convert_exp_to_lisp(r->exp));
+  return list(3, RETURN_FROM, g_compile_time_method_selector, convert_exp_to_lisp(r->exp));
 }
 
 OBJECT_PTR convert_exp_to_lisp(expression_t *e)
@@ -727,8 +727,7 @@ OBJECT_PTR convert_char_literal_to_atom(char *s)
 
 OBJECT_PTR convert_symbol_literal_to_atom(char *s)
 {
-  error("Not implemented yet\n");
-  return NIL;
+  return get_smalltalk_symbol(substring(s, 2, strlen(s)-3));
 }
 
 OBJECT_PTR convert_selector_literal_to_atom(char *s)
@@ -756,18 +755,18 @@ OBJECT_PTR convert_identifier_to_atom(char *s)
   
   unsigned int i;
 
-  for(i=0; i < compiler_package->nof_symbols; i++)
+  for(i=0; i < g_compiler_package->nof_symbols; i++)
   {
-    if(!strcmp(s, compiler_package->symbols[i]))
+    if(!strcmp(s, g_compiler_package->symbols[i]))
        return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + (i << OBJECT_SHIFT) + SYMBOL_TAG);
   }
 
-  compiler_package->nof_symbols++;
-  compiler_package->symbols = (char **)GC_REALLOC(compiler_package->symbols,
-                                                  compiler_package->nof_symbols * sizeof(char *));
-  compiler_package->symbols[compiler_package->nof_symbols - 1] = GC_strdup(s);
+  g_compiler_package->nof_symbols++;
+  g_compiler_package->symbols = (char **)GC_REALLOC(g_compiler_package->symbols,
+						    g_compiler_package->nof_symbols * sizeof(char *));
+  g_compiler_package->symbols[g_compiler_package->nof_symbols - 1] = GC_strdup(s);
 
-  unsigned int n = compiler_package->nof_symbols;
+  unsigned int n = g_compiler_package->nof_symbols;
 
   return (OBJECT_PTR)(((OBJECT_PTR)0 << (SYMBOL_BITS + OBJECT_SHIFT)) + ((n-1) << OBJECT_SHIFT) + SYMBOL_TAG);
 }

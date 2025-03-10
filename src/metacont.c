@@ -47,15 +47,15 @@ extern OBJECT_PTR GET_CONTINUATION;
 extern OBJECT_PTR SAVE_CONTINUATION_TO_RESUME;
 
 
-extern OBJECT_PTR first(OBJECT_PTR);
-extern OBJECT_PTR second(OBJECT_PTR);
-extern OBJECT_PTR third(OBJECT_PTR);
-extern OBJECT_PTR fourth(OBJECT_PTR);
-extern int cons_length(OBJECT_PTR);
-extern OBJECT_PTR reverse(OBJECT_PTR);
-extern OBJECT_PTR concat(unsigned int, ...);
-extern BOOLEAN primop(OBJECT_PTR);
-extern BOOLEAN IS_CONS_OBJECT(OBJECT_PTR);
+OBJECT_PTR first(OBJECT_PTR);
+OBJECT_PTR second(OBJECT_PTR);
+OBJECT_PTR third(OBJECT_PTR);
+OBJECT_PTR fourth(OBJECT_PTR);
+int cons_length(OBJECT_PTR);
+OBJECT_PTR reverse(OBJECT_PTR);
+OBJECT_PTR concat(unsigned int, ...);
+BOOLEAN primop(OBJECT_PTR);
+BOOLEAN IS_CONS_OBJECT(OBJECT_PTR);
 
 metacont_closure_t *mcps(OBJECT_PTR);
 

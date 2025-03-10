@@ -16,7 +16,7 @@ unsigned int build_c_string(OBJECT_PTR, char *, BOOLEAN);
 unsigned int build_c_fragment(OBJECT_PTR, char *, BOOLEAN, BOOLEAN);
 char *extract_variable_string(OBJECT_PTR, BOOLEAN);
 
-extern OBJECT_PTR message_selectors;
+extern OBJECT_PTR g_message_selector;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -326,7 +326,7 @@ char *extract_variable_string(OBJECT_PTR var, BOOLEAN serialize_flag)
             var != SAVE_CONTINUATION_TO_RESUME)
     {
       //symbols that are passed to message_send() should be passed as raw object pointers
-      if(exists(var, message_selectors)) 
+      if(exists(var, g_message_selector)) 
       {
         char *ret = (char *)GC_MALLOC(20 * sizeof(char));
         memset(ret, '\0', 20);

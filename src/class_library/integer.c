@@ -15,10 +15,7 @@ OBJECT_PTR Integer;
 
 extern OBJECT_PTR ZeroDivide;
 extern OBJECT_PTR InvalidArgument;
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
-extern stack_type *exception_contexts;
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
@@ -29,7 +26,7 @@ extern OBJECT_PTR Object;
 
 OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_INTEGER_OBJECT(receiver));
 
@@ -49,7 +46,7 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_INTEGER_OBJECT(receiver));
 
@@ -69,7 +66,7 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_INTEGER_OBJECT(receiver));
 
@@ -89,7 +86,7 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_INTEGER_OBJECT(receiver));
 
@@ -113,7 +110,7 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 //TODO: this can be subsumed by Object>>=
 OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_INTEGER_OBJECT(receiver));
 
@@ -130,7 +127,7 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   if(!IS_INTEGER_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);

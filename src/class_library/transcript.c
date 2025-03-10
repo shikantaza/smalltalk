@@ -9,14 +9,14 @@
 
 OBJECT_PTR Transcript;
 
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
 
 OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
 #ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to transcript_show()\n");
@@ -33,7 +33,7 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_CLOSURE_OBJECT(cont));
   

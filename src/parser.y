@@ -30,23 +30,23 @@ BOOLEAN is_add_instance_method_exp(OBJECT_PTR);
 BOOLEAN is_add_class_method_exp(OBJECT_PTR);
 
 executable_code_t *g_exp;
-int open_square_brackets;
-BOOLEAN loading_core_library;
-BOOLEAN running_tests;
-OBJECT_PTR method_call_stack;
+int g_open_square_brackets;
+BOOLEAN g_loading_core_library;
+BOOLEAN g_running_tests;
+OBJECT_PTR g_method_call_stack;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SMALLTALK;
 extern OBJECT_PTR LET;
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR g_test;
-extern OBJECT_PTR idclo;
-extern stack_type *exception_contexts;
+extern OBJECT_PTR g_idclo;
+extern stack_type *g_exception_contexts;
 extern OBJECT_PTR THIS_CONTEXT;
-extern OBJECT_PTR compile_time_method_selector;
-extern stack_type *call_chain;
-extern stack_type *exception_environment;
+extern OBJECT_PTR g_compile_time_method_selector;
+extern stack_type *g_call_chain;
+extern stack_type *g_exception_environment;
 
 %}
 
@@ -149,7 +149,7 @@ executable_code:
       exec_code->temporaries = $1;
       exec_code->statements = $2;
       $$ = exec_code;
-      if(open_square_brackets == 0)
+      if(g_open_square_brackets == 0)
       {
 	g_exp = $$;
 	YYACCEPT;
@@ -162,7 +162,7 @@ executable_code:
       exec_code->temporaries = $1;
       exec_code->statements = NULL;
       $$ = exec_code;
-      if(open_square_brackets == 0)
+      if(g_open_square_brackets == 0)
       {
 	g_exp = $$;
 	YYACCEPT;
@@ -175,7 +175,7 @@ executable_code:
       exec_code->temporaries = NULL;
       exec_code->statements = $1;
       $$ = exec_code;
-      if(open_square_brackets == 0)
+      if(g_open_square_brackets == 0)
       {
 	g_exp = $$;
 	YYACCEPT;
@@ -370,12 +370,12 @@ primary:
 
 block_constructor:
     T_LEFT_SQUARE_BRACKET
-    { open_square_brackets++; }
+    { g_open_square_brackets++; }
     block_argument block_arguments
     T_VERTICAL_BAR
     executable_code
     T_RIGHT_SQUARE_BRACKET
-    { open_square_brackets--; }
+    { g_open_square_brackets--; }
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = BLOCK_ARGS;
@@ -397,7 +397,7 @@ block_constructor:
       $$ = blk_cons;
     }
     |
-    T_LEFT_SQUARE_BRACKET {open_square_brackets++; }executable_code T_RIGHT_SQUARE_BRACKET { open_square_brackets--; }
+    T_LEFT_SQUARE_BRACKET {g_open_square_brackets++; }executable_code T_RIGHT_SQUARE_BRACKET { g_open_square_brackets--; }
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = NO_BLOCK_ARGS;
@@ -884,15 +884,15 @@ void yyerror(const char *s) {
 
 void repl2()
 {
-  method_call_stack = NIL;
+  g_method_call_stack = NIL;
 
-  stack_empty(call_chain);
+  stack_empty(g_call_chain);
 
-  stack_empty(exception_environment);
+  stack_empty(g_exception_environment);
 
-  stack_empty(exception_contexts);
+  stack_empty(g_exception_contexts);
 
-  compile_time_method_selector = NIL;
+  g_compile_time_method_selector = NIL;
 
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
@@ -1063,20 +1063,20 @@ void load_file(char *file_name)
 
 void load_core_library()
 {
-  loading_core_library = true;
+  g_loading_core_library = true;
   printf("Loading core library...");
   load_file("smalltalk.st");
   printf("done.\n");
-  loading_core_library = false;
+  g_loading_core_library = false;
 }
 
 void load_tests()
 {
-  running_tests = true;
+  g_running_tests = true;
   printf("Running tests...");
   load_file("tests.st");
   printf("done.\n");
-  running_tests = false;
+  g_running_tests = false;
 }
 
 #ifndef LEX
@@ -1170,7 +1170,7 @@ void repl()
   {
     OBJECT_PTR closed_val = car(rest);
     OBJECT_PTR closed_val_cons;
-    if(get_binding_val_regular(top_level, closed_val, &closed_val_cons))
+    if(get_binding_val_regular(g_top_level, closed_val, &closed_val_cons))
     {
 	ret = cons(closed_val_cons, ret);
 	rest = cdr(rest);
@@ -1185,18 +1185,18 @@ void repl()
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  put_binding_val(top_level, THIS_CONTEXT, cons(idclo, NIL));
+  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
   nativefn1 nf1 = (nativefn1)nf;
 
-  if(loading_core_library == false)
+  if(g_loading_core_library == false)
   {
     printf("\n");
-    print_object(nf1(closure_form, idclo));
+    print_object(nf1(closure_form, g_idclo));
     printf("\n");
   }
   else
-    nf1(closure_form, idclo);    
+    nf1(closure_form, g_idclo);    
 }
 
 //this too could have been brought under

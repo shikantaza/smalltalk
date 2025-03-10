@@ -9,28 +9,27 @@
 #include "util.h"
 #include "stack.h"
 
-extern OBJECT_PTR idclo;
+extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
-extern OBJECT_PTR method_call_stack;
-extern stack_type *call_chain;
-extern BOOLEAN curtailed_block_in_progress;
-extern stack_type *exception_environment;
+extern OBJECT_PTR g_method_call_stack;
+extern stack_type *g_call_chain;
+extern BOOLEAN g_curtailed_block_in_progress;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR SUPER;
 extern OBJECT_PTR Object;
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 extern OBJECT_PTR nil;
 
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
-					  OBJECT_PTR selector,
-					  OBJECT_PTR closure,
-					  unsigned int nof_args,
-					  OBJECT_PTR *args,
-					  OBJECT_PTR cont,
-					  OBJECT_PTR termination_blk_closure,
-					  BOOLEAN termination_blk_invoked)
+					    OBJECT_PTR selector,
+					    OBJECT_PTR closure,
+					    unsigned int nof_args,
+					    OBJECT_PTR *args,
+					    OBJECT_PTR cont,
+					    OBJECT_PTR termination_blk_closure,
+					    BOOLEAN termination_blk_invoked)
 {
   call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
 
@@ -139,8 +138,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
-  put_binding_val(top_level, SELF, cons(receiver, NIL));
-  put_binding_val(top_level, SUPER, cons(receiver, NIL));
+  put_binding_val(g_top_level, SELF, cons(receiver, NIL));
+  put_binding_val(g_top_level, SUPER, cons(receiver, NIL));
 
   int count;
   
@@ -180,7 +179,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
 						   convert_fn_to_closure((nativefn)new_object_internal),
-						   idclo);
+						   g_idclo);
     return signal_exception(exception_obj);
   }
 
@@ -300,12 +299,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   {
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
-    method_call_stack = cons(cons(selector,cont), method_call_stack);
+    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 0, NULL, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 0, NULL, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(cont) : "%rsi");
@@ -321,12 +320,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(sizeof(OBJECT_PTR));
     *args = arg1;
 
-    method_call_stack = cons(cons(selector,cont), method_call_stack);
+    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, args, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, args, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -341,15 +340,15 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg2 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
-    method_call_stack = cons(cons(selector,cont), method_call_stack);
+    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(2 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2;
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 2, args, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 2, args, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -366,15 +365,15 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg3 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
     
-    method_call_stack = cons(cons(selector,cont), method_call_stack);
+    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(3 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2; args[2] = arg3;
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 3, args, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 3, args, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -393,15 +392,15 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg4 = (uintptr_t)va_arg(ap, uintptr_t);
     cont = (uintptr_t)va_arg(ap, uintptr_t);
 
-    method_call_stack = cons(cons(selector,cont), method_call_stack);
+    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(4 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, 4, args, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 4, args, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(cont, NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -439,7 +438,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #endif      
     }
 
-    method_call_stack = cons(cons(selector,stack_args[n-1]), method_call_stack);
+    g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
 
@@ -452,10 +451,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     for(i=0; i<n-1; i++)
       args[i+5] = stack_args[i];
 
-    if(!curtailed_block_in_progress)
-      stack_push(call_chain, create_call_chain_entry(receiver, selector, closure_form, count, args, cont, NIL, false));
+    if(!g_curtailed_block_in_progress)
+      stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, count, args, cont, NIL, false));
 
-    put_binding_val(top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");

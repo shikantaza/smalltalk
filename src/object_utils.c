@@ -17,7 +17,7 @@ extern OBJECT_PTR SET;
 extern OBJECT_PTR RETURN;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR LAMBDA;
-extern package_t *compiler_package;
+extern package_t *g_compiler_package;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
@@ -25,18 +25,18 @@ extern OBJECT_PTR MonadicBlock;
 extern OBJECT_PTR nil;
 extern OBJECT_PTR Boolean;
 
-extern char **string_literals;
-extern unsigned int nof_string_literals;
+extern char **g_string_literals;
+extern unsigned int g_nof_string_literals;
 
 extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
 
-extern OBJECT_PTR idclo;
+extern OBJECT_PTR g_idclo;
 
-extern stack_type *call_chain;
-extern BOOLEAN curtailed_block_in_progress;
+extern stack_type *g_call_chain;
+extern BOOLEAN g_curtailed_block_in_progress;
 
 extern OBJECT_PTR nil;
 
@@ -93,7 +93,7 @@ char *get_symbol_name(OBJECT_PTR symbol_object)
 
   symbol_index = extract_symbol_index(symbol_object);
   
-  return compiler_package->symbols[symbol_index];
+  return g_compiler_package->symbols[symbol_index];
 }
 
 OBJECT_PTR convert_int_to_object(int i)
@@ -373,7 +373,7 @@ void print_object(OBJECT_PTR obj_ptr)
   else if(IS_CHARACTER_OBJECT(obj_ptr))
     fprintf(stdout, "$%c", get_char_value(obj_ptr));
   else if(IS_STRING_LITERAL_OBJECT(obj_ptr))
-    fprintf(stdout, "%s", string_literals[obj_ptr >> OBJECT_SHIFT]);
+    fprintf(stdout, "%s", g_string_literals[obj_ptr >> OBJECT_SHIFT]);
   else if(IS_TRUE_OBJECT(obj_ptr) || IS_FALSE_OBJECT(obj_ptr))
     fprintf(stdout, "%s", obj_ptr == TRUE ? "true" : "false");
   else if(IS_ARRAY_OBJECT(obj_ptr))
@@ -469,14 +469,14 @@ OBJECT_PTR clone_object(OBJECT_PTR obj)
 
 int add_symbol(char *sym)
 {
-  compiler_package->nof_symbols++;
+  g_compiler_package->nof_symbols++;
   
-  compiler_package->symbols = (char **)GC_REALLOC(compiler_package->symbols,
-                                                  compiler_package->nof_symbols * sizeof(char *));
+  g_compiler_package->symbols = (char **)GC_REALLOC(g_compiler_package->symbols,
+						    g_compiler_package->nof_symbols * sizeof(char *));
 
-  compiler_package->symbols[compiler_package->nof_symbols - 1] = GC_strdup(sym);
+  g_compiler_package->symbols[g_compiler_package->nof_symbols - 1] = GC_strdup(sym);
 
-  return compiler_package->nof_symbols - 1;
+  return g_compiler_package->nof_symbols - 1;
 }
 
 OBJECT_PTR gensym()
@@ -615,22 +615,22 @@ OBJECT_PTR get_string_obj(char *s)
 {
   unsigned int i;
 
-  for(i=0; i<nof_string_literals; i++)
+  for(i=0; i<g_nof_string_literals; i++)
   {
-    if(!strcmp(s, string_literals[i]))
+    if(!strcmp(s, g_string_literals[i]))
       return (i << OBJECT_SHIFT) + STRING_LITERAL_TAG;
   }
 
-  nof_string_literals++;
+  g_nof_string_literals++;
   
-  if(!string_literals)
-    string_literals = (char **)GC_MALLOC(nof_string_literals * sizeof(char *));
+  if(!g_string_literals)
+    g_string_literals = (char **)GC_MALLOC(g_nof_string_literals * sizeof(char *));
   else
-    string_literals = (char **)GC_REALLOC(string_literals, nof_string_literals * sizeof(char *));
+    g_string_literals = (char **)GC_REALLOC(g_string_literals, g_nof_string_literals * sizeof(char *));
 
-  string_literals[nof_string_literals-1] = GC_strdup(s);
+  g_string_literals[g_nof_string_literals-1] = GC_strdup(s);
 
-  return ((nof_string_literals - 1) << OBJECT_SHIFT) + STRING_LITERAL_TAG;
+  return ((g_nof_string_literals - 1) << OBJECT_SHIFT) + STRING_LITERAL_TAG;
 }
 
 OBJECT_PTR get_parent_class(OBJECT_PTR cls)
@@ -771,10 +771,10 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	OBJECT_PTR cons_form = list(3, car(method), reverse(ret), convert_int_to_object(0));
 	OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
-	if(!curtailed_block_in_progress)
-	  stack_push(call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, idclo, NIL, false));
+	if(!g_curtailed_block_in_progress)
+	  stack_push(g_call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, g_idclo, NIL, false));
 
-	OBJECT_PTR ret1 = nf(closure_form, idclo);
+	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 
 	if(ret1 == nil)
 	  return nil;

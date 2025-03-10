@@ -18,11 +18,9 @@
 // c) the action to be performed by the handler for the exception
 // d) the exception environment existing at the time of execution of the on:do:
 // e) the continuation to call on successful execution of the protected block
-stack_type *exception_environment;
+stack_type *g_exception_environment;
 
-stack_type *signalling_environment;
-
-OBJECT_PTR curtailed_blocks_list;
+stack_type *g_signalling_environment;
 
 OBJECT_PTR Exception;
 OBJECT_PTR Error;
@@ -35,24 +33,24 @@ OBJECT_PTR IndexOutofBounds;
 //environment that was in play when the exception
 //handler was created by the execution of an on:do:
 //method
-stack_type *handler_environment;
+stack_type *g_handler_environment;
 
-BOOLEAN curtailed_block_in_progress;
+BOOLEAN g_curtailed_block_in_progress;
 
-exception_handler_t *active_handler;
+exception_handler_t *g_active_handler;
 
-stack_type *exception_contexts;
+stack_type *g_exception_contexts;
 
-extern binding_env_t *top_level;
+extern binding_env_t *g_top_level;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR TRUE;
 extern OBJECT_PTR FALSE;
 extern OBJECT_PTR Object;
-extern stack_type *call_chain;
-extern OBJECT_PTR idclo;
-extern OBJECT_PTR msg_snd_closure;
+extern stack_type *g_call_chain;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR nil;
 
 /* code below this point is earlier code; will be
@@ -293,10 +291,10 @@ void invoke_curtailed_blocks_old()
   //this global variable ensures that the call chain
   //updates are suspended during the execution
   //of the termination blocks of 'ifCurtailed' executions
-  curtailed_block_in_progress = true;
+  g_curtailed_block_in_progress = true;
 
-  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
-  unsigned int nof_entries = stack_count(call_chain);
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  unsigned int nof_entries = stack_count(g_call_chain);
 
   int i;
   OBJECT_PTR termination_blk;
@@ -309,20 +307,20 @@ void invoke_curtailed_blocks_old()
     if(termination_blk != NIL && flag == false)
     {
       nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
+      OBJECT_PTR discarded_ret = nf(termination_blk, g_idclo);
       entries[i]->termination_blk_invoked = true;
     }
   }
 
-  curtailed_block_in_progress = false;
+  g_curtailed_block_in_progress = false;
 }
 
 void invoke_curtailed_blocks(OBJECT_PTR cont)
 {
-  assert(!stack_is_empty(call_chain));
+  assert(!stack_is_empty(g_call_chain));
 
-  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(call_chain);
-  int count = stack_count(call_chain);
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
   //printf("count = %d\n", count);
   int i = count - 1;
 
@@ -340,9 +338,9 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
        entry->termination_blk_invoked == false)
     {
       nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      curtailed_block_in_progress = true;
-      OBJECT_PTR discarded_ret = nf(termination_blk, idclo);
-      curtailed_block_in_progress = false;
+      g_curtailed_block_in_progress = true;
+      OBJECT_PTR discarded_ret = nf(termination_blk, g_idclo);
+      g_curtailed_block_in_progress = false;
       entry->termination_blk_invoked = true;
     }
     
@@ -353,10 +351,10 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
 {
-  signalling_environment = exception_environment;
+  g_signalling_environment = g_exception_environment;
 
-  exception_handler_t **entries = (exception_handler_t **)stack_data(exception_environment);
-  int count = stack_count(exception_environment);
+  exception_handler_t **entries = (exception_handler_t **)stack_data(g_exception_environment);
+  int count = stack_count(g_exception_environment);
   int i = count - 1;
 
   OBJECT_PTR cls_obj = get_class_object(exception);
@@ -370,18 +368,18 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
     if(cls_obj == handler->selector || is_super_class(handler->selector, cls_obj))
     {
-      active_handler = handler;
+      g_active_handler = handler;
 
       OBJECT_PTR action = handler->exception_action;
       
       assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
 
-      handler_environment = handler->exception_environment;
+      g_handler_environment = handler->exception_environment;
       
       nativefn nf = (nativefn)extract_native_fn(action);
 
       //pop the handler (and all later handlers (is ths correct?))
-      //stack_pop(exception_environment); //don't think the env should be popped
+      //stack_pop(g_exception_environment); //don't think the env should be popped
 
       ret =  nf(action, exception, handler->cont);
 
@@ -398,7 +396,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
 OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -408,17 +406,17 @@ OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_type *env = handler_environment;
+  stack_type *env = g_handler_environment;
 
   nativefn nf = (nativefn)extract_native_fn(cont);
 
-  exception_handler_t **entries = (exception_handler_t **)stack_data(handler_environment);
-  int count = stack_count(handler_environment);
+  exception_handler_t **entries = (exception_handler_t **)stack_data(g_handler_environment);
+  int count = stack_count(g_handler_environment);
   int i = count - 1;
 
   OBJECT_PTR cls_obj = get_class_object(receiver);
@@ -443,12 +441,12 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = active_handler->cont;
+  OBJECT_PTR handler_cont = g_active_handler->cont;
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
@@ -456,20 +454,20 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
-  assert(!stack_is_empty(exception_contexts));
-  stack_pop(exception_contexts);
+  assert(!stack_is_empty(g_exception_contexts));
+  stack_pop(g_exception_contexts);
 
   return nf(handler_cont, NIL);
 }
 
 OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = active_handler->cont;
+  OBJECT_PTR handler_cont = g_active_handler->cont;
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
@@ -477,70 +475,70 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
 
   nativefn nf = (nativefn)extract_native_fn(handler_cont);
 
-  assert(!stack_is_empty(exception_contexts));
-  stack_pop(exception_contexts);
+  assert(!stack_is_empty(g_exception_contexts));
+  stack_pop(g_exception_contexts);
 
   return nf(handler_cont, val);
 }
 
 OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = active_handler->cont;
+  OBJECT_PTR handler_cont = g_active_handler->cont;
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
   invoke_curtailed_blocks(handler_cont);
 
-  OBJECT_PTR protected_block = active_handler->protected_block;
+  OBJECT_PTR protected_block = g_active_handler->protected_block;
 
-  return message_send(msg_snd_closure,
+  return message_send(g_msg_snd_closure,
 		      protected_block,
 		      get_symbol("on:do:_"),
 		      convert_int_to_object(2),
-		      active_handler->selector,
-		      active_handler->exception_action,
-		      active_handler->cont);
+		      g_active_handler->selector,
+		      g_active_handler->exception_action,
+		      g_active_handler->cont);
 }
 
 OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 				 OBJECT_PTR another_protected_blk,
 				 OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(another_protected_blk));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR handler_cont = active_handler->cont;
+  OBJECT_PTR handler_cont = g_active_handler->cont;
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
   invoke_curtailed_blocks(handler_cont);
 
-  return message_send(msg_snd_closure,
+  return message_send(g_msg_snd_closure,
 		      another_protected_blk,
 		      get_symbol("on:do:_"),
 		      convert_int_to_object(2),
-		      active_handler->selector,
-		      active_handler->exception_action,
-		      active_handler->cont);
+		      g_active_handler->selector,
+		      g_active_handler->exception_action,
+		      g_active_handler->cont);
 }
 
 OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  invoke_curtailed_blocks(active_handler->cont);
+  invoke_curtailed_blocks(g_active_handler->cont);
 
-  assert(!stack_is_empty(exception_contexts));
-  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
+  assert(!stack_is_empty(g_exception_contexts));
+  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
 
   assert(IS_CLOSURE_OBJECT(exception_context));
 
@@ -554,15 +552,15 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  invoke_curtailed_blocks(active_handler->cont);
+  invoke_curtailed_blocks(g_active_handler->cont);
 
-  assert(!stack_is_empty(exception_contexts));
-  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(exception_contexts);
+  assert(!stack_is_empty(g_exception_contexts));
+  OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
 
   assert(IS_CLOSURE_OBJECT(exception_context));
 
@@ -573,13 +571,13 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
 
 OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  exception_handler_t **entries = (exception_handler_t **)stack_data(exception_environment);
-  int count = stack_count(exception_environment);
+  exception_handler_t **entries = (exception_handler_t **)stack_data(g_exception_environment);
+  int count = stack_count(g_exception_environment);
   int i = count - 1;
 
   OBJECT_PTR cls_obj = get_class_object(receiver);
@@ -591,20 +589,20 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
     OBJECT_PTR ret;
 
-    if((cls_obj == handler->selector || is_super_class(handler->selector, cls_obj)) && handler != active_handler)
+    if((cls_obj == handler->selector || is_super_class(handler->selector, cls_obj)) && handler != g_active_handler)
     {
-      active_handler = handler;
+      g_active_handler = handler;
 
       OBJECT_PTR action = handler->exception_action;
 
       assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
 
-      handler_environment = handler->exception_environment;
+      g_handler_environment = handler->exception_environment;
 
       nativefn nf = (nativefn)extract_native_fn(action);
 
       //pop the handler (and all later handlers (is ths correct?))
-      //stack_pop(exception_environment); //don't think the env should be popped
+      //stack_pop(g_exception_environment); //don't think the env should be popped
 
       ret =  nf(action, receiver, handler->cont);
 
@@ -621,19 +619,19 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  stack_push(exception_contexts, (void *)cont);
+  stack_push(g_exception_contexts, (void *)cont);
 
   return exception_pass(closure, cont);
 }
 
 OBJECT_PTR exception_resignal_as(OBJECT_PTR closure, OBJECT_PTR new_exception, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(top_level, SELF));
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  exception_environment = signalling_environment;
+  g_exception_environment = g_signalling_environment;
 
   return signal_exception(new_exception);
 }
@@ -746,12 +744,12 @@ OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR exc
 
   assert(IS_CLOSURE_OBJECT(excp_cont));
 
-  stack_push(exception_contexts, (void *)excp_cont);
+  stack_push(g_exception_contexts, (void *)excp_cont);
 
   OBJECT_PTR excp_obj = new_object_internal(excp_class_obj,
 					    convert_fn_to_closure((nativefn)new_object_internal),
-					    idclo);
-  return message_send(msg_snd_closure,
+					    g_idclo);
+  return message_send(g_msg_snd_closure,
 		      excp_obj,
 		      get_symbol("signal_"),
 		      convert_int_to_object(0),
