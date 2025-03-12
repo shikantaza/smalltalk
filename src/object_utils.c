@@ -36,7 +36,6 @@ extern OBJECT_PTR Object;
 extern OBJECT_PTR g_idclo;
 
 extern stack_type *g_call_chain;
-extern BOOLEAN g_curtailed_block_in_progress;
 
 extern OBJECT_PTR nil;
 
@@ -771,8 +770,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	OBJECT_PTR cons_form = list(3, car(method), reverse(ret), convert_int_to_object(0));
 	OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
-	if(!g_curtailed_block_in_progress)
-	  stack_push(g_call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, g_idclo, NIL, false));
+	stack_push(g_call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, g_idclo, NIL, false));
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 

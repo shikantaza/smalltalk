@@ -109,6 +109,7 @@ OBJECT_PTR           message_send_super(OBJECT_PTR,
 OBJECT_PTR           new_object(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           niladic_block_value(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           nth(OBJECT_PTR, OBJECT_PTR);
 uintptr_t            object_alloc(int, int);
 BOOLEAN              primop(OBJECT_PTR);
 void                 print_call_chain();

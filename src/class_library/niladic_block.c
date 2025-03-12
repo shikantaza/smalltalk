@@ -18,7 +18,6 @@ extern stack_type *g_exception_environment;
 extern stack_type *g_call_chain;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
-extern BOOLEAN g_curtailed_block_in_progress;
 
 /*
 
@@ -103,8 +102,6 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   entry->termination_blk_closure = ensure_block;
   entry->termination_blk_invoked = false;
 
-  //nativefn nf1 = (nativefn)extract_native_fn(receiver);
-  //OBJECT_PTR ret = nf1(receiver, g_idclo);
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
 				get_symbol("value_"),
@@ -115,15 +112,15 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   //of an exception unwinding, don't invoke it again
   if(entry->termination_blk_invoked == false)
   {
-    nativefn nf2 = (nativefn)extract_native_fn(ensure_block);
-    g_curtailed_block_in_progress = true;
-    OBJECT_PTR discarded_ret = nf2(ensure_block, g_idclo);
-    g_curtailed_block_in_progress = false;
+    OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
+					    ensure_block,
+					    get_symbol("value_"),
+					    convert_int_to_object(0),
+					    g_idclo);
     entry->termination_blk_invoked == true;
 
     nativefn nf3 = (nativefn)extract_native_fn(cont);
     return nf3(cont, ret);
-
   }
 
   return ret;

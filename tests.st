@@ -180,7 +180,7 @@ UnitTestFramework runTestCase: [(y = 33) & (z = 42)] withID: 19
 | x y z|
 x := 0.
 [[y := 1/x] ifCurtailed: [ z := 42]] on: ZeroDivide do: [:ex | ex resume: 33].
-UnitTestFramework runTestCase: [(y = 33) & (z = 42)] withID: 20
+UnitTestFramework runTestCase: [(y = 33) & (z = nil)] withID: 20
 
 Smalltalk createClass: #ArgTest
 
@@ -516,3 +516,13 @@ UnitTestFramework runExceptionTestCase: [MutualRecurTest isOdd: -42] exception: 
 UnitTestFramework runExceptionTestCase: [MutualRecurTest isEven: -42] exception: Error withID: 79
 
 UnitTestFramework reportStatus
+
+Smalltalk createClass: #C2
+
+Smalltalk addClassMethod: #m2 toClass: C2 withBody: [ [Transcript show: 'executing m2'; cr] ensure: [ 1 / 0 ]]
+
+Smalltalk createClass: #C1
+
+Smalltalk addClassMethod: #m1 toClass: C1 withBody: [ [^ C2 m2] on: ZeroDivide do: [ :ex | ex resume: 42]]
+
+C1 m1

@@ -35,8 +35,6 @@ OBJECT_PTR IndexOutofBounds;
 //method
 stack_type *g_handler_environment;
 
-BOOLEAN g_curtailed_block_in_progress;
-
 exception_handler_t *g_active_handler;
 
 stack_type *g_exception_contexts;
@@ -283,38 +281,6 @@ OBJECT_PTR create_MessageNotUnderstood()
 
 /** end of commented out earlier code **/
 
-/* return type is void because we
-   discard the return value of the curtailed
-   blocks' execution */
-void invoke_curtailed_blocks_old()
-{
-  //this global variable ensures that the call chain
-  //updates are suspended during the execution
-  //of the termination blocks of 'ifCurtailed' executions
-  g_curtailed_block_in_progress = true;
-
-  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
-  unsigned int nof_entries = stack_count(g_call_chain);
-
-  int i;
-  OBJECT_PTR termination_blk;
-  BOOLEAN flag;
-
-  for(i=nof_entries-1; i >=0; i--)
-  {
-    termination_blk = entries[i]->termination_blk_closure;
-    flag = entries[i]->termination_blk_invoked;
-    if(termination_blk != NIL && flag == false)
-    {
-      nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = nf(termination_blk, g_idclo);
-      entries[i]->termination_blk_invoked = true;
-    }
-  }
-
-  g_curtailed_block_in_progress = false;
-}
-
 void invoke_curtailed_blocks(OBJECT_PTR cont)
 {
   assert(!stack_is_empty(g_call_chain));
@@ -337,10 +303,11 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
     if(termination_blk != NIL &&
        entry->termination_blk_invoked == false)
     {
-      nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      g_curtailed_block_in_progress = true;
-      OBJECT_PTR discarded_ret = nf(termination_blk, g_idclo);
-      g_curtailed_block_in_progress = false;
+      OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
+					      termination_blk,
+					      get_symbol("value_"),
+					      convert_int_to_object(0),
+					      g_idclo);
       entry->termination_blk_invoked = true;
     }
     
@@ -381,7 +348,12 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
       //pop the handler (and all later handlers (is ths correct?))
       //stack_pop(g_exception_environment); //don't think the env should be popped
 
-      ret =  nf(action, exception, handler->cont);
+      ret = message_send(g_msg_snd_closure,
+			 action,
+			 get_symbol("value:_"),
+			 convert_int_to_object(1),
+			 exception,
+			 handler->cont);
 
       return ret;
     }
@@ -604,7 +576,12 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
       //pop the handler (and all later handlers (is ths correct?))
       //stack_pop(g_exception_environment); //don't think the env should be popped
 
-      ret =  nf(action, receiver, handler->cont);
+      ret = message_send(g_msg_snd_closure,
+			 action,
+			 get_symbol("value:_"),
+			 convert_int_to_object(1),
+			 receiver,
+			 handler->cont);
 
       return ret;
     }

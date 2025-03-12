@@ -92,36 +92,70 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   assert(IS_SYMBOL_OBJECT(selector));
   assert(!stack_is_empty(g_call_chain));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+  //1. Scan the call chain and identify the continuation object
+  //   corresponding to the passed selector.
+  //2. Retrieve all the to-be-executed termination blocks (upto the call chain
+  //   entry corresponding to the selector) as a list.
 
-  while(entry->selector != selector)
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
+
+  int i = count - 1;
+
+  OBJECT_PTR termination_blk_lst = NIL;
+
+  while(entries[i]->selector != selector && i >= 1)
   {
+    call_chain_entry_t *entry = entries[i];
+
     OBJECT_PTR termination_blk = entry->termination_blk_closure;
 
     if(termination_blk != NIL &&
        entry->termination_blk_invoked == false)
     {
-      nativefn nf = (nativefn)extract_native_fn(termination_blk);
-      OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
-					      termination_blk,
-					      get_symbol("value_"),
-					      convert_int_to_object(0),
-					      g_idclo);
-      //this is not really neded
-      //as we are popping the entry
+      termination_blk_lst = cons(termination_blk, termination_blk_lst);
+
+      //we are setting this to true preemptively,
+      //should not be an issue hopefully
       entry->termination_blk_invoked = true;
     }
-
-    //TODO: this assert shouldn't get triggered because
-    //the call chain cannot be empty when we are returning
-    //from a method. need to convert this into an exception
-    //to handle returns from anonymous blocks
-    assert(!stack_is_empty(g_call_chain));
-    
-    entry = (call_chain_entry_t *)stack_pop(g_call_chain);
+    i--;
   }
 
-  return entry->cont;
+  //we should have hit the method's selector before
+  //running out of stack
+  //assert(i != 0);
+
+  OBJECT_PTR cont = entries[i]->cont;
+
+  //since the termination blocks should be executed on LIFO basis
+  termination_blk_lst = reverse(termination_blk_lst);
+
+  //3. Loop through this list and execute the blocks (with explicit "value"
+  //   messages). Note that the processing of the termination blocks could alter the
+  //  stack downstream of the entry we are interested in
+
+  int n = cons_length(termination_blk_lst);
+
+  for(i=0; i<n; i++)
+  {
+    OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
+					    nth(convert_int_to_object(i),termination_blk_lst),
+					    get_symbol("value_"),
+					    convert_int_to_object(0),
+					    g_idclo);
+    
+  }
+
+  //4. Pop all the call chain stack items up to and including the one corresponding
+  //   to the selector.
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  while(entry->selector != selector & !stack_is_empty(g_call_chain))
+    entry = (call_chain_entry_t *)stack_pop(g_call_chain);
+
+  return cont;
 }
 
 int in_error_condition()
