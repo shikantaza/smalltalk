@@ -13,7 +13,7 @@ Smalltalk addClassMethod: #runTestCase:withID: toClass: UnitTestFramework withBo
   [
     Transcript show: 'Running test case '; show: id; cr.
     (blk value) ifTrue: [
-      passedCases := passedCases + 1 ]
+          passedCases := passedCases + 1 ]
     ifFalse: [
       Transcript show: id; show: ' failed!'; cr.
       failedCases := failedCases + 1
@@ -43,16 +43,15 @@ Smalltalk addClassMethod: #runNegativeTestCase:withID: toClass: UnitTestFramewor
 Smalltalk addClassMethod: #runExceptionTestCase:exception:withID: toClass: UnitTestFramework withBody: [
   :blk :ex :id |
   [
-    Transcript show: 'Running test case '; show: id; cr.
-    [ blk on: ex do: [ :ex1 | passedCases := passedCases + 1. ^ self ]] on: Exception do: [
-      Transcript show: id; show: ' failed!'; cr.
-      failedCases := failedCases + 1.
-      ^ self
-    ]
+     Transcript show: 'Running test case '; show: id; cr.
+     blk on: ex do: [ :ex1 | passedCases := passedCases + 1. ^ self ]
   ] on: Exception do: [ :ex1 |
     Transcript show: id; show: ' failed!'; cr.
-    failedCases := failedCases + 1
-  ]
+    failedCases := failedCases + 1.
+    ^ self
+  ].
+  Transcript show: id; show: ' failed!'; cr.
+  failedCases := failedCases + 1
 ]
 
 Smalltalk addClassMethod: #reportStatus toClass: UnitTestFramework withBody: [
@@ -515,14 +514,56 @@ UnitTestFramework runExceptionTestCase: [MutualRecurTest isOdd: -42] exception: 
 
 UnitTestFramework runExceptionTestCase: [MutualRecurTest isEven: -42] exception: Error withID: 79
 
-UnitTestFramework reportStatus
-
 Smalltalk createClass: #C2
 
-Smalltalk addClassMethod: #m2 toClass: C2 withBody: [ [Transcript show: 'executing m2'; cr] ensure: [ 1 / 0 ]]
+Smalltalk addClassMethod: #m2 toClass: C2 withBody: [ [Transcript show: 'executing m2'; cr. g2 := 33 ] ensure: [ 1 / 0. g1 := 42 ]]
 
 Smalltalk createClass: #C1
 
-Smalltalk addClassMethod: #m1 toClass: C1 withBody: [ [^ C2 m2] on: ZeroDivide do: [ :ex | ex resume: 42]]
+Smalltalk addClassMethod: #m1 toClass: C1 withBody: [ [^ C2 m2] on: ZeroDivide do: [ :ex | ex resume: 10]]
 
 C1 m1
+
+UnitTestFramework runTestCase: [ (g1 = 42) & (g2 = 33)] withID: 80
+
+Smalltalk addClassMethod: #m11 toClass: C1 withBody: [ ^ C2 m2 ]
+
+g1 := nil
+
+UnitTestFramework runExceptionTestCase: [C1 m11] exception: ZeroDivide withID: 81
+
+UnitTestFramework runTestCase: [g1 = nil] withID: 82
+
+Smalltalk createGlobal: #g3
+
+Smalltalk createClass: #C15
+
+Smalltalk addClassMethod: #m15 toClass: C15 withBody: [ [C2 m2] ifCurtailed: [ g3 := 42]]
+
+Smalltalk addClassMethod: #m12 toClass: C1 withBody: [ ^ C15 m15]
+
+UnitTestFramework runExceptionTestCase: [C1 m12] exception: ZeroDivide withID: 83
+
+UnitTestFramework runTestCase: [(g1 = nil) & (g3 = 42)] withID: 84
+
+Smalltalk addClassMethod: #m13 toClass: C1 withBody: [ [ ^ C15 m15] on: ZeroDivide do: [:ex | ex resume: 10 ]]
+
+C1 m13
+
+UnitTestFramework runTestCase: [(g1 = 42) & (g3 = 42)] withID: 85
+
+| x y z|
+[x := 1/0] on: ZeroDivide do: [ :ex | [y := 1/0] on: ZeroDivide do: [ :ex1 | ex1 resume: 42 ]. z := 33. ex resume: 10 ].
+UnitTestFramework runTestCase: [(x = 10) & (y = 42) & (z = 33)] withID: 86
+
+Smalltalk createClass: #GG
+
+Smalltalk addClassMethod: #m1 toClass: GG withBody: [
+  [g1 := 1/0] ensure: [ [g2 := 1/0] on: ZeroDivide do: [ :ex1 | ex1 resume: 42 ]]
+]
+
+UnitTestFramework runExceptionTestCase: [GG m1] exception: ZeroDivide withID: 87
+
+UnitTestFramework runTestCase: [g2 = 42] withID: 88
+
+UnitTestFramework reportStatus

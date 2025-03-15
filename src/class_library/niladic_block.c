@@ -112,18 +112,19 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   //of an exception unwinding, don't invoke it again
   if(entry->termination_blk_invoked == false)
   {
+    entry->termination_blk_invoked = true;
     OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					    ensure_block,
 					    get_symbol("value_"),
 					    convert_int_to_object(0),
 					    g_idclo);
-    entry->termination_blk_invoked == true;
 
     nativefn nf3 = (nativefn)extract_native_fn(cont);
     return nf3(cont, ret);
   }
 
-  return ret;
+  nativefn nf3 = (nativefn)extract_native_fn(cont);
+  return nf3(cont, ret);
 }
 
 OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,

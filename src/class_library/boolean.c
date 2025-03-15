@@ -285,31 +285,31 @@ void create_Boolean()
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("|");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("|_");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_or),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("and:");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("and:_");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_short_circuit_and),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[3].key = get_symbol("eqv:");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("eqv:_");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_equiv),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("ifFalse:");
+  cls_obj->instance_methods->bindings[4].key = get_symbol("ifFalse:_");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_if_false),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("ifFalse:ifTrue:");
+  cls_obj->instance_methods->bindings[5].key = get_symbol("ifFalse:ifTrue:_");
   cls_obj->instance_methods->bindings[5].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_if_false_if_true),
 						    NIL,
@@ -327,25 +327,25 @@ void create_Boolean()
 						    NIL,
 						    convert_int_to_object(2));
   
-  cls_obj->instance_methods->bindings[8].key = get_symbol("not");
+  cls_obj->instance_methods->bindings[8].key = get_symbol("not_");
   cls_obj->instance_methods->bindings[8].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_not),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[9].key = get_symbol("or:");
+  cls_obj->instance_methods->bindings[9].key = get_symbol("or:_");
   cls_obj->instance_methods->bindings[9].val = list(3,
 						    convert_native_fn_to_object((nativefn)boolean_short_circuit_or),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[10].key = get_symbol("xor:");
+  cls_obj->instance_methods->bindings[10].key = get_symbol("xor:_");
   cls_obj->instance_methods->bindings[10].val = list(3,
 						     convert_native_fn_to_object((nativefn)boolean_xor),
 						     NIL,
 						     convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[11].key = get_symbol("printString");
+  cls_obj->instance_methods->bindings[11].key = get_symbol("printString_");
   cls_obj->instance_methods->bindings[11].val = list(3,
 						     convert_native_fn_to_object((nativefn)boolean_print_string),
 						     NIL,
