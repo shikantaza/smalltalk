@@ -41,6 +41,8 @@ extern OBJECT_PTR nil;
 
 extern OBJECT_PTR Array;
 
+extern OBJECT_PTR INITIALIZE_SELECTOR;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -693,7 +695,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 
   OBJECT_PTR cls, method;
 
-  OBJECT_PTR selector = get_symbol("initialize_");
+  OBJECT_PTR selector = INITIALIZE_SELECTOR;
 
   //we are iterating in FIFO so that more
   //'senior' classes are processed first

@@ -51,6 +51,11 @@ extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR nil;
 
+extern OBJECT_PTR VALUE_SELECTOR;
+extern OBJECT_PTR VALUE1_SELECTOR;
+extern OBJECT_PTR SIGNAL_SELECTOR;
+extern OBJECT_PTR ON_DO_SELECTOR;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -305,7 +310,7 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
     {
       OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					      termination_blk,
-					      get_symbol("value_"),
+					      VALUE_SELECTOR,
 					      convert_int_to_object(0),
 					      g_idclo);
       entry->termination_blk_invoked = true;
@@ -350,7 +355,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
       ret = message_send(g_msg_snd_closure,
 			 action,
-			 get_symbol("value:_"),
+			 VALUE1_SELECTOR,
 			 convert_int_to_object(1),
 			 exception,
 			 handler->cont);
@@ -469,7 +474,7 @@ OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
 
   return message_send(g_msg_snd_closure,
 		      protected_block,
-		      get_symbol("on:do:_"),
+		      ON_DO_SELECTOR,
 		      convert_int_to_object(2),
 		      g_active_handler->selector,
 		      g_active_handler->exception_action,
@@ -493,7 +498,7 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 
   return message_send(g_msg_snd_closure,
 		      another_protected_blk,
-		      get_symbol("on:do:_"),
+		      ON_DO_SELECTOR,
 		      convert_int_to_object(2),
 		      g_active_handler->selector,
 		      g_active_handler->exception_action,
@@ -578,7 +583,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
       ret = message_send(g_msg_snd_closure,
 			 action,
-			 get_symbol("value:_"),
+			 VALUE1_SELECTOR,
 			 convert_int_to_object(1),
 			 receiver,
 			 handler->cont);
@@ -728,7 +733,7 @@ OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR exc
 					    g_idclo);
   return message_send(g_msg_snd_closure,
 		      excp_obj,
-		      get_symbol("signal_"),
+		      SIGNAL_SELECTOR,
 		      convert_int_to_object(0),
 		      excp_cont);
 }

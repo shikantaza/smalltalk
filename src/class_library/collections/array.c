@@ -22,6 +22,8 @@ extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR g_idclo;
 
+extern OBJECT_PTR VALUE1_SELECTOR;
+
 OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -130,7 +132,7 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
   {
     message_send(g_msg_snd_closure,
                  operation,
-		 get_symbol("value:_"),
+		 VALUE1_SELECTOR,
 		 convert_int_to_object(1),
 		 obj->elements[i],
 		 g_idclo);

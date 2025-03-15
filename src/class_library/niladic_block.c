@@ -19,6 +19,7 @@ extern stack_type *g_call_chain;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 
+extern OBJECT_PTR VALUE_SELECTOR;
 /*
 
 These two methods to be included in
@@ -104,7 +105,7 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
-				get_symbol("value_"),
+				VALUE_SELECTOR,
 				convert_int_to_object(0),
 				g_idclo);
 
@@ -115,7 +116,7 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
     entry->termination_blk_invoked = true;
     OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					    ensure_block,
-					    get_symbol("value_"),
+					    VALUE_SELECTOR,
 					    convert_int_to_object(0),
 					    g_idclo);
 
@@ -145,7 +146,7 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
   //OBJECT_PTR ret = nf1(receiver, g_idclo);
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
-				get_symbol("value_"),
+				VALUE_SELECTOR,
 				convert_int_to_object(0),
 				cont);
   

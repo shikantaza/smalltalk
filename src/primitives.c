@@ -13,6 +13,8 @@ extern stack_type *g_call_chain;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 
+extern OBJECT_PTR VALUE_SELECTOR;
+
 void save_continuation(OBJECT_PTR cont)
 {
   //TODO
@@ -146,7 +148,7 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   {
     OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					    nth(convert_int_to_object(i),termination_blk_lst),
-					    get_symbol("value_"),
+					    VALUE_SELECTOR,
 					    convert_int_to_object(0),
 					    g_idclo);
     

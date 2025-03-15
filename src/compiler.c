@@ -99,6 +99,13 @@ OBJECT_PTR g_idclo;
 OBJECT_PTR g_msg_snd_closure;
 OBJECT_PTR g_msg_snd_super_closure;
 
+OBJECT_PTR VALUE_SELECTOR;
+OBJECT_PTR VALUE1_SELECTOR;
+OBJECT_PTR SIGNAL_SELECTOR;
+OBJECT_PTR ON_DO_SELECTOR;
+OBJECT_PTR INITIALIZE_SELECTOR;
+OBJECT_PTR MNU_SYMBOL;
+
 extern stack_type *g_exception_contexts;
 extern OBJECT_PTR g_compile_time_method_selector;
 extern stack_type *g_exception_environment;
@@ -226,6 +233,16 @@ void create_message_send_super_closure()
 					   (nativefn)message_send_super);
 }
 
+void initialize_frequently_used_selectors()
+{
+  VALUE_SELECTOR = get_symbol("value_");
+  VALUE1_SELECTOR = get_symbol("value:_");
+  SIGNAL_SELECTOR = get_symbol("signal_");
+  ON_DO_SELECTOR = get_symbol("on:do:_");
+  INITIALIZE_SELECTOR = get_symbol("initialize_");
+  MNU_SYMBOL = get_symbol("MessageNotUnderstood");
+}
+
 void initialize()
 {
   g_compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
@@ -277,7 +294,7 @@ void initialize()
   create_nil();
   create_Transcript();
   
-  //this was initally after the call to
+  //this was initially after the call to
   //initialize_top_level(), but a bus error
   //was thrown in the generated code.
   //moving this here made that error go away.
@@ -293,6 +310,8 @@ void initialize()
   create_Array();
   
   initialize_top_level();
+
+  initialize_frequently_used_selectors();
 
   g_call_chain = stack_create();
 

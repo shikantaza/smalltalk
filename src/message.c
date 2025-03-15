@@ -21,6 +21,8 @@ extern OBJECT_PTR Object;
 extern binding_env_t *g_top_level;
 extern OBJECT_PTR nil;
 
+extern OBJECT_PTR MNU_SYMBOL;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
 					    OBJECT_PTR closure,
@@ -172,7 +174,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     print_object(stripped_selector); printf(" is not understood by "); print_object(receiver); printf("\n");
     getchar();
 #endif
-    assert(get_top_level_val(get_symbol("MessageNotUnderstood"), &ret));
+    assert(get_top_level_val(MNU_SYMBOL, &ret));
 
     OBJECT_PTR mnu_class_obj = car(ret);
 
