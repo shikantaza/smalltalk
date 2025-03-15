@@ -61,23 +61,21 @@ Smalltalk addClassMethod: #reportStatus toClass: UnitTestFramework withBody: [
 
 UnitTestFramework initialize
 
-Smalltalk createClass: #MyClass
+Smalltalk createGlobal: #classObj1 valued: (Smalltalk createClass: (Smalltalk genSym))
 
-Smalltalk addClassMethod: #hello toClass: MyClass withBody: [ ^ 42 ]
+Smalltalk addClassMethod: #hello toClass: classObj1 withBody: [ ^ 42 ]
 
-UnitTestFramework runTestCase: [ MyClass hello = 42 ] withID: 1
+UnitTestFramework runTestCase: [ classObj1 hello = 42 ] withID: 1
 
-Smalltalk createClass: #MyClass1
+Smalltalk addInstanceMethod: #method1 toClass: classObj1 withBody: [ ^ 33 ]
 
-Smalltalk addInstanceMethod: #method1 toClass: MyClass1 withBody: [ ^ 33 ]
+UnitTestFramework runTestCase: [ classObj1 new method1 = 33 ] withID: 2
 
-UnitTestFramework runTestCase: [ MyClass1 new method1 = 33 ] withID: 2
+Smalltalk createGlobal: #classObj2 valued: (Smalltalk createClass: (Smalltalk genSym) parentClass: classObj1)
 
-Smalltalk createClass: #MyClass2 parentClass: MyClass1
+Smalltalk addInstanceMethod: #method2 toClass: classObj2 withBody: [ ^42 ]
 
-Smalltalk addInstanceMethod: #method2 toClass: MyClass2 withBody: [ ^42 ]
-
-UnitTestFramework runTestCase: [ MyClass2 new method2 = 42 ] withID: 3
+UnitTestFramework runTestCase: [ classObj2 new method2 = 42 ] withID: 3
 
 Smalltalk createClass: #Fact
 
@@ -88,29 +86,29 @@ Smalltalk addClassMethod: #fact: toClass: Fact withBody:
 
 UnitTestFramework runTestCase: [ (Fact fact: 10)  = 3628800 ] withID: 4
 
-Smalltalk createClass: #MyClass3
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addInstanceVariable: #x toClass: MyClass3
+Smalltalk addInstanceVariable: #x toClass: classObj1
 
-Smalltalk addInstanceMethod: #x: toClass: MyClass3 withBody: [ :v | x := v]
+Smalltalk addInstanceMethod: #x: toClass: classObj1 withBody: [ :v | x := v]
 
-Smalltalk addInstanceMethod: #x toClass: MyClass3 withBody: [ ^x ]
+Smalltalk addInstanceMethod: #x toClass: classObj1 withBody: [ ^x ]
 
 | m |
-m := MyClass3 new.
+m := classObj1 new.
 m x: 10.
 UnitTestFramework runTestCase: [ ((m x) = 10)] withID: 5
 
-Smalltalk createClass: #MyClass4
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassVariable: #x toClass: MyClass4
+Smalltalk addClassVariable: #x toClass: classObj2
 
-Smalltalk addClassMethod: #x: toClass: MyClass4 withBody: [ :v | x := v ]
+Smalltalk addClassMethod: #x: toClass: classObj2 withBody: [ :v | x := v ]
 
-Smalltalk addClassMethod: #x toClass: MyClass4 withBody: [ ^x ]
+Smalltalk addClassMethod: #x toClass: classObj2 withBody: [ ^x ]
 
-MyClass4 x: 42.
-UnitTestFramework runTestCase: [((MyClass4 x) = 42)] withID: 6
+classObj2 x: 42.
+UnitTestFramework runTestCase: [((classObj2 x) = 42)] withID: 6
 
 | x |
 x := [1/0. 42] on: ZeroDivide do: [ :ex | ex return: 1].
@@ -203,79 +201,79 @@ UnitTestFramework runExceptionTestCase: [42 hello] exception: MessageNotUndersto
 
 UnitTestFramework runExceptionTestCase: [1/0] exception: ZeroDivide withID: 26
 
-Smalltalk createClass: #Class3
+Smalltalk createGlobal: #classObj3 valued: (Smalltalk createClass: (Smalltalk genSym))
 
-Smalltalk addClassMethod: #m3 toClass: Class3 withBody: [ ^ (1/0)]
+Smalltalk addClassMethod: #m3 toClass: classObj3 withBody: [ ^ (1/0)]
 
-Smalltalk createClass: #Class2
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m2 toClass: Class2 withBody: [ [ ^(Class3 m3)] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
+Smalltalk addClassMethod: #m2 toClass: classObj2 withBody: [ [ ^(classObj3 m3)] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
 
-Smalltalk createClass: #Class1
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m1 toClass: Class1 withBody: [ [^(Class2 m2)] on: ZeroDivide do: [ :ex | ex resume]]
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [ [^(classObj2 m2)] on: ZeroDivide do: [ :ex | ex resume]]
 
-Smalltalk addClassMethod: #m12 toClass: Class1 withBody: [ [ ^(Class2 m2)] on: ZeroDivide do: [ :ex | ex resume: 42]]
+Smalltalk addClassMethod: #m12 toClass: classObj1 withBody: [ [ ^(classObj2 m2)] on: ZeroDivide do: [ :ex | ex resume: 42]]
 
 | x |
-x := Class1 m12. Transcript show: x; cr.
+x := classObj1 m12. Transcript show: x; cr.
 UnitTestFramework runTestCase: [x = 42] withID: 27
 
-Class1 m1
+classObj1 m1
 
 Smalltalk createGlobal: #g1 valued: 0
 
 Smalltalk createGlobal: #g2 valued: 0
 
-Smalltalk createClass: #Class6
+classObj3 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m6 toClass: Class6 withBody: [g1 := 10 / g2. ^ g1]
+Smalltalk addClassMethod: #m6 toClass: classObj3 withBody: [g1 := 10 / g2. ^ g1]
 
-Smalltalk createClass: #Class5
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m5 toClass: Class5 withBody: [ [^(Class6 m6)] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
+Smalltalk addClassMethod: #m5 toClass: classObj2 withBody: [ [^(classObj3 m6)] ifCurtailed: [ Transcript show: 'curtailed'; cr]]
 
-Smalltalk createClass: #Class4
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m4 toClass: Class4 withBody: [ [^(Class5 m5)] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
+Smalltalk addClassMethod: #m4 toClass: classObj1 withBody: [ [^(classObj2 m5)] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
 
-Class4 m4
+classObj1 m4
 
 UnitTestFramework runTestCase: [g1 = 2] withID: 28
 
-Smalltalk addClassMethod: #m41 toClass: Class4 withBody: [ [^(Class5 m5)] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. ^(Class5 m5)]]]
+Smalltalk addClassMethod: #m41 toClass: classObj1 withBody: [ [^(classObj2 m5)] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. ^(classObj2 m5)]]]
 
 g2 := 0
 
-Class4 m41
+classObj1 m41
 
 UnitTestFramework runTestCase: [g1 = 2] withID: 29
 
-Smalltalk addClassMethod: #m42 toClass: Class4 withBody: [ [^(Class5 m5)] on: ZeroDivide do: [ :ex | ex return]]
+Smalltalk addClassMethod: #m42 toClass: classObj1 withBody: [ [^(classObj2 m5)] on: ZeroDivide do: [ :ex | ex return]]
 
 g1 := 0
 
 g2 := 0
 
-Class4 m42
+classObj1 m42
 
 UnitTestFramework runTestCase: [g1 = 0] withID: 30
 
-Smalltalk addClassMethod: #m43 toClass: Class4 withBody: [ [g1 := Class5 m5] on: ZeroDivide do: [ :ex | ex resume: 42]]
+Smalltalk addClassMethod: #m43 toClass: classObj1 withBody: [ [g1 := classObj2 m5] on: ZeroDivide do: [ :ex | ex resume: 42]]
 
 g1 := 0
 
 g2 := 0
 
-Class4 m43
+classObj1 m43
 
 UnitTestFramework runTestCase: [g1 = 42] withID: 31
 
-Smalltalk createClass: #Class7
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m7 toClass: Class7 withBody: [[ ^ 42] ifCurtailed: [g1 := 33]]
+Smalltalk addClassMethod: #m7 toClass: classObj1 withBody: [[ ^ 42] ifCurtailed: [g1 := 33]]
 
-Class7 m7
+classObj1 m7
 
 UnitTestFramework runTestCase: [g1 = 33] withID: 32
 
@@ -283,125 +281,125 @@ UnitTestFramework runTestCase: [g1 = 33] withID: 32
 [[x := 1/0. y := x + 32] on: ZeroDivide do: [ :ex | ex resume: 10]] ifCurtailed: [ y := 14].
 UnitTestFramework runTestCase: [(x = 10) & (y = 42)] withID: 33
 
-Smalltalk createClass: #Class10
+classObj3 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m10 toClass: Class10 withBody: [^(1/0)]
+Smalltalk addClassMethod: #m10 toClass: classObj3 withBody: [^(1/0)]
 
-Smalltalk createClass: #Class9
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m9 toClass: Class9 withBody: [ [^(Class10 m10)] ensure: [ Transcript show: 'ensure'; cr]]
+Smalltalk addClassMethod: #m9 toClass: classObj2 withBody: [ [^(classObj3 m10)] ensure: [ Transcript show: 'ensure'; cr]]
 
-Smalltalk createClass: #Class8
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m8 toClass: Class8 withBody: [ [^(Class9 m9)] on: ZeroDivide do: [ :ex | ex resume]]
+Smalltalk addClassMethod: #m8 toClass: classObj1 withBody: [ [^(classObj2 m9)] on: ZeroDivide do: [ :ex | ex resume]]
 
-Smalltalk addClassMethod: #m82 toClass: Class8 withBody: [ [^(Class9 m9)] on: ZeroDivide do: [ :ex | ex resume: 42]]
+Smalltalk addClassMethod: #m82 toClass: classObj1 withBody: [ [^(classObj2 m9)] on: ZeroDivide do: [ :ex | ex resume: 42]]
 
 | x |
-x := Class8 m82.
+x := classObj1 m82.
 UnitTestFramework runTestCase: [x = 42] withID: 34
 
-Class8 m8
+classObj1 m8
 
 g1 := 0
 
 g2 := 0
 
-Smalltalk createClass: #Class13
+classObj3 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m13 toClass: Class13 withBody: [g1 := 10 / g2. ^ g1]
+Smalltalk addClassMethod: #m13 toClass: classObj3 withBody: [g1 := 10 / g2. ^ g1]
 
-Smalltalk createClass: #Class12
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m12 toClass: Class12 withBody: [ [^(Class13 m13)] ensure: [ Transcript show: 'ensure'; cr]]
+Smalltalk addClassMethod: #m12 toClass: classObj2 withBody: [ [^(classObj3 m13)] ensure: [ Transcript show: 'ensure'; cr]]
 
-Smalltalk createClass: #Class11
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m11 toClass: Class11 withBody: [ [^(Class12 m12)] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
+Smalltalk addClassMethod: #m11 toClass: classObj1 withBody: [ [^(classObj2 m12)] on: ZeroDivide do: [ :ex | g2 := 5. ex retry]]
 
-Class11 m11
+classObj1 m11
 
 UnitTestFramework runTestCase: [g1 = 2] withID: 35
 
-Smalltalk addClassMethod: #m111 toClass: Class11 withBody: [ [^(Class12 m12)] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. Class12 m12]]]
+Smalltalk addClassMethod: #m111 toClass: classObj1 withBody: [ [^(classObj2 m12)] on: ZeroDivide do: [ :ex | ex retryUsing: [g2 := 5. classObj2 m12]]]
 
 g2 := 0
 
-Class11 m111
+classObj1 m111
 
 UnitTestFramework runTestCase: [g1 = 2] withID: 36
 
-Smalltalk addClassMethod: #m112 toClass: Class11 withBody: [ [^(Class12 m12)] on: ZeroDivide do: [ :ex | ex return]]
+Smalltalk addClassMethod: #m112 toClass: classObj1 withBody: [ [^(classObj2 m12)] on: ZeroDivide do: [ :ex | ex return]]
 
 g1 := 0
 
 g2 := 0
 
-Class11 m112
+classObj1 m112
 
 UnitTestFramework runTestCase: [g1 = 0] withID: 37
 
-Smalltalk addClassMethod: #m113 toClass: Class11 withBody: [ [g1 := Class12 m12] on: ZeroDivide do: [ :ex | ex resume: 42]]
+Smalltalk addClassMethod: #m113 toClass: classObj1 withBody: [ [g1 := classObj2 m12] on: ZeroDivide do: [ :ex | ex resume: 42]]
 
 g1 := 0
 
 g2 := 0
 
-Class11 m113
+classObj1 m113
 
 UnitTestFramework runTestCase: [g1 = 42] withID: 38
 
-Smalltalk createClass: #Class14
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addInstanceVariable: #x toClass: Class14
+Smalltalk addInstanceVariable: #x toClass: classObj1
 
-Smalltalk addInstanceMethod: #set toClass: Class14 withBody: [ x := 33]
+Smalltalk addInstanceMethod: #set toClass: classObj1 withBody: [ x := 33]
 
-Smalltalk addInstanceMethod: #get toClass: Class14 withBody: [ ^x ]
+Smalltalk addInstanceMethod: #get toClass: classObj1 withBody: [ ^x ]
 
-Smalltalk createClass: #Class15 parentClass: Class14
+classObj2 := Smalltalk createClass: (Smalltalk genSym) parentClass: classObj1
 
-Smalltalk addInstanceMethod: #set toClass: Class15 withBody: [ x := 42]
+Smalltalk addInstanceMethod: #set toClass: classObj2 withBody: [ x := 42]
 
-Smalltalk addInstanceMethod: #test toClass: Class15 withBody: [ super set]
+Smalltalk addInstanceMethod: #test toClass: classObj2 withBody: [ super set]
 
 |obj|
-obj := Class15 new. obj test.
+obj := classObj2 new. obj test.
 UnitTestFramework runTestCase: [(obj get) = 33] withID: 39
 
 |obj|
-obj := Class15 new. obj set.
+obj := classObj2 new. obj set.
 UnitTestFramework runTestCase: [(obj get) = 42] withID: 40
 
-Smalltalk createClass: #InitializeTestClass
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addInstanceVariable: #x toClass: InitializeTestClass
+Smalltalk addInstanceVariable: #x toClass: classObj1
 
-Smalltalk addInstanceMethod: #initialize toClass: InitializeTestClass withBody: [ x := 42]
+Smalltalk addInstanceMethod: #initialize toClass: classObj1 withBody: [ x := 42]
 
-Smalltalk addInstanceMethod: #x toClass: InitializeTestClass withBody: [ ^ x ]
+Smalltalk addInstanceMethod: #x toClass: classObj1 withBody: [ ^ x ]
 
-| a | a := InitializeTestClass new. UnitTestFramework runTestCase: [ (a x) = 42 ] withID: 41
+| a | a := classObj1 new. UnitTestFramework runTestCase: [ (a x) = 42 ] withID: 41
 
-Smalltalk createClass: #InitializeTestChildClass parentClass: InitializeTestClass
+classObj2 := Smalltalk createClass: (Smalltalk genSym) parentClass: classObj1
 
-Smalltalk addInstanceVariable: #y toClass: InitializeTestChildClass
+Smalltalk addInstanceVariable: #y toClass: classObj2
 
-Smalltalk addInstanceMethod: #initialize toClass: InitializeTestChildClass withBody: [ y := 33]
+Smalltalk addInstanceMethod: #initialize toClass: classObj2 withBody: [ y := 33]
 
-Smalltalk addInstanceMethod: #y toClass: InitializeTestChildClass withBody: [ ^ y ]
+Smalltalk addInstanceMethod: #y toClass: classObj2 withBody: [ ^ y ]
 
-| a | a := InitializeTestChildClass new. UnitTestFramework runTestCase: [((a x) = 42 & ((a y) = 33))] withID: 42
+| a | a := classObj2 new. UnitTestFramework runTestCase: [((a x) = 42 & ((a y) = 33))] withID: 42
 
-Smalltalk createClass: #YAC
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addInstanceVariable: #x toClass: YAC
+Smalltalk addInstanceVariable: #x toClass: classObj1
 
-Smalltalk addInstanceMethod: #x toClass: YAC withBody: [ ^ x ]
+Smalltalk addInstanceMethod: #x toClass: classObj1 withBody: [ ^ x ]
 
-Smalltalk addInstanceMethod: #initialize toClass: YAC withBody: [ [1/0] on: ZeroDivide do: [ :ex | ex resume: 42]. x := 33 ]
+Smalltalk addInstanceMethod: #initialize toClass: classObj1 withBody: [ [1/0] on: ZeroDivide do: [ :ex | ex resume: 42]. x := 33 ]
 
-| a | a := YAC new.
+| a | a := classObj1 new.
 UnitTestFramework runTestCase: [(a x) = 33] withID: 43
 
 UnitTestFramework runExceptionTestCase: [1 + false] exception: InvalidArgument withID: 44
@@ -420,13 +418,13 @@ UnitTestFramework runExceptionTestCase: [Smalltalk createClass: 1] exception: In
 
 UnitTestFramework runExceptionTestCase: [Smalltalk createClass: #SomeClass parentClass: 1] exception: InvalidArgument withID: 51
 
-Smalltalk createClass: #SomeClass
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-UnitTestFramework runExceptionTestCase: [Smalltalk addInstanceVariable: 1 toClass: SomeClass] exception: InvalidArgument withID: 52
+UnitTestFramework runExceptionTestCase: [Smalltalk addInstanceVariable: 1 toClass: classObj1] exception: InvalidArgument withID: 52
 
 UnitTestFramework runExceptionTestCase: [Smalltalk addInstanceVariable: #x toClass: 1] exception: InvalidArgument withID: 53
 
-UnitTestFramework runExceptionTestCase: [Smalltalk addClassVariable: 1 toClass: SomeClass] exception: InvalidArgument withID: 54
+UnitTestFramework runExceptionTestCase: [Smalltalk addClassVariable: 1 toClass: classObj1] exception: InvalidArgument withID: 54
 
 UnitTestFramework runExceptionTestCase: [Smalltalk addClassVariable: #x toClass: 1] exception: InvalidArgument withID: 55
 
@@ -514,41 +512,41 @@ UnitTestFramework runExceptionTestCase: [MutualRecurTest isOdd: -42] exception: 
 
 UnitTestFramework runExceptionTestCase: [MutualRecurTest isEven: -42] exception: Error withID: 79
 
-Smalltalk createClass: #C2
+classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m2 toClass: C2 withBody: [ [Transcript show: 'executing m2'; cr. g2 := 33 ] ensure: [ 1 / 0. g1 := 42 ]]
+Smalltalk addClassMethod: #m2 toClass: classObj2 withBody: [ [Transcript show: 'executing m2'; cr. g2 := 33 ] ensure: [ 1 / 0. g1 := 42 ]]
 
-Smalltalk createClass: #C1
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m1 toClass: C1 withBody: [ [^ C2 m2] on: ZeroDivide do: [ :ex | ex resume: 10]]
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [ [^ classObj2 m2] on: ZeroDivide do: [ :ex | ex resume: 10]]
 
-C1 m1
+classObj1 m1
 
 UnitTestFramework runTestCase: [ (g1 = 42) & (g2 = 33)] withID: 80
 
-Smalltalk addClassMethod: #m11 toClass: C1 withBody: [ ^ C2 m2 ]
+Smalltalk addClassMethod: #m11 toClass: classObj1 withBody: [ ^ classObj2 m2 ]
 
 g1 := nil
 
-UnitTestFramework runExceptionTestCase: [C1 m11] exception: ZeroDivide withID: 81
+UnitTestFramework runExceptionTestCase: [classObj1 m11] exception: ZeroDivide withID: 81
 
 UnitTestFramework runTestCase: [g1 = nil] withID: 82
 
 Smalltalk createGlobal: #g3
 
-Smalltalk createClass: #C15
+classObj3 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m15 toClass: C15 withBody: [ [C2 m2] ifCurtailed: [ g3 := 42]]
+Smalltalk addClassMethod: #m15 toClass: classObj3 withBody: [ [classObj2 m2] ifCurtailed: [ g3 := 42]]
 
-Smalltalk addClassMethod: #m12 toClass: C1 withBody: [ ^ C15 m15]
+Smalltalk addClassMethod: #m12 toClass: classObj1 withBody: [ ^ classObj3 m15]
 
-UnitTestFramework runExceptionTestCase: [C1 m12] exception: ZeroDivide withID: 83
+UnitTestFramework runExceptionTestCase: [classObj1 m12] exception: ZeroDivide withID: 83
 
 UnitTestFramework runTestCase: [(g1 = nil) & (g3 = 42)] withID: 84
 
-Smalltalk addClassMethod: #m13 toClass: C1 withBody: [ [ ^ C15 m15] on: ZeroDivide do: [:ex | ex resume: 10 ]]
+Smalltalk addClassMethod: #m13 toClass: classObj1 withBody: [ [ ^ classObj3 m15] on: ZeroDivide do: [:ex | ex resume: 10 ]]
 
-C1 m13
+classObj1 m13
 
 UnitTestFramework runTestCase: [(g1 = 42) & (g3 = 42)] withID: 85
 
@@ -556,13 +554,13 @@ UnitTestFramework runTestCase: [(g1 = 42) & (g3 = 42)] withID: 85
 [x := 1/0] on: ZeroDivide do: [ :ex | [y := 1/0] on: ZeroDivide do: [ :ex1 | ex1 resume: 42 ]. z := 33. ex resume: 10 ].
 UnitTestFramework runTestCase: [(x = 10) & (y = 42) & (z = 33)] withID: 86
 
-Smalltalk createClass: #GG
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m1 toClass: GG withBody: [
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [
   [g1 := 1/0] ensure: [ [g2 := 1/0] on: ZeroDivide do: [ :ex1 | ex1 resume: 42 ]]
 ]
 
-UnitTestFramework runExceptionTestCase: [GG m1] exception: ZeroDivide withID: 87
+UnitTestFramework runExceptionTestCase: [classObj1 m1] exception: ZeroDivide withID: 87
 
 UnitTestFramework runTestCase: [g2 = 42] withID: 88
 

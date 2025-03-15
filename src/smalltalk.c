@@ -22,6 +22,8 @@ OBJECT_PTR nil;
 
 OBJECT_PTR g_compile_time_method_selector;
 
+int smalltalk_gensym_count = 0;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
@@ -716,6 +718,25 @@ OBJECT_PTR create_global(OBJECT_PTR closure,
   return create_global_valued(closure, global_sym, nil, cont);
 }
 
+OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
+			    OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  char sym[20];
+
+  smalltalk_gensym_count++;
+
+  sprintf(sym, "#:G%d", smalltalk_gensym_count);
+
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  OBJECT_PTR ret = nf(cont, get_smalltalk_symbol(sym));
+
+  return ret;
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -743,7 +764,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 6;
+  cls_obj->class_methods->count = 7;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -784,6 +805,12 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)create_global),
 						 NIL,
 						 convert_int_to_object(1));
+
+  cls_obj->class_methods->bindings[6].key = get_symbol("genSym_");
+  cls_obj->class_methods->bindings[6].val = list(3,
+						 convert_native_fn_to_object((nativefn)smalltalk_gensym),
+						 NIL,
+						 convert_int_to_object(0));
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
