@@ -94,8 +94,11 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   assert(IS_SYMBOL_OBJECT(selector));
 
   //assert(!stack_is_empty(g_call_chain));
-  //TODO: this is a hack to handle re-execution of enure blocks.
-  //needs fixing if there are repurcussions elsewhere
+  //TODO: this is a hack to a) handle re-execution of ensure blocks
+  //b) neutralize the system-added '^ self' messages at the
+  //end of method bodies (for the case when the method body
+  //has already returned). needs fixing if there are
+  //repurcussions elsewhere
   if(stack_is_empty(g_call_chain))
     return g_idclo;
 
@@ -161,7 +164,7 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   {
     call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-    while(entry->selector != selector & !stack_is_empty(g_call_chain))
+    while(entry->selector != selector && !stack_is_empty(g_call_chain))
       entry = (call_chain_entry_t *)stack_pop(g_call_chain);
   }
 

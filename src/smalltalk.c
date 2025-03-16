@@ -917,3 +917,35 @@ void create_nil()
 
   nil =  convert_class_object_to_object_ptr(cls_obj);
 }
+
+void print_call_chain()
+{
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
+
+  int i = count - 1;
+
+  int j;
+
+  while(i >= 0)
+  {
+    call_chain_entry_t *entry = entries[i];
+
+    print_object(entry->receiver); printf(">>");
+    print_object(entry->selector); printf(" ");
+
+    for(j=0; j<get_int_value(entry->nof_args); j++)
+    {
+       print_object(entry->args[j]); printf(" ");
+    }
+
+    if(entry->termination_blk_closure != NIL)
+    {
+      printf("["); print_object(entry->termination_blk_closure);
+      printf("(invoked = %s)", entry->termination_blk_invoked == TRUE ? "yes" : "no");
+      printf("]");
+    }
+    printf("\n");
+    i--;
+  }
+}
