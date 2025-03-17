@@ -94,11 +94,8 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
   assert(IS_SYMBOL_OBJECT(selector));
 
   //assert(!stack_is_empty(g_call_chain));
-  //TODO: this is a hack to a) handle re-execution of ensure blocks
-  //b) neutralize the system-added '^ self' messages at the
-  //end of method bodies (for the case when the method body
-  //has already returned). needs fixing if there are
-  //repurcussions elsewhere
+  //TODO: this is a hack to handle re-execution of ensure blocks.
+  //needs fixing if there are repurcussions elsewhere
   if(stack_is_empty(g_call_chain))
     return g_idclo;
 
@@ -124,17 +121,10 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
        entry->termination_blk_invoked == false)
     {
       termination_blk_lst = cons(termination_blk, termination_blk_lst);
-
-      //we are setting this to true preemptively,
-      //should not be an issue hopefully
-      entry->termination_blk_invoked = true;
     }
+
     i--;
   }
-
-  //we should have hit the method's selector before
-  //running out of stack
-  //assert(i != 0);
 
   OBJECT_PTR cont = entries[i]->cont;
 
@@ -149,12 +139,19 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
 
   for(i=0; i<n; i++)
   {
-    OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
-					    nth(convert_int_to_object(i),termination_blk_lst),
-					    VALUE_SELECTOR,
-					    convert_int_to_object(0),
-					    g_idclo);
-    
+    OBJECT_PTR term_blk = nth(convert_int_to_object(i),termination_blk_lst);
+
+    call_chain_entry_t *e = is_termination_block_not_invoked(term_blk);
+
+    if(e)
+    {
+      e->termination_blk_invoked = true;
+      message_send(g_msg_snd_closure,
+		   term_blk,
+		   VALUE_SELECTOR,
+		   convert_int_to_object(0),
+		   g_idclo);
+    }
   }
 
   //4. Pop all the call chain stack items up to and including the one corresponding

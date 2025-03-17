@@ -94,6 +94,7 @@ BOOLEAN              IS_STRING_LITERAL_OBJECT(OBJECT_PTR);
 BOOLEAN              IS_STRING_OBJECT(OBJECT_PTR);
 BOOLEAN              is_super_class(OBJECT_PTR, OBJECT_PTR);
 BOOLEAN              IS_TRUE_OBJECT(OBJECT_PTR);
+call_chain_entry_t  *is_termination_block_not_invoked(OBJECT_PTR);
 OBJECT_PTR           last_cell(OBJECT_PTR);
 OBJECT_PTR           message_send(OBJECT_PTR,
 				  OBJECT_PTR,

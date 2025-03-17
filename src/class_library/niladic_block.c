@@ -89,6 +89,26 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
   return niladic_block_value(closure, cont);
 }
 
+call_chain_entry_t *is_termination_block_not_invoked(OBJECT_PTR termination_block)
+{
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
+
+  int i = count - 1;
+
+  while(i >= 0)
+  {
+    call_chain_entry_t *entry = entries[i];
+
+    if(entry->termination_blk_closure == termination_block &&
+       entry->termination_blk_invoked == false)
+      return entry;
+
+    i--;
+  }
+  return NULL;
+}
+
 OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 				OBJECT_PTR ensure_block,
 				OBJECT_PTR cont)
@@ -99,29 +119,26 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(ensure_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
-  entry->termination_blk_closure = ensure_block;
-  entry->termination_blk_invoked = false;
-
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
-				VALUE_SELECTOR,
-				convert_int_to_object(0),
+				get_symbol("ifCurtailed:_"),
+				convert_int_to_object(1),
+				ensure_block,
 				g_idclo);
 
   //if the ensure: block has already been invoked because
   //of an exception unwinding, don't invoke it again
-  if(entry->termination_blk_invoked == false)
+
+  call_chain_entry_t *e = is_termination_block_not_invoked(ensure_block);
+
+  if(e)
   {
-    entry->termination_blk_invoked = true;
+    e->termination_blk_invoked = true;
     OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					    ensure_block,
 					    VALUE_SELECTOR,
 					    convert_int_to_object(0),
 					    g_idclo);
-
-    nativefn nf3 = (nativefn)extract_native_fn(cont);
-    return nf3(cont, ret);
   }
 
   nativefn nf3 = (nativefn)extract_native_fn(cont);
@@ -210,7 +227,7 @@ void create_NiladicBlock()
 						    convert_native_fn_to_object((nativefn)niladic_block_ifcurtailed),
 						    NIL,
 						    convert_int_to_object(1));
-  
+
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;

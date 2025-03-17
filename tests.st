@@ -514,7 +514,13 @@ UnitTestFramework runExceptionTestCase: [MutualRecurTest isEven: -42] exception:
 
 classObj2 := Smalltalk createClass: (Smalltalk genSym)
 
-Smalltalk addClassMethod: #m2 toClass: classObj2 withBody: [ [Transcript show: 'executing m2'; cr. g2 := 33 ] ensure: [ 1 / 0. g1 := 42 ]]
+Smalltalk addClassMethod: #m2 toClass: classObj2 withBody: [
+  [ Transcript show: 'executing m2'; cr. g2 := 33 ]
+      ensure: [ Transcript show: 'ensuring'; cr.
+                1 / 0.
+                Transcript show: 'resuming'; cr.
+                g1 := 42 ]
+]
 
 classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
@@ -563,5 +569,14 @@ Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [
 UnitTestFramework runExceptionTestCase: [classObj1 m1] exception: ZeroDivide withID: 87
 
 UnitTestFramework runTestCase: [g2 = 42] withID: 88
+
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
+
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [
+  [^1] ensure: [ Transcript show: 'ensure'; cr ].
+  ^ 2
+]
+
+UnitTestFramework runTestCase: [(classObj1 m1) = 1] withID: 89
 
 UnitTestFramework reportStatus
