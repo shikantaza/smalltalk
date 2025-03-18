@@ -427,6 +427,7 @@ BOOLEAN is_atom(OBJECT_PTR obj)
     IS_SMALLTALK_SYMBOL_OBJECT(obj) ||
     IS_CHARACTER_OBJECT(obj)        ||
     IS_STRING_LITERAL_OBJECT(obj)   ||
+    IS_ARRAY_OBJECT(obj)            ||
     IS_TRUE_OBJECT(obj)             ||
     IS_FALSE_OBJECT(obj);
 }

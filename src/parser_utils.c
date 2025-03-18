@@ -309,7 +309,10 @@ void print_array_elements(array_elements_t *e)
   printf("array:\n#(");
   unsigned int i;
   for(i=0; i < e->nof_elements; i++)
+  {
     print_array_element(e->elements + i);
+    printf(" ");
+  }
   printf("\b)\n");
 }
 

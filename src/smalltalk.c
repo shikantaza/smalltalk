@@ -607,7 +607,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
     
       for(i=prev_count; i<prev_count + n; i++)
       {
-	obj->instance_vars->bindings[i].key = curr_cls_obj->inst_vars[prev_count - i];
+	obj->instance_vars->bindings[i].key = curr_cls_obj->inst_vars[i - prev_count];
 	obj->instance_vars->bindings[i].val = cons(NIL, NIL);
       }
     }

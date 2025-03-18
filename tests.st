@@ -579,4 +579,20 @@ Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [
 
 UnitTestFramework runTestCase: [(classObj1 m1) = 1] withID: 89
 
+Smalltalk createGlobal: #s valued: (Stack new)
+
+UnitTestFramework runTestCase: [s isEmpty] withID: 90
+
+s push: 42
+
+UnitTestFramework runTestCase: [(s top) = 42] withID: 91
+
+UnitTestFramework runNegativeTestCase: [s isEmpty] withID: 92
+
+UnitTestFramework runTestCase: [(s pop) = 42] withID: 93
+
+UnitTestFramework runTestCase: [s isEmpty] withID: 94
+
+"TODO: add test cases pertaining to OrderedCollection"
+
 UnitTestFramework reportStatus

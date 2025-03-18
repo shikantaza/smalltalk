@@ -117,6 +117,7 @@ extern OBJECT_PTR MessageNotUnderstood;
 extern OBJECT_PTR ZeroDivide;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
+extern OBJECT_PTR EmptyCollection;
 
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
@@ -341,6 +342,9 @@ void initialize_pass2()
 
   assert(get_top_level_val(get_symbol("IndexOutofBounds"), &ret));
   IndexOutofBounds = car(ret);
+
+  assert(get_top_level_val(get_symbol("EmptyCollection"), &ret));
+  EmptyCollection = car(ret);
 }
 
 void error(const char *fmt, ...)
@@ -763,8 +767,27 @@ OBJECT_PTR convert_selector_literal_to_atom(char *s)
 
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)
 {
-  error("Not implemented yet\n");
-  return NIL;
+  array_object_t *arr_obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+
+  unsigned int i, n;
+
+  n = e->nof_elements;
+
+  arr_obj->nof_elements = n;
+
+  arr_obj->elements = (OBJECT_PTR *)GC_MALLOC(n * sizeof(OBJECT_PTR));
+
+  for(i=0; i<n; i++)
+  {
+    if(e->elements[i].type == IDENTIFIER1)
+      arr_obj->elements[i] = convert_identifier_to_atom(e->elements[i].identifier);
+    else if(e->elements[i].type == LITERAL1)
+      arr_obj->elements[i] = convert_literal_to_lisp(e->elements[i].lit);
+    else
+      assert(false);
+  }
+
+  return convert_array_object_to_object_ptr(arr_obj);
 }
 
 OBJECT_PTR convert_identifier_to_atom(char *s)
