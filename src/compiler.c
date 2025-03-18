@@ -60,6 +60,7 @@ void create_Boolean();
 void create_Exception();
 void create_MonadicBlock();
 void create_Array();
+void create_OrderedCollection();
 
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
@@ -308,6 +309,8 @@ void initialize()
   create_Exception();
 
   create_Array();
+
+  create_OrderedCollection();
   
   initialize_top_level();
 

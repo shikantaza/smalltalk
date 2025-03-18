@@ -55,6 +55,8 @@ extern stack_type *g_exception_contexts;
 
 extern OBJECT_PTR nil;
 
+extern OBJECT_PTR OrderedCollection;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
@@ -118,6 +120,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Exception"), cons(Exception, NIL));
 
   add_binding_to_top_level(get_symbol("Array"), cons(Array, NIL));
+  add_binding_to_top_level(get_symbol("OrderedCollection"), cons(OrderedCollection, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -575,6 +578,9 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   
   obj->class_object = receiver;
   obj->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+
+  obj->instance_vars->count = 0;
+  obj->instance_vars->bindings = NULL;
 
   class_object_t *cls_obj = (class_object_t *)extract_ptr(receiver);
 

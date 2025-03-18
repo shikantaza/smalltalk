@@ -67,6 +67,7 @@ int                  extract_symbol_index(OBJECT_PTR);
 char                *extract_variable_string(OBJECT_PTR, BOOLEAN);
 OBJECT_PTR           fifth(OBJECT_PTR);
 
+OBJECT_PTR           get_binding(binding_env_t *, OBJECT_PTR);
 OBJECT_PTR           get_binding_val(binding_env_t *, OBJECT_PTR);
 BOOLEAN              get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
 OBJECT_PTR           get_class_object(OBJECT_PTR);
@@ -126,5 +127,5 @@ OBJECT_PTR           seventh(OBJECT_PTR);
 OBJECT_PTR           signal_exception(OBJECT_PTR);
 OBJECT_PTR           sixth(OBJECT_PTR);
 OBJECT_PTR           third(OBJECT_PTR);
-
+void                 update_binding(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 #endif

@@ -43,6 +43,11 @@ extern OBJECT_PTR Array;
 
 extern OBJECT_PTR INITIALIZE_SELECTOR;
 
+extern binding_env_t *g_top_level;
+
+extern OBJECT_PTR SELF;
+extern OBJECT_PTR SUPER;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -772,6 +777,12 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	OBJECT_PTR cons_form = list(3, car(method), reverse(ret), convert_int_to_object(0));
 	OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
+	//TODO: this should be converted into a call to message_send(),
+	//but the class lookup hierachy used by message_send() is the
+	//opposite of what is required for 'initialize'
+	put_binding_val(g_top_level, SELF, cons(obj, NIL));
+	put_binding_val(g_top_level, SUPER, cons(obj, NIL));
+
 	stack_push(g_call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, g_idclo, NIL, false));
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
@@ -785,4 +796,32 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
   }
 
   return obj;
+}
+
+void update_binding(binding_env_t *env, OBJECT_PTR key, OBJECT_PTR val)
+{
+  unsigned int i, n;
+
+  n = env->count;
+
+  for(i=0; i<n; i++)
+  {
+    if(env->bindings[i].key == key)
+    {
+      env->bindings[i].val = val;
+      return;
+    }
+  }
+
+  assert(false);
+}
+
+OBJECT_PTR get_binding(binding_env_t *env, OBJECT_PTR key)
+{
+  int i;
+  for(i=0; i<env->count; i++)
+    if(env->bindings[i].key == key)
+      return env->bindings[i].val;
+
+  return 0;
 }
