@@ -32,8 +32,11 @@ OBJECT_PTR           add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 int                  add_symbol(char *);
 char                *append_char(char *, char);
 OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);
+OBJECT_PTR           assignment_conversion(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           build_selectors_list(OBJECT_PTR);
 OBJECT_PTR           CADR(OBJECT_PTR);
 OBJECT_PTR           clone_object(OBJECT_PTR);
+OBJECT_PTR           closure_conv_transform(OBJECT_PTR);
 void                *compile_to_c(OBJECT_PTR);
 OBJECT_PTR           cons(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           convert_array_object_to_object_ptr(array_object_t *);
@@ -42,8 +45,10 @@ OBJECT_PTR           convert_class_object_to_object_ptr(class_object_t *);
 OBJECT_PTR           convert_exec_code_to_lisp(executable_code_t *);
 OBJECT_PTR           convert_fn_to_closure(nativefn);
 OBJECT_PTR           convert_int_to_object(int);
+OBJECT_PTR           convert_message_sends(OBJECT_PTR);
 OBJECT_PTR           convert_native_fn_to_object(nativefn);
 OBJECT_PTR           create_and_signal_exception(OBJECT_PTR, OBJECT_PTR);
+binding_env_t       *create_binding_env();
 call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
 					    OBJECT_PTR,
 					    OBJECT_PTR,
@@ -59,7 +64,9 @@ exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      stack_type *,
 					      OBJECT_PTR);
 OBJECT_PTR           decorate_message_selectors(OBJECT_PTR);
+OBJECT_PTR           desugar_il(OBJECT_PTR);
 BOOLEAN              exists(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           expand_bodies(OBJECT_PTR);
 OBJECT_PTR           extract_arity(OBJECT_PTR);
 nativefn             extract_native_fn(OBJECT_PTR);
 uintptr_t            extract_ptr(OBJECT_PTR);
@@ -71,6 +78,7 @@ OBJECT_PTR           get_binding(binding_env_t *, OBJECT_PTR);
 OBJECT_PTR           get_binding_val(binding_env_t *, OBJECT_PTR);
 BOOLEAN              get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
 OBJECT_PTR           get_class_object(OBJECT_PTR);
+OBJECT_PTR           get_free_variables(OBJECT_PTR);
 nativefn             get_function(void *, const char *);
 int                  get_int_value(OBJECT_PTR);
 OBJECT_PTR           get_parent_class(OBJECT_PTR);
@@ -79,9 +87,11 @@ char                *get_smalltalk_symbol_name(OBJECT_PTR);
 OBJECT_PTR           get_string_obj(char *);
 OBJECT_PTR           get_symbol(char *);
 char                *get_symbol_name(OBJECT_PTR);
+OBJECT_PTR           get_top_level_symbols();
 BOOLEAN              get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
 OBJECT_PTR           identity_function(OBJECT_PTR, ...);
 OBJECT_PTR           initialize_object();
+OBJECT_PTR           invoke_cont_on_val(OBJECT_PTR, OBJECT_PTR);
 void                 invoke_curtailed_blocks();
 BOOLEAN              IS_ARRAY_OBJECT(OBJECT_PTR);
 BOOLEAN              IS_CHARACTER_OBJECT(OBJECT_PTR);
@@ -97,6 +107,8 @@ BOOLEAN              is_super_class(OBJECT_PTR, OBJECT_PTR);
 BOOLEAN              IS_TRUE_OBJECT(OBJECT_PTR);
 call_chain_entry_t  *is_termination_block_not_invoked(OBJECT_PTR);
 OBJECT_PTR           last_cell(OBJECT_PTR);
+OBJECT_PTR           lift_transform(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           mcps_transform(OBJECT_PTR);
 OBJECT_PTR           message_send(OBJECT_PTR,
 				  OBJECT_PTR,
 				  OBJECT_PTR,
@@ -118,14 +130,21 @@ void                 print_call_chain();
 void                 print_exception_contexts();
 void                 print_object(OBJECT_PTR);
 void                 put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           ren_transform(OBJECT_PTR, binding_env_t *);
 void                 repl();
+OBJECT_PTR           repl_common();
 OBJECT_PTR           replace_method_selector(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           reverse(OBJECT_PTR);
 OBJECT_PTR           setcdr(OBJECT_PTR, OBJECT_PTR);
 void                 set_heap(uintptr_t, unsigned int, OBJECT_PTR);
 OBJECT_PTR           seventh(OBJECT_PTR);
 OBJECT_PTR           signal_exception(OBJECT_PTR);
+OBJECT_PTR           simplify_il(OBJECT_PTR);
 OBJECT_PTR           sixth(OBJECT_PTR);
 OBJECT_PTR           third(OBJECT_PTR);
+OBJECT_PTR           translate_to_il(OBJECT_PTR);
 void                 update_binding(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
+int                  yyparse();
+int                  yy_scan_string(char *);
+
 #endif

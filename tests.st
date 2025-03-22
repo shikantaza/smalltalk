@@ -593,6 +593,14 @@ UnitTestFramework runTestCase: [(s pop) = 42] withID: 93
 
 UnitTestFramework runTestCase: [s isEmpty] withID: 94
 
-"TODO: add test cases pertaining to OrderedCollection"
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
+
+Smalltalk addInstanceMethod: #m1 toClass: classObj1 withBodyStr: '[ ^ 42]'
+
+UnitTestFramework runTestCase: [(classObj1 new m1) = 42] withID: 95
+
+Smalltalk addClassMethod: #m2 toClass: classObj1 withBodyStr: '[ ^ 33]'
+
+UnitTestFramework runTestCase: [(classObj1 m2) = 33] withID: 96
 
 UnitTestFramework reportStatus

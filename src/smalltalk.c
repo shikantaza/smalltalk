@@ -19,10 +19,14 @@ binding_env_t *g_top_level;
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
 OBJECT_PTR nil;
+OBJECT_PTR Compiler;
+OBJECT_PTR CompileError;
 
 OBJECT_PTR g_compile_time_method_selector;
 
 int smalltalk_gensym_count = 0;
+
+OBJECT_PTR CompileError;
 
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
@@ -56,6 +60,11 @@ extern stack_type *g_exception_contexts;
 extern OBJECT_PTR nil;
 
 extern OBJECT_PTR OrderedCollection;
+
+extern char **g_string_literals;
+extern executable_code_t *g_exp;
+
+extern OBJECT_PTR g_message_selector;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -121,6 +130,7 @@ void initialize_top_level()
 
   add_binding_to_top_level(get_symbol("Array"), cons(Array, NIL));
   add_binding_to_top_level(get_symbol("OrderedCollection"), cons(OrderedCollection, NIL));
+  add_binding_to_top_level(get_symbol("Compiler"), cons(Compiler, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -344,6 +354,79 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   nativefn nf = (nativefn)extract_native_fn(cont);
 
   return nf(cont, class_obj);
+}
+
+OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
+				   OBJECT_PTR selector,
+				   OBJECT_PTR code_str,
+				   OBJECT_PTR cont,
+				   BOOLEAN instance_method)
+{
+  OBJECT_PTR ret;
+
+  executable_code_t *prev_exp = g_exp;
+
+  char *buf = GC_strdup(g_string_literals[code_str >> OBJECT_SHIFT]);
+
+  yy_scan_string(buf);
+
+  if(!yyparse())
+  {
+    OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+
+    exp = decorate_message_selectors(exp);
+
+    g_exp = prev_exp;
+
+    if(instance_method)
+      ret = add_instance_method(class_obj, selector, exp);
+    else
+      ret = add_class_method(class_obj, selector, exp);
+
+    return invoke_cont_on_val(cont, ret);
+  }
+  else
+  {
+    g_exp = prev_exp;
+
+    return create_and_signal_exception(CompileError, cont);
+  }
+}
+
+OBJECT_PTR add_instance_method_str(OBJECT_PTR closure,
+				   OBJECT_PTR selector,
+				   OBJECT_PTR class_obj,
+				   OBJECT_PTR code_str,
+				   OBJECT_PTR cont)
+{
+  if(!IS_CLASS_OBJECT(class_obj))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(selector))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_STRING_LITERAL_OBJECT(code_str))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  return add_method_str_internal(class_obj, selector, code_str, cont, true);
+}
+
+OBJECT_PTR add_class_method_str(OBJECT_PTR closure,
+				OBJECT_PTR selector,
+				OBJECT_PTR class_obj,
+				OBJECT_PTR code_str,
+				OBJECT_PTR cont)
+{
+  if(!IS_CLASS_OBJECT(class_obj))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(selector))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_STRING_LITERAL_OBJECT(code_str))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  return add_method_str_internal(class_obj, selector, code_str, cont, false);
 }
 
 OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
@@ -743,6 +826,50 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
   return ret;
 }
 
+OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
+			  OBJECT_PTR source_buffer,
+			  OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_STRING_LITERAL_OBJECT(source_buffer));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR ret;
+
+  executable_code_t *prev_exp = g_exp;
+
+  char *buf = GC_strdup(g_string_literals[source_buffer >> OBJECT_SHIFT]);
+
+  yy_scan_string(buf);
+
+  if(!yyparse())
+  {
+    OBJECT_PTR closure_form = repl_common();
+
+    if(closure_form != NIL)
+    {
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
+
+      nativefn1 nf1 = (nativefn1)extract_native_fn(closure_form);
+
+      ret = nf1(closure_form, g_idclo);
+    }
+    else
+      ret = NIL;
+
+    g_exp = prev_exp;
+
+    nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+    return nf(cont, ret);
+  }
+  else
+  {
+    g_exp = prev_exp;
+    return create_and_signal_exception(CompileError, cont);
+  }
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -770,7 +897,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 7;
+  cls_obj->class_methods->count = 10;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -817,6 +944,24 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)smalltalk_gensym),
 						 NIL,
 						 convert_int_to_object(0));
+
+  cls_obj->class_methods->bindings[7].key = get_symbol("addInstanceMethod:toClass:withBodyStr:_");
+  cls_obj->class_methods->bindings[7].val = list(3,
+						 convert_native_fn_to_object((nativefn)add_instance_method_str),
+						 NIL,
+						 convert_int_to_object(3));
+
+  cls_obj->class_methods->bindings[8].key = get_symbol("addClassMethod:toClass:withBodyStr:_");
+  cls_obj->class_methods->bindings[8].val = list(3,
+						 convert_native_fn_to_object((nativefn)add_class_method_str),
+						 NIL,
+						 convert_int_to_object(3));
+
+  cls_obj->class_methods->bindings[9].key = get_symbol("eval:_");
+  cls_obj->class_methods->bindings[9].val = list(3,
+						 convert_native_fn_to_object((nativefn)smalltalk_eval),
+						 NIL,
+						 convert_int_to_object(1));
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
@@ -954,4 +1099,282 @@ void print_call_chain()
     printf("\n");
     i--;
   }
+}
+
+OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
+				 OBJECT_PTR source_buffer,
+				 OBJECT_PTR pass,
+				 OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  if(!IS_STRING_LITERAL_OBJECT(source_buffer))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(pass))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  executable_code_t *prev_exp = g_exp;
+
+  OBJECT_PTR prev_message_selectors =   g_message_selector;
+
+  char *buf = GC_strdup(g_string_literals[source_buffer >> OBJECT_SHIFT]);
+
+  yy_scan_string(buf);
+
+  if(!yyparse())
+  {
+    OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+
+    if(!strcmp(get_smalltalk_symbol_name(pass), "decorateMessageSelectors"))
+      exp = decorate_message_selectors(exp);
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "expandBodies"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+      exp = expand_bodies(exp);
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "convertMessageSends"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+      exp = convert_message_sends(
+              expand_bodies(exp));
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "assignmentConversion"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "translateToIL"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = translate_to_il(exp);
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "desugarIL"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = desugar_il(
+	      translate_to_il(exp));
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "renamingTransform"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = ren_transform(desugar_il(
+	                    translate_to_il(exp)),
+			  create_binding_env());
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "simplifyIL"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = ren_transform(desugar_il(
+	                    translate_to_il(exp)),
+			  create_binding_env());
+
+      exp = simplify_il(exp);
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "cpsTransform"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = ren_transform(desugar_il(
+	                    translate_to_il(exp)),
+			  create_binding_env());
+
+      exp = mcps_transform(
+	      simplify_il(exp));
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "closureConvTransform"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = ren_transform(desugar_il(
+	                    translate_to_il(exp)),
+			  create_binding_env());
+
+      exp = closure_conv_transform(
+	      mcps_transform(
+	        simplify_il(exp)));
+    }
+    else if(!strcmp(get_smalltalk_symbol_name(pass), "liftTransform"))
+    {
+      exp = decorate_message_selectors(exp);
+      g_message_selector = build_selectors_list(exp);
+
+      OBJECT_PTR temp = convert_message_sends(
+                          expand_bodies(exp));
+
+      exp = assignment_conversion(temp,
+				  concat(2,
+					 get_top_level_symbols(),
+					 get_free_variables(temp)));
+      exp = ren_transform(desugar_il(
+	                    translate_to_il(exp)),
+			  create_binding_env());
+
+      exp = closure_conv_transform(
+	      mcps_transform(
+	        simplify_il(exp)));
+
+      exp = lift_transform(exp, NIL);
+    }
+    else
+      create_and_signal_exception(InvalidArgument, cont);
+
+    g_exp = prev_exp;
+    g_message_selector = prev_message_selectors;
+
+    nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+    return nf(cont, exp);
+  }
+  else
+  {
+    g_exp = prev_exp;
+    g_message_selector = prev_message_selectors;
+    return create_and_signal_exception(CompileError, cont);
+  }
+}
+
+//Compiler>>compile
+OBJECT_PTR compiler_compile(OBJECT_PTR closure,
+			    OBJECT_PTR source_buffer,
+			    OBJECT_PTR cont)
+{
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_STRING_LITERAL_OBJECT(source_buffer));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  executable_code_t *prev_exp = g_exp;
+
+  char *buf = GC_strdup(g_string_literals[source_buffer >> OBJECT_SHIFT]);
+
+  yy_scan_string(buf);
+
+  if(!yyparse())
+  {
+    OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+
+    exp = decorate_message_selectors(exp);
+
+    OBJECT_PTR res = apply_lisp_transforms(exp);
+
+    g_exp = prev_exp;
+
+    nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+    return nf(cont, res);
+  }
+  else
+  {
+    g_exp = prev_exp;
+    return create_and_signal_exception(CompileError, cont);
+  }
+}
+
+void create_Compiler()
+{
+  class_object_t *cls_obj;
+
+  if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
+  {
+    printf("create_Compiler(): Unable to allocate memory\n");
+    exit(1);
+  }
+
+  cls_obj->parent_class_object = Object;
+  cls_obj->name = GC_strdup("Compiler");
+
+  cls_obj->nof_instances = 0;
+  cls_obj->instances = NULL;
+
+  cls_obj->nof_instance_vars = 0;
+  cls_obj->inst_vars = NULL;
+
+  cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->shared_vars->count = 0;
+
+  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods->count = 0;
+  cls_obj->instance_methods->bindings = NULL;
+
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods->count = 2;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+
+  cls_obj->class_methods->bindings[0].key = get_symbol("compile:_");
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)compiler_compile),
+						 NIL,
+						 convert_int_to_object(1));
+
+  cls_obj->class_methods->bindings[1].key = get_symbol("compile:pass:_");
+  cls_obj->class_methods->bindings[1].val = list(3,
+						 convert_native_fn_to_object((nativefn)compiler_compile_pass),
+						 NIL,
+						 convert_int_to_object(2));
+
+  Compiler =  convert_class_object_to_object_ptr(cls_obj);
 }

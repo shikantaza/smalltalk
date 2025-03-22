@@ -1133,8 +1133,8 @@ int main()
 
   exit(0);    
 }
-  
-void repl()
+
+OBJECT_PTR repl_common()
 {
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
@@ -1178,25 +1178,39 @@ void repl()
     else
     {
       printf("Unbound variable: %s\n", get_symbol_name(closed_val));
-      return;
+      return NIL;
     }
   }  
 
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
-  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
+  return closure_form;
+}
 
-  nativefn1 nf1 = (nativefn1)nf;
+void repl()
+{
+  OBJECT_PTR closure_form = repl_common();
+
+  OBJECT_PTR ret;
+
+  if(closure_form != NIL)
+  {
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
+
+    nativefn1 nf1 = (nativefn1)extract_native_fn(closure_form);
+
+    ret = nf1(closure_form, g_idclo);
+  }
+  else
+    ret = NIL;
 
   if(g_loading_core_library == false)
   {
     printf("\n");
-    print_object(nf1(closure_form, g_idclo));
+    print_object(ret);
     printf("\n");
   }
-  else
-    nf1(closure_form, g_idclo);    
 }
 
 //this too could have been brought under

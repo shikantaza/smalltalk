@@ -38,7 +38,7 @@ OBJECT_PTR convert_binary_selector_to_atom(char *);
 OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *);
 
 OBJECT_PTR expand_body(OBJECT_PTR);
-OBJECT_PTR assignment_conversion(OBJECT_PTR);
+OBJECT_PTR assignment_conversion(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR translate_to_il(OBJECT_PTR);
 OBJECT_PTR desugar_il(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
@@ -47,7 +47,7 @@ OBJECT_PTR ren_transform(OBJECT_PTR, binding_env_t *);
 OBJECT_PTR simplify_il(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR closure_conv_transform(OBJECT_PTR);
-OBJECT_PTR lift_transform(OBJECT_PTR);
+OBJECT_PTR lift_transform(OBJECT_PTR,OBJECT_PTR);
 
 void initialize_top_level();
 void create_Object();
@@ -61,6 +61,7 @@ void create_Exception();
 void create_MonadicBlock();
 void create_Array();
 void create_OrderedCollection();
+void create_Compiler();
 
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
@@ -118,6 +119,7 @@ extern OBJECT_PTR ZeroDivide;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR EmptyCollection;
+extern OBJECT_PTR CompileError;
 
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
@@ -313,6 +315,8 @@ void initialize()
 
   create_OrderedCollection();
   
+  create_Compiler();
+
   initialize_top_level();
 
   initialize_frequently_used_selectors();
@@ -345,6 +349,9 @@ void initialize_pass2()
 
   assert(get_top_level_val(get_symbol("EmptyCollection"), &ret));
   EmptyCollection = car(ret);
+
+  assert(get_top_level_val(get_symbol("CompileError"), &ret));
+  CompileError = car(ret);
 }
 
 void error(const char *fmt, ...)
@@ -832,6 +839,13 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
                      NULL);
 }
 
+OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
+{
+  assert(IS_CLOSURE_OBJECT(cont));
 
+  nativefn1 nf = (nativefn1)extract_native_fn(cont);
+
+  return nf(cont, val);
+}
 
 

@@ -39,3 +39,5 @@ Smalltalk addInstanceMethod: #top toClass: Stack withBody: [
     ifTrue:  [EmptyCollection new signal]
     ifFalse: [ ^ coll at: (coll size)]
 ]
+
+Smalltalk createClass: #CompileError parentClass: Error
