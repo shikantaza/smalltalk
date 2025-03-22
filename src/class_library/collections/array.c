@@ -17,7 +17,7 @@ extern binding_env_t *g_top_level;
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
-extern OBJECT_PTR nil;
+extern OBJECT_PTR Nil;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR g_idclo;
@@ -49,7 +49,7 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
   int i;
 
   for(i=0; i<count; i++)
-    obj->elements[i] = nil;
+    obj->elements[i] = NIL;
 
   assert(IS_CLOSURE_OBJECT(cont));
 

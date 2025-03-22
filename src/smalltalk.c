@@ -18,7 +18,7 @@ binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
 OBJECT_PTR Smalltalk;
-OBJECT_PTR nil;
+OBJECT_PTR Nil;
 OBJECT_PTR Compiler;
 OBJECT_PTR CompileError;
 
@@ -56,8 +56,6 @@ extern OBJECT_PTR g_msg_snd_super_closure;
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
 extern stack_type *g_exception_contexts;
-
-extern OBJECT_PTR nil;
 
 extern OBJECT_PTR OrderedCollection;
 
@@ -115,7 +113,7 @@ void initialize_top_level()
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
-  add_binding_to_top_level(get_symbol("nil"), cons(nil, NIL));
+  add_binding_to_top_level(get_symbol("nil"), cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
   add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
   add_binding_to_top_level(get_symbol("MonadicBlock"), cons(MonadicBlock, NIL));
@@ -702,8 +700,8 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   OBJECT_PTR ret1 = initialize_object(obj_ptr);
 
-  if(ret1 == nil)
-    return nil;
+  if(ret1 == NIL)
+    return NIL;
 
   //add the new instance to the instances mapped to the class
   cls_obj->nof_instances++;
@@ -763,18 +761,18 @@ void create_Object()
   cls_obj->shared_vars = NULL;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->instance_methods->count = 0;
-  cls_obj->instance_methods->bindings = NULL;
+  cls_obj->instance_methods->count = 1;
+  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
   
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->instance_methods->bindings[0].key = get_symbol("=_");
+  cls_obj->instance_methods->bindings[0].val = list(3,
+						    convert_native_fn_to_object((nativefn)object_eq),
+						    NIL,
+						    convert_int_to_object(1));
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("=_");
-  cls_obj->class_methods->bindings[0].val = list(3,
-						 convert_native_fn_to_object((nativefn)object_eq),
-						 NIL,
-						 convert_int_to_object(1));  
+  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->class_methods->count = 0;
+  cls_obj->class_methods->bindings = NULL;
 
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
@@ -804,7 +802,7 @@ OBJECT_PTR create_global(OBJECT_PTR closure,
 			 OBJECT_PTR global_sym,
 			 OBJECT_PTR cont)
 {
-  return create_global_valued(closure, global_sym, nil, cont);
+  return create_global_valued(closure, global_sym, NIL, cont);
 }
 
 OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
@@ -1027,10 +1025,10 @@ OBJECT_PTR nil_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
   //TODO: revisit after addding strings
   printf("nil");
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
-  return nf(cont, nil);
+  return nf(cont, NIL);
 }
 
-void create_nil()
+void create_Nil()
 {
   class_object_t *cls_obj;
 
@@ -1053,20 +1051,20 @@ void create_nil()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 0;    
-  cls_obj->instance_methods->bindings = NULL;
+  cls_obj->instance_methods->count = 1;
+  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+
+  cls_obj->instance_methods->bindings[0].key = get_symbol("printString_");
+  cls_obj->instance_methods->bindings[0].val = list(3,
+						    convert_native_fn_to_object((nativefn)nil_print_string),
+						    NIL,
+						    convert_int_to_object(0));
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->count = 0;
+  cls_obj->class_methods->bindings = NULL;
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("printString_");
-  cls_obj->class_methods->bindings[0].val = list(3,
-						 convert_native_fn_to_object((nativefn)nil_print_string),
-						 NIL,
-						 convert_int_to_object(0));
-
-  nil =  convert_class_object_to_object_ptr(cls_obj);
+  Nil =  convert_class_object_to_object_ptr(cls_obj);
 }
 
 void print_call_chain()

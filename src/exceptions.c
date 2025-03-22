@@ -49,7 +49,7 @@ extern OBJECT_PTR Object;
 extern stack_type *g_call_chain;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
-extern OBJECT_PTR nil;
+extern OBJECT_PTR Nil;
 
 extern OBJECT_PTR VALUE_SELECTOR;
 extern OBJECT_PTR VALUE1_SELECTOR;
@@ -368,7 +368,7 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
   
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  return nil;
+  return NIL;
 }
 
 OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -596,7 +596,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  return nil;
+  return NIL;
 }
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)

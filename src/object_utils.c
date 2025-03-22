@@ -22,7 +22,7 @@ extern OBJECT_PTR Integer;
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
 
-extern OBJECT_PTR nil;
+extern OBJECT_PTR Nil;
 extern OBJECT_PTR Boolean;
 
 extern char **g_string_literals;
@@ -36,8 +36,6 @@ extern OBJECT_PTR Object;
 extern OBJECT_PTR g_idclo;
 
 extern stack_type *g_call_chain;
-
-extern OBJECT_PTR nil;
 
 extern OBJECT_PTR Array;
 
@@ -344,7 +342,7 @@ void print_cons_object(OBJECT_PTR obj)
 
 void print_object(OBJECT_PTR obj_ptr)
 {
-  if(obj_ptr == nil)
+  if(obj_ptr == NIL)
     fprintf(stdout, "nil");
   else if(IS_SYMBOL_OBJECT(obj_ptr))
     fprintf(stdout, "%s", get_symbol_name(obj_ptr));
@@ -592,7 +590,7 @@ OBJECT_PTR create_closure(OBJECT_PTR arg_count, OBJECT_PTR count1, nativefn fn, 
 OBJECT_PTR get_class_object(OBJECT_PTR obj)
 {
   if(obj == NIL)
-    return nil;
+    return Nil;
   else if(IS_SYMBOL_OBJECT(obj))
     return Symbol;
   else if(IS_INTEGER_OBJECT(obj))
@@ -614,6 +612,8 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
   }
   else if(IS_ARRAY_OBJECT(obj))
     return Array;
+  else if(IS_CONS_OBJECT(obj)) //TODO: create a proper class for CONS objects.
+    return Object;             //CONS objects are returned by Compiler>>compile
   else
     return ((object_t *)extract_ptr(obj))->class_object;
 }
@@ -788,8 +788,8 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 
-	if(ret1 == nil)
-	  return nil;
+	if(ret1 == NIL)
+	  return NIL;
 
 	break;
       }

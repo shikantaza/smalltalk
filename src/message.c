@@ -19,7 +19,7 @@ extern OBJECT_PTR SELF;
 extern OBJECT_PTR SUPER;
 extern OBJECT_PTR Object;
 extern binding_env_t *g_top_level;
-extern OBJECT_PTR nil;
+extern OBJECT_PTR Nil;
 
 extern OBJECT_PTR MNU_SYMBOL;
 
@@ -471,7 +471,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       asm("addq $8, %%rsp\n\t" : : : );
   }
 
-  OBJECT_PTR retval = nil;
+  OBJECT_PTR retval = NIL;
 
   asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
 

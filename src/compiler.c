@@ -52,7 +52,7 @@ OBJECT_PTR lift_transform(OBJECT_PTR,OBJECT_PTR);
 void initialize_top_level();
 void create_Object();
 void create_Smalltalk();
-void create_nil();
+void create_Nil();
 void create_Transcript();
 void create_Integer();
 void create_NiladicBlock();
@@ -112,7 +112,7 @@ extern stack_type *g_exception_contexts;
 extern OBJECT_PTR g_compile_time_method_selector;
 extern stack_type *g_exception_environment;
 extern char **g_string_literals;
-extern OBJECT_PTR nil;
+extern OBJECT_PTR Nil;
 extern OBJECT_PTR Error;
 extern OBJECT_PTR MessageNotUnderstood;
 extern OBJECT_PTR ZeroDivide;
@@ -295,7 +295,7 @@ void initialize()
   
   create_Object();
   create_Smalltalk();
-  create_nil();
+  create_Nil();
   create_Transcript();
   
   //this was initially after the call to
@@ -401,7 +401,7 @@ OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *t)
   OBJECT_PTR res = NIL;
 
   for(i=0; i < t->nof_temporaries; i++)
-    res = cons(list(2, convert_identifier_to_atom(t->temporaries[i]), nil), res);
+    res = cons(list(2, convert_identifier_to_atom(t->temporaries[i]), NIL), res);
 
   return reverse(res);
 }

@@ -165,7 +165,7 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
 
   len += sprintf(buf+len, "set_most_recent_closure(%s);\n", closure_name);
 
-  len += sprintf(buf+len, "uintptr_t nil = 17;\n");
+  len += sprintf(buf+len, "uintptr_t nil = 1;\n");
 
   OBJECT_PTR body = CDDR(second(lambda_form));
 
@@ -248,7 +248,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
 
     if(primitive_call && rest == NIL)
     {
-      len += sprintf(buf+len, "17)");
+      len += sprintf(buf+len, "1)");
     }
     else
     {
