@@ -239,11 +239,11 @@ void create_message_send_super_closure()
 
 void initialize_frequently_used_selectors()
 {
-  VALUE_SELECTOR = get_symbol("value_");
-  VALUE1_SELECTOR = get_symbol("value:_");
-  SIGNAL_SELECTOR = get_symbol("signal_");
-  ON_DO_SELECTOR = get_symbol("on:do:_");
-  INITIALIZE_SELECTOR = get_symbol("initialize_");
+  VALUE_SELECTOR = get_symbol("_value");
+  VALUE1_SELECTOR = get_symbol("_value:");
+  SIGNAL_SELECTOR = get_symbol("_signal");
+  ON_DO_SELECTOR = get_symbol("_on:do:");
+  INITIALIZE_SELECTOR = get_symbol("_initialize");
   MNU_SYMBOL = get_symbol("MessageNotUnderstood");
 }
 

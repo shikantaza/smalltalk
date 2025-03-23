@@ -52,7 +52,7 @@ void create_MonadicBlock()
   cls_obj->instance_methods->count = 1;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("value:_");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("_value:");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)monadic_block_value),
 						    NIL,

@@ -191,7 +191,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
   
-  cls_obj->class_methods->bindings[0].key = get_symbol("new_");
+  cls_obj->class_methods->bindings[0].key = get_symbol("_new");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)new_object),
 						 NIL,
@@ -429,7 +429,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  g_compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  g_compile_time_method_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
 
   OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
@@ -542,7 +542,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  g_compile_time_method_selector = get_symbol(append_char(get_smalltalk_symbol_name(selector),'_'));
+  g_compile_time_method_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
   
   OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
@@ -750,7 +750,7 @@ void create_Object()
   cls_obj->instance_methods->count = 1;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
   
-  cls_obj->instance_methods->bindings[0].key = get_symbol("=_");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("_=");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)object_eq),
 						    NIL,
@@ -879,61 +879,61 @@ void create_Smalltalk()
   //addInstanceMethod and addClassMethod cannot be brought into
   //the Smalltalk class because we don't have a way to 'quote' blocks
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("createClass:parentClass:_");
+  cls_obj->class_methods->bindings[0].key = get_symbol("_createClass:parentClass:");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_class),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[1].key = get_symbol("createClass:_");
+  cls_obj->class_methods->bindings[1].key = get_symbol("_createClass:");
   cls_obj->class_methods->bindings[1].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
 						 NIL,
 						 convert_int_to_object(1));
 
-  cls_obj->class_methods->bindings[2].key = get_symbol("addInstanceVariable:toClass:_");
+  cls_obj->class_methods->bindings[2].key = get_symbol("_addInstanceVariable:toClass:");
   cls_obj->class_methods->bindings[2].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_instance_var),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[3].key = get_symbol("addClassVariable:toClass:_");
+  cls_obj->class_methods->bindings[3].key = get_symbol("_addClassVariable:toClass:");
   cls_obj->class_methods->bindings[3].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_class_var),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[4].key = get_symbol("createGlobal:valued:_");
+  cls_obj->class_methods->bindings[4].key = get_symbol("_createGlobal:valued:");
   cls_obj->class_methods->bindings[4].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_global_valued),
 						 NIL,
 						 convert_int_to_object(2));
 
-  cls_obj->class_methods->bindings[5].key = get_symbol("createGlobal:_");
+  cls_obj->class_methods->bindings[5].key = get_symbol("_createGlobal:");
   cls_obj->class_methods->bindings[5].val = list(3,
 						 convert_native_fn_to_object((nativefn)create_global),
 						 NIL,
 						 convert_int_to_object(1));
 
-  cls_obj->class_methods->bindings[6].key = get_symbol("genSym_");
+  cls_obj->class_methods->bindings[6].key = get_symbol("_genSym");
   cls_obj->class_methods->bindings[6].val = list(3,
 						 convert_native_fn_to_object((nativefn)smalltalk_gensym),
 						 NIL,
 						 convert_int_to_object(0));
 
-  cls_obj->class_methods->bindings[7].key = get_symbol("addInstanceMethod:toClass:withBodyStr:_");
+  cls_obj->class_methods->bindings[7].key = get_symbol("_addInstanceMethod:toClass:withBodyStr:");
   cls_obj->class_methods->bindings[7].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_instance_method_str),
 						 NIL,
 						 convert_int_to_object(3));
 
-  cls_obj->class_methods->bindings[8].key = get_symbol("addClassMethod:toClass:withBodyStr:_");
+  cls_obj->class_methods->bindings[8].key = get_symbol("_addClassMethod:toClass:withBodyStr:");
   cls_obj->class_methods->bindings[8].val = list(3,
 						 convert_native_fn_to_object((nativefn)add_class_method_str),
 						 NIL,
 						 convert_int_to_object(3));
 
-  cls_obj->class_methods->bindings[9].key = get_symbol("eval:_");
+  cls_obj->class_methods->bindings[9].key = get_symbol("_eval:");
   cls_obj->class_methods->bindings[9].val = list(3,
 						 convert_native_fn_to_object((nativefn)smalltalk_eval),
 						 NIL,
@@ -1031,7 +1031,7 @@ void create_Nil()
   cls_obj->instance_methods->count = 1;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("printString_");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("_printString");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)nil_print_string),
 						    NIL,
@@ -1335,13 +1335,13 @@ void create_Compiler()
   cls_obj->class_methods->count = 2;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("compile:_");
+  cls_obj->class_methods->bindings[0].key = get_symbol("_compile:");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)compiler_compile),
 						 NIL,
 						 convert_int_to_object(1));
 
-  cls_obj->class_methods->bindings[1].key = get_symbol("compile:pass:_");
+  cls_obj->class_methods->bindings[1].key = get_symbol("_compile:pass:");
   cls_obj->class_methods->bindings[1].val = list(3,
 						 convert_native_fn_to_object((nativefn)compiler_compile_pass),
 						 NIL,

@@ -117,7 +117,7 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
-				get_symbol("ifCurtailed:_"),
+				get_symbol("_ifCurtailed:"),
 				convert_int_to_object(1),
 				ensure_block,
 				g_idclo);
@@ -200,25 +200,25 @@ void create_NiladicBlock()
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("value_");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("_value");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_value),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("on:do:_");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("_on:do:");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_on_do),
 						    NIL,
 						    convert_int_to_object(2));
   
-  cls_obj->instance_methods->bindings[3].key = get_symbol("ensure:_");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("_ensure:");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_ensure),
 						    NIL,
 						    convert_int_to_object(1));
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("ifCurtailed:_");
+  cls_obj->instance_methods->bindings[4].key = get_symbol("_ifCurtailed:");
   cls_obj->instance_methods->bindings[4].val = list(3,
 						    convert_native_fn_to_object((nativefn)niladic_block_ifcurtailed),
 						    NIL,

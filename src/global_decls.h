@@ -125,6 +125,7 @@ OBJECT_PTR           new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           niladic_block_value(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           nth(OBJECT_PTR, OBJECT_PTR);
 uintptr_t            object_alloc(int, int);
+char                *prepend_char(char *, char);
 BOOLEAN              primop(OBJECT_PTR);
 void                 print_call_chain();
 void                 print_exception_contexts();

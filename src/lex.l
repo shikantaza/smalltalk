@@ -60,12 +60,12 @@ void pop_yyin()
 
 \"[^\"]*\"   /* ignore comments */
 
-[a-zA-Z_][a-zA-Z_0-9]* {
+[a-zA-Z][a-zA-Z_0-9]* {
   yylval.default_value = GC_strdup(yytext);
   return T_IDENTIFIER;
 }
 
-[a-zA-Z_][a-zA-Z_0-9]*: {
+[a-zA-Z][a-zA-Z_0-9]*: {
   yylval.default_value = GC_strdup(yytext);
   return T_KEYWORD;
 }
@@ -115,7 +115,7 @@ $. {
   return T_HASHED_STRING; 
 }
 
-\#([a-zA-Z_][a-zA-Z_0-9]*|(!|%|&|\*|\+|,|\/|<|=|>|\?|@|\\|~|\||-)+|([a-zA-Z_][a-zA-Z_0-9]*:)+) {
+\#([a-zA-Z][a-zA-Z_0-9]*|(!|%|&|\*|\+|,|\/|<|=|>|\?|@|\\|~|\||-)+|([a-zA-Z_][a-zA-Z_0-9]*:)+) {
   yylval.default_value = GC_strdup(yytext);
   return T_QUOTED_SELECTOR;
 }

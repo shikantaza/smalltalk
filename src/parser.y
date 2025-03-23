@@ -912,7 +912,7 @@ void repl2()
     repl();
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
-	  third(third(exp)) == get_symbol("addInstanceMethod:toClass:withBody:_"))
+	  third(third(exp)) == get_symbol("_addInstanceMethod:toClass:withBody:"))
   {
     if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
     {
@@ -961,7 +961,7 @@ void repl2()
   }
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
-	  third(third(exp)) == get_symbol("addClassMethod:toClass:withBody:_"))
+	  third(third(exp)) == get_symbol("_addClassMethod:toClass:withBody:"))
   {
     if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
     {
@@ -1231,7 +1231,7 @@ BOOLEAN is_create_class_exp(OBJECT_PTR exp)
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
-     third(third_obj) == get_symbol("createClass:parentClass:_") &&
+     third(third_obj) == get_symbol("_createClass:parentClass:") &&
      IS_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
@@ -1268,12 +1268,12 @@ BOOLEAN is_add_var_exp(OBJECT_PTR exp, char *msg)
 
 BOOLEAN is_add_instance_var_exp(OBJECT_PTR exp)
 {
-  return is_add_var_exp(exp, "addInstanceVariable:toClass:_");
+  return is_add_var_exp(exp, "_addInstanceVariable:toClass:");
 }
 
 BOOLEAN is_add_class_var_exp(OBJECT_PTR exp)
 {
-  return is_add_var_exp(exp, "addClassVariable:toClass:_");
+  return is_add_var_exp(exp, "_addClassVariable:toClass:");
 }
 
 BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
@@ -1305,12 +1305,12 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
 
 BOOLEAN is_add_instance_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addInstanceMethod:toClass:withBody:_");
+  return is_add_method_exp(exp, "_addInstanceMethod:toClass:withBody:");
 }
 
 BOOLEAN is_add_class_method_exp(OBJECT_PTR exp)
 {
-  return is_add_method_exp(exp, "addClassMethod:toClass:withBody:_");
+  return is_add_method_exp(exp, "_addClassMethod:toClass:withBody:");
 }
 
 #endif

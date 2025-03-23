@@ -163,25 +163,25 @@ void create_Array()
   cls_obj->instance_methods->count = 4;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("at:put:_");
+  cls_obj->instance_methods->bindings[0].key = get_symbol("_at:put:");
   cls_obj->instance_methods->bindings[0].val = list(3,
 						    convert_native_fn_to_object((nativefn)array_at_put),
 						    NIL,
 						    convert_int_to_object(2));
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("at:_");
+  cls_obj->instance_methods->bindings[1].key = get_symbol("_at:");
   cls_obj->instance_methods->bindings[1].val = list(3,
 						    convert_native_fn_to_object((nativefn)array_at),
 						    NIL,
 						    convert_int_to_object(1));
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("size_");
+  cls_obj->instance_methods->bindings[2].key = get_symbol("_size");
   cls_obj->instance_methods->bindings[2].val = list(3,
 						    convert_native_fn_to_object((nativefn)array_size),
 						    NIL,
 						    convert_int_to_object(0));
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("do:_");
+  cls_obj->instance_methods->bindings[3].key = get_symbol("_do:");
   cls_obj->instance_methods->bindings[3].val = list(3,
 						    convert_native_fn_to_object((nativefn)array_do),
 						    NIL,
@@ -191,7 +191,7 @@ void create_Array()
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("new:_");
+  cls_obj->class_methods->bindings[0].key = get_symbol("_new:");
   cls_obj->class_methods->bindings[0].val = list(3,
 						 convert_native_fn_to_object((nativefn)array_new),
 						 NIL,

@@ -154,7 +154,7 @@ OBJECT_PTR decorate_message_selectors(OBJECT_PTR res)
 		  list(3,
 		       MESSAGE_SEND,
 		       decorate_message_selectors(second(res)),
-		       get_symbol(append_char(get_symbol_name(third(res)),'_'))),
+		       get_symbol(prepend_char(get_symbol_name(third(res)),'_'))),
 		  map(decorate_message_selectors,CDDDR(res)));
   else
     return map(decorate_message_selectors, res);

@@ -219,3 +219,19 @@ char *append_char(char *s, char a)
 
   return ret;
 }
+
+char *prepend_char(char *s, char a)
+{
+  unsigned int n;
+
+  n = strlen(s);
+
+  char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
+
+  strcpy(ret+1, s);
+
+  ret[0] = a;
+  ret[n+1] = '\0';
+
+  return ret;
+}
