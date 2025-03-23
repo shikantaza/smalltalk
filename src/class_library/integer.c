@@ -39,9 +39,7 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
+  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
 }
 
 OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -59,9 +57,7 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
+  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
 }
 
 OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -79,9 +75,7 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
+  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
 }
 
 OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -102,9 +96,7 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   if(get_int_value(arg) == 0)
     return create_and_signal_exception(ZeroDivide, cont);
   
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
+  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
 }
 
 //TODO: this can be subsumed by Object>>=
@@ -120,9 +112,7 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, (receiver == arg) ? TRUE : FALSE );
+  return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
 OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -138,9 +128,7 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
+  return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
 }
 
 void create_Integer()

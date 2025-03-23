@@ -201,9 +201,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
 
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
-  return nf(cont, class_object);
+  return invoke_cont_on_val(cont, class_object);
 }
 
 OBJECT_PTR create_class_no_parent_class(OBJECT_PTR closure,
@@ -286,9 +284,7 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
     inst->instance_vars->bindings[inst->instance_vars->count].val = NIL;
   }
 
-  nativefn nf = (nativefn)extract_native_fn(cont);
-  
-  return nf(cont, class_obj);
+  return invoke_cont_on_val(cont, class_obj);
 }
 
 OBJECT_PTR add_class_var(OBJECT_PTR closure,
@@ -349,9 +345,7 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
 
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
-  return nf(cont, class_obj);
+  return invoke_cont_on_val(cont, class_obj);
 }
 
 OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
@@ -467,9 +461,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
 
   put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
-  nativefn1 nf1 = (nativefn1)nf;
-    
-  OBJECT_PTR result_closure = nf1(closure_form, g_idclo);
+  OBJECT_PTR result_closure = invoke_cont_on_val(closure_form, g_idclo);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -582,9 +574,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
 
   put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
-  nativefn1 nf1 = (nativefn1)nf;
-    
-  OBJECT_PTR result_closure = nf1(closure_form, g_idclo);
+  OBJECT_PTR result_closure = invoke_cont_on_val(closure_form, g_idclo);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -713,9 +703,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  OBJECT_PTR ret = nf(cont, obj_ptr);
+  OBJECT_PTR ret = invoke_cont_on_val(cont, obj_ptr);
   
 #ifdef DEBUG
   printf("Exiting new_object_internal()\n");
@@ -740,9 +728,7 @@ OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, (receiver == arg) ? TRUE : FALSE );
+  return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
 void create_Object()
@@ -791,9 +777,7 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  OBJECT_PTR ret = nf(cont, global_val);
+  OBJECT_PTR ret = invoke_cont_on_val(cont, global_val);
 
   return ret;
 }
@@ -817,9 +801,7 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
 
   sprintf(sym, "#:G%d", smalltalk_gensym_count);
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  OBJECT_PTR ret = nf(cont, get_smalltalk_symbol(sym));
+  OBJECT_PTR ret = invoke_cont_on_val(cont, get_smalltalk_symbol(sym));
 
   return ret;
 }
@@ -848,18 +830,14 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
     {
       put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
-      nativefn1 nf1 = (nativefn1)extract_native_fn(closure_form);
-
-      ret = nf1(closure_form, g_idclo);
+      ret = invoke_cont_on_val(closure_form, g_idclo);
     }
     else
       ret = NIL;
 
     g_exp = prev_exp;
 
-    nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-    return nf(cont, ret);
+    return invoke_cont_on_val(cont, ret);
   }
   else
   {
@@ -1024,8 +1002,7 @@ OBJECT_PTR nil_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   //TODO: revisit after addding strings
   printf("nil");
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-  return nf(cont, NIL);
+  return invoke_cont_on_val(cont, NIL);
 }
 
 void create_Nil()
@@ -1284,9 +1261,7 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
     g_exp = prev_exp;
     g_message_selector = prev_message_selectors;
 
-    nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-    return nf(cont, exp);
+    return invoke_cont_on_val(cont, exp);
   }
   else
   {
@@ -1321,9 +1296,7 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
 
     g_exp = prev_exp;
 
-    nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-    return nf(cont, res);
+    return invoke_cont_on_val(cont, res);
   }
   else
   {

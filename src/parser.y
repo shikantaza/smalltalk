@@ -1198,9 +1198,7 @@ void repl()
   {
     put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
-    nativefn1 nf1 = (nativefn1)extract_native_fn(closure_form);
-
-    ret = nf1(closure_form, g_idclo);
+    ret = invoke_cont_on_val(closure_form, g_idclo);
   }
   else
     ret = NIL;

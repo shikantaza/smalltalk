@@ -49,9 +49,7 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, receiver);
+  return invoke_cont_on_val(cont, receiver);
 }
 
 OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -68,9 +66,7 @@ OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, size);
+  return invoke_cont_on_val(cont, size);
 }
 
 OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PTR cont)
@@ -106,9 +102,7 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, receiver);
+  return invoke_cont_on_val(cont, receiver);
 }
 
 //TODO: move this to superclass (see also Array class)
@@ -143,9 +137,7 @@ OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PT
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, obj->elements[idx-1]);
+  return invoke_cont_on_val(cont, obj->elements[idx-1]);
 }
 
 OBJECT_PTR ordered_collection_add_last(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PTR cont)
@@ -181,9 +173,7 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, obj->elements[size_val-1]);
+  return invoke_cont_on_val(cont, obj->elements[size_val-1]);
 }
 
 void create_OrderedCollection()

@@ -50,9 +50,7 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
   
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object(0));
+  return invoke_cont_on_val(cont, convert_int_to_object(0));
 }
 
 OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -62,9 +60,7 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn nf = (nativefn)extract_native_fn(receiver);
-  
-  return nf(receiver, cont);
+  return invoke_cont_on_val(receiver, cont);
 }
 
 OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,

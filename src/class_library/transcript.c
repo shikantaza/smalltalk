@@ -24,11 +24,9 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_CLOSURE_OBJECT(cont));
   
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
   print_object(arg);
   
-  return nf(cont, NIL);
+  return invoke_cont_on_val(cont, NIL);
 }
 
 OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -37,11 +35,9 @@ OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
   
   assert(IS_CLOSURE_OBJECT(cont));
   
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
   printf("\n");
   
-  return nf(cont, NIL);
+  return invoke_cont_on_val(cont, NIL);
 }
 
 void create_Transcript()

@@ -53,9 +53,7 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_array_object_to_object_ptr(obj));
+  return invoke_cont_on_val(cont, convert_array_object_to_object_ptr(obj));
 }
 
 //TODO: move this to superclass
@@ -77,9 +75,7 @@ OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OB
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, receiver);
+  return invoke_cont_on_val(cont, receiver);
 }
 
 //TODO: move this to superclass
@@ -99,9 +95,7 @@ OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, obj->elements[idx-1]);
+  return invoke_cont_on_val(cont, obj->elements[idx-1]);
 }
 
 OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -112,9 +106,7 @@ OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, convert_int_to_object((int)(obj->nof_elements)));
+  return invoke_cont_on_val(cont, convert_int_to_object((int)(obj->nof_elements)));
 }
 
 OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
@@ -142,9 +134,7 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  nativefn1 nf = (nativefn1)extract_native_fn(cont);
-
-  return nf(cont, receiver);
+  return invoke_cont_on_val(cont, receiver);
 }
 
 void create_Array()

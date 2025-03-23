@@ -348,8 +348,6 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
       g_handler_environment = handler->exception_environment;
       
-      nativefn nf = (nativefn)extract_native_fn(action);
-
       //pop the handler (and all later handlers (is ths correct?))
       //stack_pop(g_exception_environment); //don't think the env should be popped
 
@@ -390,8 +388,6 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
 
   stack_type *env = g_handler_environment;
 
-  nativefn nf = (nativefn)extract_native_fn(cont);
-
   exception_handler_t **entries = (exception_handler_t **)stack_data(g_handler_environment);
   int count = stack_count(g_handler_environment);
   int i = count - 1;
@@ -406,14 +402,14 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
     char *exception_name = get_smalltalk_symbol_name(handler->selector);
     
     if(!strcmp(exception_name, cls_obj_int->name))
-      return nf(cont, TRUE);
+      return invoke_cont_on_val(cont, TRUE);
     else
-      return nf(cont, FALSE);
+      return invoke_cont_on_val(cont, FALSE);
 
     i--;
   }
 
-  return nf(cont, FALSE);
+  return invoke_cont_on_val(cont, FALSE);
 }
 
 OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -429,12 +425,10 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   invoke_curtailed_blocks(handler_cont);
 
-  nativefn nf = (nativefn)extract_native_fn(handler_cont);
-
   assert(!stack_is_empty(g_exception_contexts));
   stack_pop(g_exception_contexts);
 
-  return nf(handler_cont, NIL);
+  return invoke_cont_on_val(handler_cont, NIL);
 }
 
 OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
@@ -450,12 +444,10 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
 
   invoke_curtailed_blocks(handler_cont);
 
-  nativefn nf = (nativefn)extract_native_fn(handler_cont);
-
   assert(!stack_is_empty(g_exception_contexts));
   stack_pop(g_exception_contexts);
 
-  return nf(handler_cont, val);
+  return invoke_cont_on_val(handler_cont, val);
 }
 
 OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -519,12 +511,10 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(exception_context));
 
-  nativefn nf = (nativefn)extract_native_fn(exception_context);
-
   //TODO: check if the exception object is resumable,
   //if it is, return the default resumption value
 
-  return nf(exception_context, NIL);
+  return invoke_cont_on_val(exception_context, NIL);
 }
 
 OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
@@ -541,9 +531,7 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
 
   assert(IS_CLOSURE_OBJECT(exception_context));
 
-  nativefn nf = (nativefn)extract_native_fn(exception_context);
-
-  return nf(exception_context, val);
+  return invoke_cont_on_val(exception_context, val);
 }
 
 OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -575,8 +563,6 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
       assert(IS_CLOSURE_OBJECT(action)); //MonadicBlock
 
       g_handler_environment = handler->exception_environment;
-
-      nativefn nf = (nativefn)extract_native_fn(action);
 
       //pop the handler (and all later handlers (is ths correct?))
       //stack_pop(g_exception_environment); //don't think the env should be popped
