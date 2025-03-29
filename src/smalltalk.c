@@ -1058,7 +1058,9 @@ void print_call_chain()
     call_chain_entry_t *entry = entries[i];
 
     print_object(entry->receiver); printf(">>");
-    print_object(entry->selector); printf(" ");
+    char *str = get_symbol_name(entry->selector);
+    printf("%s ", substring(str, 1, strlen(str)-1));
+    //print_object(entry->selector); printf(" ");
 
     for(j=0; j<get_int_value(entry->nof_args); j++)
     {

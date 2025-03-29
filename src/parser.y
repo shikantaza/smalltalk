@@ -48,6 +48,8 @@ extern OBJECT_PTR g_compile_time_method_selector;
 extern stack_type *g_call_chain;
 extern stack_type *g_exception_environment;
 
+extern OBJECT_PTR CompileError;
+
 %}
 
 %union{
@@ -1177,8 +1179,17 @@ OBJECT_PTR repl_common()
     }
     else
     {
-      printf("Unbound variable: %s\n", get_symbol_name(closed_val));
-      return NIL;
+      //printf("Unbound variable: %s\n", get_symbol_name(closed_val));
+      //return NIL;
+
+      //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
+      OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						     convert_fn_to_closure((nativefn)new_object_internal),
+						     g_idclo);
+      char str[100];
+      sprintf(str, "Unbound variable: %s", get_symbol_name(closed_val));
+
+      return signal_exception_with_text(exception_obj, get_string_obj(str));
     }
   }  
 

@@ -178,10 +178,13 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     OBJECT_PTR mnu_class_obj = car(ret);
 
+    //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
     OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
 						   convert_fn_to_closure((nativefn)new_object_internal),
 						   g_idclo);
-    return signal_exception(exception_obj);
+    char *str = get_symbol_name(stripped_selector);
+
+    return signal_exception_with_text(exception_obj, get_string_obj(substring(str, 1, strlen(str)-1)));
   }
 
 #ifdef DEBUG

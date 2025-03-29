@@ -56,6 +56,8 @@ extern OBJECT_PTR VALUE1_SELECTOR;
 extern OBJECT_PTR SIGNAL_SELECTOR;
 extern OBJECT_PTR ON_DO_SELECTOR;
 
+extern char **g_string_literals;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -321,8 +323,10 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
  
 }
 
-OBJECT_PTR signal_exception(OBJECT_PTR exception)
+OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerText)
 {
+  assert(IS_STRING_LITERAL_OBJECT(signalerText) || signalerText == NIL);
+
   g_signalling_environment = g_exception_environment;
 
   exception_handler_t **entries = (exception_handler_t **)stack_data(g_exception_environment);
@@ -363,10 +367,20 @@ OBJECT_PTR signal_exception(OBJECT_PTR exception)
 
     i--;
   }  
-  
-  printf("Unhandled exception: %s\n", cls_obj_int->name);
+
+  if(signalerText != NIL)
+     printf("Unhandled exception: %s (%s)\n", cls_obj_int->name, g_string_literals[signalerText >> OBJECT_SHIFT]);
+  else
+    printf("Unhandled exception: %s\n", cls_obj_int->name);
+
+  print_call_chain();
 
   return NIL;
+}
+
+OBJECT_PTR signal_exception(OBJECT_PTR exception)
+{
+  return signal_exception_with_text(exception, NIL);
 }
 
 OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
