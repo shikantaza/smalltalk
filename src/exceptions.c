@@ -58,6 +58,8 @@ extern OBJECT_PTR ON_DO_SELECTOR;
 
 extern char **g_string_literals;
 
+extern OBJECT_PTR Smalltalk;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -323,6 +325,68 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
  
 }
 
+OBJECT_PTR exception_user_intervention()
+{
+  int choice = 0;
+
+  while(choice < 1 || choice > 4)
+  {
+    printf("Enter 1 to abort, 2 to retry, 3 to resume with nil, 4 to resume with a value: ");
+    scanf("%d", &choice);
+  }
+
+  if(choice == 1)
+    return NIL;
+  else if(choice == 2)
+  {
+    printf("Retry to be implemented\n");
+    return NIL;
+  }
+  else if(choice == 3)
+  {
+    invoke_curtailed_blocks(g_active_handler->cont);
+
+    assert(!stack_is_empty(g_exception_contexts));
+    OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+
+    assert(IS_CLOSURE_OBJECT(exception_context));
+
+    //TODO: check if the exception object is resumable,
+    //if it is, return the default resumption value
+
+    return invoke_cont_on_val(exception_context, NIL);
+  }
+  else if(choice == 4)
+  {
+    char buf[200];
+
+    printf("Enter expression to evaluate and resume with: ");
+    scanf("%s", buf);
+
+    OBJECT_PTR ret = message_send(g_msg_snd_closure,
+				  Smalltalk,
+				  get_symbol("_eval:"),
+				  convert_int_to_object(1),
+				  get_string_obj(buf),
+				  g_idclo);
+
+    if(ret == NIL)
+      printf("Error evaluating the given resumption value, resuming with nil\n");
+
+    invoke_curtailed_blocks(g_active_handler->cont);
+
+    assert(!stack_is_empty(g_exception_contexts));
+    OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+
+    assert(IS_CLOSURE_OBJECT(exception_context));
+
+    //TODO: check if the exception object is resumable,
+    //if it is, return the default resumption value
+
+    return invoke_cont_on_val(exception_context, ret);
+  }
+}
+
 OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerText)
 {
   assert(IS_STRING_LITERAL_OBJECT(signalerText) || signalerText == NIL);
@@ -375,7 +439,7 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
 
   print_call_chain();
 
-  return NIL;
+  return exception_user_intervention();
 }
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception)
@@ -594,9 +658,14 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
     i--;
   }
 
+  //TODO: incorporate exception message text once this is
+  //added as an instance variable to the exception
+
   printf("Unhandled exception: %s\n", cls_obj_int->name);
 
-  return NIL;
+  print_call_chain();
+
+  return exception_user_intervention();
 }
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)

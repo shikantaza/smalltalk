@@ -1053,6 +1053,8 @@ void print_call_chain()
 
   int j;
 
+  printf("\nCall chain:\n");
+
   while(i >= 0)
   {
     call_chain_entry_t *entry = entries[i];
@@ -1076,6 +1078,7 @@ void print_call_chain()
     printf("\n");
     i--;
   }
+  printf("\n");
 }
 
 OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
