@@ -334,7 +334,7 @@ void print_cons_object(OBJECT_PTR obj)
       fprintf(stdout, ")");
     }
     else
-      fprintf(stdout, ")");
+      fprintf(stdout, "\b)");
 
     //fprintf(stdout, "\b\b)");
   }
