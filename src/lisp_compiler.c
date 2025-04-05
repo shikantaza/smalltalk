@@ -51,6 +51,8 @@ extern OBJECT_PTR GET_CONTINUATION;
 extern OBJECT_PTR SUPER;
 extern OBJECT_PTR MESSAGE_SEND_SUPER;
 
+extern OBJECT_PTR BUILD_CONS;
+
 OBJECT_PTR get_top_level_symbols()
 {
   //TODO: global objects to be added
@@ -190,6 +192,12 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
                                           get_free_variables(res)));
 #ifdef DEBUG
   print_object(res); printf(" is returned by assignment_conversion()\n");
+#endif
+
+  res = capture_local_variables(res);
+
+#ifdef DEBUG
+  print_object(res); printf(" is returned by capture_local_variables()\n");
 #endif
   
   res = translate_to_il(res);
@@ -576,7 +584,8 @@ BOOLEAN is_vararg_primop(OBJECT_PTR sym)
 
 BOOLEAN primop(OBJECT_PTR sym)
 {
-  return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS || sym == RETURN_FROM || sym == GET_CONTINUATION;
+  return sym == SAVE_CONTINUATION || sym == CAR || sym == SETCAR || sym == CONS || sym == BUILD_CONS ||
+    sym == RETURN_FROM || sym == GET_CONTINUATION;
 }
 
 OBJECT_PTR temp3(OBJECT_PTR x, OBJECT_PTR v1, OBJECT_PTR v2)
@@ -1467,4 +1476,117 @@ OBJECT_PTR extract_arity(OBJECT_PTR sexp)
 
   //TODO: control will not reach here actually. handle this better
   return 0;
+}
+
+//converts the outermost occurrence of
+//     (lambda (x) (let ((p1 (cons nil nil)) (p2 cons nil nil)) ... ))
+// to
+//     (lambda (x) (let ((p1 (build-cons 1)) (p2 (build-cons 2)) ... )))
+//(build-cons will create and return a cons pair (nil nil); it will also
+//set the ith slot in the temporaries list of the current stack frame
+//to this cons pair).
+//to be called immediately after the assignment conversion pass.
+//assumes the input expression is of the form
+//     (let nil (lambda (x) (let ((p1 (cons nil nil)) ..)) ...))
+OBJECT_PTR capture_local_variables(OBJECT_PTR exp)
+{
+  if(!IS_CONS_OBJECT(exp))
+    return exp;
+
+  if(first(exp) != LET)
+    return exp;
+
+  if(!(cons_length(exp) == 3))
+    return exp;
+
+  if(!IS_CONS_OBJECT(third(exp)))
+    return exp;
+
+  if(first(third(exp)) != LAMBDA)
+    return exp;
+
+  OBJECT_PTR let_form = third(third(exp));
+
+  if(first(let_form) != LET)
+    return exp;
+
+  OBJECT_PTR rest, ret;
+
+  rest = second(let_form);
+  ret = NIL;
+
+  int i = 0;
+
+  while(rest != NIL)
+  {
+    i++;
+
+    OBJECT_PTR binding = car(rest);
+
+    assert(IS_SYMBOL_OBJECT(car(binding)));
+
+    OBJECT_PTR binding_exp = second(binding);
+
+    if(!IS_CONS_OBJECT(binding_exp))
+      ret = cons(binding, ret);
+    else if(cons_length(binding_exp) == 3 && first(binding_exp) == CONS) //we assume it's (cons nil nil)
+      ret = cons(list(2, car(binding), list(2, BUILD_CONS, convert_int_to_object(i))), ret);
+    else
+      ret = cons(binding, ret);
+
+    rest = cdr(rest);
+  }
+
+  ret = reverse(ret);
+
+  return list(3,
+	      first(exp),    //(let
+	      second(exp),   // nil
+	      list(3,
+		   first(third(exp)),   //(lambda
+		   second(third(exp)),  //(x y ...)
+		   concat(2,
+			  list(2, first(let_form), ret), //(let ((p1 (build_cons 1))...)
+			  CDDR(let_form))));             //  <body of let form>
+}
+
+OBJECT_PTR capture_local_var_names(OBJECT_PTR exp)
+{
+  if(!IS_CONS_OBJECT(exp))
+    return exp;
+
+  if(first(exp) != LET)
+    return exp;
+
+  if(!(cons_length(exp) == 3))
+    return exp;
+
+  if(!IS_CONS_OBJECT(third(exp)))
+    return exp;
+
+  if(first(third(exp)) != LAMBDA)
+    return exp;
+
+  OBJECT_PTR let_form = third(third(exp));
+
+  if(first(let_form) != LET)
+    return exp;
+
+  OBJECT_PTR rest, ret;
+
+  rest = second(let_form);
+  ret = NIL;
+
+  while(rest != NIL)
+  {
+    OBJECT_PTR binding = car(rest);
+
+    assert(IS_SYMBOL_OBJECT(car(binding)));
+
+    ret = cons(car(binding), ret);
+
+    rest = cdr(rest);
+  }
+
+  return reverse(ret);
 }

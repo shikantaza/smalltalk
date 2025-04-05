@@ -237,6 +237,21 @@ OBJECT_PTR cons(OBJECT_PTR car, OBJECT_PTR cdr)
   return ptr + CONS_TAG;
 }
 
+OBJECT_PTR build_cons(OBJECT_PTR local_var_index)
+{
+  assert(IS_INTEGER_OBJECT(local_var_index));
+
+  OBJECT_PTR ret = cons(NIL, NIL);
+
+  assert(!stack_is_empty(g_call_chain));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  entry->local_vars_list = cons(ret, entry->local_vars_list);
+
+  return ret;
+}
+
 OBJECT_PTR car(OBJECT_PTR cons_obj)
 {
   if(cons_obj == NIL)
@@ -784,7 +799,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	put_binding_val(g_top_level, SELF, cons(obj, NIL));
 	put_binding_val(g_top_level, SUPER, cons(obj, NIL));
 
-	stack_push(g_call_chain, create_call_chain_entry(obj, selector, closure_form, 0, NULL, g_idclo, NIL, false));
+	stack_push(g_call_chain, create_call_chain_entry(obj, selector, method, closure_form, 0, NULL, g_idclo, NIL, false));
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 

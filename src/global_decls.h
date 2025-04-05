@@ -35,6 +35,8 @@ OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);
 OBJECT_PTR           assignment_conversion(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           build_selectors_list(OBJECT_PTR);
 OBJECT_PTR           CADR(OBJECT_PTR);
+OBJECT_PTR           capture_local_variables(OBJECT_PTR);
+OBJECT_PTR           capture_local_var_names(OBJECT_PTR);
 OBJECT_PTR           clone_object(OBJECT_PTR);
 OBJECT_PTR           closure_conv_transform(OBJECT_PTR);
 void                *compile_to_c(OBJECT_PTR);
@@ -50,13 +52,14 @@ OBJECT_PTR           convert_native_fn_to_object(nativefn);
 OBJECT_PTR           create_and_signal_exception(OBJECT_PTR, OBJECT_PTR);
 binding_env_t       *create_binding_env();
 call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
-					    OBJECT_PTR,
-					    OBJECT_PTR,
-					    unsigned int,
-					    OBJECT_PTR *,
-					    OBJECT_PTR,
-					    OBJECT_PTR,
-					    BOOLEAN);
+					     OBJECT_PTR,
+					     OBJECT_PTR,
+					     OBJECT_PTR,
+					     unsigned int,
+					     OBJECT_PTR *,
+					     OBJECT_PTR,
+					     OBJECT_PTR,
+					     BOOLEAN);
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,

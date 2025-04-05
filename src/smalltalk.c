@@ -453,7 +453,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
 
   //closed vals are only the variable names
   //and don't have any significance here as 
-  //they will be deferenced only when the method
+  //they will be dereferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
@@ -482,11 +482,11 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
     if(cls_obj->instance_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods->bindings[i].val = list(3,
+      cls_obj->instance_methods->bindings[i].val = list(4,
 							nfo,
 							closed_vals,
-							//second(first(res)));
-							convert_int_to_object(cons_length(second(third(code1)))));
+							convert_int_to_object(cons_length(second(third(code1)))),
+							capture_local_var_names(code1));
       break;
     }
 
@@ -506,11 +506,11 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
     
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].val =
-      list(3,
+      list(4,
 	   nfo,
 	   closed_vals,
-	   //second(first(res)));
-	   convert_int_to_object(cons_length(second(third(code1)))));
+	   convert_int_to_object(cons_length(second(third(code1)))),
+	   capture_local_var_names(code1));
   }
 
   return class_obj;
@@ -566,7 +566,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
 
   //closed vals are only the variable names
   //and don't have any significance here as 
-  //they will be deferenced only when the method
+  //they will be dereferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
   OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
@@ -595,10 +595,11 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
     if(cls_obj->class_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods->bindings[i].val = list(3,
+      cls_obj->class_methods->bindings[i].val = list(4,
 						     nfo,
 						     closed_vals,
-						     convert_int_to_object(cons_length(second(third(code)))));
+						     convert_int_to_object(cons_length(second(third(code)))),
+						     capture_local_var_names(code));
       break;
     }
 
@@ -618,11 +619,11 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].val =
-      list(3,
+      list(4,
 	   nfo,
 	   closed_vals,
-	   //second(first(res)));
-	   convert_int_to_object(cons_length(second(third(code)))));
+	   convert_int_to_object(cons_length(second(third(code)))),
+	   capture_local_var_names(code));
   }
 
   return class_obj;
@@ -1059,15 +1060,48 @@ void print_call_chain()
   {
     call_chain_entry_t *entry = entries[i];
 
-    print_object(entry->receiver); printf(">>");
+    printf("receiver: ");
+    print_object(entry->receiver);
+    printf("; ");
+    printf("selector: ");
     char *str = get_symbol_name(entry->selector);
     printf("%s ", substring(str, 1, strlen(str)-1));
-    //print_object(entry->selector); printf(" ");
+    printf("; ");
 
-    for(j=0; j<get_int_value(entry->nof_args); j++)
+    if(entry->nof_args > 0)
+      printf("args: [");
+
+    for(j=0; j<entry->nof_args; j++)
     {
        print_object(entry->args[j]); printf(" ");
     }
+
+    if(entry->nof_args > 0)
+      printf("\b] ");
+
+    assert(cons_length(fourth(entry->method)) == cons_length(entry->local_vars_list));
+
+    OBJECT_PTR rest = reverse(entry->local_vars_list);
+    OBJECT_PTR rest1 = fourth(entry->method);
+
+    BOOLEAN local_vars = false;
+
+    if(rest != NIL)
+    {
+      printf("; local vars: [");
+      local_vars = true;
+    }
+
+    while(rest != NIL)
+    {
+      print_object(car(rest1)); printf(": ");
+      print_object(car(car(rest))); printf(" ");
+      rest = cdr(rest);
+      rest1 = cdr(rest1);
+    }
+
+    if(local_vars)
+      printf("\b] ");
 
     if(entry->termination_blk_closure != NIL)
     {

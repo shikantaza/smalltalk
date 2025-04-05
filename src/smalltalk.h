@@ -100,9 +100,11 @@ typedef struct
 {
   OBJECT_PTR receiver;
   OBJECT_PTR selector;
+  OBJECT_PTR method;
   OBJECT_PTR closure;
   unsigned int nof_args;
   OBJECT_PTR *args;
+  OBJECT_PTR local_vars_list;
   OBJECT_PTR cont;
   OBJECT_PTR termination_blk_closure;
   BOOLEAN termination_blk_invoked;

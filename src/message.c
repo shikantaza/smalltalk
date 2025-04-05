@@ -25,6 +25,7 @@ extern OBJECT_PTR MNU_SYMBOL;
 
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
+					    OBJECT_PTR method,
 					    OBJECT_PTR closure,
 					    unsigned int nof_args,
 					    OBJECT_PTR *args,
@@ -36,8 +37,17 @@ call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 
   entry->receiver                = receiver;
   entry->selector                = selector;
+  entry->method                  = method;
   entry->closure                 = closure;
   entry->nof_args                = nof_args;
+
+  entry->args = (OBJECT_PTR *)GC_MALLOC(nof_args * sizeof(OBJECT_PTR));
+
+  unsigned int i;
+  for(i=0; i< nof_args; i++)
+    entry->args[i] = args[i];
+
+  entry->local_vars_list         = NIL;
   entry->cont                    = cont;
   entry->termination_blk_closure = termination_blk_closure;
   entry->termination_blk_invoked = termination_blk_invoked;
@@ -305,7 +315,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 0, NULL, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -325,7 +335,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 1, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 1, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -347,7 +357,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(2 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2;
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 2, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 2, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -371,7 +381,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(3 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2; args[2] = arg3;
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 3, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 3, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -397,7 +407,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(4 * sizeof(OBJECT_PTR));
     args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, 4, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 4, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -450,7 +460,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     for(i=0; i<n-1; i++)
       args[i+5] = stack_args[i];
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, closure_form, count, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, count, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 

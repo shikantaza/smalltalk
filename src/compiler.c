@@ -92,6 +92,7 @@ OBJECT_PTR SELF                         =  (OBJECT_PTR)((19 << OBJECT_SHIFT) + S
 OBJECT_PTR THIS_CONTEXT                 =  (OBJECT_PTR)((20 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR SUPER                        =  (OBJECT_PTR)((21 << OBJECT_SHIFT) + SYMBOL_TAG);
 OBJECT_PTR MESSAGE_SEND_SUPER           =  (OBJECT_PTR)((22 << OBJECT_SHIFT) + SYMBOL_TAG);
+OBJECT_PTR BUILD_CONS                   =  (OBJECT_PTR)((23 << OBJECT_SHIFT) + SYMBOL_TAG);
 
 OBJECT_PTR TRUE                         =  (OBJECT_PTR)(                      TRUE_TAG);
 OBJECT_PTR FALSE                        =  (OBJECT_PTR)(                      FALSE_TAG);
@@ -286,6 +287,7 @@ void initialize()
   add_symbol("THIS-CONTEXT");
   add_symbol("super");
   add_symbol("MESSAGE-SEND-SUPER");
+  add_symbol("BUILD-CONS");
 
   create_idclo();
   create_message_send_closure();
