@@ -339,8 +339,25 @@ OBJECT_PTR exception_user_intervention()
     return NIL;
   else if(choice == 2)
   {
-    printf("Retry to be implemented\n");
-    return NIL;
+    stack_pop(g_call_chain); //Exception>>signal
+
+    call_chain_entry_t *entry = stack_pop(g_call_chain); //the method that signalled the exception
+
+    int i;
+    int n = entry->nof_args;
+
+    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC((n+1) * sizeof(OBJECT_PTR));
+
+    for(i=0; i<n; i++)
+      args[i] = entry->args[i];
+
+    args[n] = entry->cont;
+
+    return message_send_internal(entry->super,
+				 entry->receiver,
+				 entry->selector,
+				 convert_int_to_object(n),
+				 args);
   }
   else if(choice == 3)
   {

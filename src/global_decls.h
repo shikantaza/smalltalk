@@ -51,7 +51,8 @@ OBJECT_PTR           convert_message_sends(OBJECT_PTR);
 OBJECT_PTR           convert_native_fn_to_object(nativefn);
 OBJECT_PTR           create_and_signal_exception(OBJECT_PTR, OBJECT_PTR);
 binding_env_t       *create_binding_env();
-call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
+call_chain_entry_t  *create_call_chain_entry(BOOLEAN,
+					     OBJECT_PTR,
 					     OBJECT_PTR,
 					     OBJECT_PTR,
 					     OBJECT_PTR,
@@ -117,6 +118,11 @@ OBJECT_PTR           message_send(OBJECT_PTR,
 				  OBJECT_PTR,
 				  OBJECT_PTR,
 				  ...);
+OBJECT_PTR           message_send_internal(BOOLEAN,
+					   OBJECT_PTR,
+					   OBJECT_PTR,
+					   OBJECT_PTR,
+					   OBJECT_PTR *);
 
 OBJECT_PTR           message_send_super(OBJECT_PTR,
 					OBJECT_PTR,

@@ -98,6 +98,7 @@ typedef struct
 
 typedef struct
 {
+  BOOLEAN super;
   OBJECT_PTR receiver;
   OBJECT_PTR selector;
   OBJECT_PTR method;

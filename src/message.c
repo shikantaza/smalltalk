@@ -23,7 +23,8 @@ extern OBJECT_PTR Nil;
 
 extern OBJECT_PTR MNU_SYMBOL;
 
-call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
+call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
+					    OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
 					    OBJECT_PTR method,
 					    OBJECT_PTR closure,
@@ -35,6 +36,7 @@ call_chain_entry_t *create_call_chain_entry(OBJECT_PTR receiver,
 {
   call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
 
+  entry->super                   = super;
   entry->receiver                = receiver;
   entry->selector                = selector;
   entry->method                  = method;
@@ -145,7 +147,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 				 OBJECT_PTR receiver,
 				 OBJECT_PTR selector,
 				 OBJECT_PTR count1,
-				 va_list ap)
+				 OBJECT_PTR *args)
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
@@ -311,11 +313,11 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count == 0)
   {
-    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    cont = args[0];
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -327,15 +329,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count == 1)
   {
-    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
-    cont = (uintptr_t)va_arg(ap, uintptr_t);
-
-    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(sizeof(OBJECT_PTR));
-    *args = arg1;
+    arg1 = args[0];
+    cont = args[1];
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 1, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 1, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -348,16 +347,13 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count == 2)
   {
-    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
-    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    arg1 = args[0];
+    arg2 = args[1];
+    cont = args[2];
     
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(2 * sizeof(OBJECT_PTR));
-    args[0] = arg1; args[1] = arg2;
-
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 2, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 2, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -371,17 +367,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count == 3)
   {
-    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
-    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    arg1 = args[0];
+    arg2 = args[1];
+    arg3 = args[2];
+    cont = args[3];
     
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(3 * sizeof(OBJECT_PTR));
-    args[0] = arg1; args[1] = arg2; args[2] = arg3;
-
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 3, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 3, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -396,18 +389,15 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count == 4)
   {
-    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg4 = (uintptr_t)va_arg(ap, uintptr_t);
-    cont = (uintptr_t)va_arg(ap, uintptr_t);
+    arg1 = args[0];
+    arg2 = args[1];
+    arg3 = args[2];
+    arg4 = args[3];
+    cont = args[4];
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(4 * sizeof(OBJECT_PTR));
-    args[0] = arg1; args[1] = arg2; args[2] = arg3; args[3] = arg4;
-
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, 4, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 4, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -425,23 +415,23 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   {
     int i, n;
     
-    arg1 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg2 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg3 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg4 = (uintptr_t)va_arg(ap, uintptr_t);
-    arg5 = (uintptr_t)va_arg(ap, uintptr_t);
+    arg1 = args[0];
+    arg2 = args[1];
+    arg3 = args[2];
+    arg4 = args[3];
+    arg5 = args[4];
 
 #ifdef DEBUG    
     printf("arg[1-5] = %lu %lu %lu %lu %lu\n", arg1, arg2, arg3, arg4, arg5);
 #endif
     
-    n = count - 4; // no of arguments that should be pushed onto the stack
+    n = count - 5; // no of arguments that should be pushed onto the stack
 
     uintptr_t *stack_args = (uintptr_t *)GC_MALLOC(n * sizeof(uintptr_t));
     
     for(i=0; i<n; i++)
     {
-      stack_args[i] = (uintptr_t)va_arg(ap, uintptr_t);
+      stack_args[i] = args[count-n+i];
 #ifdef DEBUG      
       printf("stack_args[%d] = %lu\n", i, stack_args[i]);
 #endif      
@@ -449,18 +439,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
-    OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
-
-    args[0] = arg1;
-    args[1] = arg2;
-    args[2] = arg3;
-    args[3] = arg4;
-    args[4] = arg5;
-
-    for(i=0; i<n-1; i++)
-      args[i+5] = stack_args[i];
-
-    stack_push(g_call_chain, create_call_chain_entry(receiver, selector, method, closure_form, count, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, cont, NIL, false));
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
@@ -488,13 +467,31 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
 
-  va_end(ap);
-
 #ifdef DEBUG  
   printf("message_send returning "); print_object(retval); printf("\n");
 #endif
   
   return retval;
+}
+
+OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
+					 OBJECT_PTR receiver,
+					 OBJECT_PTR selector,
+					 OBJECT_PTR count1,
+					 va_list ap)
+{
+  assert(IS_INTEGER_OBJECT(count1));
+
+  int count = get_int_value(count1) + 1;
+
+  OBJECT_PTR *args = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
+
+  int i=0;
+
+  for(i=0; i<count; i++)
+    args[i] = (uintptr_t)va_arg(ap, uintptr_t);
+
+  return message_send_internal(super, receiver, selector, count1, args);
 }
 
 OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
@@ -506,7 +503,7 @@ OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
   va_list ap;
   va_start(ap, count1);
 
-  OBJECT_PTR ret = message_send_internal(false, receiver, selector, count1, ap);
+  OBJECT_PTR ret = message_send_internal_va_list(false, receiver, selector, count1, ap);
 
   va_end(ap);
 
@@ -522,7 +519,7 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
   va_list ap;
   va_start(ap, count1);
 
-  OBJECT_PTR ret = message_send_internal(true, receiver, selector, count1, ap);
+  OBJECT_PTR ret = message_send_internal_va_list(true, receiver, selector, count1, ap);
 
   va_end(ap);
 
