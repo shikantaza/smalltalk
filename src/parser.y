@@ -1201,18 +1201,18 @@ OBJECT_PTR repl_common()
 
 void repl()
 {
-  OBJECT_PTR closure_form = repl_common();
+  OBJECT_PTR repl_ret_val = repl_common();
 
   OBJECT_PTR ret;
 
-  if(closure_form != NIL)
+  if(IS_CLOSURE_OBJECT(repl_ret_val))
   {
     put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
-    ret = invoke_cont_on_val(closure_form, g_idclo);
+    ret = invoke_cont_on_val(repl_ret_val, g_idclo);
   }
-  else
-    ret = NIL;
+  else //unhandled exception would have triggered debugger, so return value from debugger user action
+    ret = repl_ret_val;
 
   if(g_loading_core_library == false)
   {

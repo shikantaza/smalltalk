@@ -407,9 +407,6 @@ OBJECT_PTR exception_user_intervention()
 
     assert(IS_CLOSURE_OBJECT(exception_context));
 
-    //TODO: check if the exception object is resumable,
-    //if it is, return the default resumption value
-
     return invoke_cont_on_val(exception_context, ret);
   }
 }
