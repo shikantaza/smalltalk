@@ -603,4 +603,26 @@ Smalltalk addClassMethod: #m2 toClass: classObj1 withBodyStr: '[ ^ 33]'
 
 UnitTestFramework runTestCase: [(classObj1 m2) = 33] withID: 96
 
+Smalltalk createGlobal: #oc valued: (OrderedCollection new)
+
+UnitTestFramework runTestCase: [(oc size) = 0] withID: 97
+
+oc add: 42
+
+UnitTestFramework runTestCase: [(oc size) = 1] withID: 98
+
+UnitTestFramework runTestCase: [(oc at: 1) = 42] withID: 99
+
+oc add: 33
+
+UnitTestFramework runTestCase: [ ((oc size) = 2) & ((oc at: 1) = 42) & ((oc at: 2) = 33)] withID: 100
+
+UnitTestFramework runExceptionTestCase: [oc at: 3] exception: IndexOutofBounds withID: 101
+
+UnitTestFramework runExceptionTestCase: [oc at: Transcript] exception: InvalidArgument withID: 102
+
+oc removeLast
+
+UnitTestFramework runTestCase: [(oc size) = 1] withID: 103
+
 UnitTestFramework reportStatus
