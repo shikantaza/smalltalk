@@ -361,10 +361,15 @@ OBJECT_PTR exception_user_intervention()
   }
   else if(choice == 3)
   {
-    invoke_curtailed_blocks(g_active_handler->cont);
+    if(!stack_is_empty(g_call_chain))
+      invoke_curtailed_blocks(g_active_handler->cont);
 
-    assert(!stack_is_empty(g_exception_contexts));
-    OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+    OBJECT_PTR exception_context;
+
+    if(!stack_is_empty(g_exception_contexts))
+      exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+    else
+      exception_context = g_idclo;
 
     assert(IS_CLOSURE_OBJECT(exception_context));
 
@@ -390,10 +395,15 @@ OBJECT_PTR exception_user_intervention()
     if(ret == NIL)
       printf("Error evaluating the given resumption value, resuming with nil\n");
 
-    invoke_curtailed_blocks(g_active_handler->cont);
+    if(!stack_is_empty(g_call_chain))
+      invoke_curtailed_blocks(g_active_handler->cont);
 
-    assert(!stack_is_empty(g_exception_contexts));
-    OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+    OBJECT_PTR exception_context;
+
+    if(!stack_is_empty(g_exception_contexts))
+      exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
+    else
+      exception_context = g_idclo;
 
     assert(IS_CLOSURE_OBJECT(exception_context));
 
