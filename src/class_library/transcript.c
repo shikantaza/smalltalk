@@ -14,6 +14,8 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Object;
 
+extern stack_type *g_call_chain;
+
 OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -25,7 +27,9 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(cont));
   
   print_object(arg);
-  
+
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, NIL);
 }
 
@@ -37,6 +41,8 @@ OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
   
   printf("\n");
   
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, NIL);
 }
 

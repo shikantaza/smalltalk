@@ -24,6 +24,8 @@ extern OBJECT_PTR FALSE;
 
 extern OBJECT_PTR Object;
 
+extern stack_type *g_call_chain;
+
 OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -38,6 +40,8 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
 }
@@ -57,6 +61,8 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
 }
 
@@ -75,6 +81,8 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
 }
 
@@ -96,6 +104,8 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   if(get_int_value(arg) == 0)
     return create_and_signal_exception(ZeroDivide, cont);
   
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
 }
 
@@ -112,6 +122,8 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
@@ -127,6 +139,8 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
 }

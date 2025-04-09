@@ -20,6 +20,9 @@ extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 
 extern OBJECT_PTR VALUE_SELECTOR;
+
+extern stack_type *g_call_chain;
+
 /*
 
 These two methods to be included in
@@ -49,6 +52,8 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
   
   return invoke_cont_on_val(cont, convert_int_to_object(0));
 }
@@ -59,6 +64,9 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
   
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  //TODO: popping the call chain crashes for recursive methods (e.g. Fact>>fact:)
+  //stack_pop(g_call_chain);
 
   return invoke_cont_on_val(receiver, cont);
 }

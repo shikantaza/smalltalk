@@ -376,6 +376,8 @@ OBJECT_PTR exception_user_intervention()
     //TODO: check if the exception object is resumable,
     //if it is, return the default resumption value
 
+    stack_pop(g_call_chain);
+
     return invoke_cont_on_val(exception_context, NIL);
   }
   else if(choice == 4)
@@ -406,6 +408,8 @@ OBJECT_PTR exception_user_intervention()
       exception_context = g_idclo;
 
     assert(IS_CLOSURE_OBJECT(exception_context));
+
+    stack_pop(g_call_chain);
 
     return invoke_cont_on_val(exception_context, ret);
   }

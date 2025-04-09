@@ -19,6 +19,8 @@ extern OBJECT_PTR MESSAGE_SEND;
 
 extern OBJECT_PTR VALUE_SELECTOR;
 
+extern stack_type *g_call_chain;
+
 OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -35,6 +37,8 @@ OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
       ret = FALSE;
   else
     ret = FALSE;
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, ret);
 }
@@ -56,6 +60,8 @@ OBJECT_PTR boolean_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
     else
       ret = FALSE;
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, ret);
 }    
 
@@ -67,11 +73,15 @@ OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJ
   assert(IS_CLOSURE_OBJECT(cont));
   
   if(receiver == FALSE)
+  {
+    stack_pop(g_call_chain);
     return invoke_cont_on_val(cont, FALSE);
+  }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
@@ -82,6 +92,8 @@ OBJECT_PTR boolean_equiv(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
   
   if(receiver == operand)
     return invoke_cont_on_val(cont, TRUE);
@@ -100,10 +112,14 @@ OBJECT_PTR boolean_if_false(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR c
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
   else
+  {
+    stack_pop(g_call_chain);
     return invoke_cont_on_val(cont, NIL);
+  }
 }
 
 OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
@@ -120,12 +136,14 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
@@ -141,10 +159,15 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
   else
+  {
+    //TODO: popping the call chain crashes for recursive methods (e.g. Fact>>fact:)
+    //stack_pop(g_call_chain);
     return invoke_cont_on_val(cont, NIL);
+  }
 }
 
 OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
@@ -161,12 +184,14 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
@@ -177,6 +202,8 @@ OBJECT_PTR boolean_not(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
   
   if(receiver == TRUE)
     return invoke_cont_on_val(cont, FALSE);
@@ -192,11 +219,15 @@ OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJE
   assert(IS_CLOSURE_OBJECT(cont));
   
   if(receiver == TRUE)
+  {
+    stack_pop(g_call_chain);
     return invoke_cont_on_val(cont, TRUE);
+  }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
+    stack_pop(g_call_chain);
     return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
@@ -221,6 +252,8 @@ OBJECT_PTR boolean_xor(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
     else
       ret = FALSE;
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, ret);
 }
 
@@ -230,6 +263,8 @@ OBJECT_PTR boolean_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_TRUE_OBJECT(receiver) || IS_FALSE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   if(receiver == TRUE)
     return invoke_cont_on_val(cont, get_string_obj("true"));

@@ -201,6 +201,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, class_object);
 }
 
@@ -284,6 +286,8 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
     inst->instance_vars->bindings[inst->instance_vars->count].val = NIL;
   }
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, class_obj);
 }
 
@@ -345,6 +349,8 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, class_obj);
 }
 
@@ -374,6 +380,8 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
       ret = add_instance_method(class_obj, selector, exp);
     else
       ret = add_class_method(class_obj, selector, exp);
+
+    stack_pop(g_call_chain);
 
     return invoke_cont_on_val(cont, ret);
   }
@@ -704,6 +712,8 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   
+  stack_pop(g_call_chain);
+
   OBJECT_PTR ret = invoke_cont_on_val(cont, obj_ptr);
   
 #ifdef DEBUG
@@ -728,6 +738,8 @@ OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 #endif
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
@@ -778,6 +790,8 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
 
+  stack_pop(g_call_chain);
+
   OBJECT_PTR ret = invoke_cont_on_val(cont, global_val);
 
   return ret;
@@ -801,6 +815,8 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
   smalltalk_gensym_count++;
 
   sprintf(sym, "#:G%d", smalltalk_gensym_count);
+
+  stack_pop(g_call_chain);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, get_smalltalk_symbol(sym));
 
@@ -831,12 +847,16 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
     {
       put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
+      stack_pop(g_call_chain);
+
       ret = invoke_cont_on_val(closure_form, g_idclo);
     }
     else
       ret = NIL;
 
     g_exp = prev_exp;
+
+    stack_pop(g_call_chain);
 
     return invoke_cont_on_val(cont, ret);
   }
@@ -1003,6 +1023,8 @@ OBJECT_PTR nil_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   //TODO: revisit after addding strings
   printf("nil");
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, NIL);
 }
 
@@ -1300,6 +1322,8 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
     g_exp = prev_exp;
     g_message_selector = prev_message_selectors;
 
+    stack_pop(g_call_chain);
+
     return invoke_cont_on_val(cont, exp);
   }
   else
@@ -1334,6 +1358,8 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
     OBJECT_PTR res = apply_lisp_transforms(exp);
 
     g_exp = prev_exp;
+
+    stack_pop(g_call_chain);
 
     return invoke_cont_on_val(cont, res);
   }

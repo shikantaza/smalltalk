@@ -23,6 +23,7 @@ extern OBJECT_PTR Object;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
 
+extern stack_type *g_call_chain;
 
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
@@ -49,6 +50,8 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, receiver);
 }
 
@@ -65,6 +68,8 @@ OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_INTEGER_OBJECT(size));
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, size);
 }
@@ -102,6 +107,8 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   assert(IS_CLOSURE_OBJECT(cont));
 
+  stack_pop(g_call_chain);
+
   return invoke_cont_on_val(cont, receiver);
 }
 
@@ -136,6 +143,8 @@ OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PT
     return create_and_signal_exception(IndexOutofBounds, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, obj->elements[idx-1]);
 }
@@ -172,6 +181,8 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
   update_binding(coll_obj->instance_vars, get_symbol("size"), convert_int_to_object(size_val-1));
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  stack_pop(g_call_chain);
 
   return invoke_cont_on_val(cont, obj->elements[size_val-1]);
 }
