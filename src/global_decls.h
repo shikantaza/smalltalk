@@ -139,6 +139,7 @@ BOOLEAN              primop(OBJECT_PTR);
 void                 print_call_chain();
 void                 print_exception_contexts();
 void                 print_object(OBJECT_PTR);
+void                 print_object_to_string(OBJECT_PTR, char *);
 void                 put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           ren_transform(OBJECT_PTR, binding_env_t *);
 void                 repl();

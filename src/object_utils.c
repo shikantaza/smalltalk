@@ -355,16 +355,17 @@ void print_cons_object(OBJECT_PTR obj)
   }
 }
 
-void print_object(OBJECT_PTR obj_ptr)
+//it is assumed 'str' points to already-allocated memory
+void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
 {
   if(obj_ptr == NIL)
-    fprintf(stdout, "nil");
+    sprintf(str, "nil");
   else if(IS_SYMBOL_OBJECT(obj_ptr))
-    fprintf(stdout, "%s", get_symbol_name(obj_ptr));
+    sprintf(str, "%s", get_symbol_name(obj_ptr));
   else if(IS_SMALLTALK_SYMBOL_OBJECT(obj_ptr))
-    fprintf(stdout, "#%s", get_smalltalk_symbol_name(obj_ptr));
+    sprintf(str, "#%s", get_smalltalk_symbol_name(obj_ptr));
   else if(IS_INTEGER_OBJECT(obj_ptr))
-    fprintf(stdout, "%d", get_int_value(obj_ptr));
+    sprintf(str, "%d", get_int_value(obj_ptr));
   else if(IS_CONS_OBJECT(obj_ptr))
     print_cons_object(obj_ptr);
   else if(IS_CLOSURE_OBJECT(obj_ptr))
@@ -372,34 +373,40 @@ void print_object(OBJECT_PTR obj_ptr)
     OBJECT_PTR lst_form = extract_ptr(obj_ptr) + CONS_TAG;
     int arity = get_int_value(car(reverse(lst_form)));
     if(arity == 0)
-      fprintf(stdout, "#<CLOSURE %p> (a NiladicBlock)", (void *)obj_ptr);
+      sprintf(str, "#<CLOSURE %p> (a NiladicBlock)", (void *)obj_ptr);
     else if(arity == 1)
-      fprintf(stdout, "#<CLOSURE %p> (a MonadicBlock)", (void *)obj_ptr);
+      sprintf(str, "#<CLOSURE %p> (a MonadicBlock)", (void *)obj_ptr);
     else
-      fprintf(stdout, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
+      sprintf(str, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
   }
   else if(IS_CLASS_OBJECT(obj_ptr))
-    fprintf(stdout, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
-  //fprintf(stdout, "#<CLASS %p>", (void *)obj_ptr);
+    sprintf(str, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
+  //sprintf(str, "#<CLASS %p>", (void *)obj_ptr);
   else if(IS_NATIVE_FN_OBJECT(obj_ptr))
-    fprintf(stdout, "#<NATIVEFN %p> ", (void *)obj_ptr);
+    sprintf(str, "#<NATIVEFN %p> ", (void *)obj_ptr);
   else if(IS_OBJECT_OBJECT(obj_ptr))
   {
     object_t *obj = (object_t *)extract_ptr(obj_ptr);
     OBJECT_PTR cls_obj = obj->class_object;
-    fprintf(stdout, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
+    sprintf(str, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
   }
   else if(IS_CHARACTER_OBJECT(obj_ptr))
-    fprintf(stdout, "$%c", get_char_value(obj_ptr));
+    sprintf(str, "$%c", get_char_value(obj_ptr));
   else if(IS_STRING_LITERAL_OBJECT(obj_ptr))
-    fprintf(stdout, "%s", g_string_literals[obj_ptr >> OBJECT_SHIFT]);
+    sprintf(str, "%s", g_string_literals[obj_ptr >> OBJECT_SHIFT]);
   else if(IS_TRUE_OBJECT(obj_ptr) || IS_FALSE_OBJECT(obj_ptr))
-    fprintf(stdout, "%s", obj_ptr == TRUE ? "true" : "false");
+    sprintf(str, "%s", obj_ptr == TRUE ? "true" : "false");
   else if(IS_ARRAY_OBJECT(obj_ptr))
-    fprintf(stdout, "#<OBJECT %p> (instance of Array)", (void *)obj_ptr);
+    sprintf(str, "#<OBJECT %p> (instance of Array)", (void *)obj_ptr);
   else
-    error("<invalid object %p>", (void *)obj_ptr);
+    sprintf(str, "<invalid object %p>", (void *)obj_ptr);
+}
 
+void print_object(OBJECT_PTR obj_ptr)
+{
+  char buf[200];
+  print_object_to_string(obj_ptr, buf);
+  fprintf(stdout, buf);
   fflush(stdout);
 }
 

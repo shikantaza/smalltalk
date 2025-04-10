@@ -23,6 +23,8 @@ extern OBJECT_PTR Nil;
 
 extern OBJECT_PTR MNU_SYMBOL;
 
+extern OBJECT_PTR g_msg_snd_closure;
+
 call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
 					    OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
@@ -181,22 +183,20 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(method == NIL)
   {
-    OBJECT_PTR ret;
 #ifdef DEBUG    
     print_object(stripped_selector); printf(" is not understood by "); print_object(receiver); printf("\n");
     getchar();
 #endif
-    assert(get_top_level_val(MNU_SYMBOL, &ret));
 
-    OBJECT_PTR mnu_class_obj = car(ret);
+    char *selector_name = get_symbol_name(stripped_selector);
+    OBJECT_PTR trimmed_selector = get_symbol(substring(selector_name, 1, strlen(selector_name)-1));
 
-    //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
-    OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
-						   convert_fn_to_closure((nativefn)new_object_internal),
-						   g_idclo);
-    char *str = get_symbol_name(stripped_selector);
-
-    return signal_exception_with_text(exception_obj, get_string_obj(substring(str, 1, strlen(str)-1)));
+    return message_send(g_msg_snd_closure,
+			receiver,
+			get_symbol("_messageNotUnderstood:"),
+			convert_int_to_object(1),
+			trimmed_selector,
+			args[count]); //cont
   }
 
 #ifdef DEBUG

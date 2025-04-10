@@ -376,7 +376,8 @@ OBJECT_PTR exception_user_intervention()
     //TODO: check if the exception object is resumable,
     //if it is, return the default resumption value
 
-    stack_pop(g_call_chain);
+    if(!stack_is_empty(g_call_chain))
+      stack_pop(g_call_chain);
 
     return invoke_cont_on_val(exception_context, NIL);
   }
@@ -409,7 +410,8 @@ OBJECT_PTR exception_user_intervention()
 
     assert(IS_CLOSURE_OBJECT(exception_context));
 
-    stack_pop(g_call_chain);
+    if(!stack_is_empty(g_call_chain))
+      stack_pop(g_call_chain);
 
     return invoke_cont_on_val(exception_context, ret);
   }

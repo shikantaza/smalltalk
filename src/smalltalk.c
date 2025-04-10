@@ -64,6 +64,8 @@ extern executable_code_t *g_exp;
 
 extern OBJECT_PTR g_message_selector;
 
+extern OBJECT_PTR MNU_SYMBOL;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
@@ -745,6 +747,32 @@ OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
+OBJECT_PTR object_message_not_understood(OBJECT_PTR closure, OBJECT_PTR selector, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_SYMBOL_OBJECT(selector));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR ret;
+
+  assert(get_top_level_val(MNU_SYMBOL, &ret));
+
+  OBJECT_PTR mnu_class_obj = car(ret);
+
+  //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
+  OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
+						 convert_fn_to_closure((nativefn)new_object_internal),
+						 g_idclo);
+  char *selector_str = get_symbol_name(selector);
+  char buf[300], obj_str[100];
+  print_object_to_string(receiver, obj_str);
+  sprintf(buf, "Object %s does not understand message '%s'", obj_str, selector_str);
+
+  return signal_exception_with_text(exception_obj, get_string_obj(buf));
+}
+
 void create_Object()
 {
   class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
@@ -761,7 +789,7 @@ void create_Object()
   cls_obj->shared_vars = NULL;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->instance_methods->count = 1;
+  cls_obj->instance_methods->count = 2;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
   
   cls_obj->instance_methods->bindings[0].key = get_symbol("_=");
@@ -770,9 +798,21 @@ void create_Object()
 						    NIL,
 						    convert_int_to_object(1));
 
+  cls_obj->instance_methods->bindings[1].key = get_symbol("_messageNotUnderstood:");
+  cls_obj->instance_methods->bindings[1].val = list(3,
+						    convert_native_fn_to_object((nativefn)object_message_not_understood),
+						    NIL,
+						    convert_int_to_object(1));
+
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->class_methods->count = 0;
-  cls_obj->class_methods->bindings = NULL;
+  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+
+  cls_obj->class_methods->bindings[0].key = get_symbol("_messageNotUnderstood:");
+  cls_obj->class_methods->bindings[0].val = list(3,
+						 convert_native_fn_to_object((nativefn)object_message_not_understood),
+						 NIL,
+						 convert_int_to_object(1));
 
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
