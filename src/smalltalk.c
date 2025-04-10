@@ -712,7 +712,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   
-  stack_pop(g_call_chain);
+  //stack_pop(g_call_chain);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, obj_ptr);
   
