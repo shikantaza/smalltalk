@@ -803,9 +803,6 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 
-	//TODO: some conflict here because of the call chain getting popped (incorrectly?) earlier
-	//stack_pop(g_call_chain);
-
 	if(ret1 == NIL)
 	  return NIL;
 

@@ -65,7 +65,8 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //TODO: popping the call chain crashes for recursive methods (e.g. Fact>>fact:)
+  //TODO: call chain should only be popped if invoking the continuation
+  //does not do so (e.g., by a return statement)
   //stack_pop(g_call_chain);
 
   return invoke_cont_on_val(receiver, cont);

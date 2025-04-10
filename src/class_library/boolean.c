@@ -164,7 +164,8 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
   }
   else
   {
-    //TODO: popping the call chain crashes for recursive methods (e.g. Fact>>fact:)
+    //TODO: call chain should only be popped if invoking the continuation
+    //does not do so (e.g., by a return statement)
     //stack_pop(g_call_chain);
     return invoke_cont_on_val(cont, NIL);
   }
