@@ -726,6 +726,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 OBJECT_PTR new_object(OBJECT_PTR closure,
 		      OBJECT_PTR cont)
 {
+  stack_pop(g_call_chain);
   return new_object_internal(car(get_binding_val(g_top_level, SELF)), closure, cont);
 }
 
