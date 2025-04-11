@@ -50,10 +50,12 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
   
   return invoke_cont_on_val(cont, convert_int_to_object(0));
 }
@@ -62,12 +64,12 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //TODO: call chain should only be popped if invoking the continuation
-  //does not do so (e.g., by a return statement)
-  //stack_pop(g_call_chain);
+  //pop_if_top(entry);
 
   return invoke_cont_on_val(receiver, cont);
 }

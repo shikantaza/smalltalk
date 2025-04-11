@@ -850,4 +850,19 @@ OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
   return nf(cont, val);
 }
 
+//this function is used to conditionally pop the call chain
+//when a native method needs to 'return' by invoking its continuation. 
+//it no-ops if the call chain is empty or if the frame to be popped
+//is no longer available (the equality check fails).
+//a potential source of error is if the equality succeeds because
+//another call_chain_entry pointer (created fresh, after
+//freeing 'e') has the same value. this is highly unlikely (hopefully).
+void pop_if_top(call_chain_entry_t *e)
+{
+  if(stack_is_empty(g_call_chain))
+    return;
+
+  if((call_chain_entry_t *)stack_top(g_call_chain) == e)
+    stack_pop(g_call_chain);
+}
 

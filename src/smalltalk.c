@@ -154,6 +154,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   //TODO: what to do if the class to be created
   //already exists?
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   assert(IS_CLOSURE_OBJECT(closure));
 
   if(!IS_SMALLTALK_SYMBOL_OBJECT(class_sym))
@@ -203,7 +205,7 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, class_object);
 }
@@ -221,6 +223,8 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
 			    OBJECT_PTR cont)
 {
   //TODO: add a default value for the variable?
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(closure));
 
@@ -288,7 +292,7 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
     inst->instance_vars->bindings[inst->instance_vars->count].val = NIL;
   }
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, class_obj);
 }
@@ -299,6 +303,8 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
 			 OBJECT_PTR cont)
 {
   //TODO: add a default value for the variable?
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(closure));
 
@@ -351,7 +357,7 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].val = cons(NIL, NIL);
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, class_obj);
 }
@@ -362,6 +368,8 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
 				   OBJECT_PTR cont,
 				   BOOLEAN instance_method)
 {
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   OBJECT_PTR ret;
 
   executable_code_t *prev_exp = g_exp;
@@ -383,7 +391,7 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
     else
       ret = add_class_method(class_obj, selector, exp);
 
-    stack_pop(g_call_chain);
+    pop_if_top(entry);
 
     return invoke_cont_on_val(cont, ret);
   }
@@ -714,7 +722,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 
   cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   
-  //stack_pop(g_call_chain);
+  //pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, obj_ptr);
   
@@ -728,7 +736,9 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 OBJECT_PTR new_object(OBJECT_PTR closure,
 		      OBJECT_PTR cont)
 {
-  stack_pop(g_call_chain);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  pop_if_top(entry);
   return new_object_internal(car(get_binding_val(g_top_level, SELF)), closure, cont);
 }
 
@@ -736,13 +746,15 @@ OBJECT_PTR object_eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to eq\n");
 #endif
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
@@ -824,6 +836,8 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 {
   assert(IS_CLOSURE_OBJECT(closure));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   if(!IS_SMALLTALK_SYMBOL_OBJECT(global_sym))
     return create_and_signal_exception(InvalidArgument, cont);
 
@@ -831,7 +845,7 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, global_val);
 
@@ -851,13 +865,15 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   char sym[20];
 
   smalltalk_gensym_count++;
 
   sprintf(sym, "#:G%d", smalltalk_gensym_count);
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, get_smalltalk_symbol(sym));
 
@@ -871,6 +887,8 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_STRING_LITERAL_OBJECT(source_buffer));
   assert(IS_CLOSURE_OBJECT(cont));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   OBJECT_PTR ret;
 
@@ -888,7 +906,7 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
     {
       put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
-      stack_pop(g_call_chain);
+      pop_if_top(entry);
 
       ret = invoke_cont_on_val(closure_form, g_idclo);
     }
@@ -897,7 +915,7 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
 
     g_exp = prev_exp;
 
-    stack_pop(g_call_chain);
+    pop_if_top(entry);
 
     return invoke_cont_on_val(cont, ret);
   }
@@ -1062,9 +1080,11 @@ exception_handler_t *create_exception_handler(OBJECT_PTR protected_block,
 
 OBJECT_PTR nil_print_string(OBJECT_PTR closure, OBJECT_PTR cont)
 {
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   //TODO: revisit after addding strings
   printf("nil");
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, NIL);
 }
@@ -1192,6 +1212,8 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   executable_code_t *prev_exp = g_exp;
 
@@ -1363,7 +1385,7 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
     g_exp = prev_exp;
     g_message_selector = prev_message_selectors;
 
-    stack_pop(g_call_chain);
+    pop_if_top(entry);
 
     return invoke_cont_on_val(cont, exp);
   }
@@ -1384,6 +1406,8 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
   assert(IS_STRING_LITERAL_OBJECT(source_buffer));
   assert(IS_CLOSURE_OBJECT(cont));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   executable_code_t *prev_exp = g_exp;
 
   char *buf = GC_strdup(g_string_literals[source_buffer >> OBJECT_SHIFT]);
@@ -1400,7 +1424,7 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
 
     g_exp = prev_exp;
 
-    stack_pop(g_call_chain);
+    pop_if_top(entry);
 
     return invoke_cont_on_val(cont, res);
   }

@@ -30,6 +30,8 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   assert(receiver == Array);
 
   if(!IS_INTEGER_OBJECT(size))
@@ -55,7 +57,7 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_array_object_to_object_ptr(obj));
 }
@@ -64,6 +66,8 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
 OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   if(!IS_INTEGER_OBJECT(index))
     return create_and_signal_exception(InvalidArgument, cont);
@@ -79,7 +83,7 @@ OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OB
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, receiver);
 }
@@ -88,6 +92,8 @@ OBJECT_PTR array_at_put(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR val, OB
 OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   if(!IS_INTEGER_OBJECT(index))
     return create_and_signal_exception(InvalidArgument, cont);
@@ -101,7 +107,7 @@ OBJECT_PTR array_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, obj->elements[idx-1]);
 }
@@ -110,11 +116,13 @@ OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_int_to_object((int)(obj->nof_elements)));
 }
@@ -122,6 +130,8 @@ OBJECT_PTR array_size(OBJECT_PTR closure, OBJECT_PTR cont)
 OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   array_object_t *obj = (array_object_t *)extract_ptr(receiver);
 
@@ -141,12 +151,12 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 		 obj->elements[i],
 		 g_idclo);
 
-    stack_pop(g_call_chain);
+    pop_if_top(entry);
   }
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, receiver);
 }

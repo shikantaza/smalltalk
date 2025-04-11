@@ -376,6 +376,12 @@ OBJECT_PTR exception_user_intervention()
     //TODO: check if the exception object is resumable,
     //if it is, return the default resumption value
 
+    //two pops, the frame corresponding to Exception>>signal
+    //and the frame corresponding to the method that signalled
+    //the exception
+    if(!stack_is_empty(g_call_chain))
+      stack_pop(g_call_chain);
+
     if(!stack_is_empty(g_call_chain))
       stack_pop(g_call_chain);
 
@@ -409,6 +415,12 @@ OBJECT_PTR exception_user_intervention()
       exception_context = g_idclo;
 
     assert(IS_CLOSURE_OBJECT(exception_context));
+
+    //two pops, the frame corresponding to Exception>>signal
+    //and the frame corresponding to the method that signalled
+    //the exception
+    if(!stack_is_empty(g_call_chain))
+      stack_pop(g_call_chain);
 
     if(!stack_is_empty(g_call_chain))
       stack_pop(g_call_chain);

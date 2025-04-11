@@ -34,6 +34,8 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   object_t *coll_obj = (object_t *)extract_ptr(receiver);
 
   assert(coll_obj->class_object == OrderedCollection);
@@ -50,7 +52,7 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, receiver);
 }
@@ -58,6 +60,8 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   object_t *coll_obj = (object_t *)extract_ptr(receiver);
 
@@ -69,7 +73,7 @@ OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, size);
 }
@@ -77,6 +81,8 @@ OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
 OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   object_t *coll_obj = (object_t *)extract_ptr(receiver);
 
@@ -107,7 +113,7 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, receiver);
 }
@@ -116,6 +122,8 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   object_t *coll_obj = (object_t *)extract_ptr(receiver);
 
@@ -144,7 +152,7 @@ OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PT
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, obj->elements[idx-1]);
 }
@@ -157,6 +165,8 @@ OBJECT_PTR ordered_collection_add_last(OBJECT_PTR closure, OBJECT_PTR elem, OBJE
 OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   object_t *coll_obj = (object_t *)extract_ptr(receiver);
 
@@ -182,7 +192,7 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, obj->elements[size_val-1]);
 }

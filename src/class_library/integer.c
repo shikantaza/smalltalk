@@ -32,6 +32,8 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_INTEGER_OBJECT(receiver));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to plus\n");
 #endif
@@ -41,7 +43,7 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
 }
@@ -52,6 +54,8 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_INTEGER_OBJECT(receiver));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to minus\n");
 #endif
@@ -61,7 +65,7 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
 }
@@ -72,6 +76,8 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_INTEGER_OBJECT(receiver));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to times\n");
 #endif
@@ -81,7 +87,7 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
   
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
 }
@@ -91,6 +97,8 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
   
   assert(IS_INTEGER_OBJECT(receiver));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
 #ifdef DEBUG  
   print_object(arg); printf(" is the arg passed to divide_by\n");
@@ -104,7 +112,7 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   if(get_int_value(arg) == 0)
     return create_and_signal_exception(ZeroDivide, cont);
   
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
 }
@@ -116,13 +124,15 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   assert(IS_INTEGER_OBJECT(receiver));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to eq\n");
 #endif
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
@@ -134,13 +144,15 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   if(!IS_INTEGER_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
 #ifdef DEBUG
   print_object(arg); printf(" is the arg passed to lt\n");
 #endif
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_pop(g_call_chain);
+  pop_if_top(entry);
 
   return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
 }
