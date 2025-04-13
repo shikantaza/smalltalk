@@ -862,7 +862,19 @@ void pop_if_top(call_chain_entry_t *e)
   if(stack_is_empty(g_call_chain))
     return;
 
-  if((call_chain_entry_t *)stack_top(g_call_chain) == e)
-    stack_pop(g_call_chain);
-}
+  BOOLEAN reached = false;
 
+  while(!reached && !stack_is_empty(g_call_chain))
+  {
+    if((call_chain_entry_t *)stack_top(g_call_chain) == e)
+    {
+      stack_pop(g_call_chain);
+      reached = true;
+    }
+    else
+      stack_pop(g_call_chain);
+  }
+
+  //if((call_chain_entry_t *)stack_top(g_call_chain) == e)
+  //stack_pop(g_call_chain);
+}

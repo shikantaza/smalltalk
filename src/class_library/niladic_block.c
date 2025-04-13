@@ -69,9 +69,10 @@ OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //pop_if_top(entry);
+  OBJECT_PTR ret = invoke_cont_on_val(receiver, cont);
 
-  return invoke_cont_on_val(receiver, cont);
+  pop_if_top(entry);
+  return ret;
 }
 
 OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
