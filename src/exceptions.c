@@ -427,6 +427,8 @@ OBJECT_PTR exception_user_intervention()
 
     return invoke_cont_on_val(exception_context, ret);
   }
+  else
+    assert(false); //execution should not reach here
 }
 
 OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerText)
@@ -497,6 +499,20 @@ OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(cont));
 
   return signal_exception(receiver);
+}
+
+OBJECT_PTR exception_signal_with_text(OBJECT_PTR closure, OBJECT_PTR signalerText, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  if(!IS_STRING_LITERAL_OBJECT(signalerText) || signalerText == NIL)
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  return signal_exception_with_text(receiver, signalerText);
 }
 
 OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -752,7 +768,7 @@ void create_Exception()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 10;
+  cls_obj->instance_methods->count = 11;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_return");
@@ -812,6 +828,12 @@ void create_Exception()
   cls_obj->instance_methods->bindings[9].key = get_symbol("_resignalAs:");
   cls_obj->instance_methods->bindings[9].val = list(3,
 						    convert_native_fn_to_object((nativefn)exception_resignal_as),
+						    NIL,
+						    convert_int_to_object(1));
+
+  cls_obj->instance_methods->bindings[10].key = get_symbol("_signal:");
+  cls_obj->instance_methods->bindings[10].val = list(3,
+						    convert_native_fn_to_object((nativefn)exception_signal_with_text),
 						    NIL,
 						    convert_int_to_object(1));
 
