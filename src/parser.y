@@ -1189,7 +1189,7 @@ OBJECT_PTR repl_common()
       char str[100];
       sprintf(str, "Unbound variable: %s", get_symbol_name(closed_val));
 
-      return signal_exception_with_text(exception_obj, get_string_obj(str));
+      return signal_exception_with_text(exception_obj, get_string_obj(str), g_idclo);
     }
   }  
 

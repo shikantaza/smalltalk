@@ -780,7 +780,7 @@ OBJECT_PTR object_message_not_understood(OBJECT_PTR closure, OBJECT_PTR selector
   print_object_to_string(receiver, obj_str);
   sprintf(buf, "Object %s does not understand message '%s'", obj_str, selector_str);
 
-  return signal_exception_with_text(exception_obj, get_string_obj(buf));
+  return signal_exception_with_text(exception_obj, get_string_obj(buf), cont);
 }
 
 void create_Object()

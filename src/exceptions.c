@@ -325,13 +325,13 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
  
 }
 
-OBJECT_PTR exception_user_intervention()
+OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 {
   int choice = 0;
 
-  while(choice < 1 || choice > 4)
+  while(choice < 1 || choice > 5)
   {
-    printf("Enter 1 to abort, 2 to retry, 3 to resume with nil, 4 to resume with a value: ");
+    printf("Enter 1 to abort, 2 to retry, 3 to resume with nil, 4 to resume with a value, 5 to ignore exception: ");
     scanf("%d", &choice);
   }
 
@@ -427,11 +427,13 @@ OBJECT_PTR exception_user_intervention()
 
     return invoke_cont_on_val(exception_context, ret);
   }
+  else if(choice == 5)
+    return invoke_cont_on_val(cont, NIL);
   else
     assert(false); //execution should not reach here
 }
 
-OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerText)
+OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerText, OBJECT_PTR cont)
 {
   assert(IS_STRING_LITERAL_OBJECT(signalerText) || signalerText == NIL);
 
@@ -483,12 +485,12 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
 
   print_call_chain();
 
-  return exception_user_intervention();
+  return exception_user_intervention(cont);
 }
 
-OBJECT_PTR signal_exception(OBJECT_PTR exception)
+OBJECT_PTR signal_exception(OBJECT_PTR exception, OBJECT_PTR cont)
 {
-  return signal_exception_with_text(exception, NIL);
+  return signal_exception_with_text(exception, NIL, cont);
 }
 
 OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -498,7 +500,7 @@ OBJECT_PTR exception_signal(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  return signal_exception(receiver);
+  return signal_exception(receiver, cont);
 }
 
 OBJECT_PTR exception_signal_with_text(OBJECT_PTR closure, OBJECT_PTR signalerText, OBJECT_PTR cont)
@@ -512,7 +514,7 @@ OBJECT_PTR exception_signal_with_text(OBJECT_PTR closure, OBJECT_PTR signalerTex
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  return signal_exception_with_text(receiver, signalerText);
+  return signal_exception_with_text(receiver, signalerText, cont);
 }
 
 OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -723,7 +725,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
   print_call_chain();
 
-  return exception_user_intervention();
+  return exception_user_intervention(cont);
 }
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -742,7 +744,7 @@ OBJECT_PTR exception_resignal_as(OBJECT_PTR closure, OBJECT_PTR new_exception, O
 
   g_exception_environment = g_signalling_environment;
 
-  return signal_exception(new_exception);
+  return signal_exception(new_exception, cont);
 }
 
 void create_Exception()
