@@ -21,6 +21,8 @@ extern OBJECT_PTR VALUE_SELECTOR;
 
 extern stack_type *g_call_chain;
 
+extern OBJECT_PTR g_idclo;
+
 OBJECT_PTR boolean_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -148,15 +150,24 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    pop_if_top(entry);
-    return nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    OBJECT_PTR ret = nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+
+    if(pop_if_top(entry))
+      return invoke_cont_on_val(cont, ret);
+    else
+      return ret;
   }
+
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    pop_if_top(entry);
-    return nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    OBJECT_PTR ret = nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+
+    if(pop_if_top(entry))
+      return invoke_cont_on_val(cont, ret);
+    else
+      return ret;
   }
 }
 
@@ -173,22 +184,17 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    OBJECT_PTR ret = nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
-    //TODO: if the above call results in an exception, this pop is too late,
-    //the entry would have been displayed in the call chain. There seems
-    //to be no easy way to fix this. The issue occurs whenever a method
-    //invokes 'value' on a block (and the execution of the block signals
-    //an exception)
-    pop_if_top(entry);
-
-    return ret;
+    if(pop_if_top(entry))
+      return invoke_cont_on_val(cont, ret);
+    else
+      return ret;
   }
   else
   {
-    OBJECT_PTR ret = invoke_cont_on_val(cont, NIL);
-    //TODO: same issue, if the execution of the continuation signals an exception
     pop_if_top(entry);
+    OBJECT_PTR ret = invoke_cont_on_val(cont, NIL);
     return ret;
   }
 }
@@ -209,15 +215,23 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    pop_if_top(entry);
-    return nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    OBJECT_PTR ret = nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+
+    if(pop_if_top(entry))
+      return invoke_cont_on_val(cont, ret);
+    else
+      return ret;
   }
   else
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    pop_if_top(entry);
-    return nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    OBJECT_PTR ret = nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+
+    if(pop_if_top(entry))
+      return invoke_cont_on_val(cont, ret);
+    else
+      return ret;
   }
 }
 

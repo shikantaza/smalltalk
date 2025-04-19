@@ -159,7 +159,7 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
 
   if(!stack_is_empty(g_call_chain))
   {
-    call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+    call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(g_call_chain);
 
     while(entry->selector != selector && !stack_is_empty(g_call_chain))
       entry = (call_chain_entry_t *)stack_pop(g_call_chain);

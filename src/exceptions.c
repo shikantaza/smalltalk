@@ -361,7 +361,7 @@ OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
   }
   else if(choice == 3)
   {
-    if(!stack_is_empty(g_call_chain))
+    if(!stack_is_empty(g_call_chain) && g_active_handler != NULL)
       invoke_curtailed_blocks(g_active_handler->cont);
 
     OBJECT_PTR exception_context;
@@ -561,10 +561,14 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(handler_cont));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   invoke_curtailed_blocks(handler_cont);
 
   assert(!stack_is_empty(g_exception_contexts));
   stack_pop(g_exception_contexts);
+
+  pop_if_top(entry);
 
   return invoke_cont_on_val(handler_cont, NIL);
 }

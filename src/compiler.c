@@ -857,10 +857,31 @@ OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
 //a potential source of error is if the equality succeeds because
 //another call_chain_entry pointer (created fresh, after
 //freeing 'e') has the same value. this is highly unlikely (hopefully).
-void pop_if_top(call_chain_entry_t *e)
+BOOLEAN pop_if_top(call_chain_entry_t *e)
 {
   if(stack_is_empty(g_call_chain))
-    return;
+    return false;
+
+  BOOLEAN entry_found = false;
+
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
+
+  int i = count - 1;
+
+  while(i >= 0)
+  {
+    if(entries[i] == e)
+    {
+      entry_found = true;
+      break;
+    }
+
+    i--;
+  }
+
+  if(!entry_found)
+    return false;
 
   BOOLEAN reached = false;
 
@@ -874,6 +895,8 @@ void pop_if_top(call_chain_entry_t *e)
     else
       stack_pop(g_call_chain);
   }
+
+  return true;
 
   //if((call_chain_entry_t *)stack_top(g_call_chain) == e)
   //stack_pop(g_call_chain);

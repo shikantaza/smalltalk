@@ -56,23 +56,25 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(cont));
 
   pop_if_top(entry);
-  
+
   return invoke_cont_on_val(cont, convert_int_to_object(0));
 }
 
 OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-  
+
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR ret = invoke_cont_on_val(receiver, cont);
+  OBJECT_PTR ret = invoke_cont_on_val(receiver, g_idclo);
 
-  pop_if_top(entry);
-  return ret;
+  if(pop_if_top(entry))
+    return invoke_cont_on_val(cont, ret);
+  else
+    return ret;
 }
 
 OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
@@ -91,10 +93,17 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
 						     exception_selector,
 						     exception_action,
 						     g_exception_environment,
-						     cont);
+						     g_idclo);
   stack_push(g_exception_environment, eh);
 
-  return niladic_block_value(closure, cont);
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  OBJECT_PTR ret = invoke_cont_on_val(receiver, g_idclo);
+
+  if(pop_if_top(entry))
+    return invoke_cont_on_val(cont, ret);
+  else
+    return ret;
 }
 
 call_chain_entry_t *is_termination_block_not_invoked(OBJECT_PTR termination_block)
@@ -127,6 +136,8 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(ensure_block));
   assert(IS_CLOSURE_OBJECT(cont));
 
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
 				get_symbol("_ifCurtailed:"),
@@ -149,8 +160,10 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 					    g_idclo);
   }
 
-  nativefn nf3 = (nativefn)extract_native_fn(cont);
-  return nf3(cont, ret);
+  if(pop_if_top(entry))
+    return invoke_cont_on_val(cont, ret);
+  else
+    return ret;
 }
 
 OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
