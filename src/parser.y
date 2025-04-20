@@ -956,10 +956,12 @@ void repl2()
     OBJECT_PTR ret = add_instance_method(class_object,
 					 fifth(third(exp)),
 					 list(3, LET, NIL, seventh(third(exp))));
-
-    printf("\n");
-    print_object(ret);
-    printf("\n");
+    if(g_loading_core_library == false)
+    {
+      printf("\n");
+      print_object(ret);
+      printf("\n");
+    }
   }
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
@@ -1005,10 +1007,12 @@ void repl2()
     OBJECT_PTR ret = add_class_method(class_object,
 				      fifth(third(exp)),
 				      list(3, LET, NIL, seventh(third(exp))));
-
-    printf("\n");
-    print_object(ret);
-    printf("\n");
+    if(g_loading_core_library == false)
+    {
+      printf("\n");
+      print_object(ret);
+      printf("\n");
+    }
   }
   else
     repl();
@@ -1090,7 +1094,7 @@ int main()
 
   initialize_pass2();
 
-  load_tests();
+  //load_tests();
   //TODO: get this parsing too done
   //by parser_from_fp()
   

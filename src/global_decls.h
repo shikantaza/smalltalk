@@ -50,6 +50,7 @@ OBJECT_PTR           convert_int_to_object(int);
 OBJECT_PTR           convert_message_sends(OBJECT_PTR);
 OBJECT_PTR           convert_native_fn_to_object(nativefn);
 OBJECT_PTR           create_and_signal_exception(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR           create_and_signal_exception_with_text(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 binding_env_t       *create_binding_env();
 call_chain_entry_t  *create_call_chain_entry(BOOLEAN,
 					     OBJECT_PTR,
@@ -134,6 +135,7 @@ OBJECT_PTR           new_object_internal(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           niladic_block_value(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           nth(OBJECT_PTR, OBJECT_PTR);
 uintptr_t            object_alloc(int, int);
+void                 parse_from_fp(FILE *);
 BOOLEAN              pop_if_top(call_chain_entry_t *);
 char                *prepend_char(char *, char);
 BOOLEAN              primop(OBJECT_PTR);

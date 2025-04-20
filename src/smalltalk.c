@@ -66,6 +66,8 @@ extern OBJECT_PTR g_message_selector;
 
 extern OBJECT_PTR MNU_SYMBOL;
 
+extern OBJECT_PTR Error;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
@@ -924,6 +926,41 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
   }
 }
 
+OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
+			       OBJECT_PTR file_name,
+			       OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  if(!IS_STRING_LITERAL_OBJECT(file_name))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  char *file_name_str = GC_strdup(g_string_literals[file_name >> OBJECT_SHIFT]);
+
+  FILE *fp = fopen(file_name_str, "r");
+
+  if(!fp)
+  {
+    char buf[300];
+    sprintf(buf, "Unable to open file '%s'", file_name_str);
+    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+  }
+
+  //TODO: handle errors from this
+  parse_from_fp(fp);
+
+  fclose(fp);
+
+  pop_if_top(entry);
+  invoke_cont_on_val(cont, receiver);
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -951,7 +988,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 10;
+  cls_obj->class_methods->count = 11;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1014,6 +1051,12 @@ void create_Smalltalk()
   cls_obj->class_methods->bindings[9].key = get_symbol("_eval:");
   cls_obj->class_methods->bindings[9].val = list(3,
 						 convert_native_fn_to_object((nativefn)smalltalk_eval),
+						 NIL,
+						 convert_int_to_object(1));
+
+  cls_obj->class_methods->bindings[10].key = get_symbol("_loadFile:");
+  cls_obj->class_methods->bindings[10].val = list(3,
+						 convert_native_fn_to_object((nativefn)smalltalk_load_file),
 						 NIL,
 						 convert_int_to_object(1));
 

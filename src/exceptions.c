@@ -856,6 +856,32 @@ void create_Exception()
   Exception =  convert_class_object_to_object_ptr(cls_obj);
 }
 
+//call this function to signal exceptions with a sginalled text string
+//from Smalltalk methods implemented as primitives.
+OBJECT_PTR create_and_signal_exception_with_text(OBJECT_PTR excp_class_obj,
+						 OBJECT_PTR signaller_text,
+						 OBJECT_PTR excp_cont)
+{
+  assert(IS_CLASS_OBJECT(excp_class_obj));
+  assert(excp_class_obj == Exception || is_super_class(Exception, excp_class_obj));
+
+  assert(IS_STRING_LITERAL_OBJECT(signaller_text) || signaller_text == NIL);
+
+  assert(IS_CLOSURE_OBJECT(excp_cont));
+
+  stack_push(g_exception_contexts, (void *)excp_cont);
+
+  OBJECT_PTR excp_obj = new_object_internal(excp_class_obj,
+					    convert_fn_to_closure((nativefn)new_object_internal),
+					    g_idclo);
+  return message_send(g_msg_snd_closure,
+		      excp_obj,
+		      get_symbol("_signal:"), //TODO: replace with constant
+		      convert_int_to_object(1),
+		      signaller_text,
+		      excp_cont);
+}
+
 //call this function to signal exceptions from Smalltalk methods
 //implemented as primitives.
 OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR excp_cont)
