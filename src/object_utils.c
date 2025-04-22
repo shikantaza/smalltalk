@@ -405,6 +405,7 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
 void print_object(OBJECT_PTR obj_ptr)
 {
   char buf[200];
+  memset(buf,'\0',200);
   print_object_to_string(obj_ptr, buf);
   fprintf(stdout, buf);
   fflush(stdout);
