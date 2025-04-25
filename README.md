@@ -1,6 +1,6 @@
 # About
 
-This is an attempt at implementing an ANSI-compliant Smalltalk system by repurposing the [pLisp](https://github.com/shikantaza/pLisp/)  infrastructure. The project is in its early days, so there is not much to see yet, except for a REPL with these features:
+This is an attempt at implementing an ANSI-compliant Smalltalk system by repurposing the [pLisp](https://github.com/shikantaza/pLisp/)  infrastructure. The project is in its early days, so there is not much to see yet, except for a bare bones UI (Transcript and Workspace) with these features:
 
 * Class creation, with integers, arrays, and user-created objects permitted as instance and shared variables
    
@@ -42,6 +42,8 @@ The target platform is x86_64 Linux for the first version.
 * [LLVM/Clang](https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz)
 * gcc
 * g++
+* libgtk-3-dev
+* libgtksourceview-3.0-dev
 
 # Build Instructions
 
