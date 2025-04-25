@@ -1,6 +1,6 @@
 AC_ARG_VAR(LLVMDIR, "Directory in which LLVM and Clang are installed")
 
-AC_INIT([smalltalk], [0.1.0], [rajesh.jayaprakash@protonmail.com], [smalltalk], [https://github.com/shikantaza])
+AC_INIT([smalltalk], [0.1.0], [rajesh.jayaprakash@protonmail.com], [smalltalk], [https://github.com/shikantaza/smalltalk])
 AC_PREREQ([2.68])
 AC_CONFIG_SRCDIR([src/compiler.c])
 AC_CONFIG_HEADERS([config.h])
@@ -21,8 +21,8 @@ AC_PROG_CXX
 
 #AC_SEARCH_LIBS([dlopen], [dl], [], [])
 
-#PKG_CHECK_MODULES([gtk], [gtk+-3.0 >= 3.4.2])
-#PKG_CHECK_MODULES([gtksourceview], [gtksourceview-3.0 >= 3.4.2])
+PKG_CHECK_MODULES([gtk], [gtk+-3.0 >= 3.4.2])
+PKG_CHECK_MODULES([gtksourceview], [gtksourceview-3.0 >= 3.4.2])
 #PKG_CHECK_MODULES([libffi], [libffi >= 3.0.11])
 
 LT_INIT

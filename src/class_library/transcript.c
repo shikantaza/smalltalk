@@ -7,6 +7,8 @@
 
 #include "../global_decls.h"
 
+void print_to_transcript(char *);
+
 OBJECT_PTR Transcript;
 
 extern binding_env_t *g_top_level;
@@ -28,7 +30,11 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_CLOSURE_OBJECT(cont));
   
-  print_object(arg);
+  //print_object(arg);
+  char buf[500];
+  memset(buf, '\0', 500);
+  print_object_to_string(arg, buf);
+  print_to_transcript(buf);
 
   pop_if_top(entry);
 
@@ -42,8 +48,9 @@ OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(cont));
-  
-  printf("\n");
+
+  //printf("\n");
+  print_to_transcript("\n");
   
   pop_if_top(entry);
 

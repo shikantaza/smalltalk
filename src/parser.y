@@ -29,6 +29,12 @@ BOOLEAN is_add_method_exp(OBJECT_PTR, char *);
 BOOLEAN is_add_instance_method_exp(OBJECT_PTR);
 BOOLEAN is_add_class_method_exp(OBJECT_PTR);
 
+void gtk_main();
+void gtk_init(int *, char ***);
+void create_transcript_window(int, int, int, int, char *);
+void create_workspace_window(int, int, int, int, char *);
+void print_to_transcript(char *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -884,7 +890,7 @@ void yyerror(const char *s) {
     fprintf(stderr, "Parse error: %s\n", s);
 }
 
-void repl2()
+int repl2()
 {
   g_method_call_stack = NIL;
 
@@ -919,7 +925,7 @@ void repl2()
     if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
     {
       printf("Invalid method selector passed to Smalltalk>>addInstanceMethod\n");
-      return;
+      return 0;
     }
 
     OBJECT_PTR class_object_val, class_object;
@@ -930,13 +936,13 @@ void repl2()
     if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
     {
       printf("Smalltalk>>addInstanceMethod: Invalid class name\n");
-      return;
+      return 0;
     }
 
     if(!get_top_level_val(sixth(third(exp)), &class_object_val))
     {
       printf("Smalltalk>>addInstanceMethod: Class does not exist\n");
-      return;
+      return 0;
     }
 
     class_object = car(class_object_val);
@@ -944,13 +950,13 @@ void repl2()
     if(!IS_CLASS_OBJECT(class_object))
     {
       printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
-      return;
+      return 0;
     }
 
     if(!IS_CONS_OBJECT(seventh(third(exp))))
     {
       printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
-      return;
+      return 0;
     }
 
     OBJECT_PTR ret = add_instance_method(class_object,
@@ -958,9 +964,15 @@ void repl2()
 					 list(3, LET, NIL, seventh(third(exp))));
     if(g_loading_core_library == false)
     {
-      printf("\n");
-      print_object(ret);
-      printf("\n");
+      //printf("\n");
+      //print_object(ret);
+      //printf("\n");
+
+      //not printing anything by default
+      //char buf[500];
+      //memset(buf, '\0', 500);
+      //print_object_to_string(ret, buf);
+      //print_to_transcript(buf);
     }
   }
   else if(first(third(exp)) == MESSAGE_SEND &&
@@ -970,7 +982,7 @@ void repl2()
     if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
     {
       printf("Invalid method selector passed to Smalltalk>>addClassMethod\n");
-      return;
+      return 0;
     }
 
     OBJECT_PTR class_object_val, class_object;
@@ -981,13 +993,13 @@ void repl2()
     if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
     {
       printf("Smalltalk>>addClassMethod: Invalid class name\n");
-      return;
+      return 0;
     }
 
     if(!get_top_level_val(sixth(third(exp)), &class_object_val))
     {
       printf("Smalltalk>>addClassMethod: Class does not exist\n");
-      return;
+      return 0;
     }
 
     class_object = car(class_object_val);
@@ -995,13 +1007,13 @@ void repl2()
     if(!IS_CLASS_OBJECT(class_object))
     {
       printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
-      return;
+      return 0;
     }
 
     if(!IS_CONS_OBJECT(seventh(third(exp))))
     {
       printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
-      return;
+      return 0;
     }
 
     OBJECT_PTR ret = add_class_method(class_object,
@@ -1009,13 +1021,21 @@ void repl2()
 				      list(3, LET, NIL, seventh(third(exp))));
     if(g_loading_core_library == false)
     {
-      printf("\n");
-      print_object(ret);
-      printf("\n");
+      //printf("\n");
+      //print_object(ret);
+      //printf("\n");
+
+      //not printing anything by default
+      //char buf[500];
+      //memset(buf, '\0', 500);
+      //print_object_to_string(ret, buf);
+      //print_to_transcript(buf);
     }
   }
   else
     repl();
+
+  return 0;
 }
 
 void parse_from_fp(FILE *fp)
@@ -1071,7 +1091,7 @@ void load_core_library()
 {
   g_loading_core_library = true;
   printf("Loading core library...");
-  load_file("smalltalk.st");
+  load_file(SMALLTALKDATADIR "/smalltalk.st");
   printf("done.\n");
   g_loading_core_library = false;
 }
@@ -1086,7 +1106,7 @@ void load_tests()
 }
 
 #ifndef LEX
-int main()
+int main(int argc, char **argv)
 {
   initialize();  
 
@@ -1094,6 +1114,12 @@ int main()
 
   initialize_pass2();
 
+  gtk_init(&argc, &argv);
+  create_transcript_window(800, 100, 600, 300, "Smalltalk");
+  create_workspace_window(100, 500, 500, 300, "Smalltalk");
+  gtk_main();
+
+  /*
   //load_tests();
   //TODO: get this parsing too done
   //by parser_from_fp()
@@ -1136,6 +1162,7 @@ int main()
       repl2();
     }
   }
+  */
 
   exit(0);    
 }
@@ -1220,9 +1247,15 @@ void repl()
 
   if(g_loading_core_library == false)
   {
-    printf("\n");
-    print_object(ret);
-    printf("\n");
+    //printf("\n");
+    //print_object(ret);
+    //printf("\n");
+
+    //not printing anything by default
+    //char buf[500];
+    //memset(buf, '\0', 500);
+    //print_object_to_string(ret, buf);
+    //print_to_transcript(buf);
   }
 }
 

@@ -15,6 +15,8 @@ YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
 
 int g_include_stack_ptr = 0;
 
+int repl2();
+
 int set_up_new_yyin(FILE *fp)
 {
   if (g_include_stack_ptr >= MAX_INCLUDE_DEPTH)
@@ -46,6 +48,29 @@ void pop_yyin()
     yy_delete_buffer(YY_CURRENT_BUFFER);
     yy_switch_to_buffer(include_stack[g_include_stack_ptr]);
   }
+}
+
+int call_repl(char *expression)
+{
+  YY_BUFFER_STATE buf = yy_scan_string(expression);
+
+  int ret;
+
+  while((ret = yyparse()) == 0)
+  {
+    if(repl2())
+    {
+      yy_delete_buffer(buf);
+      return -1;
+    }
+  }
+
+  yy_delete_buffer(buf);
+
+  if(ret == 1)
+    return -1;
+
+  return 0;
 }
 
 %}

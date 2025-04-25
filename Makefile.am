@@ -6,9 +6,9 @@ bin_PROGRAMS = smalltalk
 
 BUILT_SOURCES = libsmalltalkjitllvm.la
 
-smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c
+smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c src/gui/ui.c src/gui/event_handlers.c
 
-AM_CFLAGS = -DSMALLTALKDATADIR=\"$(pkgdatadir)\" -Wall
+AM_CFLAGS = -DSMALLTALKDATADIR=\"$(pkgdatadir)\" ${gtk_CFLAGS} ${gtksourceview_CFLAGS} -Wall
 
 #set the --export-dynamic flag only for Linux (needed for LLVM)
 if LINUX
@@ -19,10 +19,9 @@ if WINDOWS
 AM_CFLAGS += -Wl,--export-all-symbols
 endif
 
-AM_LIBS = ${LEXLIB}
+AM_LIBS = ${gtk_LIBS} ${gtksourceview_LIBS} ${LEXLIB}
 
 ACLOCAL_AMFLAGS = -I m4 --install
-
 
 if WINDOWS
 smalltalk_LDADD = ${AM_LIBS} -lgc $(LIBS) libsmalltalkjitllvm.la -lversion -lstdc++ -ldl
@@ -36,4 +35,13 @@ clang_LIBS = -lclangCodeGen  -lclangFrontend -lclangSerialization -lclangDriver 
 libsmalltalkjitllvm_la_SOURCES = src/jit_llvm.cpp
 libsmalltalkjitllvm_la_CXXFLAGS = -std=c++14 -fPIC -fno-rtti `$(LLVMDIR)/bin/llvm-config --cflags` 
 libsmalltalkjitllvm_la_LDFLAGS = `$(LLVMDIR)/bin/llvm-config --ldflags` -no-undefined -avoid-version $(clang_LIBS) `$(LLVMDIR)/bin/llvm-config --libs` -lz -lncurses -pthread -ldl
+
+pkgdata_DATA = lib/smalltalk.st
+
+dist_pkgdata_DATA = ${pkgdata_DATA}
+
+iconsdir = $(pkgdatadir)/icons
+icons_DATA  = icons/load_image.png icons/save_image.png icons/workspace.png icons/browser.png icons/clear.png  \
+              icons/exit.png icons/evaluate.png icons/load_file.png icons/file_browser.png icons/clear32x32.png \
+              icons/exit32x32.png
 
