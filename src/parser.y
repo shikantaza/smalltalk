@@ -1115,8 +1115,16 @@ int main(int argc, char **argv)
   initialize_pass2();
 
   gtk_init(&argc, &argv);
-  create_transcript_window(800, 100, 600, 300, "Smalltalk");
-  create_workspace_window(100, 500, 500, 300, "Smalltalk");
+  create_transcript_window(DEFAULT_TRANSCRIPT_POSX,
+			   DEFAULT_TRANSCRIPT_POSY,
+			   DEFAULT_TRANSCRIPT_WIDTH,
+			   DEFAULT_TRANSCRIPT_HEIGHT,
+			   "Smalltalk");
+  create_workspace_window(DEFAULT_WORKSPACE_POSX,
+			  DEFAULT_WORKSPACE_POSY,
+			  DEFAULT_WORKSPACE_WIDTH,
+			  DEFAULT_WORKSPACE_HEIGHT,
+			  "Smalltalk");
   gtk_main();
 
   /*

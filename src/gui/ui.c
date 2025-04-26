@@ -9,6 +9,21 @@ gboolean handle_key_press_events(GtkWidget *,
 				 gpointer);
 
 void quit(GtkWidget *, gpointer);
+void load_image_file(GtkWidget *, gpointer);
+void save_image_file(GtkWidget *, gpointer);
+void show_system_browser_win(GtkWidget *, gpointer);
+void show_workspace_win(GtkWidget *, gpointer);
+void clear_transcript(GtkWidget *, gpointer);
+void clear_workspace(GtkWidget *, gpointer);
+
+void close_window(GtkWidget *, gpointer);
+gboolean delete_event(GtkWidget *widget, GdkEvent *, gpointer);
+
+void set_triggering_window(GtkWidget *, gpointer);
+
+void load_source_file(GtkWidget *, gpointer);
+void show_file_browser_win(GtkWidget *, gpointer);
+void eval_expression(GtkWidget *, gpointer);
 
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
@@ -48,27 +63,27 @@ GtkToolbar *create_transcript_toolbar()
 
   GtkToolItem *load_button = gtk_tool_button_new(load_icon, NULL);
   gtk_tool_item_set_tooltip_text(load_button, "Load image (Ctrl-L)");
-  //g_signal_connect (load_button, "clicked", G_CALLBACK (load_image_file), transcript_window);
+  g_signal_connect (load_button, "clicked", G_CALLBACK (load_image_file), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, load_button, 0);
 
   GtkToolItem *save_button = gtk_tool_button_new(save_icon, NULL);
   gtk_tool_item_set_tooltip_text(save_button, "Save image (Ctrl-S)");
-  //g_signal_connect (save_button, "clicked", G_CALLBACK (save_image_file), transcript_window);
+  g_signal_connect (save_button, "clicked", G_CALLBACK (save_image_file), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, save_button, 1);
 
   GtkToolItem *workspace_button = gtk_tool_button_new(workspace_icon, NULL);
   gtk_tool_item_set_tooltip_text(workspace_button, "Show workspace window (F7)");
-  //g_signal_connect (workspace_button, "clicked", G_CALLBACK (show_workspace_win), transcript_window);
+  g_signal_connect (workspace_button, "clicked", G_CALLBACK (show_workspace_win), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, workspace_button, 2);
 
   GtkToolItem *browser_button = gtk_tool_button_new(browser_icon, NULL);
   gtk_tool_item_set_tooltip_text(browser_button, "System Browser (F9)");
-  //g_signal_connect (browser_button, "clicked", G_CALLBACK (show_system_browser_win), transcript_window);
+  g_signal_connect (browser_button, "clicked", G_CALLBACK (show_system_browser_win), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, browser_button, 3);
 
   GtkToolItem *clear_button = gtk_tool_button_new(clear_icon, NULL);
   gtk_tool_item_set_tooltip_text(clear_button, "Clear Transcript");
-  //g_signal_connect (clear_button, "clicked", G_CALLBACK (clear_transcript), transcript_window);
+  g_signal_connect (clear_button, "clicked", G_CALLBACK (clear_transcript), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, clear_button, 4);
 
   GtkToolItem *exit_button = gtk_tool_button_new(exit_icon, NULL);
@@ -162,27 +177,27 @@ GtkToolbar *create_workspace_toolbar()
 
   GtkToolItem *load_button = gtk_tool_button_new(load_icon, NULL);
   gtk_tool_item_set_tooltip_text(load_button, "Load file (Ctrl-L)");
-  //g_signal_connect (load_button, "clicked", G_CALLBACK (load_source_file), workspace_window);
+  g_signal_connect (load_button, "clicked", G_CALLBACK (load_source_file), workspace_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, load_button, 0);
 
   GtkToolItem *fb_button = gtk_tool_button_new(fb_icon, NULL);
   gtk_tool_item_set_tooltip_text(fb_button, "File Browser (Ctrl-B)");
-  //g_signal_connect (fb_button, "clicked", G_CALLBACK (show_file_browser_win), workspace_window);
+  g_signal_connect (fb_button, "clicked", G_CALLBACK (show_file_browser_win), workspace_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, fb_button, 1);
 
   GtkToolItem *eval_button = gtk_tool_button_new(eval_icon, NULL);
-  gtk_tool_item_set_tooltip_text(eval_button, "Evaluate (Ctrl+Enter)");
-  //g_signal_connect (eval_button, "clicked", G_CALLBACK (eval_expression), workspace_window);
+  gtk_tool_item_set_tooltip_text(eval_button, "Evaluate (Ctrl+D)");
+  g_signal_connect (eval_button, "clicked", G_CALLBACK (eval_expression), workspace_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, eval_button, 2);
 
   GtkToolItem *clear_button = gtk_tool_button_new(clear_icon, NULL);
   gtk_tool_item_set_tooltip_text(clear_button, "Clear Workspace");
-  //g_signal_connect (clear_button, "clicked", G_CALLBACK (clear_workspace), workspace_window);
+  g_signal_connect (clear_button, "clicked", G_CALLBACK (clear_workspace), workspace_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, clear_button, 3);
 
   GtkToolItem *close_button = gtk_tool_button_new(exit_icon, NULL);
   gtk_tool_item_set_tooltip_text(close_button, "Close (Ctrl-W)");
-  //g_signal_connect (close_button, "clicked", G_CALLBACK (close_window), workspace_window);
+  g_signal_connect (close_button, "clicked", G_CALLBACK (close_window), workspace_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, close_button, 4);
 
   return (GtkToolbar *)toolbar;
@@ -201,11 +216,11 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   gtk_window_set_default_size((GtkWindow *)win, width, height);
   gtk_window_move((GtkWindow *)win, posx, posy); 
 
-  //g_signal_connect (win, "delete-event",
-  //                  G_CALLBACK (delete_event), NULL);
+  g_signal_connect (win, "delete-event",
+                    G_CALLBACK (delete_event), NULL);
 
-  //g_signal_connect (win, "focus",
-  //                  G_CALLBACK (set_triggering_window), NULL);
+  g_signal_connect (win, "focus",
+                    G_CALLBACK (set_triggering_window), NULL);
 
   gtk_container_set_border_width (GTK_CONTAINER (win), 10);
 
@@ -262,4 +277,16 @@ void print_to_transcript(char *str)
   gtk_text_buffer_move_mark(transcript_buffer, mark, &iter );
   gtk_text_buffer_insert_at_cursor(transcript_buffer, str, -1 );
   gtk_text_view_scroll_to_mark(transcript_textview, mark, 0.0, TRUE, 0.5, 1 );
+}
+
+void show_info_dialog(char *msg)
+{
+  GtkWidget *dialog = gtk_message_dialog_new (action_triggering_window,
+                                              GTK_DIALOG_DESTROY_WITH_PARENT,
+                                              GTK_MESSAGE_ERROR,
+                                              GTK_BUTTONS_CLOSE,
+                                              "%s",
+                                              msg);
+  gtk_dialog_run(GTK_DIALOG (dialog));
+  gtk_widget_destroy((GtkWidget *)dialog);
 }

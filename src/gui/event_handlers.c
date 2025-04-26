@@ -4,11 +4,20 @@
 
 #include <assert.h>
 
+#include "../smalltalk.h"
+
 int call_repl(char *);
 
+void show_info_dialog(char *msg);
+
+void create_workspace_window(int, int, int, int, char *);
+
 extern GtkWindow *action_triggering_window;
+
 extern GtkWindow *transcript_window;
 extern GtkWindow *workspace_window;
+
+extern GtkTextBuffer *transcript_buffer;
 extern GtkTextBuffer *workspace_buffer;
 
 void evaluate()
@@ -101,4 +110,106 @@ void quit(GtkWidget *widget,
           gpointer   data )
 {
   quit_application();
+}
+
+void load_image_file(GtkWidget *widget,
+                     gpointer data)
+{
+  show_info_dialog("To be implemented");
+}
+
+void save_image_file(GtkWidget *widget,
+                     gpointer data)
+{
+  show_info_dialog("To be implemented");
+}
+
+void show_system_browser_win(GtkWidget *widget,
+			     gpointer data)
+{
+  show_info_dialog("To be implemented");
+}
+
+void show_workspace_window()
+{
+  if(workspace_window == NULL)
+    create_workspace_window(DEFAULT_WORKSPACE_POSX,
+                            DEFAULT_WORKSPACE_POSY,
+                            DEFAULT_WORKSPACE_WIDTH,
+                            DEFAULT_WORKSPACE_HEIGHT,
+                            "");
+  else
+  {
+    gtk_window_present(workspace_window);
+  }
+}
+
+void show_workspace_win(GtkWidget *widget,
+                           gpointer  data)
+{
+  show_workspace_window();
+}
+
+void close_application_window(GtkWidget **window)
+{
+  gtk_widget_destroy(*window);
+  *window = NULL;
+}
+
+void close_window(GtkWidget *widget,
+                  gpointer data)
+{
+  if((GtkWidget *)data == (GtkWidget *)workspace_window)
+    close_application_window((GtkWidget **)&workspace_window);
+}
+
+gboolean delete_event(GtkWidget *widget,
+		      GdkEvent *event,
+		      gpointer data)
+{
+  if(widget == (GtkWidget *)transcript_window)
+  {
+    quit_application();
+
+    //if control comes here, it means
+    //the user cancelled the quit operation
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)workspace_window)
+    close_application_window((GtkWidget **)&workspace_window);
+
+  return FALSE;
+}
+
+void set_triggering_window(GtkWidget *widget,
+                           gpointer   data)
+{
+  action_triggering_window = (GtkWindow *)widget;
+}
+
+void clear_transcript(GtkWidget *widget,
+		      gpointer data)
+{
+  gtk_text_buffer_set_text(transcript_buffer, "", -1);
+}
+
+void clear_workspace(GtkWidget *widget, gpointer data)
+{
+  gtk_text_buffer_set_text(workspace_buffer, "", -1);
+}
+
+void load_source_file(GtkWidget *widget, gpointer data)
+{
+  show_info_dialog("To be implemented");
+}
+
+void show_file_browser_win(GtkWidget *widget, gpointer data)
+{
+  show_info_dialog("To be implemented");
+}
+
+void eval_expression(GtkWidget *widget, gpointer data)
+{
+  action_triggering_window = (GtkWindow *)data;
+  evaluate();
 }
