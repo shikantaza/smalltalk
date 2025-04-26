@@ -25,6 +25,8 @@ void load_source_file(GtkWidget *, gpointer);
 void show_file_browser_win(GtkWidget *, gpointer);
 void eval_expression(GtkWidget *, gpointer);
 
+void setup_language_manager_path(GtkSourceLanguageManager *);
+
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
 
@@ -96,6 +98,12 @@ GtkToolbar *create_transcript_toolbar()
 
 void create_transcript_window(int posx, int posy, int width, int height, char *text)
 {
+
+  //TODO: find a better place for this (maybe an init_gui() function?)
+  lm = gtk_source_language_manager_get_default();
+  setup_language_manager_path(lm);
+  source_language = gtk_source_language_manager_get_language(lm, "smalltalk");
+
   GtkWidget *scrolled_win, *vbox;
 
   transcript_window = (GtkWindow *)gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -229,12 +237,12 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
 
   set_up_workspace_source_buffer();
 
-  GtkWidget *textview = gtk_text_view_new ();
-  //GtkWidget *textview = (GtkWidget *)workspace_source_view;
+  //workspace_textview = gtk_text_view_new ();
+  GtkWidget *textview = (GtkWidget *)workspace_source_view;
 
   //gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
 
-  workspace_buffer = gtk_text_view_get_buffer((GtkTextView *)textview);
+  workspace_buffer = gtk_text_view_get_buffer((GtkTextView *)workspace_source_view);
   //workspace_buffer = (GtkTextBuffer *)workspace_source_buffer;
 
   //g_signal_connect(G_OBJECT(workspace_buffer), 
@@ -289,4 +297,29 @@ void show_info_dialog(char *msg)
                                               msg);
   gtk_dialog_run(GTK_DIALOG (dialog));
   gtk_widget_destroy((GtkWidget *)dialog);
+}
+
+void setup_language_manager_path(GtkSourceLanguageManager *lm)
+{
+  gchar **lang_files;
+  int i, lang_files_count;
+  char **new_langs;
+
+  lang_files = g_strdupv ((gchar **)gtk_source_language_manager_get_search_path (lm));
+
+  lang_files_count = g_strv_length (lang_files);
+  new_langs = g_new (char*, lang_files_count + 2);
+
+  for (i = 0; lang_files[i]; i++)
+    new_langs[i] = lang_files[i];
+
+  new_langs[lang_files_count] = g_strdup (SMALLTALKDATADIR);
+
+  new_langs[lang_files_count+1] = NULL;
+
+  g_free (lang_files);
+
+  gtk_source_language_manager_set_search_path (lm, new_langs);
+
+  g_free(new_langs);
 }
