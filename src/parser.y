@@ -41,6 +41,8 @@ BOOLEAN g_loading_core_library;
 BOOLEAN g_running_tests;
 OBJECT_PTR g_method_call_stack;
 
+OBJECT_PTR g_last_eval_result;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SMALLTALK;
@@ -974,6 +976,7 @@ int repl2()
       //print_object_to_string(ret, buf);
       //print_to_transcript(buf);
     }
+    g_last_eval_result = ret;
   }
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
@@ -1031,6 +1034,7 @@ int repl2()
       //print_object_to_string(ret, buf);
       //print_to_transcript(buf);
     }
+    g_last_eval_result = ret;
   }
   else
     repl();
@@ -1265,6 +1269,7 @@ void repl()
     //print_object_to_string(ret, buf);
     //print_to_transcript(buf);
   }
+  g_last_eval_result = ret;
 }
 
 //this too could have been brought under

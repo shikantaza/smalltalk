@@ -287,6 +287,17 @@ void print_to_transcript(char *str)
   gtk_text_view_scroll_to_mark(transcript_textview, mark, 0.0, TRUE, 0.5, 1 );
 }
 
+void print_to_workspace(char *str)
+{
+  GtkTextMark *mark = gtk_text_buffer_get_insert(workspace_buffer);
+  GtkTextIter iter;
+
+  gtk_text_buffer_get_end_iter(workspace_buffer, &iter );
+  gtk_text_buffer_move_mark(workspace_buffer, mark, &iter );
+  gtk_text_buffer_insert_at_cursor(workspace_buffer, str, -1 );
+  gtk_text_view_scroll_to_mark((GtkTextView *)workspace_source_view, mark, 0.0, TRUE, 0.5, 1 );
+}
+
 void show_info_dialog(char *msg)
 {
   GtkWidget *dialog = gtk_message_dialog_new (action_triggering_window,

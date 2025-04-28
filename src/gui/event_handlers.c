@@ -12,6 +12,10 @@ void show_info_dialog(char *msg);
 
 void create_workspace_window(int, int, int, int, char *);
 
+void print_object_to_string(OBJECT_PTR, char *);
+
+void print_to_workspace(char *);
+
 extern GtkWindow *action_triggering_window;
 
 extern GtkWindow *transcript_window;
@@ -19,6 +23,8 @@ extern GtkWindow *workspace_window;
 
 extern GtkTextBuffer *transcript_buffer;
 extern GtkTextBuffer *workspace_buffer;
+
+extern OBJECT_PTR g_last_eval_result;
 
 void evaluate()
 {
@@ -50,6 +56,21 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     {
       action_triggering_window = workspace_window;
       evaluate();
+      return TRUE;
+    }
+  }
+  else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_p)
+  {
+    if(event->state & GDK_CONTROL_MASK)
+    {
+      action_triggering_window = workspace_window;
+      evaluate();
+
+      char buf[500];
+      memset(buf, '\0', 500);
+      print_object_to_string(g_last_eval_result, buf);
+      print_to_workspace(buf);
+
       return TRUE;
     }
   }
