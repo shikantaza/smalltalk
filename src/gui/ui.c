@@ -166,6 +166,10 @@ void set_up_workspace_source_buffer()
   g_value_init(&gv, G_TYPE_BOOLEAN);
   g_value_set_boolean(&gv, FALSE);
   g_object_set_property((GObject *)sc1, "show-headers", &gv);
+
+  if(!provider)
+    provider = (GtkSourceCompletionProvider *)gtk_source_completion_words_new("Symbols", NULL);
+
   gtk_source_completion_add_provider(sc1, provider, NULL);
 
 }

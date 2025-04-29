@@ -5,7 +5,7 @@
     <property name="mimetypes">text/x-smalltalk</property>
     <property name="globs">*.scm</property>
     <property name="block-comment-start">"</property>
-    <property name="block-comment-end">""</property>
+    <property name="block-comment-end">"</property>
   </metadata>
 
   <styles>
