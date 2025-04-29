@@ -47,6 +47,8 @@ GtkWindow *workspace_window;
 
 GtkTextView *transcript_textview;
 
+GtkTextTag *workspace_tag;
+
 GtkToolbar *create_transcript_toolbar()
 {
   GtkWidget *toolbar;
@@ -245,6 +247,9 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   workspace_buffer = gtk_text_view_get_buffer((GtkTextView *)workspace_source_view);
   //workspace_buffer = (GtkTextBuffer *)workspace_source_buffer;
 
+  workspace_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "orange_bg",
+					     "background", "orange", NULL);
+
   //g_signal_connect(G_OBJECT(workspace_buffer), 
   //                 "notify::cursor-position", 
   //                 G_CALLBACK (handle_cursor_move), 
@@ -294,7 +299,7 @@ void print_to_workspace(char *str)
 
   gtk_text_buffer_get_end_iter(workspace_buffer, &iter );
   gtk_text_buffer_move_mark(workspace_buffer, mark, &iter );
-  gtk_text_buffer_insert_at_cursor(workspace_buffer, str, -1 );
+  gtk_text_buffer_insert_with_tags(workspace_buffer, &iter, str, -1, workspace_tag, NULL);
   gtk_text_view_scroll_to_mark((GtkTextView *)workspace_source_view, mark, 0.0, TRUE, 0.5, 1 );
 }
 
