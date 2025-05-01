@@ -227,50 +227,50 @@ void create_OrderedCollection()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_initialize");
-  cls_obj->instance_methods->bindings[0].val = list(3,
+  cls_obj->instance_methods->bindings[0].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_initialize),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[1].val = list(3,
+  cls_obj->instance_methods->bindings[1].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_size),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_add:");
-  cls_obj->instance_methods->bindings[2].val = list(3,
+  cls_obj->instance_methods->bindings[2].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_add),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("_at:");
-  cls_obj->instance_methods->bindings[3].val = list(3,
+  cls_obj->instance_methods->bindings[3].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_at),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[4].key = get_symbol("_addLast:");
-  cls_obj->instance_methods->bindings[4].val = list(3,
+  cls_obj->instance_methods->bindings[4].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_add_last),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[5].key = get_symbol("_removeLast");
-  cls_obj->instance_methods->bindings[5].val = list(3,
+  cls_obj->instance_methods->bindings[5].val = create_method(
 						    convert_native_fn_to_object((nativefn)ordered_collection_remove_last),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)ordered_collection_new),
-						 NIL,
-						 convert_int_to_object(0));
+						 NIL, NIL,
+						 0, NIL, NULL);
 
   OrderedCollection =  convert_class_object_to_object_ptr(cls_obj);
 }

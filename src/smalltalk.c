@@ -198,10 +198,10 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
   
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)new_object),
-						 NIL,
-						 convert_int_to_object(0));
+						 NIL, NIL,
+						 0, NIL, NULL);
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
@@ -389,9 +389,9 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
     g_exp = prev_exp;
 
     if(instance_method)
-      ret = add_instance_method(class_obj, selector, exp);
+      ret = add_instance_method(class_obj, selector, exp, code_str, g_exp);
     else
-      ret = add_class_method(class_obj, selector, exp);
+      ret = add_class_method(class_obj, selector, exp, code_str, g_exp);
 
     pop_if_top(entry);
 
@@ -441,7 +441,36 @@ OBJECT_PTR add_class_method_str(OBJECT_PTR closure,
   return add_method_str_internal(class_obj, selector, code_str, cont, false);
 }
 
-OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
+OBJECT_PTR create_method(OBJECT_PTR nfo,
+			 OBJECT_PTR closed_syms,
+			 OBJECT_PTR temporaries,
+			 unsigned int arity,
+			 OBJECT_PTR code_str,
+			 executable_code_t *exec_code)
+{
+  method_t *m;
+
+  if(allocate_memory((void **)&m, sizeof(method_t)))
+  {
+    printf("create_method(): Unable to allocate memory\n");
+    exit(1);
+  }
+
+  m->nativefn_obj = nfo;
+  m->closed_syms  = closed_syms;
+  m->temporaries  = temporaries;
+  m->arity        = arity;
+  m->code_str     = code_str;
+  m->exec_code    = exec_code;
+
+  return (uintptr_t)m + OBJECT_TAG;
+}
+
+OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
+			       OBJECT_PTR selector,
+			       OBJECT_PTR code,
+			       OBJECT_PTR code_str,
+			       executable_code_t *exec_code)
 {
   //these asserts are redundant since the checks
   //are being done in repl() now
@@ -502,11 +531,12 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
     if(cls_obj->instance_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods->bindings[i].val = list(4,
-							nfo,
-							closed_vals,
-							convert_int_to_object(cons_length(second(third(code1)))),
-							capture_local_var_names(code1));
+      cls_obj->instance_methods->bindings[i].val = create_method(nfo,
+								 closed_vals,
+								 capture_local_var_names(code1),
+								 cons_length(second(third(code1))),
+								 code_str,
+								 exec_code);
       break;
     }
 
@@ -526,11 +556,12 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT
     
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].val =
-      list(4,
-	   nfo,
-	   closed_vals,
-	   convert_int_to_object(cons_length(second(third(code1)))),
-	   capture_local_var_names(code1));
+      create_method(nfo,
+		    closed_vals,
+		    capture_local_var_names(code1),
+		    cons_length(second(third(code1))),
+		    code_str,
+		    exec_code);
   }
 
   return class_obj;
@@ -554,7 +585,11 @@ OBJECT_PTR replace_method_selector(OBJECT_PTR code, OBJECT_PTR selector)
   }
 }
 
-OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PTR code)
+OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
+			    OBJECT_PTR selector,
+			    OBJECT_PTR code,
+			    OBJECT_PTR code_str,
+			    executable_code_t *exec_code)
 {
   //these asserts are redundant since the checks
   //are being done in repl() now
@@ -615,11 +650,12 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
     if(cls_obj->class_methods->bindings[i].key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods->bindings[i].val = list(4,
-						     nfo,
-						     closed_vals,
-						     convert_int_to_object(cons_length(second(third(code)))),
-						     capture_local_var_names(code));
+      cls_obj->class_methods->bindings[i].val = create_method(nfo,
+							      closed_vals,
+							      capture_local_var_names(code),
+							      cons_length(second(third(code))),
+							      code_str,
+							      exec_code);
       break;
     }
 
@@ -639,11 +675,12 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj, OBJECT_PTR selector, OBJECT_PT
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].val =
-      list(4,
-	   nfo,
-	   closed_vals,
-	   convert_int_to_object(cons_length(second(third(code)))),
-	   capture_local_var_names(code));
+      create_method(nfo,
+		    closed_vals,
+		    capture_local_var_names(code),
+		    cons_length(second(third(code))),
+		    code_str,
+		    exec_code);
   }
 
   return class_obj;
@@ -805,26 +842,26 @@ void create_Object()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
   
   cls_obj->instance_methods->bindings[0].key = get_symbol("_=");
-  cls_obj->instance_methods->bindings[0].val = list(3,
+  cls_obj->instance_methods->bindings[0].val = create_method(
 						    convert_native_fn_to_object((nativefn)object_eq),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_messageNotUnderstood:");
-  cls_obj->instance_methods->bindings[1].val = list(3,
+  cls_obj->instance_methods->bindings[1].val = create_method(
 						    convert_native_fn_to_object((nativefn)object_message_not_understood),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_messageNotUnderstood:");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)object_message_not_understood),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
@@ -995,70 +1032,70 @@ void create_Smalltalk()
   //the Smalltalk class because we don't have a way to 'quote' blocks
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_createClass:parentClass:");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)create_class),
-						 NIL,
-						 convert_int_to_object(2));
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   cls_obj->class_methods->bindings[1].key = get_symbol("_createClass:");
-  cls_obj->class_methods->bindings[1].val = list(3,
+  cls_obj->class_methods->bindings[1].val = create_method(
 						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   cls_obj->class_methods->bindings[2].key = get_symbol("_addInstanceVariable:toClass:");
-  cls_obj->class_methods->bindings[2].val = list(3,
+  cls_obj->class_methods->bindings[2].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_instance_var),
-						 NIL,
-						 convert_int_to_object(2));
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   cls_obj->class_methods->bindings[3].key = get_symbol("_addClassVariable:toClass:");
-  cls_obj->class_methods->bindings[3].val = list(3,
+  cls_obj->class_methods->bindings[3].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_class_var),
-						 NIL,
-						 convert_int_to_object(2));
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   cls_obj->class_methods->bindings[4].key = get_symbol("_createGlobal:valued:");
-  cls_obj->class_methods->bindings[4].val = list(3,
+  cls_obj->class_methods->bindings[4].val = create_method(
 						 convert_native_fn_to_object((nativefn)create_global_valued),
-						 NIL,
-						 convert_int_to_object(2));
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   cls_obj->class_methods->bindings[5].key = get_symbol("_createGlobal:");
-  cls_obj->class_methods->bindings[5].val = list(3,
+  cls_obj->class_methods->bindings[5].val = create_method(
 						 convert_native_fn_to_object((nativefn)create_global),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   cls_obj->class_methods->bindings[6].key = get_symbol("_genSym");
-  cls_obj->class_methods->bindings[6].val = list(3,
+  cls_obj->class_methods->bindings[6].val = create_method(
 						 convert_native_fn_to_object((nativefn)smalltalk_gensym),
-						 NIL,
-						 convert_int_to_object(0));
+						 NIL, NIL,
+						 0, NIL, NULL);
 
   cls_obj->class_methods->bindings[7].key = get_symbol("_addInstanceMethod:toClass:withBodyStr:");
-  cls_obj->class_methods->bindings[7].val = list(3,
+  cls_obj->class_methods->bindings[7].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_instance_method_str),
-						 NIL,
-						 convert_int_to_object(3));
+						 NIL, NIL,
+						 3, NIL, NULL);
 
   cls_obj->class_methods->bindings[8].key = get_symbol("_addClassMethod:toClass:withBodyStr:");
-  cls_obj->class_methods->bindings[8].val = list(3,
+  cls_obj->class_methods->bindings[8].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_class_method_str),
-						 NIL,
-						 convert_int_to_object(3));
+						 NIL, NIL,
+						 3, NIL, NULL);
 
   cls_obj->class_methods->bindings[9].key = get_symbol("_eval:");
-  cls_obj->class_methods->bindings[9].val = list(3,
+  cls_obj->class_methods->bindings[9].val = create_method(
 						 convert_native_fn_to_object((nativefn)smalltalk_eval),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   cls_obj->class_methods->bindings[10].key = get_symbol("_loadFile:");
-  cls_obj->class_methods->bindings[10].val = list(3,
+  cls_obj->class_methods->bindings[10].val = create_method(
 						 convert_native_fn_to_object((nativefn)smalltalk_load_file),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
@@ -1157,10 +1194,10 @@ void create_Nil()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_printString");
-  cls_obj->instance_methods->bindings[0].val = list(3,
+  cls_obj->instance_methods->bindings[0].val = create_method(
 						    convert_native_fn_to_object((nativefn)nil_print_string),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;
@@ -1203,10 +1240,12 @@ void print_call_chain()
     if(entry->nof_args > 0)
       printf("\b] ");
 
-    assert(cons_length(fourth(entry->method)) == cons_length(entry->local_vars_list));
+    method_t *m = (method_t *)extract_ptr(entry->method);
+
+    assert(cons_length(m->temporaries) == cons_length(entry->local_vars_list));
 
     OBJECT_PTR rest = reverse(entry->local_vars_list);
-    OBJECT_PTR rest1 = fourth(entry->method);
+    OBJECT_PTR rest1 = m->temporaries;
 
     BOOLEAN local_vars = false;
 
@@ -1507,16 +1546,16 @@ void create_Compiler()
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_compile:");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)compiler_compile),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   cls_obj->class_methods->bindings[1].key = get_symbol("_compile:pass:");
-  cls_obj->class_methods->bindings[1].val = list(3,
+  cls_obj->class_methods->bindings[1].val = create_method(
 						 convert_native_fn_to_object((nativefn)compiler_compile_pass),
-						 NIL,
-						 convert_int_to_object(2));
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   Compiler =  convert_class_object_to_object_ptr(cls_obj);
 }

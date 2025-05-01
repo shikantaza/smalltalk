@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "stack.h"
+#include "parser_header.h"
 
 #define TWO_RAISED_TO_SYMBOL_BITS_MINUS_1 0x3FFFFF
 
@@ -85,6 +86,16 @@ typedef struct
   OBJECT_PTR class_object;
   binding_env_t *instance_vars; //instance var name, value
 } object_t;
+
+typedef struct
+{
+  OBJECT_PTR nativefn_obj;
+  OBJECT_PTR closed_syms;
+  OBJECT_PTR temporaries;
+  unsigned int arity;
+  OBJECT_PTR code_str;
+  executable_code_t *exec_code;
+} method_t;
 
 typedef struct
 {

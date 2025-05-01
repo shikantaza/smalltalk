@@ -778,80 +778,80 @@ void create_Exception()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_return");
-  cls_obj->instance_methods->bindings[0].val = list(3,
+  cls_obj->instance_methods->bindings[0].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_return),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_return:");
-  cls_obj->instance_methods->bindings[1].val = list(3,
+  cls_obj->instance_methods->bindings[1].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_return_val),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_retry");
-  cls_obj->instance_methods->bindings[2].val = list(3,
+  cls_obj->instance_methods->bindings[2].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_retry),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("_retryUsing:");
-  cls_obj->instance_methods->bindings[3].val = list(3,
+  cls_obj->instance_methods->bindings[3].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_retry_using),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[4].key = get_symbol("_resume");
-  cls_obj->instance_methods->bindings[4].val = list(3,
+  cls_obj->instance_methods->bindings[4].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_resume),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[5].key = get_symbol("_resume:");
-  cls_obj->instance_methods->bindings[5].val = list(3,
+  cls_obj->instance_methods->bindings[5].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_resume_with_val),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[6].key = get_symbol("_pass");
-  cls_obj->instance_methods->bindings[6].val = list(3,
+  cls_obj->instance_methods->bindings[6].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_pass),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[7].key = get_symbol("_outer");
-  cls_obj->instance_methods->bindings[7].val = list(3,
+  cls_obj->instance_methods->bindings[7].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_outer),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[8].key = get_symbol("_signal");
-  cls_obj->instance_methods->bindings[8].val = list(3,
+  cls_obj->instance_methods->bindings[8].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_signal),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[9].key = get_symbol("_resignalAs:");
-  cls_obj->instance_methods->bindings[9].val = list(3,
+  cls_obj->instance_methods->bindings[9].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_resignal_as),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[10].key = get_symbol("_signal:");
-  cls_obj->instance_methods->bindings[10].val = list(3,
+  cls_obj->instance_methods->bindings[10].val = create_method(
 						    convert_native_fn_to_object((nativefn)exception_signal_with_text),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));;
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)new_object),
-						 NIL,
-						 convert_int_to_object(0));
+						 NIL, NIL,
+						 0, NIL, NULL);
   
   Exception =  convert_class_object_to_object_ptr(cls_obj);
 }

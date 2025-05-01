@@ -158,9 +158,6 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   int count;
   
-  //va_list ap;
-  //va_start(ap, count1); 
-
 #ifdef DEBUG  
   print_object(receiver);printf(" is the receiver; ");
   print_object(selector); printf(" is the selector\n");
@@ -199,32 +196,26 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 			args[count]); //cont
   }
 
+  method_t *m = (method_t *)extract_ptr(method);
+
 #ifdef DEBUG
   print_object(method); printf(" is returned by method_lookup()\n");
 #endif  
 
-  //if(count1 != car(last_cell(cdr(method))))
-  if(count1 != third(method))
+  if(count != m->arity)
   {
     assert(false);
   }
   
-  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
+  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(m->nativefn_obj);
   nativefn nf = nfobj->nf;
   assert(nf);
 
-  //OBJECT_PTR closed_vars = cdr(method);
-  OBJECT_PTR closed_vars = second(method);
+  OBJECT_PTR closed_vars = m->closed_syms;
   OBJECT_PTR ret = NIL;
   
-  //OBJECT_PTR rest = closed_vars;
-  //to discard the arity value which is at the end
-  //TODO: replace with a more efficient way
-  //OBJECT_PTR rest = reverse(cdr(reverse(closed_vars)));
   OBJECT_PTR rest = closed_vars;
-  //OBJECT_PTR rest = cdr(closed_vars);
   
-  //binding_env_t *env = NULL;
   binding_env_t *inst_vars = NULL;
   binding_env_t *shared_vars = NULL;
   
@@ -276,28 +267,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     assert(get_top_level_val(car(rest), &closed_val_cons));
     ret = cons(closed_val_cons, ret);
     
-    /*
-    if(env) //to filter out objects like integers which are not regular objects
-    {
-      if(get_binding_val_regular(env, car(rest), &closed_val_cons))
-      {
-	ret = cons(closed_val_cons, ret);
-	rest = cdr(rest);
-	continue;
-      }
-      else
-      {
-	//TODO: assert should be replaced to raise an exception
-	assert(get_top_level_val(car(rest), &closed_val_cons));
-	ret = cons(closed_val_cons, ret);
-      }
-    }
-    */
-    
     rest = cdr(rest);
   }
 
-  OBJECT_PTR cons_form = list(3, car(method), reverse(ret), count1);
+  OBJECT_PTR cons_form = list(3, m->nativefn_obj, reverse(ret), count1);
   OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
 #ifdef DEBUG  

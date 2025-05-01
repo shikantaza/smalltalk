@@ -88,16 +88,16 @@ void create_Transcript()
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_show:");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)transcript_show),
-						 NIL,
-						 convert_int_to_object(1));				
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   cls_obj->class_methods->bindings[1].key = get_symbol("_cr");
-  cls_obj->class_methods->bindings[1].val = list(3,
+  cls_obj->class_methods->bindings[1].val = create_method(
 						 convert_native_fn_to_object((nativefn)transcript_cr),
-						 NIL,
-						 convert_int_to_object(0));
+						 NIL, NIL,
+						 0, NIL, NULL);
   
   Transcript =  convert_class_object_to_object_ptr(cls_obj);
 }

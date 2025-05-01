@@ -188,38 +188,38 @@ void create_Array()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_at:put:");
-  cls_obj->instance_methods->bindings[0].val = list(3,
+  cls_obj->instance_methods->bindings[0].val = create_method(
 						    convert_native_fn_to_object((nativefn)array_at_put),
-						    NIL,
-						    convert_int_to_object(2));
+						    NIL, NIL,
+						    2, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_at:");
-  cls_obj->instance_methods->bindings[1].val = list(3,
+  cls_obj->instance_methods->bindings[1].val = create_method(
 						    convert_native_fn_to_object((nativefn)array_at),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[2].val = list(3,
+  cls_obj->instance_methods->bindings[2].val = create_method(
 						    convert_native_fn_to_object((nativefn)array_size),
-						    NIL,
-						    convert_int_to_object(0));
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("_do:");
-  cls_obj->instance_methods->bindings[3].val = list(3,
+  cls_obj->instance_methods->bindings[3].val = create_method(
 						    convert_native_fn_to_object((nativefn)array_do),
-						    NIL,
-						    convert_int_to_object(1));
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new:");
-  cls_obj->class_methods->bindings[0].val = list(3,
+  cls_obj->class_methods->bindings[0].val = create_method(
 						 convert_native_fn_to_object((nativefn)array_new),
-						 NIL,
-						 convert_int_to_object(1));
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   Array =  convert_class_object_to_object_ptr(cls_obj);
 }

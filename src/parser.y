@@ -963,7 +963,9 @@ int repl2()
 
     OBJECT_PTR ret = add_instance_method(class_object,
 					 fifth(third(exp)),
-					 list(3, LET, NIL, seventh(third(exp))));
+					 list(3, LET, NIL, seventh(third(exp))),
+					 NIL, //we do not have a code string to pass; will be resolved when we
+					 g_exp);  //switch to addInstanceMethod:toClass:withBodyStr
     if(g_loading_core_library == false)
     {
       //printf("\n");
@@ -1021,7 +1023,9 @@ int repl2()
 
     OBJECT_PTR ret = add_class_method(class_object,
 				      fifth(third(exp)),
-				      list(3, LET, NIL, seventh(third(exp))));
+				      list(3, LET, NIL, seventh(third(exp))),
+				      NIL, //we do not have a code string to pass; will be resolved
+				      g_exp); //switch to addInstanceMethod:toClass:withBodyStr
     if(g_loading_core_library == false)
     {
       //printf("\n");

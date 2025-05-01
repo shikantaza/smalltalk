@@ -742,11 +742,13 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
       {
 	method = cls_obj_int->instance_methods->bindings[j].val;
 
-	native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(car(method));
+	method_t *m = (method_t *)extract_ptr(method);
+
+	native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(m->nativefn_obj);
 	nativefn nf = nfobj->nf;
 	assert(nf);
 
-	OBJECT_PTR closed_vars = second(method);
+	OBJECT_PTR closed_vars = m->closed_syms;
 	OBJECT_PTR ret = NIL;
 
 	OBJECT_PTR rest = closed_vars;
@@ -798,7 +800,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	  rest = cdr(rest);
 	}
 
-	OBJECT_PTR cons_form = list(3, car(method), reverse(ret), convert_int_to_object(0));
+	OBJECT_PTR cons_form = list(3, m->nativefn_obj, reverse(ret), convert_int_to_object(0));
 	OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
 	//TODO: this should be converted into a call to message_send(),
