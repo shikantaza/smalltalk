@@ -10,6 +10,9 @@
 #include "util.h"
 #include "stack.h"
 
+void create_debug_window(int, int, int, int, OBJECT_PTR, char *);
+void show_error_dialog(char *);
+
 //stack of exception handlers;
 //an exception handler is a list of tuples,
 //each tuple comprising:
@@ -59,6 +62,10 @@ extern OBJECT_PTR ON_DO_SELECTOR;
 extern char **g_string_literals;
 
 extern OBJECT_PTR Smalltalk;
+
+extern OBJECT_PTR g_last_eval_result;
+
+extern BOOLEAN g_debug_in_progress;
 
 /* code below this point is earlier code; will be
    incoporated if found relevant */
@@ -327,6 +334,22 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
 
 OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 {
+  g_debug_in_progress = true;
+  create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+		      DEFAULT_DEBUG_WINDOW_POSY,
+		      DEFAULT_DEBUG_WINDOW_WIDTH,
+		      DEFAULT_DEBUG_WINDOW_HEIGHT,
+		      cont,
+		      "Smalltalk");
+
+  while(g_debug_in_progress)
+    ; //loop till the debug window returns control
+
+  return g_last_eval_result;
+}
+
+OBJECT_PTR exception_user_intervention_cli(OBJECT_PTR cont)
+{
   int choice = 0;
 
   while(choice < 1 || choice > 5)
@@ -478,12 +501,19 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
     i--;
   }  
 
-  if(signalerText != NIL)
-     printf("Unhandled exception: %s (%s)\n", cls_obj_int->name, g_string_literals[signalerText >> OBJECT_SHIFT]);
-  else
-    printf("Unhandled exception: %s\n", cls_obj_int->name);
+  char buf[200];
+  memset(buf, '\0', 200);
 
-  print_call_chain();
+  if(signalerText != NIL)
+    //printf("Unhandled exception: %s (%s)\n", cls_obj_int->name, g_string_literals[signalerText >> OBJECT_SHIFT]);
+    sprintf(buf, "Unhandled exception: %s (%s)\n", cls_obj_int->name, g_string_literals[signalerText >> OBJECT_SHIFT]);
+  else
+    //printf("Unhandled exception: %s\n", cls_obj_int->name);
+    sprintf(buf, "Unhandled exception: %s\n", cls_obj_int->name);
+
+  show_error_dialog(buf);
+
+  //print_call_chain();
 
   return exception_user_intervention(cont);
 }
@@ -725,9 +755,15 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
   //TODO: incorporate exception message text once this is
   //added as an instance variable to the exception
 
-  printf("Unhandled exception: %s\n", cls_obj_int->name);
+  char buf[200];
+  memset(buf, '\0', 200);
 
-  print_call_chain();
+  //printf("Unhandled exception: %s\n", cls_obj_int->name);
+  sprintf(buf, "Unhandled exception: %s\n", cls_obj_int->name);
+
+  show_error_dialog(buf);
+
+  //print_call_chain();
 
   return exception_user_intervention(cont);
 }
