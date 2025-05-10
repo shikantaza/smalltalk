@@ -10,7 +10,7 @@
 #include "util.h"
 #include "stack.h"
 
-void create_debug_window(int, int, int, int, OBJECT_PTR, char *);
+void create_debug_window(int, int, int, int, BOOLEAN, OBJECT_PTR, char *);
 void show_error_dialog(char *);
 
 //stack of exception handlers;
@@ -339,6 +339,7 @@ OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 		      DEFAULT_DEBUG_WINDOW_POSY,
 		      DEFAULT_DEBUG_WINDOW_WIDTH,
 		      DEFAULT_DEBUG_WINDOW_HEIGHT,
+		      true,
 		      cont,
 		      "Smalltalk");
 

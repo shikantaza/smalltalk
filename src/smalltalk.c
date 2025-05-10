@@ -462,6 +462,7 @@ OBJECT_PTR create_method(OBJECT_PTR nfo,
   m->arity        = arity;
   m->code_str     = code_str;
   m->exec_code    = exec_code;
+  m->breakpointed = false;
 
   return (uintptr_t)m + OBJECT_TAG;
 }
@@ -998,6 +999,94 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
   invoke_cont_on_val(cont, receiver);
 }
 
+OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
+					   OBJECT_PTR selector,
+					   OBJECT_PTR class_obj,
+					   BOOLEAN add_breakpoint,
+					   OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(selector))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_CLASS_OBJECT(class_obj))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  OBJECT_PTR decorated_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
+
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
+
+  unsigned int i, n;
+  n = cls_obj->instance_methods->count;
+
+  BOOLEAN method_found = false;
+
+  for(i=0; i<n; i++)
+  {
+    if(cls_obj->instance_methods->bindings[i].key == decorated_selector)
+    {
+      method_found = true;
+      method_t *m = (method_t *)extract_ptr(cls_obj->instance_methods->bindings[i].val);
+      m->breakpointed = add_breakpoint;
+      break;
+    }
+  }
+
+  if(!method_found)
+  {
+    n = cls_obj->class_methods->count;
+
+    for(i=0; i<n; i++)
+    {
+      if(cls_obj->class_methods->bindings[i].key == decorated_selector)
+      {
+	method_found = true;
+	method_t *m = (method_t *)extract_ptr(cls_obj->class_methods->bindings[i].val);
+	m->breakpointed = add_breakpoint;
+	break;
+      }
+    }
+  }
+
+  if(!method_found)
+  {
+    char buf[300];
+    sprintf(buf, "Method '%s' does not exist in class %s",
+	    get_smalltalk_symbol_name(selector),
+	    ((class_object_t *)extract_ptr(class_obj))->name);
+    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+  }
+
+  pop_if_top(entry);
+
+  OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  return ret;
+}
+
+OBJECT_PTR smalltalk_add_breakpoint(OBJECT_PTR closure,
+				    OBJECT_PTR selector,
+				    OBJECT_PTR class_obj,
+				    OBJECT_PTR cont)
+{
+  return smalltalk_add_remove_breakpoint(closure, selector, class_obj, true, cont);
+}
+
+OBJECT_PTR smalltalk_remove_breakpoint(OBJECT_PTR closure,
+				       OBJECT_PTR selector,
+				       OBJECT_PTR class_obj,
+				       OBJECT_PTR cont)
+{
+  return smalltalk_add_remove_breakpoint(closure, selector, class_obj, false, cont);
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1025,7 +1114,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 11;
+  cls_obj->class_methods->count = 13;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1096,6 +1185,18 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)smalltalk_load_file),
 						 NIL, NIL,
 						 1, NIL, NULL);
+
+  cls_obj->class_methods->bindings[11].key = get_symbol("_addBreakpointTo:ofClass:");
+  cls_obj->class_methods->bindings[11].val = create_method(
+						 convert_native_fn_to_object((nativefn)smalltalk_add_breakpoint),
+						 NIL, NIL,
+						 2, NIL, NULL);
+
+  cls_obj->class_methods->bindings[12].key = get_symbol("_removeBreakpointFrom:ofClass:");
+  cls_obj->class_methods->bindings[12].val = create_method(
+						 convert_native_fn_to_object((nativefn)smalltalk_remove_breakpoint),
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }

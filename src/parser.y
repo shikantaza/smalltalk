@@ -43,6 +43,8 @@ OBJECT_PTR g_method_call_stack;
 
 OBJECT_PTR g_last_eval_result;
 
+BOOLEAN g_system_initialized;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SMALLTALK;
@@ -1116,11 +1118,15 @@ void load_tests()
 #ifndef LEX
 int main(int argc, char **argv)
 {
+  g_system_initialized = false;
+
   initialize();  
 
   load_core_library();
 
   initialize_pass2();
+
+  g_system_initialized = true;
 
   gtk_init(&argc, &argv);
   create_transcript_window(DEFAULT_TRANSCRIPT_POSX,

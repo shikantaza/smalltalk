@@ -51,10 +51,12 @@ extern stack_type *g_exception_contexts;
 
 extern OBJECT_PTR g_idclo;
 
-extern OBJECT_PTR debug_cont;
+extern OBJECT_PTR g_debug_cont;
 
 extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR Smalltalk;
+
+extern BOOLEAN g_debugger_invoked_for_exception;
 
 void evaluate()
 {
@@ -338,6 +340,10 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
 void debug_abort(GtkWidget *widget, gpointer data)
 {
+  //TODO: should also hanlde aborts in the context of  breakpoints
+  if(!g_debugger_invoked_for_exception)
+    return;
+
   gtk_main_quit();
   g_last_eval_result = NIL;
   close_application_window((GtkWidget **)&debugger_window);
@@ -346,6 +352,9 @@ void debug_abort(GtkWidget *widget, gpointer data)
 
 void debug_retry(GtkWidget *widget, gpointer data)
 {
+  if(!g_debugger_invoked_for_exception)
+    return;
+
   gtk_main_quit();
   close_application_window((GtkWidget **)&debugger_window);
 
@@ -374,6 +383,9 @@ void debug_retry(GtkWidget *widget, gpointer data)
 
 void debug_resume(GtkWidget *widget, gpointer data)
 {
+  if(!g_debugger_invoked_for_exception)
+    return;
+
   gtk_main_quit();
   close_application_window((GtkWidget **)&debugger_window);
 
@@ -408,10 +420,14 @@ void debug_resume(GtkWidget *widget, gpointer data)
 
 void debug_continue(GtkWidget *widget, gpointer data)
 {
+  //TODO: should also hanlde 'continue' in the context of  breakpoints
+  if(!g_debugger_invoked_for_exception)
+    return;
+
   gtk_main_quit();
   close_application_window((GtkWidget **)&debugger_window);
 
-  g_last_eval_result = invoke_cont_on_val(debug_cont, NIL);
+  g_last_eval_result = invoke_cont_on_val(g_debug_cont, NIL);
 
   g_debug_in_progress = false;
 }
@@ -455,6 +471,9 @@ int get_expression(char *buf)
 
 void debug_resume_with_val(GtkWidget *widget, gpointer data)
 {
+  if(!g_debugger_invoked_for_exception)
+    return;
+
   char buf[MAX_STRING_LENGTH];
   memset(buf, '\0', MAX_STRING_LENGTH);
 
@@ -514,4 +533,17 @@ void debug_resume_with_val(GtkWidget *widget, gpointer data)
 
     g_debug_in_progress = false;
   }
+}
+
+void debug_step_into(GtkWidget *widget, gpointer data)
+{
+  if(g_debugger_invoked_for_exception)
+    return;
+
+  gtk_main_quit();
+  close_application_window((GtkWidget **)&debugger_window);
+
+  g_debug_in_progress = false;
+
+  //control passed pack to message_send_internal()
 }

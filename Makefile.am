@@ -44,5 +44,5 @@ iconsdir = $(pkgdatadir)/icons
 icons_DATA  = icons/load_image.png icons/save_image.png icons/workspace.png icons/browser.png icons/clear.png  \
               icons/exit.png icons/evaluate.png icons/load_file.png icons/file_browser.png icons/clear32x32.png \
               icons/exit32x32.png icons/resume_with_val32x32.png icons/resume32x32.png icons/retry32x32.png \
-              icons/continue.png icons/abort.png
+              icons/continue.png icons/abort.png icons/step.png
 

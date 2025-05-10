@@ -37,6 +37,7 @@ void debug_retry(GtkWidget *, gpointer);
 void debug_resume(GtkWidget *, gpointer);
 void debug_resume_with_val(GtkWidget *, gpointer);
 void debug_continue(GtkWidget *, gpointer);
+void debug_step_into(GtkWidget *, gpointer);
 
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
@@ -67,7 +68,9 @@ GtkWindow *debugger_window;
 
 GtkTreeView *temp_vars_list;
 
-OBJECT_PTR debug_cont;
+OBJECT_PTR g_debug_cont;
+
+BOOLEAN g_debugger_invoked_for_exception;
 
 extern stack_type *g_call_chain;
 
@@ -490,6 +493,7 @@ GtkToolbar *create_debug_toolbar()
   GtkWidget *resume_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/resume32x32.png");
   GtkWidget *resume_with_val_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/resume_with_val32x32.png");
   GtkWidget *continue_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/continue.png");
+  GtkWidget *step_into_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step.png");
 
   toolbar = gtk_toolbar_new ();
   gtk_orientable_set_orientation (GTK_ORIENTABLE (toolbar), GTK_ORIENTATION_HORIZONTAL);
@@ -521,10 +525,16 @@ GtkToolbar *create_debug_toolbar()
   g_signal_connect (continue_button, "clicked", G_CALLBACK (debug_continue), debugger_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, continue_button, 4);
 
+  GtkToolItem *step_into_button = gtk_tool_button_new(step_into_icon, NULL);
+  gtk_tool_item_set_tooltip_text(step_into_button, "Step into");
+  g_signal_connect (step_into_button, "clicked", G_CALLBACK (debug_step_into), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, step_into_button, 5);
+
   return (GtkToolbar *)toolbar;
 }
 
-void create_debug_window(int posx, int posy, int width, int height, OBJECT_PTR cont, char *title)
+void create_debug_window(int posx, int posy, int width, int height,
+			 BOOLEAN invoked_for_exception, OBJECT_PTR cont, char *title)
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
@@ -537,6 +547,7 @@ void create_debug_window(int posx, int posy, int width, int height, OBJECT_PTR c
 
   gtk_window_set_title((GtkWindow *)win, "Debugger");
 
+  gtk_window_set_position((GtkWindow *)win, GTK_WIN_POS_CENTER_ALWAYS);
   gtk_window_set_default_size((GtkWindow *)win, width, height);
   gtk_window_move((GtkWindow *)win, posx, posy);
 
@@ -632,7 +643,8 @@ void create_debug_window(int posx, int posy, int width, int height, OBJECT_PTR c
   //select the top entry of the call chain stack
   gtk_tree_view_set_cursor(call_chain_list, gtk_tree_path_new_from_indices(0, -1), NULL, false);
 
-  debug_cont = cont;
+  g_debugger_invoked_for_exception = invoked_for_exception;
+  g_debug_cont = cont;
 
   gtk_widget_show_all(win);
 

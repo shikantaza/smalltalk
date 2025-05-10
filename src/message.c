@@ -9,6 +9,8 @@
 #include "util.h"
 #include "stack.h"
 
+void create_debug_window(int, int, int, int, BOOLEAN, OBJECT_PTR, char *);
+
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
 extern OBJECT_PTR g_method_call_stack;
@@ -24,6 +26,10 @@ extern OBJECT_PTR Nil;
 extern OBJECT_PTR MNU_SYMBOL;
 
 extern OBJECT_PTR g_msg_snd_closure;
+
+extern BOOLEAN g_system_initialized;
+
+extern BOOLEAN g_debug_in_progress;
 
 call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
 					    OBJECT_PTR receiver,
@@ -292,6 +298,21 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
 
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
+
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
@@ -309,6 +330,21 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 1, args, cont, NIL, false));
 
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
+
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
@@ -323,10 +359,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg1 = args[0];
     arg2 = args[1];
     cont = args[2];
-    
+
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 2, args, cont, NIL, false));
+
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -344,10 +395,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg2 = args[1];
     arg3 = args[2];
     cont = args[3];
-    
+
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 3, args, cont, NIL, false));
+
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -371,6 +437,21 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 4, args, cont, NIL, false));
+
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
@@ -410,9 +491,26 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #endif      
     }
 
+    //TODO: IMPORTANT - cont has to be set correctly
+
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, cont, NIL, false));
+
+    if(m->breakpointed && g_system_initialized)
+    {
+      g_debug_in_progress = true;
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  false,
+			  cont,
+			  "Smalltalk");
+
+      while(g_debug_in_progress)
+	; //loop till the debug window returns control
+    }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 

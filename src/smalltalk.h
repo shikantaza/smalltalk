@@ -46,8 +46,8 @@ typedef int BOOLEAN;
 #define DEFAULT_DEBUG_WINDOW_POSX 650
 #define DEFAULT_DEBUG_WINDOW_POSY 200
 
-#define DEFAULT_DEBUG_WINDOW_WIDTH 600
-#define DEFAULT_DEBUG_WINDOW_HEIGHT 400
+#define DEFAULT_DEBUG_WINDOW_WIDTH 800
+#define DEFAULT_DEBUG_WINDOW_HEIGHT 500
 
 #define MAX_STRING_LENGTH 16192
 
@@ -98,6 +98,7 @@ typedef struct
   unsigned int arity;
   OBJECT_PTR code_str;
   executable_code_t *exec_code;
+  BOOLEAN breakpointed;
 } method_t;
 
 typedef struct
