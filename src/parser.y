@@ -60,6 +60,8 @@ extern stack_type *g_exception_environment;
 
 extern OBJECT_PTR CompileError;
 
+extern enum DebugAction g_debug_action;
+
 %}
 
 %union{
@@ -905,6 +907,8 @@ int repl2()
   stack_empty(g_exception_contexts);
 
   g_compile_time_method_selector = NIL;
+
+  g_debug_action = CONTINUE;
 
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 

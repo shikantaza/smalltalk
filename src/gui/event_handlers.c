@@ -24,6 +24,8 @@ void show_error_dialog(char *);
 
 BOOLEAN g_debug_in_progress;
 
+enum DebugAction g_debug_action;
+
 extern GtkWindow *action_triggering_window;
 
 extern GtkWindow *transcript_window;
@@ -340,9 +342,7 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
 void debug_abort(GtkWidget *widget, gpointer data)
 {
-  //TODO: should also hanlde aborts in the context of  breakpoints
-  if(!g_debugger_invoked_for_exception)
-    return;
+  g_debug_action = ABORT;
 
   gtk_main_quit();
   g_last_eval_result = NIL;
@@ -420,14 +420,11 @@ void debug_resume(GtkWidget *widget, gpointer data)
 
 void debug_continue(GtkWidget *widget, gpointer data)
 {
-  //TODO: should also hanlde 'continue' in the context of  breakpoints
-  if(!g_debugger_invoked_for_exception)
-    return;
-
   gtk_main_quit();
   close_application_window((GtkWidget **)&debugger_window);
 
-  g_last_eval_result = invoke_cont_on_val(g_debug_cont, NIL);
+  if(g_debugger_invoked_for_exception)
+    g_last_eval_result = invoke_cont_on_val(g_debug_cont, NIL);
 
   g_debug_in_progress = false;
 }
@@ -539,6 +536,20 @@ void debug_step_into(GtkWidget *widget, gpointer data)
 {
   if(g_debugger_invoked_for_exception)
     return;
+
+  //can't step into a primitive method
+  assert(!stack_is_empty(g_call_chain));
+
+  call_chain_entry_t *entry = stack_top(g_call_chain);
+  method_t *m = (method_t *)extract_ptr(entry->method);
+
+  if(m->code_str == NIL)
+  {
+    show_error_dialog("Cannot step into primitive method");
+    return;
+  }
+
+  g_debug_action = STEP_INTO;
 
   gtk_main_quit();
   close_application_window((GtkWidget **)&debugger_window);

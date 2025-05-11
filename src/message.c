@@ -31,6 +31,8 @@ extern BOOLEAN g_system_initialized;
 
 extern BOOLEAN g_debug_in_progress;
 
+extern enum DebugAction g_debug_action;
+
 call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
 					    OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
@@ -298,7 +300,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -311,6 +313,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
@@ -330,7 +335,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 1, args, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -343,6 +348,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
@@ -364,7 +372,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 2, args, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -377,6 +385,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
@@ -400,7 +411,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 3, args, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -413,6 +424,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
@@ -438,7 +452,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 4, args, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -451,6 +465,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
@@ -497,7 +514,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, cont, NIL, false));
 
-    if(m->breakpointed && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
       create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
@@ -510,6 +527,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
+
+      if(g_debug_action == ABORT)
+	return NIL;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));

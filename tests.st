@@ -79,10 +79,10 @@ UnitTestFramework runTestCase: [ classObj2 new method2 = 42 ] withID: 3
 
 Smalltalk createClass: #Fact
 
-Smalltalk addClassMethod: #fact: toClass: Fact withBody:
-  [ :n |
+Smalltalk addClassMethod: #fact: toClass: Fact withBodyStr:
+  '[ :n |
   (n = 0) ifTrue: [ ^ 1].
-  ^ (n * (self fact: (n - 1)))]
+  ^ (n * (self fact: (n - 1)))]'
 
 UnitTestFramework runTestCase: [ (Fact fact: 10)  = 3628800 ] withID: 4
 

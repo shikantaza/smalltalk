@@ -51,6 +51,15 @@ typedef int BOOLEAN;
 
 #define MAX_STRING_LENGTH 16192
 
+enum DebugAction
+{
+  CONTINUE,
+  STEP_INTO,
+  STEP_OVER,
+  STEP_OUT,
+  ABORT
+};
+
 typedef uintptr_t OBJECT_PTR;
 
 //#if __aarch64__
