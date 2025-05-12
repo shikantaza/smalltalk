@@ -72,6 +72,8 @@ OBJECT_PTR g_debug_cont;
 
 BOOLEAN g_debugger_invoked_for_exception;
 
+GtkTreeView *call_chain_list;
+
 extern stack_type *g_call_chain;
 
 GtkToolbar *create_transcript_toolbar()
@@ -533,8 +535,7 @@ GtkToolbar *create_debug_toolbar()
   return (GtkToolbar *)toolbar;
 }
 
-void create_debug_window(int posx, int posy, int width, int height,
-			 BOOLEAN invoked_for_exception, OBJECT_PTR cont, char *title)
+void create_debug_window(int posx, int posy, int width, int height, char *title)
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
@@ -563,7 +564,7 @@ void create_debug_window(int posx, int posy, int width, int height,
   scrolled_win2 = gtk_scrolled_window_new(NULL, NULL);
   scrolled_win3 = gtk_scrolled_window_new(NULL, NULL);
 
-  GtkTreeView *call_chain_list = (GtkTreeView *)gtk_tree_view_new();
+  call_chain_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(call_chain_list, TRUE);
   //gtk_widget_override_font(GTK_WIDGET(call_chain_list), pango_font_description_from_string(FONT));
 
@@ -575,7 +576,8 @@ void create_debug_window(int posx, int posy, int width, int height,
   //sorting the call chain is not allowed
   //gtk_tree_view_column_set_sort_column_id(gtk_tree_view_get_column(callers_symbols_list, 0), 0);
 
-  populate_call_chain_list(call_chain_list);
+  //moved to show_debug_window()
+  //populate_call_chain_list(call_chain_list);
 
   g_signal_connect(G_OBJECT(win),
                    "key_press_event",
@@ -640,6 +642,8 @@ void create_debug_window(int posx, int posy, int width, int height,
 
   debugger_window = (GtkWindow *)win;
 
+  //moved to show_debug_window
+  /*
   //select the top entry of the call chain stack
   gtk_tree_view_set_cursor(call_chain_list, gtk_tree_path_new_from_indices(0, -1), NULL, false);
 
@@ -649,6 +653,7 @@ void create_debug_window(int posx, int posy, int width, int height,
   gtk_widget_show_all(win);
 
   gtk_main();
+  */
 }
 
 void show_error_dialog(char *msg)
@@ -661,4 +666,23 @@ void show_error_dialog(char *msg)
                                               msg);
   gtk_dialog_run(GTK_DIALOG (dialog));
   gtk_widget_destroy((GtkWidget *)dialog);
+}
+
+void show_debug_window(BOOLEAN invoked_for_exception, OBJECT_PTR cont)
+{
+  populate_call_chain_list(call_chain_list);
+  //select the top entry of the call chain stack
+  gtk_tree_view_set_cursor(call_chain_list, gtk_tree_path_new_from_indices(0, -1), NULL, false);
+
+  g_debugger_invoked_for_exception = invoked_for_exception;
+  g_debug_cont = cont;
+
+  gtk_widget_show_all((GtkWidget *)debugger_window);
+
+  gtk_main();
+}
+
+void hide_debug_window()
+{
+  gtk_widget_set_visible((GtkWidget *)debugger_window, FALSE);
 }

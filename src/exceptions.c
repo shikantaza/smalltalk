@@ -10,7 +10,7 @@
 #include "util.h"
 #include "stack.h"
 
-void create_debug_window(int, int, int, int, BOOLEAN, OBJECT_PTR, char *);
+void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 void show_error_dialog(char *);
 
 //stack of exception handlers;
@@ -335,13 +335,9 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
 OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 {
   g_debug_in_progress = true;
-  create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-		      DEFAULT_DEBUG_WINDOW_POSY,
-		      DEFAULT_DEBUG_WINDOW_WIDTH,
-		      DEFAULT_DEBUG_WINDOW_HEIGHT,
-		      true,
-		      cont,
-		      "Smalltalk");
+  show_debug_window(true,
+		    cont,
+		    "Smalltalk");
 
   while(g_debug_in_progress)
     ; //loop till the debug window returns control

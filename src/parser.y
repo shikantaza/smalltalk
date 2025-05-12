@@ -33,6 +33,7 @@ void gtk_main();
 void gtk_init(int *, char ***);
 void create_transcript_window(int, int, int, int, char *);
 void create_workspace_window(int, int, int, int, char *);
+void create_debug_window(int, int, int, int, char *);
 void print_to_transcript(char *);
 
 executable_code_t *g_exp;
@@ -1143,6 +1144,11 @@ int main(int argc, char **argv)
 			  DEFAULT_WORKSPACE_WIDTH,
 			  DEFAULT_WORKSPACE_HEIGHT,
 			  "Smalltalk");
+  create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+		      DEFAULT_DEBUG_WINDOW_POSY,
+		      DEFAULT_DEBUG_WINDOW_WIDTH,
+		      DEFAULT_DEBUG_WINDOW_HEIGHT,
+		      "Smalltalk");
   gtk_main();
 
   /*

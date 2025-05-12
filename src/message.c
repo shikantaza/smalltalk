@@ -9,7 +9,7 @@
 #include "util.h"
 #include "stack.h"
 
-void create_debug_window(int, int, int, int, BOOLEAN, OBJECT_PTR, char *);
+void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
@@ -303,13 +303,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -338,13 +334,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -375,13 +367,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -414,13 +402,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -455,13 +439,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -517,13 +497,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			  DEFAULT_DEBUG_WINDOW_POSY,
-			  DEFAULT_DEBUG_WINDOW_WIDTH,
-			  DEFAULT_DEBUG_WINDOW_HEIGHT,
-			  false,
-			  cont,
-			  "Smalltalk");
+      show_debug_window(false,
+			cont,
+			"Smalltalk");
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control

@@ -22,6 +22,9 @@ void remove_all_from_list(GtkTreeView *);
 
 void show_error_dialog(char *);
 
+void hide_debug_window();
+
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -346,7 +349,7 @@ void debug_abort(GtkWidget *widget, gpointer data)
 
   gtk_main_quit();
   g_last_eval_result = NIL;
-  close_application_window((GtkWidget **)&debugger_window);
+  hide_debug_window();
   g_debug_in_progress = false;
 }
 
@@ -356,7 +359,7 @@ void debug_retry(GtkWidget *widget, gpointer data)
     return;
 
   gtk_main_quit();
-  close_application_window((GtkWidget **)&debugger_window);
+  hide_debug_window();
 
   stack_pop(g_call_chain); //Exception>>signal
 
@@ -387,7 +390,7 @@ void debug_resume(GtkWidget *widget, gpointer data)
     return;
 
   gtk_main_quit();
-  close_application_window((GtkWidget **)&debugger_window);
+  hide_debug_window();
 
   if(!stack_is_empty(g_call_chain) && g_active_handler != NULL)
     invoke_curtailed_blocks(g_active_handler->cont);
@@ -420,8 +423,10 @@ void debug_resume(GtkWidget *widget, gpointer data)
 
 void debug_continue(GtkWidget *widget, gpointer data)
 {
+  g_debug_action = CONTINUE;
+
   gtk_main_quit();
-  close_application_window((GtkWidget **)&debugger_window);
+  hide_debug_window();
 
   if(g_debugger_invoked_for_exception)
     g_last_eval_result = invoke_cont_on_val(g_debug_cont, NIL);
@@ -493,7 +498,7 @@ void debug_resume_with_val(GtkWidget *widget, gpointer data)
   if(result == GTK_RESPONSE_ACCEPT)
   {
     gtk_main_quit();
-    close_application_window((GtkWidget **)&debugger_window);
+    hide_debug_window();
 
     OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				  Smalltalk,
@@ -552,7 +557,7 @@ void debug_step_into(GtkWidget *widget, gpointer data)
   g_debug_action = STEP_INTO;
 
   gtk_main_quit();
-  close_application_window((GtkWidget **)&debugger_window);
+  hide_debug_window();
 
   g_debug_in_progress = false;
 
