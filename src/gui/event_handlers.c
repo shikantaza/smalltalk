@@ -304,42 +304,46 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
     method_t *m = (method_t *)extract_ptr(method);
 
     if(m->code_str != NIL)
+    {
       gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
 				       g_string_literals[m->code_str >> OBJECT_SHIFT], -1);
+
+      //fetch temp vars for the call chain entry
+      remove_all_from_list(temp_vars_list);
+
+      GtkListStore *store1;
+      GtkTreeIter  iter1;
+
+      store1 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(temp_vars_list)));
+
+      //this assert will not hold now, as the local vars list will be populated
+      //only when the method is executed
+      //assert(cons_length(m->temporaries) == cons_length(entry->local_vars_list));
+
+      OBJECT_PTR rest = reverse(entry->local_vars_list);
+      OBJECT_PTR rest1 = m->temporaries;
+
+      char var_name[100], var_val[100];
+
+      while(rest != NIL)
+      {
+	memset(var_name, '\0', 100);
+	memset(var_val, '\0', 100);
+
+	print_object_to_string(car(rest1), var_name);
+	print_object_to_string(car(car(rest)), var_val);
+
+	gtk_list_store_append(store1, &iter1);
+	gtk_list_store_set(store1, &iter1, 0, var_name, 1, var_val, -1);
+
+	rest = cdr(rest);
+	rest1 = cdr(rest1);
+      }
+      //
+    }
     else
       gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
 				       "<primitive method>", -1);
-
-    //fetch temp vars for the call chain entry
-    remove_all_from_list(temp_vars_list);
-
-    GtkListStore *store1;
-    GtkTreeIter  iter1;
-
-    store1 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(temp_vars_list)));
-
-    assert(cons_length(m->temporaries) == cons_length(entry->local_vars_list));
-
-    OBJECT_PTR rest = reverse(entry->local_vars_list);
-    OBJECT_PTR rest1 = m->temporaries;
-
-    char var_name[100], var_val[100];
-
-    while(rest != NIL)
-    {
-      memset(var_name, '\0', 100);
-      memset(var_val, '\0', 100);
-
-      print_object_to_string(car(rest1), var_name);
-      print_object_to_string(car(car(rest)), var_val);
-
-      gtk_list_store_append(store1, &iter1);
-      gtk_list_store_set(store1, &iter1, 0, var_name, 1, var_val, -1);
-
-      rest = cdr(rest);
-      rest1 = cdr(rest1);
-    }
-    //
   }
 }
 
@@ -555,6 +559,21 @@ void debug_step_into(GtkWidget *widget, gpointer data)
   }
 
   g_debug_action = STEP_INTO;
+
+  gtk_main_quit();
+  hide_debug_window();
+
+  g_debug_in_progress = false;
+
+  //control passed pack to message_send_internal()
+}
+
+void debug_step_over(GtkWidget *widget, gpointer data)
+{
+  if(g_debugger_invoked_for_exception)
+    return;
+
+  g_debug_action = STEP_OVER;
 
   gtk_main_quit();
   hide_debug_window();

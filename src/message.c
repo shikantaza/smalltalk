@@ -153,11 +153,11 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
     return NIL;
 }
 
-OBJECT_PTR message_send_internal(BOOLEAN super,
-				 OBJECT_PTR receiver,
-				 OBJECT_PTR selector,
-				 OBJECT_PTR count1,
-				 OBJECT_PTR *args)
+OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
+					   OBJECT_PTR receiver,
+					   OBJECT_PTR selector,
+					   OBJECT_PTR count1,
+					   OBJECT_PTR *args)
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
@@ -539,6 +539,30 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #endif
   
   return retval;
+}
+
+OBJECT_PTR message_send_internal(BOOLEAN super,
+				 OBJECT_PTR receiver,
+				 OBJECT_PTR selector,
+				 OBJECT_PTR count1,
+				 OBJECT_PTR *args)
+{
+  if(g_debug_action == STEP_OVER)
+  {
+    int count;
+    count = get_int_value(count1);
+
+    OBJECT_PTR cont = args[count];
+    args[count] = g_idclo;
+
+    OBJECT_PTR ret = message_send_internal_delegated(super, receiver, selector, count1, args);
+
+    g_debug_action = STEP_INTO;
+
+    return invoke_cont_on_val(cont, ret);
+  }
+  else
+    return message_send_internal_delegated(super, receiver, selector, count1, args);
 }
 
 OBJECT_PTR message_send_internal_va_list(BOOLEAN super,

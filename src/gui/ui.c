@@ -38,6 +38,7 @@ void debug_resume(GtkWidget *, gpointer);
 void debug_resume_with_val(GtkWidget *, gpointer);
 void debug_continue(GtkWidget *, gpointer);
 void debug_step_into(GtkWidget *, gpointer);
+void debug_step_over(GtkWidget *, gpointer);
 
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
@@ -496,6 +497,7 @@ GtkToolbar *create_debug_toolbar()
   GtkWidget *resume_with_val_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/resume_with_val32x32.png");
   GtkWidget *continue_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/continue.png");
   GtkWidget *step_into_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step.png");
+  GtkWidget *step_over_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_over.png");
 
   toolbar = gtk_toolbar_new ();
   gtk_orientable_set_orientation (GTK_ORIENTABLE (toolbar), GTK_ORIENTATION_HORIZONTAL);
@@ -531,6 +533,11 @@ GtkToolbar *create_debug_toolbar()
   gtk_tool_item_set_tooltip_text(step_into_button, "Step into");
   g_signal_connect (step_into_button, "clicked", G_CALLBACK (debug_step_into), debugger_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, step_into_button, 5);
+
+  GtkToolItem *step_over_button = gtk_tool_button_new(step_over_icon, NULL);
+  gtk_tool_item_set_tooltip_text(step_over_button, "Step over");
+  g_signal_connect (step_over_button, "clicked", G_CALLBACK (debug_step_over), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, step_over_button, 6);
 
   return (GtkToolbar *)toolbar;
 }
