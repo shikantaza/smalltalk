@@ -303,13 +303,14 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
     method_t *m = (method_t *)extract_ptr(method);
 
+    remove_all_from_list(temp_vars_list);
+
     if(m->code_str != NIL)
     {
       gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
 				       g_string_literals[m->code_str >> OBJECT_SHIFT], -1);
 
       //fetch temp vars for the call chain entry
-      remove_all_from_list(temp_vars_list);
 
       GtkListStore *store1;
       GtkTreeIter  iter1;
