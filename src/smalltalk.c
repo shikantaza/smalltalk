@@ -113,7 +113,7 @@ void initialize_top_level()
 
   add_binding_to_top_level(MESSAGE_SEND, cons(g_msg_snd_closure, NIL));
   add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(g_msg_snd_super_closure, NIL));
-  add_binding_to_top_level(get_symbol("Integer"), Integer); //TODO: shouldn't this be cons(Integer, NIL)?
+  add_binding_to_top_level(get_symbol("Integer"), cons(Integer, NIL));
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
@@ -996,7 +996,7 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
   fclose(fp);
 
   pop_if_top(entry);
-  invoke_cont_on_val(cont, receiver);
+  return invoke_cont_on_val(cont, receiver);
 }
 
 OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
@@ -1060,7 +1060,7 @@ OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
     char buf[300];
     sprintf(buf, "Method '%s' does not exist in class %s",
 	    get_smalltalk_symbol_name(selector),
-	    ((class_object_t *)extract_ptr(class_obj))->name);
+	    cls_obj->name);
     return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
   }
 
