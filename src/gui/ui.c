@@ -7,6 +7,8 @@
 #include "../global_decls.h"
 #include "../util.h"
 
+#define FONT "DejaVu Sans Mono Bold 11"
+
 gboolean handle_key_press_events(GtkWidget *, 
 				 GdkEventKey *,
 				 gpointer);
@@ -167,7 +169,7 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
   gtk_text_view_set_cursor_visible((GtkTextView *)textview, FALSE);
   //gtk_widget_set_sensitive(textview, FALSE);
 
-  //gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
 
   transcript_buffer = gtk_text_view_get_buffer((GtkTextView *)textview);
 
@@ -274,7 +276,7 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   //workspace_textview = gtk_text_view_new ();
   GtkWidget *textview = (GtkWidget *)workspace_source_view;
 
-  //gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
 
   workspace_buffer = gtk_text_view_get_buffer((GtkTextView *)workspace_source_view);
   //workspace_buffer = (GtkTextBuffer *)workspace_source_buffer;
@@ -399,10 +401,12 @@ void remove_all_from_list(GtkTreeView *list)
   GtkTreeIter  iter;
 
   model = gtk_tree_view_get_model (GTK_TREE_VIEW (list));
+
   store = GTK_LIST_STORE(model);
 
   if(gtk_tree_model_get_iter_first(model, &iter) == FALSE)
-      return;
+    return;
+
   gtk_list_store_clear(store);
 }
 
@@ -573,7 +577,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   call_chain_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(call_chain_list, TRUE);
-  //gtk_widget_override_font(GTK_WIDGET(call_chain_list), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(call_chain_list), pango_font_description_from_string(FONT));
 
   g_signal_connect(G_OBJECT(call_chain_list), "cursor-changed",
                    G_CALLBACK(fetch_details_for_call_chain_entry), NULL);
@@ -611,7 +615,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   gtk_text_buffer_create_tag((GtkTextBuffer *)debugger_source_buffer, "gray_bg",
                              "background", "lightgray", NULL);
 
-  //gtk_widget_override_font(GTK_WIDGET(debugger_source_view), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(debugger_source_view), pango_font_description_from_string(FONT));
   gtk_text_view_set_editable((GtkTextView *)debugger_source_view, FALSE); //TODO: make it editable later
 
   //TODO: uncomment later
@@ -626,6 +630,8 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   //having temp_vars_list as global would be a problem
   temp_vars_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(temp_vars_list, FALSE);
+
+  gtk_widget_override_font(GTK_WIDGET(temp_vars_list), pango_font_description_from_string(FONT));
 
   initialize_temp_vars_list(temp_vars_list);
 

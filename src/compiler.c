@@ -122,6 +122,9 @@ extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR EmptyCollection;
 extern OBJECT_PTR CompileError;
 
+extern OBJECT_PTR g_step_over_till_cont;
+extern enum DebugAction g_debug_action;
+
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
@@ -844,6 +847,12 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
 OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
 {
   assert(IS_CLOSURE_OBJECT(cont));
+
+  if(g_step_over_till_cont == cont)
+  {
+    g_debug_action = STEP_INTO;
+    g_step_over_till_cont = NIL;
+  }
 
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
 

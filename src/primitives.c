@@ -15,6 +15,9 @@ extern OBJECT_PTR g_msg_snd_closure;
 
 extern OBJECT_PTR VALUE_SELECTOR;
 
+extern OBJECT_PTR g_step_over_till_cont;
+extern enum DebugAction g_debug_action;
+
 void save_continuation(OBJECT_PTR cont)
 {
   //TODO
@@ -163,6 +166,12 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
 
     while(entry->selector != selector && !stack_is_empty(g_call_chain))
       entry = (call_chain_entry_t *)stack_pop(g_call_chain);
+  }
+
+  if(g_step_over_till_cont == cont)
+  {
+    g_debug_action = STEP_INTO;
+    g_step_over_till_cont = NIL;
   }
 
   return cont;

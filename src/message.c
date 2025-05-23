@@ -9,7 +9,9 @@
 #include "util.h"
 #include "stack.h"
 
-void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
+//void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
+
+OBJECT_PTR g_step_over_till_cont;
 
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
@@ -153,11 +155,11 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
     return NIL;
 }
 
-OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
-					   OBJECT_PTR receiver,
-					   OBJECT_PTR selector,
-					   OBJECT_PTR count1,
-					   OBJECT_PTR *args)
+OBJECT_PTR message_send_internal(BOOLEAN super,
+				 OBJECT_PTR receiver,
+				 OBJECT_PTR selector,
+				 OBJECT_PTR count1,
+				 OBJECT_PTR *args)
 {
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
@@ -286,7 +288,7 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
   print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
 #endif
   
-  uintptr_t arg1, arg2, arg3,arg4, arg5;
+  uintptr_t arg1, arg2, arg3, arg4, arg5;
   uintptr_t cont;
 
   //order of registers - first to sixth argument
@@ -303,23 +305,24 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
+      return nf(closure_form, cont);
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
-    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm("mov %0, %%rsi\n\t" : : "r"(cont) : "%rsi");
-    
-    asm("call *%0\n\t" : : "m"(nf) : );
+    return nf(closure_form, cont);
   }
 
   if(count == 1)
@@ -334,24 +337,24 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
+      return nf(closure_form, arg1, cont);
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
-    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm("mov %0, %%rdx\n\t" : : "r"(cont) : "%rdx");
-    
-    asm("call *%0\n\t" : : "m"(nf) : );
+    return nf(closure_form, arg1, cont);
   }
 
   if(count == 2)
@@ -367,25 +370,24 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
+      return nf(closure_form, arg1, arg2, cont);
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
-    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm("mov %0, %%rcx\n\t" : : "r"(cont) : "%rcx");
-    
-    asm("call *%0\n\t" : : "m"(nf) : );
+    return nf(closure_form, arg1, arg2, cont);
   }
 
   if(count == 3)
@@ -402,26 +404,24 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
+      return nf(closure_form, arg1, arg2, arg3, cont);
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
-    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    asm("mov %0, %%r8\n\t"  : : "r"(cont) : "%r8");
-   
-    asm("call *%0\n\t" : : "m"(nf) : );
+    return nf(closure_form, arg1, arg2, arg3, cont);
   }
 
   if(count == 4)
@@ -439,27 +439,24 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
+      return nf(closure_form, arg1, arg2, arg3, arg4, cont);
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
 
-    asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-    asm("mov %0, %%r9\n\t"  : : "r"(cont) : "%r9");
-
-    asm("call *%0\n\t" : : "m"(nf) : );
+    return nf(closure_form, arg1, arg2, arg3, arg4, cont);
   }
 
   if(count > 4)
@@ -472,46 +469,82 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
     arg4 = args[3];
     arg5 = args[4];
 
-#ifdef DEBUG    
-    printf("arg[1-5] = %lu %lu %lu %lu %lu\n", arg1, arg2, arg3, arg4, arg5);
+#ifdef DEBUG
+    printf("count = %d\n", count);
+    printf("arg[1-5] = ");
+    print_object(arg1); printf(" ");
+    print_object(arg2); printf(" ");
+    print_object(arg3); printf(" ");
+    print_object(arg4); printf(" ");
+    print_object(arg5); printf(" \n");
 #endif
     
-    n = count - 5; // no of arguments that should be pushed onto the stack
+    n = count - 4; // no of arguments that should be pushed onto the stack
 
     uintptr_t *stack_args = (uintptr_t *)GC_MALLOC(n * sizeof(uintptr_t));
     
     for(i=0; i<n; i++)
     {
-      stack_args[i] = args[count-n+i];
+      stack_args[i] = args[count-n+i+1];
 #ifdef DEBUG      
-      printf("stack_args[%d] = %lu\n", i, stack_args[i]);
+      printf("stack_args[%d] = ", i); print_object(stack_args[i]); printf("\n");
 #endif      
     }
 
-    //TODO: IMPORTANT - cont has to be set correctly
-
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, cont, NIL, false));
+    stack_push(g_call_chain,
+	       create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, stack_args[n-1], NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
-      show_debug_window(false,
-			cont,
-			"Smalltalk");
+      show_debug_window(false, cont);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
 	return NIL;
+
+      if(g_debug_action == STEP_OVER)
+	g_step_over_till_cont = cont;
+
+      put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
+
+      //invoke nf via assembly on the args and cont directly
+      asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+      asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+      //not populating rdx here, see below
+      asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+      asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+      asm("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
+
+      for(i=n-1; i>=0; i--)
+	asm("push %0\n\t"       : : "r"(stack_args[i]) : );
+
+      //using a for loop screws up the rdx register.
+      //so we populate rdx after the stack push operations
+      asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+
+      asm("call *%0\n\t" : : "m"(nf) : );
+
+      for(i=0; i<n; i++)
+	asm("addq $8, %%rsp\n\t" : : : );
+
+      OBJECT_PTR retval = NIL;
+
+      asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
+      return retval;
     }
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
+    OBJECT_PTR retval = NIL;
+
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+    //not populating rdx here, see below
     //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
     asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
     asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
@@ -528,41 +561,11 @@ OBJECT_PTR message_send_internal_delegated(BOOLEAN super,
 
     for(i=0; i<n; i++)
       asm("addq $8, %%rsp\n\t" : : : );
+
+    asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
+
+    return retval;
   }
-
-  OBJECT_PTR retval = NIL;
-
-  asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
-
-#ifdef DEBUG  
-  printf("message_send returning "); print_object(retval); printf("\n");
-#endif
-  
-  return retval;
-}
-
-OBJECT_PTR message_send_internal(BOOLEAN super,
-				 OBJECT_PTR receiver,
-				 OBJECT_PTR selector,
-				 OBJECT_PTR count1,
-				 OBJECT_PTR *args)
-{
-  if(g_debug_action == STEP_OVER)
-  {
-    int count;
-    count = get_int_value(count1);
-
-    OBJECT_PTR cont = args[count];
-    args[count] = g_idclo;
-
-    OBJECT_PTR ret = message_send_internal_delegated(super, receiver, selector, count1, args);
-
-    g_debug_action = STEP_INTO;
-
-    return invoke_cont_on_val(cont, ret);
-  }
-  else
-    return message_send_internal_delegated(super, receiver, selector, count1, args);
 }
 
 OBJECT_PTR message_send_internal_va_list(BOOLEAN super,

@@ -63,6 +63,7 @@ call_chain_entry_t  *create_call_chain_entry(BOOLEAN,
 					     OBJECT_PTR,
 					     BOOLEAN);
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
+void                 show_debug_window(BOOLEAN, OBJECT_PTR);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,
 					      OBJECT_PTR,
