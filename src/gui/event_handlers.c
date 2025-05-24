@@ -24,6 +24,7 @@ void show_error_dialog(char *);
 
 void hide_debug_window();
 
+void render_executable_code(GtkTextBuffer *, executable_code_t *);
 
 BOOLEAN g_debug_in_progress;
 
@@ -62,6 +63,8 @@ extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR Smalltalk;
 
 extern BOOLEAN g_debugger_invoked_for_exception;
+
+extern executable_code_t *g_exp;
 
 void evaluate()
 {
@@ -307,8 +310,14 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
     if(m->code_str != NIL)
     {
-      gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
-				       g_string_literals[m->code_str >> OBJECT_SHIFT], -1);
+      //gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
+      //			       g_string_literals[m->code_str >> OBJECT_SHIFT], -1);
+      executable_code_t *prev_exp = g_exp;
+      char *buf = GC_strdup(g_string_literals[m->code_str >> OBJECT_SHIFT]);
+      yy_scan_string(buf);
+      assert(!yyparse()); //m->code_str should be valid
+      render_executable_code(debugger_source_buffer, g_exp);
+      g_exp = prev_exp;
 
       //fetch temp vars for the call chain entry
 
