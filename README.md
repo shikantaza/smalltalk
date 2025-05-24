@@ -1,6 +1,6 @@
 # About
 
-This is an attempt at implementing an ANSI-compliant Smalltalk system by repurposing the [pLisp](https://github.com/shikantaza/pLisp/)  infrastructure. The project is in its early days, so there is not much to see yet, except for a bare bones UI (Transcript and Workspace) with these features:
+This is an attempt at implementing an ANSI-compliant Smalltalk system by repurposing the [pLisp](https://github.com/shikantaza/pLisp/)  infrastructure. The project is in its early days, so there is not much to see yet, except for a bare bones UI (Transcript, Workspace, and Debugger) with these features:
 
 * Class creation, with integers, arrays, and user-created objects permitted as instance and shared variables
    
@@ -22,8 +22,9 @@ This is an attempt at implementing an ANSI-compliant Smalltalk system by repurpo
   `Smalltalk createGlobal: #x`
 
 * Integer operations (+, -, *, /)
-* `Transcript>>show:` and `Transcript>>cr` for printing strings to the REPL
+* `Transcript>>show:` and `Transcript>>cr` for printing things to the Transcript window
 * Exception handling (`signal/return/resume/retry/pass/outer/resignalAs`)
+* Debugger with step into, step over, and step out of functionality
 * Basic block operations (`value, value:, on:do:, ensure:, ifCurtailed:`)
 * Arrays (`new:, at:put:, at:, size, do:`)
 
