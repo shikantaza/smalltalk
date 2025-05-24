@@ -583,3 +583,18 @@ void debug_step_over(GtkWidget *widget, gpointer data)
 
   //control passed pack to message_send_internal()
 }
+
+void debug_step_out(GtkWidget *widget, gpointer data)
+{
+  if(g_debugger_invoked_for_exception)
+    return;
+
+  g_debug_action = STEP_OUT;
+
+  gtk_main_quit();
+  hide_debug_window();
+
+  g_debug_in_progress = false;
+
+  //control passed pack to message_send_internal()
+}

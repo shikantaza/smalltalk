@@ -11,7 +11,7 @@
 
 //void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 
-OBJECT_PTR g_step_over_till_cont;
+OBJECT_PTR g_run_till_cont;
 
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
@@ -294,6 +294,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   //order of registers - first to sixth argument
   //%rdi, %rsi, %rdx, %rcx, %r8, %r9
 
+  OBJECT_PTR step_out_cont = NIL;
+
+  if(!stack_is_empty(g_call_chain))
+  {
+    call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+    step_out_cont = entry->cont;
+  }
+
   if(count == 0)
   {
     cont = args[0];
@@ -314,7 +322,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, cont);
@@ -346,7 +357,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, cont);
@@ -379,7 +393,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, cont);
@@ -413,7 +430,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, arg3, cont);
@@ -448,7 +468,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, arg3, arg4, cont);
@@ -508,7 +531,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	return NIL;
 
       if(g_debug_action == STEP_OVER)
-	g_step_over_till_cont = cont;
+	g_run_till_cont = cont;
+
+      if(g_debug_action == STEP_OUT)
+	g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 

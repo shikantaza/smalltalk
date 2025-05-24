@@ -122,7 +122,7 @@ extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR EmptyCollection;
 extern OBJECT_PTR CompileError;
 
-extern OBJECT_PTR g_step_over_till_cont;
+extern OBJECT_PTR g_run_till_cont;
 extern enum DebugAction g_debug_action;
 
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
@@ -848,10 +848,10 @@ OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
 {
   assert(IS_CLOSURE_OBJECT(cont));
 
-  if(g_step_over_till_cont == cont)
+  if(g_run_till_cont == cont)
   {
     g_debug_action = STEP_INTO;
-    g_step_over_till_cont = NIL;
+    g_run_till_cont = NIL;
   }
 
   nativefn1 nf = (nativefn1)extract_native_fn(cont);
