@@ -203,6 +203,7 @@ void render_cascaded_messages(GtkTextBuffer *code_buf, BOOLEAN highlight, gint64
   unsigned int i;
   for(i=0; i < c->nof_cascaded_msgs; i++)
   {
+    render_string_to_buffer(code_buf, highlight, index, "; ");
     render_message(code_buf, highlight, index, c->cascaded_msgs + i);
   }
 }
