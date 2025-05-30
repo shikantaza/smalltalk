@@ -270,6 +270,21 @@ typedef struct number
   char *val;
 } number_t;
 
+enum DebugExpressionType
+{
+  DEBUG_BASIC_EXPRESSION,
+  DEBUG_BINARY_ARGUMENT,
+  DEBUG_KEYWORD_ARGUMENT
+};
+
+typedef struct debug_expression
+{
+  enum DebugExpressionType type;
+  struct basic_expression *be;
+  struct binary_argument *bin_arg;
+  struct keyword_argument *kw_arg;
+} debug_expression_t;
+
 void print_temporaries(temporaries_t *);
 void print_statements(statement_t *);
 void print_return_statement(return_statement_t *);

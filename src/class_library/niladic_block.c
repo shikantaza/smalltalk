@@ -140,6 +140,7 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
 
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
+				NIL,
 				get_symbol("_ifCurtailed:"),
 				convert_int_to_object(1),
 				ensure_block,
@@ -155,6 +156,7 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
     e->termination_blk_invoked = true;
     OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					    ensure_block,
+					    NIL,
 					    VALUE_SELECTOR,
 					    convert_int_to_object(0),
 					    g_idclo);
@@ -184,6 +186,7 @@ OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR closure,
   //OBJECT_PTR ret = nf1(receiver, g_idclo);
   OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				receiver,
+				NIL,
 				VALUE_SELECTOR,
 				convert_int_to_object(0),
 				cont);

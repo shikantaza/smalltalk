@@ -28,7 +28,8 @@ OBJECT_PTR convert_symbol_literal_to_atom(char *);
 OBJECT_PTR convert_selector_literal_to_atom(char *);
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *);
 
-OBJECT_PTR convert_msg(primary_t *,
+OBJECT_PTR convert_msg(OBJECT_PTR,
+		       primary_t *,
                        unary_messages_t *,
                        binary_messages_t *,
                        keyword_message_t *);
@@ -319,7 +320,7 @@ void initialize()
   create_Array();
 
   create_OrderedCollection();
-  
+
   create_Compiler();
 
   initialize_top_level();
@@ -500,13 +501,20 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
   {
     OBJECT_PTR res = NIL;
 
+    debug_expression_t *debug_exp;
+    allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+
+    debug_exp->type = DEBUG_BASIC_EXPRESSION;
+    debug_exp->be = be;
+
     if(be->msg)
     {
       if(be->msg->type == UNARY_MESSAGE)
       {
         assert(be->msg->unary_messages);
 
-        res = convert_msg(be->prim,
+        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+			  be->prim,
                           be->msg->unary_messages,
                           be->msg->binary_messages,
                           be->msg->kw_msg);
@@ -516,14 +524,16 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
       {
         assert(be->msg->binary_messages);
 
-        res = convert_msg(be->prim,
+        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+			  be->prim,
                           NULL,
                           be->msg->binary_messages,
                           be->msg->kw_msg);
       }
       else if(be->msg->type == KEYWORD_MESSAGE)
       {
-        res = convert_msg(be->prim,
+        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+			  be->prim,
                           NULL,
                           NULL,
                           be->msg->kw_msg);
@@ -545,7 +555,8 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
         unsigned int i;
         unsigned int nof_msgs = cm->nof_cascaded_msgs;
         for(i=0; i< nof_msgs; i++)
-          res1 = cons(convert_msg(be->prim,
+          res1 = cons(convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+				  be->prim,
                                   cm->cascaded_msgs[i].unary_messages,
                                   cm->cascaded_msgs[i].binary_messages,
                                   cm->cascaded_msgs[i].kw_msg),
@@ -648,7 +659,8 @@ OBJECT_PTR convert_block_constructor_to_lisp(block_constructor_t *b)
   return concat(2, res, list(1, convert_exec_code_to_lisp(b->exec_code)));
 }
 
-OBJECT_PTR convert_msg(primary_t *prim,
+OBJECT_PTR convert_msg(OBJECT_PTR expr_ptr,
+		       primary_t *prim,
                        unary_messages_t *unary_messages,
                        binary_messages_t *binary_messages,
                        keyword_message_t *kw_msg)
@@ -667,9 +679,10 @@ OBJECT_PTR convert_msg(primary_t *prim,
     nof_msgs = unary_messages->nof_messages;
 
     for(i=0; i < nof_msgs; i++)
-      res = list(4,
+      res = list(5,
                  MESSAGE_SEND,
                  res,
+		 expr_ptr,
                  convert_identifier_to_atom(unary_messages->identifiers[i]),
 		 convert_int_to_object(0));
   }
@@ -679,9 +692,10 @@ OBJECT_PTR convert_msg(primary_t *prim,
     nof_msgs = binary_messages->nof_messages;
 
     for(i=0; i < nof_msgs; i++)
-      res = list(5,
+      res = list(6,
                  MESSAGE_SEND,
                  res,
+		 expr_ptr,
                  convert_binary_selector_to_atom(binary_messages->bin_msgs[i].binary_selector),
 		 convert_int_to_object(1),
                  convert_binary_argument_to_lisp(binary_messages->bin_msgs[i].bin_arg));
@@ -706,9 +720,10 @@ OBJECT_PTR convert_msg(primary_t *prim,
     for(i=0; i<nof_arg_pairs; i++)
       len += sprintf(combined_keyword+len, "%s", kw_msg->kw_arg_pairs[i].keyword);
 
-    res = list(3,
+    res = list(4,
                MESSAGE_SEND,
                res,
+	       expr_ptr,
                convert_identifier_to_atom(combined_keyword));
 
     OBJECT_PTR res1 = NIL;
@@ -728,7 +743,14 @@ OBJECT_PTR convert_keyword_argument_to_lisp(keyword_argument_t *k)
   if(!k)
     return NIL;
 
-  return convert_msg(k->prim,
+  debug_expression_t *debug_exp;
+  allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+
+  debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
+  debug_exp->kw_arg = k;
+
+  return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+                     k->prim,
                      k->unary_messages,
                      k->binary_messages,
                      NULL); //why no keyword messages within a keyword argument?
@@ -838,7 +860,14 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
   if(!arg)
     return NIL;
 
-  return convert_msg(arg->prim,
+  debug_expression_t *debug_exp;
+  allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+
+  debug_exp->type = DEBUG_BINARY_ARGUMENT;
+  debug_exp->bin_arg = arg;
+
+  return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+                     arg->prim,
                      arg->unary_messages,
                      NULL,
                      NULL);

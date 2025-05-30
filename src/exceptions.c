@@ -321,6 +321,7 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
     {
       OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
 					      termination_blk,
+					      NIL,
 					      VALUE_SELECTOR,
 					      convert_int_to_object(0),
 					      g_idclo);
@@ -373,6 +374,7 @@ OBJECT_PTR exception_user_intervention_cli(OBJECT_PTR cont)
 
     return message_send_internal(entry->super,
 				 entry->receiver,
+				 entry->exp_ptr,
 				 entry->selector,
 				 convert_int_to_object(n),
 				 args);
@@ -414,6 +416,7 @@ OBJECT_PTR exception_user_intervention_cli(OBJECT_PTR cont)
 
     OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				  Smalltalk,
+				  NIL,
 				  get_symbol("_eval:"),
 				  convert_int_to_object(1),
 				  get_string_obj(buf),
@@ -485,6 +488,7 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
 
       ret = message_send(g_msg_snd_closure,
 			 action,
+			 NIL,
 			 VALUE1_SELECTOR,
 			 convert_int_to_object(1),
 			 exception,
@@ -633,6 +637,7 @@ OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
 
   return message_send(g_msg_snd_closure,
 		      protected_block,
+		      NIL,
 		      ON_DO_SELECTOR,
 		      convert_int_to_object(2),
 		      g_active_handler->selector,
@@ -657,6 +662,7 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 
   return message_send(g_msg_snd_closure,
 		      another_protected_blk,
+		      NIL,
 		      ON_DO_SELECTOR,
 		      convert_int_to_object(2),
 		      g_active_handler->selector,
@@ -736,6 +742,7 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
       ret = message_send(g_msg_snd_closure,
 			 action,
+			 NIL,
 			 VALUE1_SELECTOR,
 			 convert_int_to_object(1),
 			 receiver,
@@ -907,6 +914,7 @@ OBJECT_PTR create_and_signal_exception_with_text(OBJECT_PTR excp_class_obj,
 					    g_idclo);
   return message_send(g_msg_snd_closure,
 		      excp_obj,
+		      NIL,
 		      get_symbol("_signal:"), //TODO: replace with constant
 		      convert_int_to_object(1),
 		      signaller_text,
@@ -929,6 +937,7 @@ OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR exc
 					    g_idclo);
   return message_send(g_msg_snd_closure,
 		      excp_obj,
+		      NIL,
 		      SIGNAL_SELECTOR,
 		      convert_int_to_object(0),
 		      excp_cont);

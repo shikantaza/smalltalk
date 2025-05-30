@@ -64,6 +64,7 @@ GtkWindow *workspace_window;
 GtkTextView *transcript_textview;
 
 GtkTextTag *workspace_tag;
+GtkTextTag *debugger_tag;
 
 GtkSourceView *debugger_source_view;
 GtkSourceBuffer *debugger_source_buffer;
@@ -611,6 +612,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   debugger_source_buffer = gtk_source_buffer_new_with_language(source_language);
   debugger_source_view = (GtkSourceView *)gtk_source_view_new_with_buffer(debugger_source_buffer);
+
+  debugger_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)debugger_source_buffer, "cyan_bg",
+					    "background", "cyan", NULL);
 
   GtkSourceCompletion *sc1 = gtk_source_view_get_completion(debugger_source_view);
   GValue gv = G_VALUE_INIT;

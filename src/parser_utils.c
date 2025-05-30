@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
+
+#include "global_decls.h"
 
 #include "parser_header.h"
 
@@ -359,4 +362,16 @@ void print_literal(literal_t *lit)
     printf("Unknown literal type: %d\n", lit->type);
     exit(1);
   }     
+}
+
+void print_debug_expression(debug_expression_t *debug_exp)
+{
+  if(debug_exp->type == DEBUG_BASIC_EXPRESSION)
+    print_basic_expression(debug_exp->be);
+  else if(debug_exp->type == DEBUG_BINARY_ARGUMENT)
+    print_binary_argument(debug_exp->bin_arg);
+  else if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT)
+    print_keyword_argument(debug_exp->kw_arg);
+  else
+    assert(false);
 }

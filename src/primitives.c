@@ -151,6 +151,7 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
       e->termination_blk_invoked = true;
       message_send(g_msg_snd_closure,
 		   term_blk,
+		   NIL,
 		   VALUE_SELECTOR,
 		   convert_int_to_object(0),
 		   g_idclo);

@@ -34,10 +34,10 @@ Smalltalk addInstanceMethod: #pop toClass: Stack withBody: [
   ^ coll removeLast
 ]
 
-Smalltalk addInstanceMethod: #top toClass: Stack withBody: [
+Smalltalk addInstanceMethod: #top toClass: Stack withBodyStr: '[
   ((coll size) = 0 )
     ifTrue:  [EmptyCollection new signal]
     ifFalse: [ ^ coll at: (coll size)]
-]
+]'
 
 Smalltalk createClass: #CompileError parentClass: Error

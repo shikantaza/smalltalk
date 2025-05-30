@@ -809,7 +809,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	put_binding_val(g_top_level, SELF, cons(obj, NIL));
 	put_binding_val(g_top_level, SUPER, cons(obj, NIL));
 
-	stack_push(g_call_chain, create_call_chain_entry(false, obj, selector, method, closure_form, 0, NULL, g_idclo, NIL, false));
+	stack_push(g_call_chain, create_call_chain_entry(NIL, false, obj, selector, method, closure_form, 0, NULL, g_idclo, NIL, false));
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 

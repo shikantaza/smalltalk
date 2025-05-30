@@ -90,7 +90,7 @@ OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR closure, OBJECT_PTR operand, OBJ
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     pop_if_top(entry);
-    return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
 
@@ -125,7 +125,7 @@ OBJECT_PTR boolean_if_false(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR c
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     pop_if_top(entry);
-    return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
   else
   {
@@ -150,7 +150,7 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+    OBJECT_PTR ret = nf1(msg_send, false_operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
     if(pop_if_top(entry))
       return invoke_cont_on_val(cont, ret);
@@ -162,7 +162,7 @@ OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+    OBJECT_PTR ret = nf1(msg_send, true_operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
     if(pop_if_top(entry))
       return invoke_cont_on_val(cont, ret);
@@ -184,7 +184,7 @@ OBJECT_PTR boolean_if_true(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR co
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+    OBJECT_PTR ret = nf1(msg_send, operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
     if(pop_if_top(entry))
       return invoke_cont_on_val(cont, ret);
@@ -215,7 +215,7 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, true_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+    OBJECT_PTR ret = nf1(msg_send, true_operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
     if(pop_if_top(entry))
       return invoke_cont_on_val(cont, ret);
@@ -226,7 +226,7 @@ OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR closure,
   {
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
-    OBJECT_PTR ret = nf1(msg_send, false_operand, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
+    OBJECT_PTR ret = nf1(msg_send, false_operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), g_idclo);
 
     if(pop_if_top(entry))
       return invoke_cont_on_val(cont, ret);
@@ -271,7 +271,7 @@ OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR closure, OBJECT_PTR operand, OBJE
     OBJECT_PTR msg_send = car(get_binding_val(g_top_level, MESSAGE_SEND));
     nativefn nf1 = (nativefn)extract_native_fn(msg_send);
     pop_if_top(entry);
-    return nf1(msg_send, operand, VALUE_SELECTOR, convert_int_to_object(0), cont);
+    return nf1(msg_send, operand, NIL, VALUE_SELECTOR, convert_int_to_object(0), cont);
   }
 }
 

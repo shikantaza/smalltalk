@@ -11,6 +11,8 @@
 
 //void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 
+void print_debug_expression(debug_expression_t *);
+
 OBJECT_PTR g_run_till_cont;
 
 extern OBJECT_PTR g_idclo;
@@ -35,7 +37,8 @@ extern BOOLEAN g_debug_in_progress;
 
 extern enum DebugAction g_debug_action;
 
-call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
+call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
+					    BOOLEAN super,
 					    OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
 					    OBJECT_PTR method,
@@ -48,6 +51,7 @@ call_chain_entry_t *create_call_chain_entry(BOOLEAN super,
 {
   call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
 
+  entry->exp_ptr                 = exp_ptr;
   entry->super                   = super;
   entry->receiver                = receiver;
   entry->selector                = selector;
@@ -157,6 +161,7 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
 
 OBJECT_PTR message_send_internal(BOOLEAN super,
 				 OBJECT_PTR receiver,
+				 OBJECT_PTR exp_ptr,
 				 OBJECT_PTR selector,
 				 OBJECT_PTR count1,
 				 OBJECT_PTR *args)
@@ -200,6 +205,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     return message_send(g_msg_snd_closure,
 			receiver,
+			NIL,
 			get_symbol("_messageNotUnderstood:"),
 			convert_int_to_object(1),
 			trimmed_selector,
@@ -308,7 +314,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 0, NULL, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+						     closure_form, 0, NULL, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -343,7 +350,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 1, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+						     closure_form, 1, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -379,7 +387,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 2, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+						     closure_form, 2, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -416,7 +425,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 3, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+						     closure_form, 3, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -454,7 +464,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(super, receiver, selector, method, closure_form, 4, args, cont, NIL, false));
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+						     closure_form, 4, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -517,7 +528,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     stack_push(g_call_chain,
-	       create_call_chain_entry(super, receiver, selector, method, closure_form, count, args, stack_args[n-1], NIL, false));
+	       create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+				       closure_form, count, args, stack_args[n-1], NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
@@ -596,6 +608,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
 OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
 					 OBJECT_PTR receiver,
+					 OBJECT_PTR exp_ptr,
 					 OBJECT_PTR selector,
 					 OBJECT_PTR count1,
 					 va_list ap)
@@ -611,11 +624,12 @@ OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
   for(i=0; i<count; i++)
     args[i] = (uintptr_t)va_arg(ap, uintptr_t);
 
-  return message_send_internal(super, receiver, selector, count1, args);
+  return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
 }
 
 OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
 			OBJECT_PTR receiver,
+			OBJECT_PTR exp_ptr,
 			OBJECT_PTR selector,
 			OBJECT_PTR count1,
 			...)
@@ -623,7 +637,7 @@ OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
   va_list ap;
   va_start(ap, count1);
 
-  OBJECT_PTR ret = message_send_internal_va_list(false, receiver, selector, count1, ap);
+  OBJECT_PTR ret = message_send_internal_va_list(false, receiver, exp_ptr, selector, count1, ap);
 
   va_end(ap);
 
@@ -632,6 +646,7 @@ OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
 
 OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
 			      OBJECT_PTR receiver,
+			      OBJECT_PTR exp_ptr,
 			      OBJECT_PTR selector,
 			      OBJECT_PTR count1,
 			      ...)
@@ -639,7 +654,7 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
   va_list ap;
   va_start(ap, count1);
 
-  OBJECT_PTR ret = message_send_internal_va_list(true, receiver, selector, count1, ap);
+  OBJECT_PTR ret = message_send_internal_va_list(true, receiver, exp_ptr, selector, count1, ap);
 
   va_end(ap);
 

@@ -24,7 +24,7 @@ void show_error_dialog(char *);
 
 void hide_debug_window();
 
-void render_executable_code(GtkTextBuffer *, executable_code_t *);
+void render_executable_code(GtkTextBuffer *, BOOLEAN, gint64, executable_code_t *);
 
 BOOLEAN g_debug_in_progress;
 
@@ -312,12 +312,15 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
     {
       //gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
       //			       g_string_literals[m->code_str >> OBJECT_SHIFT], -1);
+      /*
       executable_code_t *prev_exp = g_exp;
       char *buf = GC_strdup(g_string_literals[m->code_str >> OBJECT_SHIFT]);
       yy_scan_string(buf);
       assert(!yyparse()); //m->code_str should be valid
-      render_executable_code(debugger_source_buffer, g_exp);
+      render_executable_code(debugger_source_buffer, false, call_chain_entry_index, g_exp);
       g_exp = prev_exp;
+      */
+      render_executable_code(debugger_source_buffer, false, call_chain_entry_index, m->exec_code);
 
       //fetch temp vars for the call chain entry
 
@@ -391,6 +394,7 @@ void debug_retry(GtkWidget *widget, gpointer data)
 
   g_last_eval_result = message_send_internal(entry->super,
 					     entry->receiver,
+					     entry->exp_ptr,
 					     entry->selector,
 					     convert_int_to_object(n),
 					     args);
@@ -516,6 +520,7 @@ void debug_resume_with_val(GtkWidget *widget, gpointer data)
 
     OBJECT_PTR ret = message_send(g_msg_snd_closure,
 				  Smalltalk,
+				  NIL,
 				  get_symbol("_eval:"),
 				  convert_int_to_object(1),
 				  get_string_obj(buf),
@@ -565,7 +570,7 @@ void debug_step_into(GtkWidget *widget, gpointer data)
   if(m->code_str == NIL)
   {
     show_error_dialog("Cannot step into primitive method");
-    return;
+    //return;
   }
 
   g_debug_action = STEP_INTO;

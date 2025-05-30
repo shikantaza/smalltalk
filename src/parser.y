@@ -386,7 +386,7 @@ primary:
 block_constructor:
     T_LEFT_SQUARE_BRACKET
     { g_open_square_brackets++; }
-    block_argument block_arguments
+    block_arguments block_argument
     T_VERTICAL_BAR
     executable_code
     T_RIGHT_SQUARE_BRACKET
@@ -395,19 +395,12 @@ block_constructor:
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = BLOCK_ARGS;
 
-      block_arguments_t *block_args = (block_arguments_t *)GC_MALLOC((1 + $4->nof_args) *
-                                                                     sizeof(block_arguments_t));
-      block_args->nof_args = 1 + $4->nof_args;
-      block_args->identifiers = (char **)GC_MALLOC(block_args->nof_args * sizeof(char *));
-      
-      block_args->identifiers[0] = GC_strdup($3);
+      $3->nof_args++;
+      $3->identifiers = (char **)GC_REALLOC($3->identifiers, $3->nof_args * sizeof(char *));
+      $3->identifiers[$3->nof_args - 1] = GC_strdup($4);
 
-      int i;
+      blk_cons->block_args = $3;
 
-      for(i=0; i<$4->nof_args; i++)
-        block_args->identifiers[i+1] = GC_strdup($4->identifiers[i]);
-
-      blk_cons->block_args = block_args;
       blk_cons->exec_code = $6;
       $$ = blk_cons;
     }
@@ -456,24 +449,16 @@ block_argument:
     ;
 
 message:
-    unary_message unary_messages binary_messages
+    unary_messages unary_message binary_messages
     {
       message_t *msg = (message_t *)GC_MALLOC(sizeof(message_t));
       msg->type = UNARY_MESSAGE;
-      
-      unary_messages_t *unary_msgs = (unary_messages_t *)GC_MALLOC((1 + $2->nof_messages) *
-                                                                  sizeof(unary_messages_t));
-      unary_msgs->nof_messages = 1 + $2->nof_messages;
-      unary_msgs->identifiers = (char **)GC_MALLOC(unary_msgs->nof_messages * sizeof(char *));
-      
-      unary_msgs->identifiers[0] = GC_strdup($1);
 
-      int i;
+      $1->nof_messages++;
+      $1->identifiers = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
 
-      for(i=0; i<$2->nof_messages; i++)
-        unary_msgs->identifiers[i+1] = GC_strdup($2->identifiers[i]);
-
-      msg->unary_messages = unary_msgs;
+      msg->unary_messages = $1;
 
       if($3->nof_messages > 0)
         msg->binary_messages = $3;
@@ -485,24 +470,16 @@ message:
       $$ = msg;
     }
     |
-    unary_message unary_messages binary_messages keyword_message
+    unary_messages unary_message binary_messages keyword_message
     {
       message_t *msg = (message_t *)GC_MALLOC(sizeof(message_t));
       msg->type = UNARY_MESSAGE;
-      
-      unary_messages_t *unary_msgs = (unary_messages_t *)GC_MALLOC((1 + $2->nof_messages) *
-                                                                   sizeof(unary_messages_t));
-      unary_msgs->nof_messages = 1 + $2->nof_messages;
-      unary_msgs->identifiers = (char **)GC_MALLOC(unary_msgs->nof_messages * sizeof(char *));
-      
-      unary_msgs->identifiers[0] = GC_strdup($1);
 
-      int i;
+      $1->nof_messages++;
+      $1->identifiers = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
 
-      for(i=0; i<$2->nof_messages; i++)
-        unary_msgs->identifiers[i+1] = GC_strdup($2->identifiers[i]);
-
-      msg->unary_messages = unary_msgs;
+      msg->unary_messages = $1;
 
       if($3->nof_messages > 0)
         msg->binary_messages = $3;
@@ -514,50 +491,36 @@ message:
       $$ = msg;     
     }
     |
-    binary_message binary_messages
+    binary_messages binary_message
     {
       message_t *msg = (message_t *)GC_MALLOC(sizeof(message_t));
       msg->type = BINARY_MESSAGE;
 
       msg->unary_messages = NULL;
-      
-      binary_messages_t *binary_msgs = (binary_messages_t *)GC_MALLOC(sizeof(binary_messages_t));
-      binary_msgs->nof_messages = 1 + $2->nof_messages;
-      binary_msgs->bin_msgs =
-        (binary_message_t *)GC_MALLOC(binary_msgs->nof_messages * sizeof(binary_message_t));
-      
-      binary_msgs->bin_msgs[0] = *($1);
 
-      int i;
+      $1->nof_messages++;
+      $1->bin_msgs = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      $1->bin_msgs[$1->nof_messages - 1] = *($2);
 
-      for(i=0; i<$2->nof_messages; i++)
-        binary_msgs->bin_msgs[i+1] = $2->bin_msgs[i];
-
-      msg->binary_messages = binary_msgs;
+      msg->binary_messages = $1;
 
       msg->kw_msg = NULL;
         
       $$ = msg;
     }
     |
-    binary_message binary_messages keyword_message
+    binary_messages binary_message keyword_message
     {
       message_t *msg = (message_t *)GC_MALLOC(sizeof(message_t));
       msg->type = BINARY_MESSAGE;
-      
-      binary_messages_t *binary_msgs = (binary_messages_t *)GC_MALLOC(sizeof(binary_messages_t));
-      binary_msgs->nof_messages = 1 + $2->nof_messages;
-      binary_msgs->bin_msgs =
-        (binary_message_t *)GC_MALLOC(binary_msgs->nof_messages * sizeof(binary_message_t));
-      
-      binary_msgs->bin_msgs[0] = *($1);
 
-      int i;
+      msg->unary_messages = NULL;
 
-      for(i=0; i<$2->nof_messages; i++)
-        binary_msgs->bin_msgs[i+1] = $2->bin_msgs[i];
+      $1->nof_messages++;
+      $1->bin_msgs = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      $1->bin_msgs[$1->nof_messages - 1] = *($2);
 
-      msg->binary_messages = binary_msgs;
+      msg->binary_messages = $1;
 
       msg->kw_msg = $3;
 
@@ -644,22 +607,13 @@ binary_argument:
     ;
 
 keyword_message:
-    keyword_arg_pair keyword_arg_pairs
+    keyword_arg_pairs keyword_arg_pair
     {
-      keyword_message_t *kw_msg = (keyword_message_t *)GC_MALLOC(sizeof(keyword_message_t));
+      $1->nof_args++;
+      $1->kw_arg_pairs = (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs, $1->nof_args * sizeof(keyword_argument_pair_t));
+      $1->kw_arg_pairs[$1->nof_args - 1] = *($2);
 
-      kw_msg->nof_args = 1 + $2->nof_args;
-
-      kw_msg->kw_arg_pairs =
-        (keyword_argument_pair_t *)GC_MALLOC((1 + $2->nof_args) * sizeof(keyword_argument_pair_t));
-
-      kw_msg->kw_arg_pairs[0] = *($1);
-      
-      int i;
-      for(i=0; i < $2->nof_args; i++)
-        kw_msg->kw_arg_pairs[i+1] = $2->kw_arg_pairs[i];
-      
-      $$ = kw_msg;
+      $$ = $1;
     }
     ;
 
@@ -929,9 +883,9 @@ int repl2()
     repl();
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
-	  third(third(exp)) == get_symbol("_addInstanceMethod:toClass:withBody:"))
+	  fourth(third(exp)) == get_symbol("_addInstanceMethod:toClass:withBody:"))
   {
-    if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
+    if(!IS_SMALLTALK_SYMBOL_OBJECT(sixth(third(exp))))
     {
       printf("Invalid method selector passed to Smalltalk>>addInstanceMethod\n");
       return 0;
@@ -942,13 +896,13 @@ int repl2()
     //TODO: figure out how to convert these
     //asserts into exceptions
 
-    if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
+    if(!IS_SYMBOL_OBJECT(seventh(third(exp))))
     {
       printf("Smalltalk>>addInstanceMethod: Invalid class name\n");
       return 0;
     }
 
-    if(!get_top_level_val(sixth(third(exp)), &class_object_val))
+    if(!get_top_level_val(seventh(third(exp)), &class_object_val))
     {
       printf("Smalltalk>>addInstanceMethod: Class does not exist\n");
       return 0;
@@ -962,15 +916,16 @@ int repl2()
       return 0;
     }
 
-    if(!IS_CONS_OBJECT(seventh(third(exp))))
+    //if(!IS_CONS_OBJECT(seventh(third(exp))))
+    if(!IS_CONS_OBJECT(nth(convert_int_to_object(7), third(exp))))
     {
       printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
       return 0;
     }
 
     OBJECT_PTR ret = add_instance_method(class_object,
-					 fifth(third(exp)),
-					 list(3, LET, NIL, seventh(third(exp))),
+					 sixth(third(exp)),
+					 list(3, LET, NIL, nth(convert_int_to_object(7), third(exp))),
 					 NIL, //we do not have a code string to pass; will be resolved when we
 					 g_exp);  //switch to addInstanceMethod:toClass:withBodyStr
     if(g_loading_core_library == false)
@@ -989,9 +944,9 @@ int repl2()
   }
   else if(first(third(exp)) == MESSAGE_SEND &&
 	  second(third(exp)) == SMALLTALK &&
-	  third(third(exp)) == get_symbol("_addClassMethod:toClass:withBody:"))
+	  fourth(third(exp)) == get_symbol("_addClassMethod:toClass:withBody:"))
   {
-    if(!IS_SMALLTALK_SYMBOL_OBJECT(fifth(third(exp))))
+    if(!IS_SMALLTALK_SYMBOL_OBJECT(sixth(third(exp))))
     {
       printf("Invalid method selector passed to Smalltalk>>addClassMethod\n");
       return 0;
@@ -1002,13 +957,13 @@ int repl2()
     //TODO: figure out how to convert these
     //asserts into exceptions
 
-    if(!IS_SYMBOL_OBJECT(sixth(third(exp))))
+    if(!IS_SYMBOL_OBJECT(seventh(third(exp))))
     {
       printf("Smalltalk>>addClassMethod: Invalid class name\n");
       return 0;
     }
 
-    if(!get_top_level_val(sixth(third(exp)), &class_object_val))
+    if(!get_top_level_val(seventh(third(exp)), &class_object_val))
     {
       printf("Smalltalk>>addClassMethod: Class does not exist\n");
       return 0;
@@ -1022,15 +977,16 @@ int repl2()
       return 0;
     }
 
-    if(!IS_CONS_OBJECT(seventh(third(exp))))
+    //if(!IS_CONS_OBJECT(seventh(third(exp))))
+    if(!IS_CONS_OBJECT(nth(convert_int_to_object(7), third(exp))))
     {
       printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
       return 0;
     }
 
     OBJECT_PTR ret = add_class_method(class_object,
-				      fifth(third(exp)),
-				      list(3, LET, NIL, seventh(third(exp))),
+				      sixth(third(exp)),
+				      list(3, LET, NIL, nth(convert_int_to_object(7), third(exp))),
 				      NIL, //we do not have a code string to pass; will be resolved
 				      g_exp); //switch to addInstanceMethod:toClass:withBodyStr
     if(g_loading_core_library == false)
@@ -1312,7 +1268,7 @@ BOOLEAN is_create_class_exp(OBJECT_PTR exp)
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
-     third(third_obj) == get_symbol("_createClass:parentClass:") &&
+     fourth(third_obj) == get_symbol("_createClass:parentClass:") &&
      IS_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
@@ -1338,7 +1294,7 @@ BOOLEAN is_add_var_exp(OBJECT_PTR exp, char *msg)
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
-     third(third_obj) == get_symbol(msg) &&
+     fourth(third_obj) == get_symbol(msg) &&
      IS_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_SYMBOL_OBJECT(sixth(third_obj)))
     return true;
@@ -1375,7 +1331,7 @@ BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
      
   if(first(third_obj) == MESSAGE_SEND &&
      second(third_obj) == SMALLTALK &&
-     third(third_obj) == get_symbol(msg) &&
+     fourth(third_obj) == get_symbol(msg) &&
      IS_SMALLTALK_SYMBOL_OBJECT(fifth(third_obj)) &&
      IS_CONS_OBJECT(seventh(third_obj)) && //TODO: maybe some stronger checks?
      IS_SYMBOL_OBJECT(sixth(third_obj)))

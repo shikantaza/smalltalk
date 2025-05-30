@@ -386,12 +386,14 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
 
     exp = decorate_message_selectors(exp);
 
-    g_exp = prev_exp;
+    //g_exp = prev_exp;
 
     if(instance_method)
       ret = add_instance_method(class_obj, selector, exp, code_str, g_exp);
     else
       ret = add_class_method(class_obj, selector, exp, code_str, g_exp);
+
+    g_exp = prev_exp;
 
     pop_if_top(entry);
 

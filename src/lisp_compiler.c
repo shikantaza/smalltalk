@@ -131,8 +131,8 @@ OBJECT_PTR build_selectors_list(OBJECT_PTR res)
   if(car(res) == MESSAGE_SEND)
     return concat(3,
                   build_selectors_list(second(res)),
-                  list(1, third(res)),
-                  build_selectors_list(CDDDR(res)));
+                  list(1, fourth(res)),
+                  build_selectors_list(cdr(CDDDR(res))));
   else if(car(res) == RETURN_FROM)
     return concat(2,
 		  list(1, second(res)),
@@ -153,11 +153,12 @@ OBJECT_PTR decorate_message_selectors(OBJECT_PTR res)
     return res;
   else if(car(res) == MESSAGE_SEND)
     return concat(2,
-		  list(3,
+		  list(4,
 		       MESSAGE_SEND,
 		       decorate_message_selectors(second(res)),
-		       get_symbol(prepend_char(get_symbol_name(third(res)),'_'))),
-		  map(decorate_message_selectors,CDDDR(res)));
+		       third(res),
+		       get_symbol(prepend_char(get_symbol_name(fourth(res)),'_'))),
+		  map(decorate_message_selectors,cdr(CDDDR(res))));
   else
     return map(decorate_message_selectors, res);
 }
@@ -1064,9 +1065,9 @@ OBJECT_PTR free_ids_il(OBJECT_PTR exp)
   //We don't want message selectors to be processed as free variables.
   //Also, MESSAGE_SEND itself is going to be a top level closure.
   else if(car_exp == MESSAGE_SEND)
-    return concat(2, list(1, MESSAGE_SEND), difference(free_ids_il(cdr(exp)), list(1, third(exp))));
+    return concat(2, list(1, MESSAGE_SEND), difference(free_ids_il(cdr(exp)), list(1, fourth(exp))));
   else if(car_exp == MESSAGE_SEND_SUPER)
-    return concat(2, list(1, MESSAGE_SEND_SUPER), difference(free_ids_il(cdr(exp)), list(1, third(exp))));
+    return concat(2, list(1, MESSAGE_SEND_SUPER), difference(free_ids_il(cdr(exp)), list(1, fourth(exp))));
   else if(car_exp == RETURN_FROM)
     return difference(free_ids_il(cdr(cdr(exp))), list(1, second(exp)));
   else
@@ -1153,8 +1154,8 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR exp)
   else if(car(exp) == MESSAGE_SEND && second(exp) == SUPER)
   {
     return concat(2,
-		  list(2, MESSAGE_SEND_SUPER, SUPER),
-		  map(convert_message_sends,(CDDR(exp))));
+		  list(3, MESSAGE_SEND_SUPER, SUPER, third(exp)),
+		  map(convert_message_sends,(CDDDR(exp))));
   }
   else
   {

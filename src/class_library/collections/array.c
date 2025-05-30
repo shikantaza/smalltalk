@@ -146,6 +146,7 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
   {
     message_send(g_msg_snd_closure,
                  operation,
+		 NIL,
 		 VALUE1_SELECTOR,
 		 convert_int_to_object(1),
 		 obj->elements[i],
