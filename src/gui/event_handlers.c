@@ -24,7 +24,7 @@ void show_error_dialog(char *);
 
 void hide_debug_window();
 
-void render_executable_code(GtkTextBuffer *, BOOLEAN, gint64, executable_code_t *);
+void render_executable_code(GtkTextBuffer *, int *, BOOLEAN, gint64, executable_code_t *);
 
 BOOLEAN g_debug_in_progress;
 
@@ -320,7 +320,8 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
       render_executable_code(debugger_source_buffer, false, call_chain_entry_index, g_exp);
       g_exp = prev_exp;
       */
-      render_executable_code(debugger_source_buffer, false, call_chain_entry_index, m->exec_code);
+      int indents = 0;
+      render_executable_code(debugger_source_buffer, &indents, false, call_chain_entry_index, m->exec_code);
 
       //fetch temp vars for the call chain entry
 

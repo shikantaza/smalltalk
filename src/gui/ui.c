@@ -455,11 +455,13 @@ void populate_call_chain_list(GtkTreeView *call_chain_list)
       char arg[100];
       memset(arg, '\0', 100);
       print_object_to_string(entry->args[j], arg);
-      len += sprintf(buf+len, "%s ", arg);
+      len += sprintf(buf+len, "%s", arg);
+      if(j != entry->nof_args -1)
+	len += sprintf(buf+len, " ");
     }
 
     if(entry->nof_args > 0)
-      len += sprintf(buf+len, "] ");
+      len += sprintf(buf+len, "]");
 
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter, 0, buf, -1);

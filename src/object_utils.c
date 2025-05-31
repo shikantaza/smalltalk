@@ -380,7 +380,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
       sprintf(str, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
   }
   else if(IS_CLASS_OBJECT(obj_ptr))
-    sprintf(str, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
+    //sprintf(str, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
+    sprintf(str, "Class %s", ((class_object_t *)extract_ptr(obj_ptr))->name);
   //sprintf(str, "#<CLASS %p>", (void *)obj_ptr);
   else if(IS_NATIVE_FN_OBJECT(obj_ptr))
     sprintf(str, "#<NATIVEFN %p> ", (void *)obj_ptr);
@@ -388,7 +389,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
   {
     object_t *obj = (object_t *)extract_ptr(obj_ptr);
     OBJECT_PTR cls_obj = obj->class_object;
-    sprintf(str, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
+    //sprintf(str, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
+    sprintf(str, "An instance of %s", ((class_object_t *)extract_ptr(cls_obj))->name);
   }
   else if(IS_CHARACTER_OBJECT(obj_ptr))
     sprintf(str, "$%c", get_char_value(obj_ptr));
