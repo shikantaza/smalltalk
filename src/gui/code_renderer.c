@@ -143,9 +143,10 @@ void render_return_statement(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
   if(!r)
     return;
 
-  render_string_to_buffer(code_buf, indents, highlight, index, "^(");
+  //render_string_to_buffer(code_buf, indents, highlight, index, "^(");
+  render_string_to_buffer(code_buf, indents, highlight, index, "^");
   render_expression(code_buf, indents, highlight, index, r->exp);
-  render_string_to_buffer(code_buf, indents, highlight, index, ")");
+  //render_string_to_buffer(code_buf, indents, highlight, index, ")");
 }
 
 void render_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, expression_t *exp)
@@ -240,9 +241,15 @@ void render_primary(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gi
     return;
   
   if(p->type == IDENTIFIER)
+  {
     render_string_to_buffer(code_buf, indents, highlight, index, p->identifier);
+    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+  }
   else if(p->type == LITERAL)
+  {
     render_literal(code_buf, indents, highlight, index, p->lit);
+    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+  }
   else if(p->type == BLOCK_CONSTRUCTOR)
     render_block_constructor(code_buf, indents, highlight, index, p->blk_cons);
   else if(p->type == EXPRESSION1)
@@ -403,7 +410,11 @@ void render_keyword_message(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
   
   unsigned int i;
   for(i=0; i < msg->nof_args; i++)
+  {
     render_keyword_argument_pair(code_buf, indents, highlight, index, msg->kw_arg_pairs + i);
+    if(i != msg->nof_args - 1)
+      render_string_to_buffer(code_buf, indents, highlight, index, " ");
+  }
 }
 
 void render_keyword_argument_pair(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, keyword_argument_pair_t *arg_pair)
@@ -414,7 +425,6 @@ void render_keyword_argument_pair(GtkTextBuffer *code_buf, int *indents, BOOLEAN
   render_string_to_buffer(code_buf, indents, highlight, index, arg_pair->keyword);
   render_string_to_buffer(code_buf, indents, highlight, index, " ");
   render_keyword_argument(code_buf, indents, highlight, index, arg_pair->kw_arg);
-  render_string_to_buffer(code_buf, indents, highlight, index, " ");
 }
 
 void render_keyword_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, keyword_argument_t *arg)

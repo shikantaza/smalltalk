@@ -1164,13 +1164,13 @@ void create_Smalltalk()
 						 NIL, NIL,
 						 0, NIL, NULL);
 
-  cls_obj->class_methods->bindings[7].key = get_symbol("_addInstanceMethod:toClass:withBodyStr:");
+  cls_obj->class_methods->bindings[7].key = get_symbol("_addInstanceMethod:toClass:withBody:");
   cls_obj->class_methods->bindings[7].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_instance_method_str),
 						 NIL, NIL,
 						 3, NIL, NULL);
 
-  cls_obj->class_methods->bindings[8].key = get_symbol("_addClassMethod:toClass:withBodyStr:");
+  cls_obj->class_methods->bindings[8].key = get_symbol("_addClassMethod:toClass:withBody:");
   cls_obj->class_methods->bindings[8].val = create_method(
 						 convert_native_fn_to_object((nativefn)add_class_method_str),
 						 NIL, NIL,

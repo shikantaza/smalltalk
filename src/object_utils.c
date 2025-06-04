@@ -390,7 +390,10 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
     object_t *obj = (object_t *)extract_ptr(obj_ptr);
     OBJECT_PTR cls_obj = obj->class_object;
     //sprintf(str, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
-    sprintf(str, "An instance of %s", ((class_object_t *)extract_ptr(cls_obj))->name);
+    if(IS_CLASS_OBJECT(cls_obj))
+      sprintf(str, "An instance of %s", ((class_object_t *)extract_ptr(cls_obj))->name);
+    else
+      sprintf(str, "<Unknown object %p>", (void *)obj_ptr);
   }
   else if(IS_CHARACTER_OBJECT(obj_ptr))
     sprintf(str, "$%c", get_char_value(obj_ptr));

@@ -36,6 +36,8 @@ void create_workspace_window(int, int, int, int, char *);
 void create_debug_window(int, int, int, int, char *);
 void print_to_transcript(char *);
 
+void replace_block_constructor(executable_code_t *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -865,14 +867,15 @@ int repl2()
 
   g_debug_action = CONTINUE;
 
-  OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
+  //OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
-  exp = decorate_message_selectors(exp);
+  //exp = decorate_message_selectors(exp);
     
 #ifdef DEBUG
   print_object(exp); printf("\n");
 #endif
 
+  /*
   //awkward conditionals because of
   //absence of shortcirtuing for && (confirm)
   if(!IS_CONS_OBJECT(exp))
@@ -1005,6 +1008,8 @@ int repl2()
   }
   else
     repl();
+  */
+  repl();
 
   return 0;
 }
@@ -1157,6 +1162,7 @@ int main(int argc, char **argv)
 
 OBJECT_PTR repl_common()
 {
+  replace_block_constructor(g_exp);
   OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
   exp = decorate_message_selectors(exp);
