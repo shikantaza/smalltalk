@@ -424,7 +424,8 @@ void populate_call_chain_list(GtkTreeView *call_chain_list)
   call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
   int count = stack_count(g_call_chain);
 
-  int i = count - 1;
+  //int i = count - 1;
+  int i = count - 2;
 
   int j;
 
