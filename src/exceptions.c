@@ -816,67 +816,67 @@ void create_Exception()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_return");
-  cls_obj->instance_methods->bindings[0].val = create_method(
+  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_return),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_return:");
-  cls_obj->instance_methods->bindings[1].val = create_method(
+  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_return_val),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_retry");
-  cls_obj->instance_methods->bindings[2].val = create_method(
+  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_retry),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("_retryUsing:");
-  cls_obj->instance_methods->bindings[3].val = create_method(
+  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_retry_using),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[4].key = get_symbol("_resume");
-  cls_obj->instance_methods->bindings[4].val = create_method(
+  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_resume),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[5].key = get_symbol("_resume:");
-  cls_obj->instance_methods->bindings[5].val = create_method(
+  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_resume_with_val),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[6].key = get_symbol("_pass");
-  cls_obj->instance_methods->bindings[6].val = create_method(
+  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_pass),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[7].key = get_symbol("_outer");
-  cls_obj->instance_methods->bindings[7].val = create_method(
+  cls_obj->instance_methods->bindings[7].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_outer),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[8].key = get_symbol("_signal");
-  cls_obj->instance_methods->bindings[8].val = create_method(
+  cls_obj->instance_methods->bindings[8].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_signal),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[9].key = get_symbol("_resignalAs:");
-  cls_obj->instance_methods->bindings[9].val = create_method(
+  cls_obj->instance_methods->bindings[9].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_resignal_as),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[10].key = get_symbol("_signal:");
-  cls_obj->instance_methods->bindings[10].val = create_method(
+  cls_obj->instance_methods->bindings[10].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)exception_signal_with_text),
 						    NIL, NIL,
 						    1, NIL, NULL);
@@ -886,7 +886,7 @@ void create_Exception()
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));;
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
-  cls_obj->class_methods->bindings[0].val = create_method(
+  cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)new_object),
 						 NIL, NIL,
 						 0, NIL, NULL);

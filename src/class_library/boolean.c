@@ -346,73 +346,73 @@ void create_Boolean()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_&");
-  cls_obj->instance_methods->bindings[0].val = create_method(
+  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_and),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_|");
-  cls_obj->instance_methods->bindings[1].val = create_method(
+  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_or),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_and:");
-  cls_obj->instance_methods->bindings[2].val = create_method(
+  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_short_circuit_and),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
   cls_obj->instance_methods->bindings[3].key = get_symbol("_eqv:");
-  cls_obj->instance_methods->bindings[3].val = create_method(
+  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_equiv),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
   cls_obj->instance_methods->bindings[4].key = get_symbol("_ifFalse:");
-  cls_obj->instance_methods->bindings[4].val = create_method(
+  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_if_false),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[5].key = get_symbol("_ifFalse:ifTrue:");
-  cls_obj->instance_methods->bindings[5].val = create_method(
+  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_if_false_if_true),
 						    NIL, NIL,
 						    2, NIL, NULL);
   
   cls_obj->instance_methods->bindings[6].key = get_symbol("_ifTrue:");
-  cls_obj->instance_methods->bindings[6].val = create_method(
+  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_if_true),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
   cls_obj->instance_methods->bindings[7].key = get_symbol("_ifTrue:ifFalse:");
-  cls_obj->instance_methods->bindings[7].val = create_method(
+  cls_obj->instance_methods->bindings[7].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_if_true_if_false),
 						    NIL, NIL,
 						    2, NIL, NULL);
   
   cls_obj->instance_methods->bindings[8].key = get_symbol("_not");
-  cls_obj->instance_methods->bindings[8].val = create_method(
+  cls_obj->instance_methods->bindings[8].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_not),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[9].key = get_symbol("_or:");
-  cls_obj->instance_methods->bindings[9].val = create_method(
+  cls_obj->instance_methods->bindings[9].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)boolean_short_circuit_or),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[10].key = get_symbol("_xor:");
-  cls_obj->instance_methods->bindings[10].val = create_method(
+  cls_obj->instance_methods->bindings[10].val = create_method(cls_obj, false,
 						     convert_native_fn_to_object((nativefn)boolean_xor),
 						     NIL, NIL,
 						     1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[11].key = get_symbol("_printString");
-  cls_obj->instance_methods->bindings[11].val = create_method(
+  cls_obj->instance_methods->bindings[11].val = create_method(cls_obj, false,
 						     convert_native_fn_to_object((nativefn)boolean_print_string),
 						     NIL, NIL,
 						     0, NIL, NULL);

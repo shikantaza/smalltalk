@@ -412,7 +412,7 @@ void remove_all_from_list(GtkTreeView *list)
   gtk_list_store_clear(store);
 }
 
-void populate_call_chain_list(GtkTreeView *call_chain_list)
+void populate_call_chain_list(BOOLEAN invoked_for_exception, GtkTreeView *call_chain_list)
 {
   remove_all_from_list(call_chain_list);
 
@@ -424,8 +424,13 @@ void populate_call_chain_list(GtkTreeView *call_chain_list)
   call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
   int count = stack_count(g_call_chain);
 
-  //int i = count - 1;
-  int i = count - 2;
+  //we are not displaying the exception-signalling entry
+  //in the call chain
+  int i;
+  if(invoked_for_exception)
+    i = count - 2;
+  else
+    i = count - 1;
 
   int j;
 
@@ -697,7 +702,7 @@ void show_error_dialog(char *msg)
 
 void show_debug_window(BOOLEAN invoked_for_exception, OBJECT_PTR cont)
 {
-  populate_call_chain_list(call_chain_list);
+  populate_call_chain_list(invoked_for_exception, call_chain_list);
   //select the top entry of the call chain stack
   gtk_tree_view_set_cursor(call_chain_list, gtk_tree_path_new_from_indices(0, -1), NULL, false);
 

@@ -66,7 +66,6 @@ void replace_block_constructor(executable_code_t *e)
   if(kw_msg->nof_args != 3)
     return;
 
-  //confirm we don't have to include the trailing colon
   if(strcmp(kw_msg->kw_arg_pairs[0].keyword, "addClassMethod:") &&
      strcmp(kw_msg->kw_arg_pairs[0].keyword, "addInstanceMethod:"))
     return;
@@ -109,6 +108,10 @@ unsigned int convert_executable_code(char *buf, executable_code_t *ec)
 {
   if(!ec)
     return 0;
+
+  //TODO: ideally we need to call replace_block_constructor()
+  //on ec to handle embedded Smalltalk>>addInstanceMethod
+  //and Smalltalk>>addClassMethod expressions
 
   unsigned int len = 0;
 

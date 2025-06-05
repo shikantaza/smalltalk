@@ -189,25 +189,25 @@ void create_Array()
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_at:put:");
-  cls_obj->instance_methods->bindings[0].val = create_method(
+  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)array_at_put),
 						    NIL, NIL,
 						    2, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1].key = get_symbol("_at:");
-  cls_obj->instance_methods->bindings[1].val = create_method(
+  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)array_at),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2].key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[2].val = create_method(
+  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)array_size),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3].key = get_symbol("_do:");
-  cls_obj->instance_methods->bindings[3].val = create_method(
+  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)array_do),
 						    NIL, NIL,
 						    1, NIL, NULL);
@@ -217,7 +217,7 @@ void create_Array()
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new:");
-  cls_obj->class_methods->bindings[0].val = create_method(
+  cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)array_new),
 						 NIL, NIL,
 						 1, NIL, NULL);

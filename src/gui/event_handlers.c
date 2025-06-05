@@ -320,6 +320,19 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
       render_executable_code(debugger_source_buffer, false, call_chain_entry_index, g_exp);
       g_exp = prev_exp;
       */
+
+      char header[200];
+      memset(header, '\0', 200);
+
+      char *sym = get_symbol_name(entry->selector);
+
+      sprintf(header,
+	      "Smalltalk %s %s toClass: %s withBody:\n",
+	      m->class_method ? "addClassMethod:" : "addInstanceMethod",
+	      substring(sym, 1, strlen(sym) - 1),
+	      m->cls_obj->name);
+      gtk_text_buffer_insert_at_cursor(debugger_source_buffer, header, -1);
+
       int indents = 0;
       render_executable_code(debugger_source_buffer, &indents, false, call_chain_entry_index, m->exec_code);
 

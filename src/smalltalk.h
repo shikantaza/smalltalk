@@ -101,17 +101,6 @@ typedef struct
 
 typedef struct
 {
-  OBJECT_PTR nativefn_obj;
-  OBJECT_PTR closed_syms;
-  OBJECT_PTR temporaries;
-  unsigned int arity;
-  OBJECT_PTR code_str;
-  executable_code_t *exec_code;
-  BOOLEAN breakpointed;
-} method_t;
-
-typedef struct
-{
   OBJECT_PTR parent_class_object;
   char *name;
   
@@ -129,6 +118,20 @@ typedef struct
   //the val component of the dictionary wiil be a CONS cell with the native funtion object
   //and the method source Lisp object
 } class_object_t;
+
+typedef struct
+{
+  class_object_t *cls_obj;
+  BOOLEAN class_method;
+  OBJECT_PTR nativefn_obj;
+  OBJECT_PTR closed_syms;
+  OBJECT_PTR temporaries;
+  unsigned int arity;
+  OBJECT_PTR code_str;
+  executable_code_t *exec_code;
+  BOOLEAN breakpointed;
+} method_t;
+
 
 //to avoid passing function pointers
 //between manual code and compiler-generated code
