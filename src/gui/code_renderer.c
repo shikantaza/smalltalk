@@ -390,7 +390,7 @@ void render_unary_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN highli
   for(i=0; i < msgs->nof_messages; i++)
   {
     render_string_to_buffer(code_buf, highlight, index, msgs->identifiers[i]);
-    if(i != msgs->nof_messages -1)
+    //if(i != msgs->nof_messages -1)
       render_space_to_buffer(code_buf, highlight, index);
   }    
 }
