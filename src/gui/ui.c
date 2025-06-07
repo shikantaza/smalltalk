@@ -718,3 +718,36 @@ void hide_debug_window()
 {
   gtk_widget_set_visible((GtkWidget *)debugger_window, FALSE);
 }
+
+//from Google Gemini
+gchar* get_last_char_from_text_buffer(GtkTextBuffer* buffer)
+{
+  GtkTextIter end_iter;
+  gchar* last_char = NULL;
+
+  g_return_val_if_fail(GTK_IS_TEXT_BUFFER(buffer), NULL);
+
+  gtk_text_buffer_get_end_iter(buffer, &end_iter);
+
+  // If the buffer is empty, get_end_iter() will return an iterator
+  // that points to the beginning, and moving backward will not be possible.
+  if (gtk_text_iter_get_offset(&end_iter) == 0) {
+    return NULL;
+  }
+
+  // Move the iterator one character backward
+  if (!gtk_text_iter_backward_char(&end_iter)) {
+    // This case should ideally not happen if the buffer is not empty
+    // and has at least one character, but it's good practice to check.
+    g_warning("Failed to move iterator backward. Buffer might be in an unexpected state.");
+    return NULL;
+  }
+
+  // Get the text between this iterator and the actual end of the buffer.
+  // Since we moved backward one character, this will give us the last character.
+  GtkTextIter end_iter1;
+  gtk_text_buffer_get_end_iter(buffer, &end_iter1);
+  last_char = gtk_text_buffer_get_text(buffer, &end_iter, &end_iter1, FALSE);
+
+  return last_char;
+}

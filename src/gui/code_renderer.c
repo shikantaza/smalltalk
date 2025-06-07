@@ -31,6 +31,8 @@ void render_array_element(GtkTextBuffer *, int *, BOOLEAN, gint64, array_element
 
 void print_debug_expression(debug_expression_t *);
 
+gchar *get_last_char_from_text_buffer(GtkTextBuffer *);
+
 extern GtkTextTag *debugger_tag;
 
 extern stack_type *g_call_chain;
@@ -59,7 +61,7 @@ void render_indents_to_buffer(GtkTextBuffer *buf, int *indents, BOOLEAN highligh
   }
 }
 
-void render_string_to_buffer(GtkTextBuffer *buf, int *indents, BOOLEAN highlight, gint64 index, char *str)
+void render_string_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index, char *str)
 {
   GtkTextMark *mark = gtk_text_buffer_get_insert(buf);
   GtkTextIter iter;
@@ -73,6 +75,27 @@ void render_string_to_buffer(GtkTextBuffer *buf, int *indents, BOOLEAN highlight
     gtk_text_buffer_insert_with_tags(buf, &iter, str, -1, debugger_tag, NULL);
   else
     gtk_text_buffer_insert_at_cursor(buf, str, -1);
+}
+
+void render_space_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
+{
+  char *c = get_last_char_from_text_buffer(buf);
+
+  if(*c == ' ')
+    return;
+
+  GtkTextMark *mark = gtk_text_buffer_get_insert(buf);
+  GtkTextIter iter;
+
+  gtk_text_buffer_get_end_iter(buf, &iter );
+  gtk_text_buffer_move_mark(buf, mark, &iter );
+
+  int i;
+
+  if(highlight)
+    gtk_text_buffer_insert_with_tags(buf, &iter, " ", -1, debugger_tag, NULL);
+  else
+    gtk_text_buffer_insert_at_cursor(buf, " ", -1);
 }
 
 void render_executable_code(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, executable_code_t *ec)
@@ -90,15 +113,15 @@ void render_temporaries(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight
   
   unsigned int i;
 
-  render_string_to_buffer(code_buf, indents, highlight, index, "|");
+  render_string_to_buffer(code_buf, highlight, index, "|");
   
   for(i=0; i < t->nof_temporaries; i++)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, t->temporaries[i]);
+    render_string_to_buffer(code_buf, highlight, index, t->temporaries[i]);
     if(i != t->nof_temporaries-1)
-      render_string_to_buffer(code_buf, indents, highlight, index, " ");
+      render_space_to_buffer(code_buf, highlight, index);
   }
-  render_string_to_buffer(code_buf, indents, highlight, index, "|\n");
+  render_string_to_buffer(code_buf, highlight, index, "|\n");
   render_indents_to_buffer(code_buf, indents, highlight);
 }
 
@@ -114,7 +137,29 @@ void render_statements(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight,
   else if(st->type == EXP_PLUS_STATEMENTS)
   {
     render_expression(code_buf, indents, highlight, index, st->exp);
-    render_string_to_buffer(code_buf, indents, highlight, index, ".\n");
+
+    //overwrite the space at the end if present
+    char *c;
+    c = get_last_char_from_text_buffer(code_buf);
+
+    if(*c == ' ')
+    {
+      GtkTextIter end_iter, saved_iter;
+      gtk_text_buffer_get_end_iter(code_buf, &end_iter);
+      saved_iter = end_iter;
+      gtk_text_iter_backward_char(&end_iter);
+
+      gtk_text_buffer_delete(code_buf, &end_iter, &saved_iter);
+      gtk_text_buffer_get_end_iter(code_buf, &end_iter);
+
+      if(highlight)
+	gtk_text_buffer_insert_with_tags(code_buf, &end_iter, ".\n", -1, debugger_tag, NULL);
+      else
+	gtk_text_buffer_insert(code_buf, &end_iter, ".\n", -1);
+    }
+    else
+      render_string_to_buffer(code_buf, highlight, index, ".\n");
+
     render_indents_to_buffer(code_buf, indents, highlight);
     render_statements(code_buf, indents, highlight, index, st->statements);
   }
@@ -133,8 +178,9 @@ void render_identifiers(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight
   unsigned int i;
   for(i=0; i < ids->nof_identifiers; i++)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, ids->identifiers[i]);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+    render_string_to_buffer(code_buf, highlight, index, ids->identifiers[i]);
+    if(i != ids->nof_identifiers-1)
+      render_space_to_buffer(code_buf, highlight, index);
   }
 }
 
@@ -143,10 +189,8 @@ void render_return_statement(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
   if(!r)
     return;
 
-  //render_string_to_buffer(code_buf, indents, highlight, index, "^(");
-  render_string_to_buffer(code_buf, indents, highlight, index, "^");
+  render_string_to_buffer(code_buf, highlight, index, "^");
   render_expression(code_buf, indents, highlight, index, r->exp);
-  //render_string_to_buffer(code_buf, indents, highlight, index, ")");
 }
 
 void render_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, expression_t *exp)
@@ -170,8 +214,8 @@ void render_assignment(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight,
   if(!as)
     return;
 
-  render_string_to_buffer(code_buf, indents, highlight, index, as->identifier);
-  render_string_to_buffer(code_buf, indents, highlight, index, " := ");
+  render_string_to_buffer(code_buf, highlight, index, as->identifier);
+  render_string_to_buffer(code_buf, highlight, index, " := ");
   render_expression(code_buf, indents, highlight, index, as->rvalue);
 }
 
@@ -207,11 +251,14 @@ void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
   }
 
   if(b->type == PRIMARY)
+  {
     render_primary(code_buf, indents, my_highlight, index, b->prim);
+    render_space_to_buffer(code_buf, my_highlight, index);
+  }
   else if(b->type == PRIMARY_PLUS_MESSAGES)
   {
     render_primary(code_buf, indents, my_highlight, index, b->prim);
-    render_string_to_buffer(code_buf, indents, my_highlight, index, " ");
+    render_space_to_buffer(code_buf, my_highlight, index);
     render_message(code_buf, indents, my_highlight, index, b->msg);
     render_cascaded_messages(code_buf, indents, my_highlight, index, b->cascaded_msgs);
   }
@@ -230,7 +277,29 @@ void render_cascaded_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
   unsigned int i;
   for(i=0; i < c->nof_cascaded_msgs; i++)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, "; ");
+
+    //overwrite the space at the end if present
+    char *c1;
+    c1 = get_last_char_from_text_buffer(code_buf);
+
+    if(*c1 == ' ')
+    {
+      GtkTextIter end_iter, saved_iter;
+      gtk_text_buffer_get_end_iter(code_buf, &end_iter);
+      saved_iter = end_iter;
+      gtk_text_iter_backward_char(&end_iter);
+
+      gtk_text_buffer_delete(code_buf, &end_iter, &saved_iter);
+      gtk_text_buffer_get_end_iter(code_buf, &end_iter);
+
+      if(highlight)
+	gtk_text_buffer_insert_with_tags(code_buf, &end_iter, "; ", -1, debugger_tag, NULL);
+      else
+	gtk_text_buffer_insert(code_buf, &end_iter, "; ", -1);
+    }
+    else
+      render_string_to_buffer(code_buf, highlight, index, "; ");
+
     render_message(code_buf, indents, highlight, index, c->cascaded_msgs + i);
   }
 }
@@ -242,13 +311,11 @@ void render_primary(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gi
   
   if(p->type == IDENTIFIER)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, p->identifier);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+    render_string_to_buffer(code_buf, highlight, index, p->identifier);
   }
   else if(p->type == LITERAL)
   {
     render_literal(code_buf, indents, highlight, index, p->lit);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
   }
   else if(p->type == BLOCK_CONSTRUCTOR)
     render_block_constructor(code_buf, indents, highlight, index, p->blk_cons);
@@ -266,21 +333,19 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
   if(!b)
     return;
   
-  render_string_to_buffer(code_buf, indents, highlight, index, "[ ");
+  render_string_to_buffer(code_buf, highlight, index, "[ ");
 
   if(b->type == BLOCK_ARGS)
   {
     render_block_arguments(code_buf, indents, highlight, index, b->block_args);
-    int temp = 0;
-    render_string_to_buffer(code_buf, &temp, highlight, index, "\n");
+    render_string_to_buffer(code_buf, highlight, index, "\n");
     *indents += 2;
     render_indents_to_buffer(code_buf, indents, highlight);
     render_executable_code(code_buf, indents, highlight, index, b->exec_code);
   }
   else if(b->type == NO_BLOCK_ARGS)
   {
-    int temp = 0;
-    render_string_to_buffer(code_buf, &temp, highlight, index, "\n");
+    render_string_to_buffer(code_buf, highlight, index, "\n");
     *indents += 2;
     render_indents_to_buffer(code_buf, indents, highlight);
     render_executable_code(code_buf, indents, highlight, index, b->exec_code);
@@ -291,10 +356,10 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
     exit(1);
   }
 
-  render_string_to_buffer(code_buf, indents, highlight, index, "\n");
+  render_string_to_buffer(code_buf, highlight, index, "\n");
   *indents -= 2;
   render_indents_to_buffer(code_buf, indents, highlight);
-  render_string_to_buffer(code_buf, indents, highlight, index, "]");
+  render_string_to_buffer(code_buf, highlight, index, "]");
 }
 
 void render_block_arguments(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, block_arguments_t *args)
@@ -305,12 +370,12 @@ void render_block_arguments(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
   unsigned int i = args->nof_args;
   for(i=0; i < args->nof_args; i++)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, ":");
-    render_string_to_buffer(code_buf, indents, highlight, index, args->identifiers[i]);
+    render_string_to_buffer(code_buf, highlight, index, ":");
+    render_string_to_buffer(code_buf, highlight, index, args->identifiers[i]);
     if(i != args->nof_args-1)
-      render_string_to_buffer(code_buf, indents, highlight, index, " ");
+      render_space_to_buffer(code_buf, highlight, index);
   }
-  render_string_to_buffer(code_buf, indents, highlight, index, " | ");
+  render_string_to_buffer(code_buf, highlight, index, " | ");
 }
 
 void render_unary_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, unary_messages_t *msgs)
@@ -324,9 +389,9 @@ void render_unary_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN highli
   unsigned int i = msgs->nof_messages;
   for(i=0; i < msgs->nof_messages; i++)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, msgs->identifiers[i]);
+    render_string_to_buffer(code_buf, highlight, index, msgs->identifiers[i]);
     if(i != msgs->nof_messages -1)
-      render_string_to_buffer(code_buf, indents, highlight, index, " ");
+      render_space_to_buffer(code_buf, highlight, index);
   }    
 }
 
@@ -376,8 +441,8 @@ void render_binary_message(GtkTextBuffer *code_buf, int *indents, BOOLEAN highli
   if(!msg)
     return;
   
-  render_string_to_buffer(code_buf, indents, highlight, index, msg->binary_selector);
-  render_string_to_buffer(code_buf, indents, highlight, index, " ");
+  render_string_to_buffer(code_buf, highlight, index, msg->binary_selector);
+  render_space_to_buffer(code_buf, highlight, index);
   render_binary_argument(code_buf, indents, highlight, index, msg->bin_arg);
 }
 
@@ -413,7 +478,7 @@ void render_keyword_message(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
   {
     render_keyword_argument_pair(code_buf, indents, highlight, index, msg->kw_arg_pairs + i);
     if(i != msg->nof_args - 1)
-      render_string_to_buffer(code_buf, indents, highlight, index, " ");
+      render_space_to_buffer(code_buf, highlight, index);
   }
 }
 
@@ -422,8 +487,8 @@ void render_keyword_argument_pair(GtkTextBuffer *code_buf, int *indents, BOOLEAN
   if(!arg_pair)
     return;
   
-  render_string_to_buffer(code_buf, indents, highlight, index, arg_pair->keyword);
-  render_string_to_buffer(code_buf, indents, highlight, index, " ");
+  render_string_to_buffer(code_buf, highlight, index, arg_pair->keyword);
+  render_space_to_buffer(code_buf, highlight, index);
   render_keyword_argument(code_buf, indents, highlight, index, arg_pair->kw_arg);
 }
 
@@ -446,6 +511,7 @@ void render_keyword_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
   }
 
   render_primary(code_buf, indents, my_highlight, index, arg->prim);
+  render_space_to_buffer(code_buf, my_highlight, index);
   render_unary_messages(code_buf, indents, my_highlight, index, arg->unary_messages);
   render_binary_messages(code_buf, indents, my_highlight, index, arg->binary_messages);
 }
@@ -455,14 +521,15 @@ void render_array_elements(GtkTextBuffer *code_buf, int *indents, BOOLEAN highli
   if(!e)
     return;
   
-  render_string_to_buffer(code_buf, indents, highlight, index, "#(");
+  render_string_to_buffer(code_buf, highlight, index, "#(");
   unsigned int i;
   for(i=0; i < e->nof_elements; i++)
   {
     render_array_element(code_buf, indents, highlight, index, e->elements + i);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+    if(i != e->nof_elements-1)
+      render_space_to_buffer(code_buf, highlight, index);
   }
-  render_string_to_buffer(code_buf, indents, highlight, index, ")");
+  render_string_to_buffer(code_buf, highlight, index, ")");
 }
 
 void render_array_element(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, array_element_t *e)
@@ -474,8 +541,7 @@ void render_array_element(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlig
     render_literal(code_buf, indents, highlight, index, e->lit);
   else if(e->type == IDENTIFIER1)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, e->identifier);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+    render_string_to_buffer(code_buf, highlight, index, e->identifier);
   }
   else
   {
@@ -489,7 +555,7 @@ void render_number(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gin
   if(!n)
     return;
 
-  render_string_to_buffer(code_buf, indents, highlight, index, n->val);
+  render_string_to_buffer(code_buf, highlight, index, n->val);
 }
 
 void render_literal(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, literal_t *lit)
@@ -504,8 +570,7 @@ void render_literal(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gi
           lit->type == SYMBOL_LITERAL   ||
           lit->type == SELECTOR_LITERAL)
   {
-    render_string_to_buffer(code_buf, indents, highlight, index, lit->val);
-    render_string_to_buffer(code_buf, indents, highlight, index, " ");
+    render_string_to_buffer(code_buf, highlight, index, lit->val);
   }
   else if(lit->type == ARRAY_LITERAL)
     render_array_elements(code_buf, indents, highlight, index, lit->array_elements);
