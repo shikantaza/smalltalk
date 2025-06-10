@@ -63,6 +63,8 @@ void create_MonadicBlock();
 void create_Array();
 void create_OrderedCollection();
 void create_Compiler();
+void create_ReadableString();
+void create_Character();
 
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
@@ -322,6 +324,9 @@ void initialize()
   create_OrderedCollection();
 
   create_Compiler();
+
+  create_ReadableString();
+  create_Character();
 
   initialize_top_level();
 

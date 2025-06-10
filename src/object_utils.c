@@ -46,6 +46,9 @@ extern binding_env_t *g_top_level;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR SUPER;
 
+extern OBJECT_PTR ReadableString;
+extern OBJECT_PTR Character;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
@@ -642,6 +645,10 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
     return Array;
   else if(IS_CONS_OBJECT(obj)) //TODO: create a proper class for CONS objects.
     return Object;             //CONS objects are returned by Compiler>>compile
+  else if(IS_STRING_LITERAL_OBJECT(obj))
+    return ReadableString;
+  else if(IS_CHARACTER_OBJECT(obj))
+    return Character;
   else
     return ((object_t *)extract_ptr(obj))->class_object;
 }

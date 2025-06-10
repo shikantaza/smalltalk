@@ -22,6 +22,7 @@ extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR IndexOutofBounds;
 extern OBJECT_PTR g_idclo;
 
+extern OBJECT_PTR VALUE_SELECTOR;
 extern OBJECT_PTR VALUE1_SELECTOR;
 
 extern stack_type *g_call_chain;
@@ -162,6 +163,50 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, receiver);
 }
 
+OBJECT_PTR array_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR separator, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  array_object_t *obj = (array_object_t *)extract_ptr(receiver);
+
+  if(!IS_CLOSURE_OBJECT(operation))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_CLOSURE_OBJECT(separator))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  unsigned int size = obj->nof_elements;
+
+  int i;
+
+  for(i=0; i<size; i++)
+  {
+    message_send(g_msg_snd_closure,
+                 operation,
+		 NIL,
+		 VALUE1_SELECTOR,
+		 convert_int_to_object(1),
+		 obj->elements[i],
+		 g_idclo);
+
+    if(i < size - 1)
+      message_send(g_msg_snd_closure,
+		   separator,
+		   NIL,
+		   VALUE_SELECTOR,
+		   convert_int_to_object(0),
+		   g_idclo);
+  }
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, receiver);
+}
+
 void create_Array()
 {
   class_object_t *cls_obj;
@@ -185,7 +230,7 @@ void create_Array()
   cls_obj->shared_vars->count = 0;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 4;
+  cls_obj->instance_methods->count = 5;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_at:put:");
@@ -211,6 +256,12 @@ void create_Array()
 						    convert_native_fn_to_object((nativefn)array_do),
 						    NIL, NIL,
 						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[4].key = get_symbol("_do:separatedBy:");
+  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
+						    convert_native_fn_to_object((nativefn)array_do_separated_by),
+						    NIL, NIL,
+						    2, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;

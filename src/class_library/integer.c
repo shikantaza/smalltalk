@@ -157,6 +157,26 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
 }
 
+OBJECT_PTR gt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  if(!IS_INTEGER_OBJECT(arg))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+#ifdef DEBUG
+  print_object(arg); printf(" is the arg passed to gt\n");
+#endif
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, (get_int_value(receiver) > get_int_value(arg)) ? TRUE : FALSE );
+}
+
 void create_Integer()
 {
   class_object_t *cls_obj;
@@ -180,7 +200,7 @@ void create_Integer()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 6;
+  cls_obj->instance_methods->count = 7;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_+");
@@ -217,6 +237,12 @@ void create_Integer()
   cls_obj->instance_methods->bindings[5].key = get_symbol("_<");
   cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)lt),
+						    NIL, NIL,
+						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[6].key = get_symbol("_>");
+  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+						    convert_native_fn_to_object((nativefn)gt),
 						    NIL, NIL,
 						    1, NIL, NULL);
 

@@ -603,4 +603,51 @@ Smalltalk addClassMethod: #m2 toClass: classObj1 withBody: [ ^ 33]
 
 UnitTestFramework runTestCase: [(classObj1 m2) = 33] withID: 96
 
+UnitTestFramework runTestCase: [('Hello world!' size) = 12] withID: 97
+
+UnitTestFramework runTestCase: [('Hello world!' isEmpty) = false] withID: 98
+
+UnitTestFramework runTestCase: [('Hello world!' notEmpty) = true] withID: 99
+
+UnitTestFramework runTestCase: [('' isEmpty) = true] withID: 100
+
+UnitTestFramework runTestCase: [('' notEmpty) = false] withID: 101
+
+|sum|
+sum := 0.
+'Hello world!' do: [ :c | sum := sum + 1].
+UnitTestFramework runTestCase: [ sum = 12 ] withID: 102
+
+|sum1 sum2|
+sum1 := 0.
+sum2 := 0.
+'Hello world!' do: [ :c | sum1 := sum1 + 1] separatedBy: [ sum2 := sum2 + 1].
+UnitTestFramework runTestCase: [ (sum1 = 12) & (sum2 = 11) ] withID: 103
+
+UnitTestFramework runTestCase: [ ('Hello world!' select: [ :c | c = $o ]) = 'oo'] withID: 104
+
+UnitTestFramework runTestCase: [ ('Hello world!' reject: [ :c | c = $o ]) = 'Hell wrld!'] withID: 105
+
+UnitTestFramework runTestCase: [ ('Hello world!' occurrencesOf: $o) = 2 ] withID: 106
+
+UnitTestFramework runTestCase: [ 'Hello world!' includes: $o ] withID: 107
+
+UnitTestFramework runNegativeTestCase: [ 'Hello world!' includes: $x ] withID: 108
+
+|x|
+x := 0.
+UnitTestFramework runTestCase: [ (('Hello world!' detect: [ :c | c = $o] ifNone: [ x := 42]) = $o) & (x = 0)] withID: 109
+
+UnitTestFramework runTestCase: [ ('Hello world!' detect: [ :c | c = $x] ifNone: [ 42 ]) = 42 ] withID: 110
+
+UnitTestFramework runTestCase: [ ('Hello world!' detect: [ :c | c = $o]) = $o ] withID: 111
+
+UnitTestFramework runTestCase: [ ('Hello world!' detect: [ :c | c = $x]) = nil ] withID: 112
+
+UnitTestFramework runTestCase: [
+  ('Hello world!' collect: [ :c |
+    (c = $o) ifTrue: [ $x ] ifFalse: [ c ]
+  ]) = 'Hellx wxrld!'
+] withID: 113
+
 UnitTestFramework reportStatus

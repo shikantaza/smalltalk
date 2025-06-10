@@ -68,6 +68,8 @@ extern OBJECT_PTR MNU_SYMBOL;
 
 extern OBJECT_PTR Error;
 
+extern BOOLEAN g_system_initialized;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
@@ -995,13 +997,21 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
 
   char *file_name_str = GC_strdup(g_string_literals[file_name >> OBJECT_SHIFT]);
 
-  FILE *fp = fopen(file_name_str, "r");
+  char qualified_file_name[200];
+  memset(qualified_file_name, '\0', 200);
+
+  if(g_system_initialized)
+    sprintf(qualified_file_name, "%s", file_name_str);
+  else
+    sprintf(qualified_file_name, "%s/%s", SMALLTALKDATADIR, file_name_str);
+
+  FILE *fp = fopen(qualified_file_name, "r");
 
   if(!fp)
   {
     char buf[300];
     sprintf(buf, "Unable to open file '%s'", file_name_str);
-    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+    return create_and_signal_exception_with_text(Exception, get_string_obj(buf), cont);
   }
 
   //TODO: handle errors from this
