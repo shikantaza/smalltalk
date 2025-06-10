@@ -413,6 +413,8 @@ OBJECT_PTR readable_string_collect(OBJECT_PTR closure, OBJECT_PTR transformer, O
     if(!(IS_CHARACTER_OBJECT(ret)))
       return create_and_signal_exception_with_text(Error, get_string_obj("Transformer returns non-character"), cont);
 
+    stack_pop(g_call_chain);
+
     ret_str[i] = get_char_value(ret);
   }
 
