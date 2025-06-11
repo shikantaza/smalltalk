@@ -294,6 +294,9 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
                        1, &call_chain_entry_index,
                        -1);
 
+    if(call_chain_entry_index < 0 || call_chain_entry_index >= stack_count(g_call_chain))
+      return;
+
     char buf[MAX_STRING_LENGTH];
     memset(buf, '\0', MAX_STRING_LENGTH);
 
