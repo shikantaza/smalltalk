@@ -21,6 +21,7 @@ extern package_t *g_compiler_package;
 extern OBJECT_PTR Integer;
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
+extern OBJECT_PTR DyadicValuable;
 
 extern OBJECT_PTR Nil;
 extern OBJECT_PTR Boolean;
@@ -379,6 +380,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
       sprintf(str, "#<CLOSURE %p> (a NiladicBlock)", (void *)obj_ptr);
     else if(arity == 1)
       sprintf(str, "#<CLOSURE %p> (a MonadicBlock)", (void *)obj_ptr);
+    else if(arity == 2)
+      sprintf(str, "#<CLOSURE %p> (a DyadicValuable)", (void *)obj_ptr);
     else
       sprintf(str, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
   }
@@ -638,6 +641,8 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
       return NiladicBlock;
     else if(arity == 1)
       return MonadicBlock;
+    else if(arity == 2)
+      return DyadicValuable;
     else
       assert(false);//TODO
   }

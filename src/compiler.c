@@ -65,6 +65,7 @@ void create_OrderedCollection();
 void create_Compiler();
 void create_ReadableString();
 void create_Character();
+void create_DyadicValuable();
 
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
@@ -314,6 +315,7 @@ void initialize()
 
   create_NiladicBlock();
   create_MonadicBlock();
+  create_DyadicValuable();
 
   create_Boolean();
 
@@ -943,4 +945,30 @@ BOOLEAN pop_if_top(call_chain_entry_t *e)
 
   //if((call_chain_entry_t *)stack_top(g_call_chain) == e)
   //stack_pop(g_call_chain);
+}
+
+BOOLEAN call_chain_entry_exists(call_chain_entry_t *e)
+{
+  if(stack_is_empty(g_call_chain))
+    return false;
+
+  BOOLEAN entry_found = false;
+
+  call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+  int count = stack_count(g_call_chain);
+
+  int i = count - 1;
+
+  while(i >= 0)
+  {
+    if(entries[i] == e)
+    {
+      entry_found = true;
+      break;
+    }
+
+    i--;
+  }
+
+  return entry_found;
 }

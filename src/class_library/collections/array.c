@@ -143,24 +143,33 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 
   int i;
 
+  OBJECT_PTR ret;
+
   for(i=0; i<size; i++)
   {
-    message_send(g_msg_snd_closure,
-                 operation,
-		 NIL,
-		 VALUE1_SELECTOR,
-		 convert_int_to_object(1),
-		 obj->elements[i],
-		 g_idclo);
+    ret = message_send(g_msg_snd_closure,
+		       operation,
+		       NIL,
+		       VALUE1_SELECTOR,
+		       convert_int_to_object(1),
+		       obj->elements[i],
+		       g_idclo);
 
-    pop_if_top(entry);
+    if(call_chain_entry_exists(entry))
+      continue;
+    else
+      break;
   }
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  pop_if_top(entry);
-
-  return invoke_cont_on_val(cont, receiver);
+  if(call_chain_entry_exists(entry))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, receiver);
+  }
+  else
+    return ret;
 }
 
 OBJECT_PTR array_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR separator, OBJECT_PTR cont)
@@ -181,30 +190,59 @@ OBJECT_PTR array_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   int i;
 
+  OBJECT_PTR ret1, ret2;
+
+  BOOLEAN ret_from_do, ret_from_separated_by;
+
   for(i=0; i<size; i++)
   {
-    message_send(g_msg_snd_closure,
-                 operation,
-		 NIL,
-		 VALUE1_SELECTOR,
-		 convert_int_to_object(1),
-		 obj->elements[i],
-		 g_idclo);
+    ret1 = message_send(g_msg_snd_closure,
+			operation,
+			NIL,
+			VALUE1_SELECTOR,
+			convert_int_to_object(1),
+			obj->elements[i],
+			g_idclo);
+
+    if(!call_chain_entry_exists(entry))
+    {
+      ret_from_do = true;
+      break;
+    }
 
     if(i < size - 1)
-      message_send(g_msg_snd_closure,
-		   separator,
-		   NIL,
-		   VALUE_SELECTOR,
-		   convert_int_to_object(0),
-		   g_idclo);
+    {
+      ret2 = message_send(g_msg_snd_closure,
+			  separator,
+			  NIL,
+			  VALUE_SELECTOR,
+			  convert_int_to_object(0),
+			  g_idclo);
+
+      if(!call_chain_entry_exists(entry))
+      {
+	ret_from_separated_by = true;
+	break;
+      }
+    }
   }
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  pop_if_top(entry);
-
-  return invoke_cont_on_val(cont, receiver);
+  if(call_chain_entry_exists(entry))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, receiver);
+  }
+  else
+  {
+    if(ret_from_do)
+      return ret1;
+    else if(ret_from_separated_by)
+      return ret2;
+    else
+      assert(false);
+  }
 }
 
 void create_Array()

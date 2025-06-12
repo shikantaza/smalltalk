@@ -35,6 +35,7 @@ OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);
 OBJECT_PTR           assignment_conversion(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           build_selectors_list(OBJECT_PTR);
 OBJECT_PTR           CADR(OBJECT_PTR);
+BOOLEAN              call_chain_entry_exists(call_chain_entry_t *);
 OBJECT_PTR           capture_local_variables(OBJECT_PTR);
 OBJECT_PTR           capture_local_var_names(OBJECT_PTR);
 OBJECT_PTR           clone_object(OBJECT_PTR);

@@ -21,8 +21,6 @@ extern OBJECT_PTR g_msg_snd_closure;
 
 extern OBJECT_PTR VALUE_SELECTOR;
 
-extern stack_type *g_call_chain;
-
 /*
 
 These two methods to be included in
