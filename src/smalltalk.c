@@ -70,6 +70,8 @@ extern OBJECT_PTR Error;
 
 extern BOOLEAN g_system_initialized;
 
+extern OBJECT_PTR ReadableString;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
@@ -135,6 +137,8 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Array"), cons(Array, NIL));
   add_binding_to_top_level(get_symbol("OrderedCollection"), cons(OrderedCollection, NIL));
   add_binding_to_top_level(get_symbol("Compiler"), cons(Compiler, NIL));
+
+  add_binding_to_top_level(get_symbol("ReadableString"), cons(ReadableString, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)

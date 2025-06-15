@@ -177,6 +177,51 @@ OBJECT_PTR gt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, (get_int_value(receiver) > get_int_value(arg)) ? TRUE : FALSE );
 }
 
+OBJECT_PTR to(OBJECT_PTR closure, OBJECT_PTR stop, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  if(!IS_INTEGER_OBJECT(stop))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  int stop_int = get_int_value(stop);
+
+  array_object_t *arr = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+
+  int start_int = get_int_value(receiver);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  if(start_int > stop_int)
+  {
+    arr->nof_elements = 0;
+    arr->elements = NULL;
+
+    pop_if_top(entry);
+
+    return invoke_cont_on_val(cont, convert_array_object_to_object_ptr(arr));
+  }
+  else
+  {
+    arr->nof_elements = stop_int - start_int + 1;
+
+    int i, count;
+
+    count = arr->nof_elements;
+
+    arr->elements = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));
+
+    for(i=0; i<count; i++)
+      arr->elements[i] = convert_int_to_object(start_int + i);
+
+    pop_if_top(entry);
+
+    return invoke_cont_on_val(cont, convert_array_object_to_object_ptr(arr));
+  }
+}
+
 void create_Integer()
 {
   class_object_t *cls_obj;
@@ -200,7 +245,7 @@ void create_Integer()
   cls_obj->shared_vars->count = 0;
   
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 7;
+  cls_obj->instance_methods->count = 8;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_+");
@@ -243,6 +288,12 @@ void create_Integer()
   cls_obj->instance_methods->bindings[6].key = get_symbol("_>");
   cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)gt),
+						    NIL, NIL,
+						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[7].key = get_symbol("_to:");
+  cls_obj->instance_methods->bindings[7].val = create_method(cls_obj, false,
+						    convert_native_fn_to_object((nativefn)to),
 						    NIL, NIL,
 						    1, NIL, NULL);
 

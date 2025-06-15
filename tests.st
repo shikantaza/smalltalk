@@ -650,4 +650,10 @@ UnitTestFramework runTestCase: [
   ]) = 'Hellx wxrld!'
 ] withID: 113
 
+UnitTestFramework runTestCase: [ (('Hello world!' substringsForSeparators: ' ' ) size) = 2 ] withID: 114
+
+UnitTestFramework runTestCase: [ (('Hello world!' substringsForSeparators: ' ' ) at: 1) = 'Hello' ] withID: 115
+
+UnitTestFramework runTestCase: [ (('Hello world!' substringsForSeparators: ' ' ) at: 2) = 'world!' ] withID: 116
+
 UnitTestFramework reportStatus

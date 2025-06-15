@@ -81,8 +81,8 @@ void replace_block_constructor(executable_code_t *e)
 
   if(prim1->type = BLOCK_CONSTRUCTOR)
   {
-    char str[500];
-    memset(str, '\0', 500);
+    char str[2000];
+    memset(str, '\0', 2000);
 
     str[0] = '\'';
 
@@ -283,6 +283,8 @@ unsigned int convert_primary(char *buf, primary_t *p)
 
   unsigned int len = 0;
 
+  len += sprintf(buf+len, "(");
+
   if(p->type == IDENTIFIER)
     len += sprintf(buf+len, "%s", p->identifier);
   else if(p->type == LITERAL)
@@ -296,6 +298,8 @@ unsigned int convert_primary(char *buf, primary_t *p)
     printf("Unknown primary type: %d\n", p->type);
     exit(1);
   }
+
+  len += sprintf(buf+len, ")");
 
   return len;
 }
@@ -489,9 +493,13 @@ unsigned int convert_keyword_argument(char *buf, keyword_argument_t *arg)
 
   unsigned int len = 0;
 
+  len += sprintf(buf+len, "(");
+
   len += convert_primary(buf+len, arg->prim);
   len += convert_unary_messages(buf+len, arg->unary_messages);
   len += convert_binary_messages(buf+len, arg->binary_messages);
+
+  len += sprintf(buf+len, ")");
 
   return len;
 }

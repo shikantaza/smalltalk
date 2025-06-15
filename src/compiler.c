@@ -345,6 +345,9 @@ void initialize_pass2()
 {
   OBJECT_PTR ret;
 
+  //TODO: confirm these are really required
+  //(i.e., initialize() has not taken care of this)
+
   assert(get_top_level_val(get_symbol("Error"), &ret));
   Error = car(ret);
 
