@@ -43,9 +43,16 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
   if(count <= 0)
     return create_and_signal_exception(InvalidArgument, cont);
 
-  array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  //array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  array_object_t *obj;
 
-  assert(obj);
+  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  {
+    printf("array_new(): Unable to allocate memory\n");
+    exit(1);
+  }
+
+  //assert(obj);
 
   obj->nof_elements = count;
   obj->elements = (OBJECT_PTR *)GC_MALLOC(count * sizeof(OBJECT_PTR));

@@ -25,6 +25,10 @@ extern OBJECT_PTR IndexOutofBounds;
 
 extern stack_type *g_call_chain;
 
+extern OBJECT_PTR g_msg_snd_closure;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR VALUE1_SELECTOR;
+
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   return new_object_internal(OrderedCollection, convert_fn_to_closure((nativefn)new_object_internal), cont);
@@ -40,7 +44,14 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  //array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  array_object_t *obj;
+
+  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  {
+    printf("ordered_collection_initialize(): Unable to allocate memory\n");
+    exit(1);
+  }
 
   assert(obj);
 
@@ -197,6 +208,63 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, obj->elements[size_val-1]);
 }
 
+OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  object_t *coll_obj = (object_t *)extract_ptr(receiver);
+
+  assert(coll_obj->class_object == OrderedCollection);
+
+  OBJECT_PTR arr = get_binding(coll_obj->instance_vars, get_symbol("arr"));
+
+  assert(arr); //get_binding returns NULL if the binding is not found
+  assert(IS_ARRAY_OBJECT(arr));
+
+  array_object_t *obj = (array_object_t *)extract_ptr(arr);
+
+  if(!IS_CLOSURE_OBJECT(operation))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  assert(size);
+  assert(IS_INTEGER_OBJECT(size));
+
+  unsigned int size_val = get_int_value(size);
+
+  int i;
+
+  OBJECT_PTR ret;
+
+  for(i=0; i<size_val; i++)
+  {
+    ret = message_send(g_msg_snd_closure,
+		       operation,
+		       NIL,
+		       VALUE1_SELECTOR,
+		       convert_int_to_object(1),
+		       obj->elements[i],
+		       g_idclo);
+
+    if(call_chain_entry_exists(entry))
+      continue;
+    else
+      break;
+  }
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  if(call_chain_entry_exists(entry))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, receiver);
+  }
+  else
+    return ret;
+}
+
 void create_OrderedCollection()
 {
   class_object_t *cls_obj;
@@ -223,7 +291,7 @@ void create_OrderedCollection()
   cls_obj->shared_vars->count = 0;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 6;
+  cls_obj->instance_methods->count = 7;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_initialize");
@@ -261,6 +329,12 @@ void create_OrderedCollection()
 						    convert_native_fn_to_object((nativefn)ordered_collection_remove_last),
 						    NIL, NIL,
 						    0, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[6].key = get_symbol("_do:");
+  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+						    convert_native_fn_to_object((nativefn)ordered_collection_do),
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 1;

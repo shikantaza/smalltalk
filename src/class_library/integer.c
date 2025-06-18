@@ -188,7 +188,14 @@ OBJECT_PTR to(OBJECT_PTR closure, OBJECT_PTR stop, OBJECT_PTR cont)
 
   int stop_int = get_int_value(stop);
 
-  array_object_t *arr = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  //array_object_t *arr = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  array_object_t *arr;
+
+  if(allocate_memory((void **)&arr, sizeof(array_object_t)))
+  {
+    printf("to(): Unable to allocate memory\n");
+    exit(1);
+  }
 
   int start_int = get_int_value(receiver);
 

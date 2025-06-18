@@ -724,7 +724,14 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   assert(IS_CLASS_OBJECT(receiver));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
+  //object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
+  object_t *obj;
+
+  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  {
+    printf("new_object_internal(): Unable to allocate memory\n");
+    exit(1);
+  }
   
   obj->class_object = receiver;
   obj->instance_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
@@ -845,8 +852,15 @@ OBJECT_PTR object_message_not_understood(OBJECT_PTR closure, OBJECT_PTR selector
 
 void create_Object()
 {
-  class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
-  
+  //class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
+  class_object_t *cls_obj;
+
+  if(allocate_memory((void **)&cls_obj, sizeof(class_object_t)))
+  {
+    printf("create_Array(): Unable to allocate memory\n");
+    exit(1);
+  }
+
   cls_obj->parent_class_object = NIL;
   cls_obj->name = GC_strdup("Object");
 

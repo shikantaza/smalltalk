@@ -811,7 +811,14 @@ OBJECT_PTR convert_selector_literal_to_atom(char *s)
 
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)
 {
-  array_object_t *arr_obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  //array_object_t *arr_obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
+  array_object_t *arr_obj;
+
+  if(allocate_memory((void **)&arr_obj, sizeof(array_object_t)))
+  {
+    printf("convert_array_literal_to_atom(): Unable to allocate memory\n");
+    exit(1);
+  }
 
   unsigned int i, n;
 

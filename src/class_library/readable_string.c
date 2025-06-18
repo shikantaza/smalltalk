@@ -494,6 +494,8 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
 
   ret_str[substr_size] = '\0';
 
+  pop_if_top(entry);
+
   return invoke_cont_on_val(cont, get_string_obj(ret_str));
 }
 

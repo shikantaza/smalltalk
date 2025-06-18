@@ -73,3 +73,5 @@ Smalltalk addInstanceMethod: #substringsForSeparators: toClass: ReadableString w
   ].
   ^arr
 ]
+
+Smalltalk loadFile: 'package.st'
