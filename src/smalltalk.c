@@ -28,6 +28,8 @@ int smalltalk_gensym_count = 0;
 
 OBJECT_PTR CompileError;
 
+OBJECT_PTR Package;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
@@ -71,6 +73,9 @@ extern OBJECT_PTR Error;
 extern BOOLEAN g_system_initialized;
 
 extern OBJECT_PTR ReadableString;
+
+extern OBJECT_PTR DyadicValuable;
+extern OBJECT_PTR Character;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -121,6 +126,7 @@ void initialize_top_level()
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));
+  add_binding_to_top_level(get_symbol("Nil"), cons(Nil, NIL));
   add_binding_to_top_level(get_symbol("nil"), cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Transcript"), cons(Transcript, NIL));
   add_binding_to_top_level(get_symbol("NiladicBlock"), cons(NiladicBlock, NIL));
@@ -139,6 +145,8 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Compiler"), cons(Compiler, NIL));
 
   add_binding_to_top_level(get_symbol("ReadableString"), cons(ReadableString, NIL));
+  add_binding_to_top_level(get_symbol("DyadicValuable"), cons(DyadicValuable, NIL));
+  add_binding_to_top_level(get_symbol("Character"), cons(Character, NIL));
 }
 
 BOOLEAN exists_in_top_level(OBJECT_PTR sym)
@@ -297,7 +305,7 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
       inst->instance_vars->count++;
     
     inst->instance_vars->bindings[inst->instance_vars->count].key = var_sym;
-    inst->instance_vars->bindings[inst->instance_vars->count].val = NIL;
+    inst->instance_vars->bindings[inst->instance_vars->count].val = cons(NIL, NIL);
   }
 
   pop_if_top(entry);
@@ -727,7 +735,7 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   //object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
   object_t *obj;
 
-  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  if(allocate_memory((void **)&obj, sizeof(object_t)))
   {
     printf("new_object_internal(): Unable to allocate memory\n");
     exit(1);
@@ -1129,6 +1137,49 @@ OBJECT_PTR smalltalk_remove_breakpoint(OBJECT_PTR closure,
   return smalltalk_add_remove_breakpoint(closure, selector, class_obj, false, cont);
 }
 
+OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
+					     OBJECT_PTR class_obj,
+					     OBJECT_PTR pkg_str,
+					     OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_CLASS_OBJECT(class_obj))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_STRING_LITERAL_OBJECT(pkg_str))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  /* OBJECT_PTR pkg = message_send(g_msg_snd_closure, */
+  /* 				Package, */
+  /* 				NIL, */
+  /* 				get_symbol("_get:"), */
+  /* 				convert_int_to_object(1), */
+  /* 				pkg_str, */
+  /* 				g_idclo); */
+
+  /* //the above message send results in an exception */
+  /* if(!call_chain_entry_exists(entry)) */
+  /* { */
+  /*   pop_if_top(entry); */
+  /*   return invoke_cont_on_val(cont, receiver); */
+  /* } */
+
+  /* class_object_t *cls = (class_object_t *)extract_ptr(class_obj); */
+
+  /* cls->package = pkg; */
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, receiver);
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1156,19 +1207,19 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
-  cls_obj->class_methods->count = 13;
+  cls_obj->class_methods->count = 14;
   cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
   //the Smalltalk class because we don't have a way to 'quote' blocks
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("_createClass:parentClass:");
+  cls_obj->class_methods->bindings[0].key = get_symbol("_createClassPreInitialize:parentClass:");
   cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)create_class),
 						 NIL, NIL,
 						 2, NIL, NULL);
 
-  cls_obj->class_methods->bindings[1].key = get_symbol("_createClass:");
+  cls_obj->class_methods->bindings[1].key = get_symbol("_createClassPreInitialize:");
   cls_obj->class_methods->bindings[1].val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)create_class_no_parent_class),
 						 NIL, NIL,
@@ -1237,6 +1288,12 @@ void create_Smalltalk()
   cls_obj->class_methods->bindings[12].key = get_symbol("_removeBreakpointFrom:ofClass:");
   cls_obj->class_methods->bindings[12].val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)smalltalk_remove_breakpoint),
+						 NIL, NIL,
+						 2, NIL, NULL);
+
+  cls_obj->class_methods->bindings[13].key = get_symbol("_assignClass:toPackage:");
+  cls_obj->class_methods->bindings[13].val = create_method(cls_obj, true,
+						 convert_native_fn_to_object((nativefn)smalltalk_assign_class_to_package),
 						 NIL, NIL,
 						 2, NIL, NULL);
 

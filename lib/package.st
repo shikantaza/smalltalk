@@ -1,4 +1,4 @@
-Smalltalk createClass: #Package
+Smalltalk createClassPreInitialize: #Package
 
 Smalltalk addClassVariable: #packages toClass: Package
 

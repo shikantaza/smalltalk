@@ -1072,6 +1072,15 @@ void load_core_library()
   g_loading_core_library = false;
 }
 
+void load_core_library2()
+{
+  g_loading_core_library = true;
+  printf("Loading core library (Phase 2)...");
+  load_file(SMALLTALKDATADIR "/smalltalk2.st");
+  printf("done.\n");
+  g_loading_core_library = false;
+}
+
 void load_tests()
 {
   g_running_tests = true;
@@ -1091,6 +1100,8 @@ int main(int argc, char **argv)
   load_core_library();
 
   initialize_pass2();
+
+  load_core_library2();
 
   g_system_initialized = true;
 

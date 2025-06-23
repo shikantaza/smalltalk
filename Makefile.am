@@ -36,7 +36,7 @@ libsmalltalkjitllvm_la_SOURCES = src/jit_llvm.cpp
 libsmalltalkjitllvm_la_CXXFLAGS = -std=c++14 -fPIC -fno-rtti `$(LLVMDIR)/bin/llvm-config --cflags` 
 libsmalltalkjitllvm_la_LDFLAGS = `$(LLVMDIR)/bin/llvm-config --ldflags` -no-undefined -avoid-version $(clang_LIBS) `$(LLVMDIR)/bin/llvm-config --libs` -lz -lncurses -pthread -ldl
 
-pkgdata_DATA = lib/smalltalk.st lib/package.st data/smalltalk.lang
+pkgdata_DATA = lib/smalltalk.st lib/smalltalk2.st lib/package.st data/smalltalk.lang
 
 dist_pkgdata_DATA = ${pkgdata_DATA}
 

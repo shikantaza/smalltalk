@@ -103,6 +103,8 @@ typedef struct
 {
   OBJECT_PTR parent_class_object;
   char *name;
+
+  OBJECT_PTR package;
   
   unsigned int nof_instances;
   OBJECT_PTR *instances;

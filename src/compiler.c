@@ -129,6 +129,8 @@ extern OBJECT_PTR CompileError;
 extern OBJECT_PTR g_run_till_cont;
 extern enum DebugAction g_debug_action;
 
+extern OBJECT_PTR Package;
+
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
@@ -368,6 +370,9 @@ void initialize_pass2()
 
   assert(get_top_level_val(get_symbol("CompileError"), &ret));
   CompileError = car(ret);
+
+  assert(get_top_level_val(get_symbol("Package"), &ret));
+  Package = car(ret);
 }
 
 void error(const char *fmt, ...)

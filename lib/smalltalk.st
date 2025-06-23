@@ -8,19 +8,19 @@ Smalltalk addClassMethod: #addClassVariables:toClass: toClass: Smalltalk  withBo
   lst do: [ :v | self addClassVariable: v toClass: cls ]
 ]
 
-Smalltalk createClass: #Error parentClass: Exception
+Smalltalk createClassPreInitialize: #Error parentClass: Exception
 
-Smalltalk createClass: #MessageNotUnderstood parentClass: Error
+Smalltalk createClassPreInitialize: #MessageNotUnderstood parentClass: Error
 
-Smalltalk createClass: #ZeroDivide parentClass: Error
+Smalltalk createClassPreInitialize: #ZeroDivide parentClass: Error
 
-Smalltalk createClass: #InvalidArgument parentClass: Error
+Smalltalk createClassPreInitialize: #InvalidArgument parentClass: Error
 
-Smalltalk createClass: #IndexOutofBounds parentClass: Error
+Smalltalk createClassPreInitialize: #IndexOutofBounds parentClass: Error
 
-Smalltalk createClass: #EmptyCollection parentClass: Error
+Smalltalk createClassPreInitialize: #EmptyCollection parentClass: Error
 
-Smalltalk createClass: #Stack
+Smalltalk createClassPreInitialize: #Stack
 
 Smalltalk addInstanceVariable: #coll toClass: Stack
 
@@ -40,7 +40,7 @@ Smalltalk addInstanceMethod: #top toClass: Stack withBody: [
     ifFalse: [ ^ coll at: (coll size)]
 ]
 
-Smalltalk createClass: #CompileError parentClass: Error
+Smalltalk createClassPreInitialize: #CompileError parentClass: Error
 
 Smalltalk addInstanceMethod: #contains: toClass: ReadableString withBody:
 [ :char |

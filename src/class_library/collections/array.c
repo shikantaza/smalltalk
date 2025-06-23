@@ -46,7 +46,7 @@ OBJECT_PTR array_new(OBJECT_PTR closure, OBJECT_PTR size, OBJECT_PTR cont)
   //array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
   array_object_t *obj;
 
-  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  if(allocate_memory((void **)&obj, sizeof(array_object_t)))
   {
     printf("array_new(): Unable to allocate memory\n");
     exit(1);

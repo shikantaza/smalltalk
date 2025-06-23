@@ -656,4 +656,30 @@ UnitTestFramework runTestCase: [ (('Hello world!' substringsForSeparators: ' ' )
 
 UnitTestFramework runTestCase: [ (('Hello world!' substringsForSeparators: ' ' ) at: 2) = 'world!' ] withID: 116
 
+Smalltalk createGlobal: #oc valued: (OrderedCollection new)
+
+UnitTestFramework runTestCase: [(oc size) = 0] withID: 117
+
+oc add: 42
+
+UnitTestFramework runTestCase: [(oc size) = 1] withID: 118
+
+UnitTestFramework runTestCase: [(oc at: 1) = 42] withID: 119
+
+oc add: 33
+
+UnitTestFramework runTestCase: [ (oc size) = 2 ] withID: 120
+
+UnitTestFramework runTestCase: [(oc at: 1) = 42] withID: 121
+
+UnitTestFramework runTestCase: [(oc at: 2) = 33] withID: 122
+
+UnitTestFramework runExceptionTestCase: [oc at: 3] exception: IndexOutofBounds withID: 123
+
+UnitTestFramework runExceptionTestCase: [oc at: Transcript] exception: InvalidArgument withID: 124
+
+oc removeLast
+
+UnitTestFramework runTestCase: [(oc size) = 1] withID: 125
+
 UnitTestFramework reportStatus

@@ -47,7 +47,7 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
   //array_object_t *obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
   array_object_t *obj;
 
-  if(allocate_memory((void **)&obj, sizeof(class_object_t)))
+  if(allocate_memory((void **)&obj, sizeof(array_object_t)))
   {
     printf("ordered_collection_initialize(): Unable to allocate memory\n");
     exit(1);
@@ -58,8 +58,13 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
   obj->nof_elements = DEFAULT_COLLECTION_SIZE;
   obj->elements = (OBJECT_PTR *)GC_MALLOC(obj->nof_elements * sizeof(OBJECT_PTR));
 
-  update_binding(coll_obj->instance_vars, get_symbol("arr"), convert_array_object_to_object_ptr(obj));
-  update_binding(coll_obj->instance_vars, get_symbol("size"), convert_int_to_object(0));
+  int i;
+
+  for(i=0; i<DEFAULT_COLLECTION_SIZE; i++)
+    obj->elements[i] = NIL;
+
+  update_binding(coll_obj->instance_vars, get_symbol("arr"), cons(convert_array_object_to_object_ptr(obj), NIL));
+  update_binding(coll_obj->instance_vars, get_symbol("size"), cons(convert_int_to_object(0), NIL));
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -78,7 +83,7 @@ OBJECT_PTR ordered_collection_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
 
@@ -99,18 +104,18 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  OBJECT_PTR arr = get_binding(coll_obj->instance_vars, get_symbol("arr"));
+  OBJECT_PTR arr = car(get_binding(coll_obj->instance_vars, get_symbol("arr")));
 
   assert(arr); //get_binding returns NULL if the binding is not found
   assert(IS_ARRAY_OBJECT(arr));
 
   array_object_t *obj = (array_object_t *)extract_ptr(arr);
 
-  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
 
-  unsigned int size_val = get_int_value(size);
+  int size_val = get_int_value(size);
 
   if(size_val == obj->nof_elements)
   {
@@ -120,7 +125,7 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   obj->elements[size_val] = elem;
 
-  update_binding(coll_obj->instance_vars, get_symbol("size"), convert_int_to_object(size_val+1));
+  update_binding(coll_obj->instance_vars, get_symbol("size"), cons(convert_int_to_object(size_val+1), NIL));
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -140,7 +145,7 @@ OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PT
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  OBJECT_PTR arr = get_binding(coll_obj->instance_vars, get_symbol("arr"));
+  OBJECT_PTR arr = car(get_binding(coll_obj->instance_vars, get_symbol("arr")));
 
   assert(arr); //get_binding returns NULL if the binding is not found
   assert(IS_ARRAY_OBJECT(arr));
@@ -150,7 +155,7 @@ OBJECT_PTR ordered_collection_at(OBJECT_PTR closure, OBJECT_PTR index, OBJECT_PT
   if(!IS_INTEGER_OBJECT(index))
     return create_and_signal_exception(InvalidArgument, cont);
 
-  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
 
@@ -183,14 +188,14 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  OBJECT_PTR arr = get_binding(coll_obj->instance_vars, get_symbol("arr"));
+  OBJECT_PTR arr = car(get_binding(coll_obj->instance_vars, get_symbol("arr")));
 
   assert(arr); //get_binding returns NULL if the binding is not found
   assert(IS_ARRAY_OBJECT(arr));
 
   array_object_t *obj = (array_object_t *)extract_ptr(arr);
 
-  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
 
@@ -199,7 +204,7 @@ OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR closure, OBJECT_PTR cont)
   if(size_val == 0)
     return create_and_signal_exception(EmptyCollection, cont);
 
-  update_binding(coll_obj->instance_vars, get_symbol("size"), convert_int_to_object(size_val-1));
+  update_binding(coll_obj->instance_vars, get_symbol("size"), cons(convert_int_to_object(size_val-1), NIL));
 
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -218,7 +223,7 @@ OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   assert(coll_obj->class_object == OrderedCollection);
 
-  OBJECT_PTR arr = get_binding(coll_obj->instance_vars, get_symbol("arr"));
+  OBJECT_PTR arr = car(get_binding(coll_obj->instance_vars, get_symbol("arr")));
 
   assert(arr); //get_binding returns NULL if the binding is not found
   assert(IS_ARRAY_OBJECT(arr));
@@ -228,7 +233,7 @@ OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
   if(!IS_CLOSURE_OBJECT(operation))
     return create_and_signal_exception(InvalidArgument, cont);
 
-  OBJECT_PTR size = get_binding(coll_obj->instance_vars, get_symbol("size"));
+  OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
 
