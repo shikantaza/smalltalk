@@ -34,6 +34,8 @@ extern OBJECT_PTR VALUE_SELECTOR;
 
 extern OBJECT_PTR Error;
 
+extern BOOLEAN g_eval_aborted;
+
 OBJECT_PTR readable_string_size(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -91,13 +93,13 @@ OBJECT_PTR readable_string_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_P
 		       convert_char_to_object(str[i]),
 		       g_idclo);
 
-    if(call_chain_entry_exists(entry))
+    if(call_chain_entry_exists(entry) & !g_eval_aborted)
       continue;
     else
       break;
   }
 
-  if(call_chain_entry_exists(entry))
+  if(call_chain_entry_exists(entry) && !g_eval_aborted)
   {
     pop_if_top(entry);
     return invoke_cont_on_val(cont, receiver);

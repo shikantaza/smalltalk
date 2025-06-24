@@ -65,6 +65,7 @@ extern OBJECT_PTR CompileError;
 
 extern enum DebugAction g_debug_action;
 
+extern BOOLEAN g_eval_aborted;
 %}
 
 %union{
@@ -893,6 +894,8 @@ int repl2()
   g_compile_time_method_selector = NIL;
 
   g_debug_action = CONTINUE;
+
+  g_eval_aborted = false;
 
   //OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 

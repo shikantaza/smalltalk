@@ -67,6 +67,9 @@ extern OBJECT_PTR g_last_eval_result;
 
 extern BOOLEAN g_debug_in_progress;
 
+extern enum DebugAction g_debug_action;
+extern BOOLEAN g_eval_aborted;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -340,6 +343,9 @@ OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 
   while(g_debug_in_progress)
     ; //loop till the debug window returns control
+
+  if(g_debug_action == ABORT)
+    g_eval_aborted = true;
 
   return g_last_eval_result;
 }

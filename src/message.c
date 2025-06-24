@@ -15,6 +15,11 @@ void print_debug_expression(debug_expression_t *);
 
 OBJECT_PTR g_run_till_cont;
 
+//this will be set to true if the
+//abort option is selected in there
+//debugger
+BOOLEAN g_eval_aborted;
+
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
 extern OBJECT_PTR g_method_call_stack;
@@ -166,6 +171,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 				 OBJECT_PTR count1,
 				 OBJECT_PTR *args)
 {
+  if(g_eval_aborted)
+    return NIL;
+
   //TODO: should we save the previous value of SELF
   //and restore it before returning from message_send?
   put_binding_val(g_top_level, SELF, cons(receiver, NIL));
@@ -326,7 +334,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;
@@ -362,7 +373,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;
@@ -399,7 +413,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;
@@ -437,7 +454,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;
@@ -476,7 +496,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;
@@ -540,7 +563,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
+      {
+	g_eval_aborted = true;
 	return NIL;
+      }
 
       if(g_debug_action == STEP_OVER)
 	g_run_till_cont = cont;

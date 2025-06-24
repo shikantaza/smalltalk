@@ -29,6 +29,8 @@ extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR VALUE1_SELECTOR;
 
+extern BOOLEAN g_eval_aborted;
+
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   return new_object_internal(OrderedCollection, convert_fn_to_closure((nativefn)new_object_internal), cont);
@@ -253,7 +255,7 @@ OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 		       obj->elements[i],
 		       g_idclo);
 
-    if(call_chain_entry_exists(entry))
+    if(call_chain_entry_exists(entry) && !g_eval_aborted)
       continue;
     else
       break;
@@ -261,7 +263,7 @@ OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  if(call_chain_entry_exists(entry))
+  if(call_chain_entry_exists(entry) && !g_eval_aborted)
   {
     pop_if_top(entry);
     return invoke_cont_on_val(cont, receiver);
