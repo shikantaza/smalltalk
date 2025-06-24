@@ -1066,7 +1066,7 @@ void parse_from_fp(FILE *fp)
   char *line = NULL;
 
   unsigned int len;
-  int nbytes = 200;
+  size_t nbytes = 0;
 
   BOOLEAN eof = 0;
   
@@ -1077,11 +1077,13 @@ void parse_from_fp(FILE *fp)
     
     while(1)
     {
-      line = (char *)GC_MALLOC((nbytes + 1) * sizeof(char));
-      eof = getline(&line, (size_t *)&nbytes, fp);
+      //line = (char *)GC_MALLOC((nbytes + 1) * sizeof(char));
+      eof = getline(&line, &nbytes, fp);
     
       if(!strcmp(line, "\n") || eof == -1)
 	 break;
+
+      assert(strlen(buf) + strlen(line) < 1024);
 
       len += sprintf(buf+len, "%s", line);
     }
@@ -1099,6 +1101,7 @@ void parse_from_fp(FILE *fp)
     if(eof == -1)
       break;
   }
+  free(line);
 }
 
 void load_file(char *file_name)
