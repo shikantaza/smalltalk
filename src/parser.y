@@ -3,7 +3,7 @@
 #include <stdlib.h>  
 #include <stdio.h>
 #include <assert.h>
-  
+
 #include "gc.h"
 
 #include "global_decls.h"
@@ -228,8 +228,10 @@ identifiers:
     identifiers T_IDENTIFIER
     {
       $1->nof_identifiers++;
-      $1->identifiers = (char **)GC_REALLOC($1->identifiers,
-                                            $1->nof_identifiers * sizeof(char *));
+      char **temp = (char **)GC_REALLOC($1->identifiers,
+					$1->nof_identifiers * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
 
       $1->identifiers[$1->nof_identifiers - 1] = GC_strdup($2);
       $$ = $1;
@@ -398,7 +400,9 @@ block_constructor:
       blk_cons->type = BLOCK_ARGS;
 
       $3->nof_args++;
-      $3->identifiers = (char **)GC_REALLOC($3->identifiers, $3->nof_args * sizeof(char *));
+      char **temp = (char **)GC_REALLOC($3->identifiers, $3->nof_args * sizeof(char *));
+      assert(temp);
+      $3->identifiers = temp;
       $3->identifiers[$3->nof_args - 1] = GC_strdup($4);
 
       blk_cons->block_args = $3;
@@ -428,8 +432,10 @@ block_arguments:
     block_arguments block_argument
     {
       $1->nof_args++;
-      $1->identifiers = (char **)GC_REALLOC($1->identifiers,
-                                            $1->nof_args * sizeof(char *));
+      char **temp = (char **)GC_REALLOC($1->identifiers,
+					$1->nof_args * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
 
       $1->identifiers[$1->nof_args - 1] = $2;
       $$ = $1;
@@ -457,7 +463,9 @@ message:
       msg->type = UNARY_MESSAGE;
 
       $1->nof_messages++;
-      $1->identifiers = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      char **temp  = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
       $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
 
       msg->unary_messages = $1;
@@ -478,7 +486,9 @@ message:
       msg->type = UNARY_MESSAGE;
 
       $1->nof_messages++;
-      $1->identifiers = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      char **temp = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
       $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
 
       msg->unary_messages = $1;
@@ -501,7 +511,9 @@ message:
       msg->unary_messages = NULL;
 
       $1->nof_messages++;
-      $1->bin_msgs = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      assert(temp);
+      $1->bin_msgs = temp;
       $1->bin_msgs[$1->nof_messages - 1] = *($2);
 
       msg->binary_messages = $1;
@@ -519,7 +531,9 @@ message:
       msg->unary_messages = NULL;
 
       $1->nof_messages++;
-      $1->bin_msgs = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      assert(temp);
+      $1->bin_msgs = temp;
       $1->bin_msgs[$1->nof_messages - 1] = *($2);
 
       msg->binary_messages = $1;
@@ -558,8 +572,10 @@ unary_messages:
     unary_messages unary_message
     {
       $1->nof_messages++;
-      $1->identifiers = (char **)GC_REALLOC($1->identifiers,
-                                            $1->nof_messages * sizeof(char *));
+      char **temp = (char **)GC_REALLOC($1->identifiers,
+					$1->nof_messages * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
 
       /* no GC_strdup() as this has already been done 
          in the rule for unary_message */
@@ -580,8 +596,10 @@ binary_messages:
     binary_messages binary_message
     {
       $1->nof_messages++;
-      $1->bin_msgs = (binary_message_t *)GC_REALLOC($1->bin_msgs,
-                                                    $1->nof_messages * sizeof(binary_message_t));
+      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs,
+							      $1->nof_messages * sizeof(binary_message_t));
+      assert(temp);
+      $1->bin_msgs = temp;
 
       $1->bin_msgs[$1->nof_messages - 1] = *($2);
       $$ = $1;      
@@ -612,7 +630,10 @@ keyword_message:
     keyword_arg_pairs keyword_arg_pair
     {
       $1->nof_args++;
-      $1->kw_arg_pairs = (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs, $1->nof_args * sizeof(keyword_argument_pair_t));
+      keyword_argument_pair_t *temp = (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs,
+									    $1->nof_args * sizeof(keyword_argument_pair_t));
+      assert(temp);
+      $1->kw_arg_pairs = temp;
       $1->kw_arg_pairs[$1->nof_args - 1] = *($2);
 
       $$ = $1;
@@ -653,9 +674,11 @@ keyword_arg_pairs:
     keyword_arg_pairs keyword_arg_pair
     {
       $1->nof_args++;
-      $1->kw_arg_pairs =
+      keyword_argument_pair_t *temp =
         (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs,
                                               $1->nof_args * sizeof(keyword_argument_pair_t));
+      assert(temp);
+      $1->kw_arg_pairs = temp;
 
       $1->kw_arg_pairs[$1->nof_args - 1] = *($2);
       $$ = $1;
@@ -674,9 +697,11 @@ cascaded_messages:
     cascaded_messages cascaded_message
     {
       $1->nof_cascaded_msgs++;
-      $1->cascaded_msgs =
+      message_t *temp =
         (message_t *)GC_REALLOC($1->cascaded_msgs,
                                 $1->nof_cascaded_msgs * sizeof(message_t));
+      assert(temp);
+      $1->cascaded_msgs = temp;
 
       $1->cascaded_msgs[$1->nof_cascaded_msgs - 1] = *($2);
       $$ = $1;
@@ -819,8 +844,10 @@ array_elements:
     array_elements array_element
     {
       $1->nof_elements++;
-      $1->elements = (array_element_t *)GC_REALLOC($1->elements,
-                                                   $1->nof_elements * sizeof(array_element_t));
+      array_element_t *temp = (array_element_t *)GC_REALLOC($1->elements,
+							    $1->nof_elements * sizeof(array_element_t));
+      assert(temp);
+      $1->elements = temp;
 
       $1->elements[$1->nof_elements - 1] = *($2);
       $$ = $1;      

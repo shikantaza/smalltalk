@@ -81,8 +81,10 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
 
-  g_top_level->bindings = (binding_t *)GC_REALLOC(g_top_level->bindings,
-                                                g_top_level->count * sizeof(binding_t));
+  binding_t *temp = (binding_t *)GC_REALLOC(g_top_level->bindings,
+					    g_top_level->count * sizeof(binding_t));
+  assert(temp);
+  g_top_level->bindings = temp;
 
   g_top_level->bindings[g_top_level->count - 1].key = sym;
   g_top_level->bindings[g_top_level->count - 1].val = val;
@@ -281,8 +283,12 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
   if(!cls_obj->inst_vars)
     cls_obj->inst_vars = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
   else
-    cls_obj->inst_vars = (OBJECT_PTR *)GC_REALLOC(cls_obj->inst_vars,
-                                                  cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
+  {
+    OBJECT_PTR *temp = (OBJECT_PTR *)GC_REALLOC(cls_obj->inst_vars,
+						cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
+    assert(temp);
+    cls_obj->inst_vars = temp;
+  }
 
   cls_obj->inst_vars[cls_obj->nof_instance_vars-1] = var_sym;
 
@@ -366,8 +372,10 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   else
   {
     cls_obj->shared_vars->count++;
-    cls_obj->shared_vars->bindings = (binding_t *)GC_REALLOC(cls_obj->shared_vars->bindings,
-							     cls_obj->shared_vars->count * sizeof(binding_t));
+    binding_t *temp = (binding_t *)GC_REALLOC(cls_obj->shared_vars->bindings,
+					      cls_obj->shared_vars->count * sizeof(binding_t));
+    assert(temp);
+    cls_obj->shared_vars->bindings = temp;
   }
   
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1].key = var_sym;
@@ -573,8 +581,10 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
     else
     {
       cls_obj->instance_methods->count++;
-      cls_obj->instance_methods->bindings = (binding_t *)GC_REALLOC(cls_obj->instance_methods->bindings,
-								    cls_obj->instance_methods->count * sizeof(binding_t));
+      binding_t *temp = (binding_t *)GC_REALLOC(cls_obj->instance_methods->bindings,
+						cls_obj->instance_methods->count * sizeof(binding_t));
+      assert(temp);
+      cls_obj->instance_methods->bindings = temp;
     }
     
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1].key = selector_sym;
@@ -696,8 +706,10 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
     else
     {
       cls_obj->class_methods->count++;
-      cls_obj->class_methods->bindings = (binding_t *)GC_REALLOC(cls_obj->class_methods->bindings,
-								 cls_obj->class_methods->count * sizeof(binding_t));
+      binding_t *temp = (binding_t *)GC_REALLOC(cls_obj->class_methods->bindings,
+						cls_obj->class_methods->count * sizeof(binding_t));
+      assert(temp);
+      cls_obj->class_methods->bindings = temp;
     }
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1].key = selector_sym;
@@ -767,9 +779,13 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
       if(!obj->instance_vars->bindings)
 	obj->instance_vars->bindings = (binding_t *)GC_MALLOC(obj->instance_vars->count * sizeof(binding_t));
       else
-	obj->instance_vars->bindings = (binding_t *)GC_REALLOC(obj->instance_vars->bindings,
-							       obj->instance_vars->count * sizeof(binding_t));
-    
+      {
+	binding_t *temp = (binding_t *)GC_REALLOC(obj->instance_vars->bindings,
+						  obj->instance_vars->count * sizeof(binding_t));
+	assert(temp);
+	obj->instance_vars->bindings = temp;
+      }
+
       for(i=prev_count; i<prev_count + n; i++)
       {
 	obj->instance_vars->bindings[i].key = curr_cls_obj->inst_vars[i - prev_count];
@@ -793,7 +809,11 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
   if(!cls_obj->instances)
     cls_obj->instances = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instances * sizeof(OBJECT_PTR));
   else
-    cls_obj->instances = (OBJECT_PTR *)GC_REALLOC(cls_obj->instances, cls_obj->nof_instances * sizeof(OBJECT_PTR));
+  {
+    OBJECT_PTR *temp = (OBJECT_PTR *)GC_REALLOC(cls_obj->instances, cls_obj->nof_instances * sizeof(OBJECT_PTR));
+    assert(temp);
+    cls_obj->instances = temp;
+  }
 
   cls_obj->instances[cls_obj->nof_instances-1] = obj_ptr;
   

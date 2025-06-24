@@ -510,8 +510,10 @@ int add_symbol(char *sym)
 {
   g_compiler_package->nof_symbols++;
   
-  g_compiler_package->symbols = (char **)GC_REALLOC(g_compiler_package->symbols,
-						    g_compiler_package->nof_symbols * sizeof(char *));
+  char **temp = (char **)GC_REALLOC(g_compiler_package->symbols,
+				    g_compiler_package->nof_symbols * sizeof(char *));
+  assert(temp);
+  g_compiler_package->symbols = temp;
 
   g_compiler_package->symbols[g_compiler_package->nof_symbols - 1] = GC_strdup(sym);
 
@@ -673,7 +675,11 @@ OBJECT_PTR get_string_obj(char *s)
   if(!g_string_literals)
     g_string_literals = (char **)GC_MALLOC(g_nof_string_literals * sizeof(char *));
   else
-    g_string_literals = (char **)GC_REALLOC(g_string_literals, g_nof_string_literals * sizeof(char *));
+  {
+    char **temp = (char **)GC_REALLOC(g_string_literals, g_nof_string_literals * sizeof(char *));
+    assert(temp);
+    g_string_literals = temp;
+  }
 
   g_string_literals[g_nof_string_literals-1] = GC_strdup(s);
 

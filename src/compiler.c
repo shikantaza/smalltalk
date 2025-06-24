@@ -163,8 +163,10 @@ int add_smalltalk_symbol(char *sym)
 {
   g_smalltalk_symbols->nof_symbols++;
   
-  g_smalltalk_symbols->symbols = (char **)GC_REALLOC(g_smalltalk_symbols->symbols,
-						     g_smalltalk_symbols->nof_symbols * sizeof(char *));
+  char **temp = (char **)GC_REALLOC(g_smalltalk_symbols->symbols,
+				    g_smalltalk_symbols->nof_symbols * sizeof(char *));
+  assert(temp);
+  g_smalltalk_symbols->symbols = temp;
 
   g_smalltalk_symbols->symbols[g_smalltalk_symbols->nof_symbols - 1] = GC_strdup(sym);
 
@@ -863,8 +865,12 @@ OBJECT_PTR convert_identifier_to_atom(char *s)
   }
 
   g_compiler_package->nof_symbols++;
-  g_compiler_package->symbols = (char **)GC_REALLOC(g_compiler_package->symbols,
-						    g_compiler_package->nof_symbols * sizeof(char *));
+
+  char **temp = (char **)GC_REALLOC(g_compiler_package->symbols,
+				    g_compiler_package->nof_symbols * sizeof(char *));
+  assert(temp);
+  g_compiler_package->symbols = temp;
+
   g_compiler_package->symbols[g_compiler_package->nof_symbols - 1] = GC_strdup(s);
 
   unsigned int n = g_compiler_package->nof_symbols;
