@@ -51,7 +51,7 @@
     </context>
 
     <context id="integer" style-ref="number" class="string" class-disabled="no-spell-check">
-      <match extended="true">[\s][0-9]+ | ^[0-9]+ </match>
+      <match extended="true">[-]?[0-9]+|[0-9]+r[0-9A-Z]+ </match>
     </context>
 
     <context id="character" style-ref="character" class="string" class-disabled="no-spell-check">
