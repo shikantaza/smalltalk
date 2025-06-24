@@ -16,7 +16,7 @@ void print_debug_expression(debug_expression_t *);
 OBJECT_PTR g_run_till_cont;
 
 //this will be set to true if the
-//abort option is selected in there
+//abort option is selected in the
 //debugger
 BOOLEAN g_eval_aborted;
 

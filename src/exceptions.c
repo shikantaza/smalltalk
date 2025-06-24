@@ -70,6 +70,8 @@ extern BOOLEAN g_debug_in_progress;
 extern enum DebugAction g_debug_action;
 extern BOOLEAN g_eval_aborted;
 
+extern enum UIMode g_ui_mode;
+
 /* code below this point is earlier code; will be
    incoporated if found relevant */
 
@@ -516,11 +518,18 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
     //printf("Unhandled exception: %s\n", cls_obj_int->name);
     sprintf(buf, "Unhandled exception: %s\n", cls_obj_int->name);
 
-  show_error_dialog(buf);
-
-  //print_call_chain();
-
-  return exception_user_intervention(cont);
+  if(g_ui_mode == GUI)
+  {
+    show_error_dialog(buf);
+    return exception_user_intervention(cont);
+  }
+  else if(g_ui_mode == CLI)
+  {
+    printf("%s\n", buf);
+    return exception_user_intervention_cli(cont);
+  }
+  else
+    assert(false);
 }
 
 OBJECT_PTR signal_exception(OBJECT_PTR exception, OBJECT_PTR cont)

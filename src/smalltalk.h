@@ -60,6 +60,12 @@ enum DebugAction
   ABORT
 };
 
+enum UIMode
+{
+  CLI,
+  GUI
+};
+
 typedef uintptr_t OBJECT_PTR;
 
 //#if __aarch64__

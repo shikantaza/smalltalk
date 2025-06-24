@@ -48,6 +48,8 @@ OBJECT_PTR g_last_eval_result;
 
 BOOLEAN g_system_initialized;
 
+enum UIMode g_ui_mode;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SMALLTALK;
@@ -1096,7 +1098,7 @@ void load_file(char *file_name)
 void load_core_library()
 {
   g_loading_core_library = true;
-  printf("Loading core library...");
+  printf("Loading core library (Phase 1)...");
   load_file(SMALLTALKDATADIR "/smalltalk.st");
   printf("done.\n");
   g_loading_core_library = false;
@@ -1123,6 +1125,8 @@ void load_tests()
 #ifndef LEX
 int main(int argc, char **argv)
 {
+  g_ui_mode = CLI;
+
   g_system_initialized = false;
 
   initialize();  
@@ -1152,6 +1156,8 @@ int main(int argc, char **argv)
 		      DEFAULT_DEBUG_WINDOW_HEIGHT,
 		      "Smalltalk");
   gtk_main();
+
+  g_ui_mode = GUI;
 
   /*
   //load_tests();
