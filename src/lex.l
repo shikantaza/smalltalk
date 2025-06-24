@@ -6,6 +6,8 @@
 
 #include "gc.h"
 
+#include "smalltalk.h"
+
 #include "parser_header.h"
 #include "parser.h"
 
@@ -16,6 +18,9 @@ YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
 int g_include_stack_ptr = 0;
 
 int repl2();
+
+extern OBJECT_PTR NIL;
+extern OBJECT_PTR g_last_eval_result;
 
 int set_up_new_yyin(FILE *fp)
 {
@@ -51,6 +56,18 @@ void pop_yyin()
 }
 
 int call_repl(char *expression)
+{
+  g_last_eval_result = NIL;
+
+  YY_BUFFER_STATE buf = yy_scan_string(expression);
+  if(!yyparse())
+    repl2();
+  yy_delete_buffer(buf);
+
+  return 0;
+}
+
+int call_repl_orig(char *expression)
 {
   YY_BUFFER_STATE buf = yy_scan_string(expression);
 

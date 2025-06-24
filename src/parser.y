@@ -38,6 +38,8 @@ void print_to_transcript(char *);
 
 void replace_block_constructor(executable_code_t *);
 
+void show_error_dialog(char *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -879,8 +881,20 @@ array_element:
 
 %%
 
-void yyerror(const char *s) {
+void yyerror(const char *s)
+{
+  if(g_ui_mode == CLI)
     fprintf(stderr, "Parse error: %s\n", s);
+  else if(g_ui_mode == GUI)
+  {
+    char buf[200];
+    memset(buf, '\0', 200);
+
+    sprintf(buf, "Parse error: %s", s);
+    show_error_dialog(buf);
+  }
+  else
+    assert(false);
 }
 
 int repl2()
@@ -1155,9 +1169,11 @@ int main(int argc, char **argv)
 		      DEFAULT_DEBUG_WINDOW_WIDTH,
 		      DEFAULT_DEBUG_WINDOW_HEIGHT,
 		      "Smalltalk");
-  gtk_main();
 
   g_ui_mode = GUI;
+
+  gtk_main();
+
 
   /*
   //load_tests();
