@@ -3,6 +3,7 @@
 #include <stdlib.h>  
 #include <stdio.h>
 #include <assert.h>
+#include <gtk/gtk.h>
 
 #include "gc.h"
 
@@ -35,6 +36,7 @@ void create_transcript_window(int, int, int, int, char *);
 void create_workspace_window(int, int, int, int, char *);
 void create_debug_window(int, int, int, int, char *);
 void print_to_transcript(char *);
+void print_to_workspace(char *, GtkTextTag *);
 
 void replace_block_constructor(executable_code_t *);
 
@@ -70,6 +72,8 @@ extern OBJECT_PTR CompileError;
 extern enum DebugAction g_debug_action;
 
 extern BOOLEAN g_eval_aborted;
+
+extern GtkTextTag *error_tag;
 %}
 
 %union{
@@ -891,7 +895,7 @@ void yyerror(const char *s)
     memset(buf, '\0', 200);
 
     sprintf(buf, "Parse error: %s", s);
-    show_error_dialog(buf);
+    print_to_workspace(buf, error_tag);
   }
   else
     assert(false);

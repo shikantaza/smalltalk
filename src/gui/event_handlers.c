@@ -16,7 +16,7 @@ void create_workspace_window(int, int, int, int, char *);
 
 void print_object_to_string(OBJECT_PTR, char *);
 
-void print_to_workspace(char *);
+void print_to_workspace(char *, GtkTextTag *);
 
 void remove_all_from_list(GtkTreeView *);
 
@@ -66,6 +66,8 @@ extern BOOLEAN g_debugger_invoked_for_exception;
 
 extern executable_code_t *g_exp;
 
+extern GtkTextTag *workspace_tag;
+
 void evaluate()
 {
   GtkTextBuffer *buf;
@@ -109,7 +111,7 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
       char buf[500];
       memset(buf, '\0', 500);
       print_object_to_string(g_last_eval_result, buf);
-      print_to_workspace(buf);
+      print_to_workspace(buf, workspace_tag);
 
       return TRUE;
     }
