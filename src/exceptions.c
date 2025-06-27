@@ -340,6 +340,12 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
 
 OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 {
+  //for the cases where workspace expression
+  //results in an exception without any call chain
+  //existent (e.g., unbound variables)
+  if(stack_count(g_call_chain) == 0)
+    return NIL;
+
   g_debug_in_progress = true;
   show_debug_window(true, cont);
 
@@ -354,6 +360,12 @@ OBJECT_PTR exception_user_intervention(OBJECT_PTR cont)
 
 OBJECT_PTR exception_user_intervention_cli(OBJECT_PTR cont)
 {
+  //for the cases where workspace expression
+  //results in an exception without any call chain
+  //existent (e.g., unbound variables)
+  if(stack_count(g_call_chain) == 0)
+    return NIL;
+
   int choice = 0;
 
   while(choice < 1 || choice > 5)

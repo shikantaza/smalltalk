@@ -18,6 +18,8 @@ extern OBJECT_PTR Object;
 
 extern stack_type *g_call_chain;
 
+extern enum UIMode g_ui_mode;
+
 OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -30,11 +32,16 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   assert(IS_CLOSURE_OBJECT(cont));
   
-  //print_object(arg);
   char buf[500];
   memset(buf, '\0', 500);
   print_object_to_string(arg, buf);
-  print_to_transcript(buf);
+
+  if(g_ui_mode == CLI)
+    fprintf(stdout, "%s", buf);
+  else if(g_ui_mode = GUI)
+    print_to_transcript(buf);
+  else
+    assert(false);
 
   pop_if_top(entry);
 
@@ -49,8 +56,12 @@ OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  //printf("\n");
-  print_to_transcript("\n");
+  if(g_ui_mode == CLI)
+    fprintf(stdout, "\n");
+  else if(g_ui_mode = GUI)
+    print_to_transcript("\n");
+  else
+    assert(false);
   
   pop_if_top(entry);
 
