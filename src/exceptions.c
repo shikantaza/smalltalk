@@ -538,6 +538,7 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
   else if(g_ui_mode == CLI)
   {
     printf("%s\n", buf);
+    print_call_chain();
     return exception_user_intervention_cli(cont);
   }
   else
@@ -787,14 +788,21 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
   char buf[200];
   memset(buf, '\0', 200);
 
-  //printf("Unhandled exception: %s\n", cls_obj_int->name);
   sprintf(buf, "Unhandled exception: %s\n", cls_obj_int->name);
 
-  show_error_dialog(buf);
-
-  //print_call_chain();
-
-  return exception_user_intervention(cont);
+  if(g_ui_mode == GUI)
+  {
+    show_error_dialog(buf);
+    return exception_user_intervention(cont);
+  }
+  else if(g_ui_mode == CLI)
+  {
+    printf("%s\n", buf);
+    print_call_chain();
+    return exception_user_intervention_cli(cont);
+  }
+  else
+    assert(false);
 }
 
 OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)
