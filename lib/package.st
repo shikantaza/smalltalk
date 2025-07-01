@@ -66,3 +66,24 @@ Smalltalk addClassMethod: #get: toClass: Package withBody:
     ^(self getPackage: s2 withParent: parent)
   ]
 ]
+
+Smalltalk addInstanceMethod: #buildStack: toClass: Package withBody:
+[ :s |
+  s push: name.
+  (parent = nil) ifFalse: [
+    parent buildStack: s
+  ].
+  ^s
+]
+
+Smalltalk addInstanceMethod: #getQualifiedName toClass: Package withBody:
+[
+  |s ret|
+  s := Stack new.
+  ret := ''.
+  self buildStack: s.
+  [s isEmpty] whileFalse: [
+    ret := ret, '.' , (s pop)
+  ].
+  ^ret substringFrom: 2 to: (ret size)
+]

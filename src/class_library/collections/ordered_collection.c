@@ -31,6 +31,11 @@ extern OBJECT_PTR VALUE1_SELECTOR;
 
 extern BOOLEAN g_eval_aborted;
 
+//workaround to fix memory corruption
+//issue involving array_object_t's
+//'elements' variable
+OBJECT_PTR *g_watch_value;
+
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   return new_object_internal(OrderedCollection, convert_fn_to_closure((nativefn)new_object_internal), cont);
@@ -59,6 +64,8 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   obj->nof_elements = DEFAULT_COLLECTION_SIZE;
   obj->elements = (OBJECT_PTR *)GC_MALLOC(obj->nof_elements * sizeof(OBJECT_PTR));
+
+  g_watch_value = obj->elements;
 
   int i;
 
@@ -112,6 +119,8 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
   assert(IS_ARRAY_OBJECT(arr));
 
   array_object_t *obj = (array_object_t *)extract_ptr(arr);
+
+  g_watch_value = obj->elements;
 
   OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);

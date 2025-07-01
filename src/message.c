@@ -576,20 +576,24 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
+      for(i=n-1; i>=0; i--)
+	asm("push %0\n\t"       : : "r"(stack_args[i]) : );
+
       //invoke nf via assembly on the args and cont directly
       asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
       asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
+      asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
       //not populating rdx here, see below
       asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
       asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
       asm("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
-      for(i=n-1; i>=0; i--)
-	asm("push %0\n\t"       : : "r"(stack_args[i]) : );
+      /* for(i=n-1; i>=0; i--) */
+      /* 	asm("push %0\n\t"       : : "r"(stack_args[i]) : ); */
 
       //using a for loop screws up the rdx register.
       //so we populate rdx after the stack push operations
-      asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+      //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
 
       asm("call *%0\n\t" : : "m"(nf) : );
 
@@ -604,31 +608,36 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
-    OBJECT_PTR retval = NIL;
+    for(i=n-1; i>=0; i--)
+      asm("push %0\n\t"       : : "r"(stack_args[i]) : );
 
     asm("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     asm("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     //not populating rdx here, see below
-    //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
     asm("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
     asm("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
     asm("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
-    for(i=n-1; i>=0; i--)
-      asm("push %0\n\t"       : : "r"(stack_args[i]) : );
+    /* for(i=n-1; i>=0; i--) */
+    /*   asm("push %0\n\t"       : : "r"(stack_args[i]) : ); */
 
     //using a for loop screws up the rdx register.
     //so we populate rdx after the stack push operations
-    asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
 
-    asm("call *%0\n\t" : : "m"(nf) : );
+    {
+      OBJECT_PTR retval = NIL;
 
-    for(i=0; i<n; i++)
-      asm("addq $8, %%rsp\n\t" : : : );
+      asm("call *%0\n\t" : : "m"(nf) : );
 
-    asm("mov %%rax, %0\n\t" : : "r"(retval) : "%rax");
+      //for(i=0; i<n; i++)
+      //  asm("addq $8, %%rsp\n\t" : : : );
 
-    return retval;
+      asm("mov %%rax, %0\n\t" : "=r"(retval) : : "%rax");
+
+      return retval;
+    }
   }
 }
 

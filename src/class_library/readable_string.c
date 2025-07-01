@@ -501,6 +501,31 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
   return invoke_cont_on_val(cont, get_string_obj(ret_str));
 }
 
+OBJECT_PTR readable_string_concat(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!(get_class_object(operand) == ReadableString))
+      return create_and_signal_exception(InvalidArgument, cont);
+
+  char *str1 = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str2 = g_string_literals[operand >> OBJECT_SHIFT];
+
+  unsigned int size1 = strlen(str1);
+  unsigned int size2 = strlen(str2);
+
+  char *ret_str = (char *)GC_MALLOC((size1 + size2 + 1) * sizeof(char));
+
+  sprintf(ret_str, "%s%s", str1, str2);
+  ret_str[size1+size2] = '\0';
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+}
+
 void create_ReadableString()
 {
   class_object_t *cls_obj;
@@ -524,7 +549,7 @@ void create_ReadableString()
   cls_obj->shared_vars->count = 0;
 
   cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
-  cls_obj->instance_methods->count = 13;
+  cls_obj->instance_methods->count = 14;
   cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_size");
@@ -604,6 +629,12 @@ void create_ReadableString()
 						    convert_native_fn_to_object((nativefn)readable_string_substring),
 						    NIL, NIL,
 						    2, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[13].key = get_symbol("_,");
+  cls_obj->instance_methods->bindings[13].val = create_method(cls_obj, false,
+						    convert_native_fn_to_object((nativefn)readable_string_concat),
+						    NIL, NIL,
+						    1, NIL, NULL);
 
   cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->class_methods->count = 0;

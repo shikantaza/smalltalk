@@ -40,6 +40,8 @@ Smalltalk assignClass:  IndexOutofBounds toPackage: 'core'
 
 Smalltalk assignClass:  EmptyCollection toPackage: 'core'
 
+Smalltalk assignClass: Stack toPackage: 'core.util.collections'
+
 Smalltalk assignClass:  CompileError toPackage: 'core'
 
 Smalltalk assignClass:  Package toPackage: 'core'
@@ -75,3 +77,19 @@ Smalltalk addClassMethod: #createClass:parentClass: toClass: Smalltalk withBody:
   self assignClass: ret toPackage: 'user'.
   ^ ret
 ]
+
+Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
+[ :className :parentClass :instVars :classVars :package |
+  | ret |
+  ret := self createClass: className parentClass: parentClass inPackage: package.
+  self addInstanceVariables: instVars toClass: ret.
+  self addClassVariables: classVars toClass: ret.
+  ^ret
+]
+
+Smalltalk addClassMethod: #createClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
+[ :className :instVars :classVars :package |
+  ^(self createClass: className parentClass: Object instanceVars: instVars classVars: classVars inPackage: package)
+]
+
+Package get: 'user'

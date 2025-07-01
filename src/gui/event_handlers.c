@@ -13,6 +13,7 @@ int call_repl(char *);
 void show_info_dialog(char *msg);
 
 void create_workspace_window(int, int, int, int, char *);
+void create_class_browser_window(int, int, int, int);
 
 void print_object_to_string(OBJECT_PTR, char *);
 
@@ -34,9 +35,11 @@ extern GtkWindow *action_triggering_window;
 
 extern GtkWindow *transcript_window;
 extern GtkWindow *workspace_window;
+extern GtkWindow *class_browser_window;
 
 extern GtkTextBuffer *transcript_buffer;
 extern GtkTextBuffer *workspace_buffer;
+extern GtkTextBuffer *class_browser_source_buffer;
 
 extern OBJECT_PTR g_last_eval_result;
 
@@ -70,21 +73,29 @@ extern GtkTextTag *workspace_tag;
 
 void evaluate()
 {
-  GtkTextBuffer *buf;
-  GtkTextIter start_sel, end_sel;
-  gboolean selected;
-
-  if(action_triggering_window == workspace_window)
-    buf = workspace_buffer;
-  else
-    assert(0); //TODO
-
-  selected = gtk_text_buffer_get_selection_bounds(buf, &start_sel, &end_sel);
-
   char *expression = NULL;
 
-  if(selected)
-    expression = (char *) gtk_text_buffer_get_text(buf, &start_sel, &end_sel, FALSE);
+  if(action_triggering_window == workspace_window)
+  {
+    gboolean selected;
+    GtkTextIter start_sel, end_sel;
+
+    selected = gtk_text_buffer_get_selection_bounds(workspace_buffer, &start_sel, &end_sel);
+
+    if(selected)
+      expression = (char *) gtk_text_buffer_get_text(workspace_buffer, &start_sel, &end_sel, FALSE);
+  }
+  else if(action_triggering_window == class_browser_window)
+  {
+    GtkTextIter start_buffer, end_buffer;
+
+    gtk_text_buffer_get_start_iter(class_browser_source_buffer, &start_buffer);
+    gtk_text_buffer_get_end_iter(class_browser_source_buffer, &end_buffer);
+
+    expression = (char *)gtk_text_buffer_get_text(class_browser_source_buffer, &start_buffer, &end_buffer, FALSE);
+  }
+  else
+    assert(0); //TODO
 
   if(expression)
     call_repl(expression);
@@ -101,6 +112,15 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
       return TRUE;
     }
   }
+  /* else if(widget == (GtkWidget *)class_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_s) */
+  /* { */
+  /*   if(event->state & GDK_CONTROL_MASK) */
+  /*   { */
+  /*     action_triggering_window = class_browser_window; */
+  /*     evaluate(); */
+  /*     return TRUE; */
+  /*   } */
+  /* } */
   else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_p)
   {
     if(event->state & GDK_CONTROL_MASK)
@@ -190,7 +210,15 @@ void save_image_file(GtkWidget *widget,
 void show_system_browser_win(GtkWidget *widget,
 			     gpointer data)
 {
-  show_info_dialog("To be implemented");
+  if(class_browser_window == NULL)
+    create_class_browser_window(DEFAULT_BROWSER_WINDOW_POSX,
+				DEFAULT_BROWSER_WINDOW_POSY,
+				DEFAULT_BROWSER_WINDOW_WIDTH,
+				DEFAULT_BROWSER_WINDOW_HEIGHT);
+  else
+  {
+    gtk_window_present(class_browser_window);
+  }
 }
 
 void show_workspace_window()
@@ -224,6 +252,8 @@ void close_window(GtkWidget *widget,
 {
   if((GtkWidget *)data == (GtkWidget *)workspace_window)
     close_application_window((GtkWidget **)&workspace_window);
+  if((GtkWidget *)data == (GtkWidget *)class_browser_window)
+    close_application_window((GtkWidget **)&class_browser_window);
 }
 
 gboolean delete_event(GtkWidget *widget,
@@ -240,6 +270,8 @@ gboolean delete_event(GtkWidget *widget,
   }
   else if(widget == (GtkWidget *)workspace_window)
     close_application_window((GtkWidget **)&workspace_window);
+  else if(widget == (GtkWidget *)class_browser_window)
+    close_application_window((GtkWidget **)&class_browser_window);
 
   return FALSE;
 }
@@ -312,6 +344,8 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
     method_t *m = (method_t *)extract_ptr(method);
 
     remove_all_from_list(temp_vars_list);
+
+    action_triggering_window = debugger_window;
 
     if(m->code_str != NIL)
     {

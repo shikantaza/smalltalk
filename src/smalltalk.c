@@ -81,10 +81,15 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   g_top_level->count++;
 
-  binding_t *temp = (binding_t *)GC_REALLOC(g_top_level->bindings,
-					    g_top_level->count * sizeof(binding_t));
-  assert(temp);
-  g_top_level->bindings = temp;
+  if(!g_top_level->bindings)
+    g_top_level->bindings = (binding_t *)GC_MALLOC(sizeof(binding_t));
+  else
+  {
+    binding_t *temp = (binding_t *)GC_REALLOC(g_top_level->bindings,
+					      g_top_level->count * sizeof(binding_t));
+    assert(temp);
+    g_top_level->bindings = temp;
+  }
 
   g_top_level->bindings[g_top_level->count - 1].key = sym;
   g_top_level->bindings[g_top_level->count - 1].val = val;
@@ -121,6 +126,7 @@ void initialize_top_level()
 {
   g_top_level = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   g_top_level->count = 0;
+  g_top_level->bindings = NULL;
 
   add_binding_to_top_level(MESSAGE_SEND, cons(g_msg_snd_closure, NIL));
   add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(g_msg_snd_super_closure, NIL));
@@ -1176,24 +1182,24 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  /* OBJECT_PTR pkg = message_send(g_msg_snd_closure, */
-  /* 				Package, */
-  /* 				NIL, */
-  /* 				get_symbol("_get:"), */
-  /* 				convert_int_to_object(1), */
-  /* 				pkg_str, */
-  /* 				g_idclo); */
+  OBJECT_PTR pkg = message_send(g_msg_snd_closure,
+				Package,
+				NIL,
+				get_symbol("_get:"),
+				convert_int_to_object(1),
+				pkg_str,
+				g_idclo);
 
-  /* //the above message send results in an exception */
-  /* if(!call_chain_entry_exists(entry)) */
-  /* { */
-  /*   pop_if_top(entry); */
-  /*   return invoke_cont_on_val(cont, receiver); */
-  /* } */
+  //the above message send results in an exception
+  if(!call_chain_entry_exists(entry))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, receiver);
+  }
 
-  /* class_object_t *cls = (class_object_t *)extract_ptr(class_obj); */
+  class_object_t *cls = (class_object_t *)extract_ptr(class_obj);
 
-  /* cls->package = pkg; */
+  cls->package = pkg;
 
   pop_if_top(entry);
 

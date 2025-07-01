@@ -39,6 +39,9 @@ extern stack_type *g_call_chain;
 
 extern OBJECT_PTR NIL;
 
+extern GtkWindow *action_triggering_window;
+extern GtkWindow *debugger_window;
+
 void render_indents_to_buffer(GtkTextBuffer *buf, int *indents, BOOLEAN highlight)
 {
   GtkTextMark *mark = gtk_text_buffer_get_insert(buf);
@@ -225,28 +228,21 @@ void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
     return;
 
   BOOLEAN my_highlight = highlight;
-  
-  if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
+
+  if(action_triggering_window == debugger_window)
   {
-    call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
-    call_chain_entry_t *entry = entries[index + 1];
-
-    /* if(entry->exp_ptr == NIL) */
-    /*   printf("exp ptr is NIL\n"); */
-    /* printf("%p %p %p\n", entry->exp_ptr, (void*)extract_ptr(entry->exp_ptr), b); */
-
-    if(entry->exp_ptr != NIL)
+    if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
     {
-      debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+      call_chain_entry_t *entry = entries[index + 1];
 
-      /* printf("debug expression is: "); */
-      /* print_debug_expression(debug_exp); */
-      /* printf("basic_expression is: "); */
-      /* print_basic_expression(b); */
-      /* printf("---&&&---\n"); */
+      if(entry->exp_ptr != NIL)
+      {
+	debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
 
-      if(debug_exp->type == DEBUG_BASIC_EXPRESSION && debug_exp->be == b)
-	my_highlight = true;
+	if(debug_exp->type == DEBUG_BASIC_EXPRESSION && debug_exp->be == b)
+	  my_highlight = true;
+      }
     }
   }
 
@@ -452,16 +448,19 @@ void render_binary_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
     return;
 
   BOOLEAN my_highlight = highlight;
-  
-  if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
+
+  if(action_triggering_window == debugger_window)
   {
-    call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
-    call_chain_entry_t *entry = entries[index + 1];
+    if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
+    {
+      call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+      call_chain_entry_t *entry = entries[index + 1];
 
-    debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
 
-    if(debug_exp->type == DEBUG_BINARY_ARGUMENT && debug_exp->bin_arg == arg)
-      my_highlight = true;
+      if(debug_exp->type == DEBUG_BINARY_ARGUMENT && debug_exp->bin_arg == arg)
+	my_highlight = true;
+    }
   }
 
   render_primary(code_buf, indents, my_highlight, index, arg->prim);
@@ -499,15 +498,18 @@ void render_keyword_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
 
   BOOLEAN my_highlight = highlight;
   
-  if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
+  if(action_triggering_window == debugger_window)
   {
-    call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
-    call_chain_entry_t *entry = entries[index + 1];
+    if(index < stack_count(g_call_chain) - 1) //there is at least one more call chain entry above this entry
+    {
+      call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+      call_chain_entry_t *entry = entries[index + 1];
 
-    debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
 
-    if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT && debug_exp->kw_arg == arg)
-      my_highlight = true;
+      if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT && debug_exp->kw_arg == arg)
+	my_highlight = true;
+    }
   }
 
   render_primary(code_buf, indents, my_highlight, index, arg->prim);
