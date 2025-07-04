@@ -10,6 +10,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([1.11 -Wall subdir-objects])
 AC_CONFIG_FILES([Makefile])
+${CFLAGS="-O0 -g"}
 AC_PROG_CC
 AC_PROG_LEX
 AC_PROG_YACC

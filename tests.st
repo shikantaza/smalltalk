@@ -682,4 +682,8 @@ oc removeLast
 
 UnitTestFramework runTestCase: [(oc size) = 1] withID: 125
 
+Smalltalk addClassMethod: #p1:p2:p3:p4:p5: toClass: ArgTest withBody: [:x1 :x2 :x3 :x4 :x5 | ^ (x1 + x2 + x3 + x4 + x5)]
+
+UnitTestFramework runTestCase: [(ArgTest p1: 1 p2: 2 p3: 3 p4: 4 p5: 5) = 15] withID: 126
+
 UnitTestFramework reportStatus
