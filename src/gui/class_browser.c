@@ -56,6 +56,8 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 
+extern OBJECT_PTR Object;
+
 GtkToolbar *create_class_browser_toolbar()
 {
   GtkWidget *toolbar;
@@ -328,6 +330,62 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
     int i, n;
 
+    // populate class creation code
+    char str[500];
+    memset(str, '\0', 500);
+    unsigned int len = 0;
+
+    len += sprintf(str+len, "Smalltalk createClass: #%s\n", cls_obj->name);
+
+    OBJECT_PTR parent_cls_obj = get_class_object(cls_obj->parent_class_object);
+    if(id != Object)
+    {
+      class_object_t *parent_cls_obj_int = (class_object_t *)extract_ptr(cls_obj->parent_class_object);
+      len += sprintf(str+len, "  parentClass: %s\n", parent_cls_obj_int->name);
+    }
+    else
+      len += sprintf(str+len, "  parentClass: nil\n");
+
+    len += sprintf(str+len, "  instVars : #(");
+
+    n = cls_obj->nof_instance_vars;
+
+    for(i=0; i<n; i++)
+    {
+      len += sprintf(str+len, "#%s", get_symbol_name(cls_obj->inst_vars[i]));
+      if(i != (n-1))
+	len += sprintf(str+len, " ");
+    }
+    len += sprintf(str+len, ")\n");
+
+    len += sprintf(str+len, "  classVars : #(");
+
+    binding_env_t *shared_vars = cls_obj->shared_vars;
+
+    if(shared_vars)
+    {
+      n = shared_vars->count;
+
+      for(i=0; i<n; i++)
+      {
+	len += sprintf(str+len, "#%s", get_symbol_name(shared_vars->bindings[i].key));
+	if(i != (n-1))
+	  len += sprintf(str+len, " ");
+      }
+    }
+
+    len += sprintf(str+len, ")\n");
+
+    OBJECT_PTR pkg_obj = cls_obj->package;
+    object_t *pkg_obj_int = (object_t *)extract_ptr(pkg_obj);
+    char *pkg_name = g_string_literals[car(get_binding(pkg_obj_int->instance_vars, get_symbol("name"))) >> OBJECT_SHIFT];
+
+    len += sprintf(str+len, "  inPackage: \'%s'\n", pkg_name);
+
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), "", -1);
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), str, -1);
+    //
+
     if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)))
     {
       n = cls_obj->class_methods->count;
@@ -360,7 +418,6 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
       assert(false);
   }
 
-  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), "", -1);
   //gtk_statusbar_remove_all(class_browser_statusbar, 0);
 
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
