@@ -418,7 +418,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
       assert(false);
   }
 
-  //gtk_statusbar_remove_all(class_browser_statusbar, 0);
+ //gtk_statusbar_remove_all(class_browser_statusbar, 0);
 
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
 }
