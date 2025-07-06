@@ -93,7 +93,7 @@ void initialize_packages_list(GtkTreeView *list)
 {
   GtkCellRenderer    *renderer;
   GtkTreeViewColumn  *column1;
-  GtkListStore       *store;
+  GtkTreeStore       *store;
 
   renderer = gtk_cell_renderer_text_new();
 
@@ -101,7 +101,7 @@ void initialize_packages_list(GtkTreeView *list)
                                                      renderer, "text", 0, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
 
-  store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_INT64);
+  store = gtk_tree_store_new (2, G_TYPE_STRING, G_TYPE_INT64);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW (list), 
                           GTK_TREE_MODEL(store));
@@ -151,14 +151,49 @@ void initialize_methods_list(GtkTreeView *list)
   g_object_unref(store);  
 }
 
+void print_package_details(GtkTreeStore *store,
+			   OBJECT_PTR pkgs_array,
+			   int nof_packages,
+			   OBJECT_PTR parent,
+			   GtkTreeIter *parent_iter)
+{
+  GtkTreeIter iter;
+
+  OBJECT_PTR pkg;
+  object_t *pkg_obj_int;
+  OBJECT_PTR parent_pkg;
+
+  int i;
+
+  array_object_t *arr_obj = (array_object_t *)extract_ptr(pkgs_array);
+
+  for(i=0; i<nof_packages; i++)
+  {
+    pkg = arr_obj->elements[i];
+    pkg_obj_int = (object_t *)extract_ptr(pkg);
+    parent_pkg = car(get_binding(pkg_obj_int->instance_vars, get_symbol("parent")));
+
+    if(parent_pkg == parent)
+    {
+      gtk_tree_store_append(store, &iter, parent_iter);
+      OBJECT_PTR pkg_name = car(get_binding(pkg_obj_int->instance_vars, get_symbol("name")));
+
+      gtk_tree_store_set(store, &iter, 0, GC_strdup(g_string_literals[pkg_name >> OBJECT_SHIFT]), -1);
+      gtk_tree_store_set(store, &iter, 1, pkg, -1);
+
+      print_package_details(store, pkgs_array, nof_packages, pkg, &iter);
+    }
+  }
+}
+
 void populate_packages_list()
 {
   remove_all_from_list(packages_list);
 
-  GtkListStore *store;
+  GtkTreeStore *store;
   GtkTreeIter  iter;
 
-  store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
+  store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
 
   class_object_t *pkg_cls_object = (class_object_t *)extract_ptr(Package);
 
@@ -169,26 +204,7 @@ void populate_packages_list()
   OBJECT_PTR arr = car(get_binding(pkgs_obj_int->instance_vars, get_symbol("arr")));
   OBJECT_PTR size = car(get_binding(pkgs_obj_int->instance_vars, get_symbol("size")));
 
-  array_object_t *arr_obj = (array_object_t *)extract_ptr(arr);
-  
-  int i, nof_packages;
-
-  nof_packages = get_int_value(size);
-
-  for(i=0; i<nof_packages; i++)
-  {
-    gtk_list_store_append(store, &iter);
-
-    //TODO: display the package hierarchy
-
-    OBJECT_PTR pkg = arr_obj->elements[i];
-    object_t *pkg_obj_int = (object_t *)extract_ptr(pkg);
-    
-    OBJECT_PTR pkg_name = car(get_binding(pkg_obj_int->instance_vars, get_symbol("name")));
-    
-    gtk_list_store_set(store, &iter, 0, GC_strdup(g_string_literals[pkg_name >> OBJECT_SHIFT]), -1);  
-    gtk_list_store_set(store, &iter, 1, pkg, -1);
-  }
+  print_package_details(store, arr, get_int_value(size), NIL, NULL);
 }
 
 void set_up_class_browser_source_buffer()
@@ -201,7 +217,7 @@ void set_up_class_browser_source_buffer()
 
 void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 {
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
+  GtkTreeStore *store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (packages_list));
   GtkTreeIter  iter;
 
