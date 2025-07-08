@@ -124,7 +124,7 @@ GtkToolbar *create_transcript_toolbar()
   gtk_toolbar_insert((GtkToolbar *)toolbar, clear_button, 4);
 
   GtkToolItem *exit_button = gtk_tool_button_new(exit_icon, NULL);
-  gtk_tool_item_set_tooltip_text(exit_button, "Exit (Ctrl-W)");
+  gtk_tool_item_set_tooltip_text(exit_button, "Quit (Ctrl-Q)");
   g_signal_connect (exit_button, "clicked", G_CALLBACK (quit), transcript_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, exit_button, 5);
 
@@ -151,16 +151,16 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
 
   gtk_window_move(transcript_window, posx, posy); 
       
-  //g_signal_connect (transcript_window, "delete-event",
-  //                  G_CALLBACK (delete_event), NULL);
+  g_signal_connect(transcript_window, "delete-event",
+		   G_CALLBACK (delete_event), NULL);
 
   //g_signal_connect (transcript_window, "focus",
   //                  G_CALLBACK (set_triggering_window), NULL);
     
-  //g_signal_connect(transcript_window, 
-  //                 "key_press_event", 
-  //                 G_CALLBACK (handle_key_press_events), 
-  //                 NULL);
+  g_signal_connect(transcript_window,
+                  "key_press_event",
+                  G_CALLBACK (handle_key_press_events),
+                  NULL);
     
   gtk_container_set_border_width (GTK_CONTAINER (transcript_window), 10);
   

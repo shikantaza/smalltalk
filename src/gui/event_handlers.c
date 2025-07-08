@@ -27,6 +27,13 @@ void hide_debug_window();
 
 void render_executable_code(GtkTextBuffer *, int *, BOOLEAN, gint64, executable_code_t *);
 
+void show_system_browser_window();
+void show_workspace_window();
+
+void close_application_window(GtkWidget **window);
+
+void quit_application();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -105,12 +112,9 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
 {
   if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_d)
   {
-    if(event->state & GDK_CONTROL_MASK)
-    {
-      action_triggering_window = workspace_window;
-      evaluate();
-      return TRUE;
-    }
+    action_triggering_window = workspace_window;
+    evaluate();
+    return TRUE;
   }
   /* else if(widget == (GtkWidget *)class_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_s) */
   /* { */
@@ -123,19 +127,26 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
   /* } */
   else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_p)
   {
-    if(event->state & GDK_CONTROL_MASK)
-    {
-      action_triggering_window = workspace_window;
-      evaluate();
+    action_triggering_window = workspace_window;
+    evaluate();
 
-      char buf[500];
-      memset(buf, '\0', 500);
-      print_object_to_string(g_last_eval_result, buf);
-      print_to_workspace(buf, workspace_tag);
+    char buf[500];
+    memset(buf, '\0', 500);
+    print_object_to_string(g_last_eval_result, buf);
+    print_to_workspace(buf, workspace_tag);
 
-      return TRUE;
-    }
+    return TRUE;
   }
+  else if(event->keyval == GDK_KEY_F9)
+    show_system_browser_window();
+  else if(event->keyval == GDK_KEY_F7)
+    show_workspace_window();
+  else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_w)
+    close_application_window((GtkWidget **)&workspace_window);
+  else if(widget == (GtkWidget *)class_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_w)
+    close_application_window((GtkWidget **)&class_browser_window);
+  else if(widget == (GtkWidget *)transcript_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_Q)
+    quit_application();
 
   return FALSE;
 }
@@ -207,8 +218,7 @@ void save_image_file(GtkWidget *widget,
   show_info_dialog("To be implemented");
 }
 
-void show_system_browser_win(GtkWidget *widget,
-			     gpointer data)
+void show_system_browser_window()
 {
   if(class_browser_window == NULL)
     create_class_browser_window(DEFAULT_BROWSER_WINDOW_POSX,
@@ -219,6 +229,12 @@ void show_system_browser_win(GtkWidget *widget,
   {
     gtk_window_present(class_browser_window);
   }
+}
+
+void show_system_browser_win(GtkWidget *widget,
+			     gpointer data)
+{
+  show_system_browser_window();
 }
 
 void show_workspace_window()
