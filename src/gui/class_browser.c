@@ -25,6 +25,8 @@ void remove_all_from_list(GtkTreeView *list);
 
 void render_executable_code(GtkTextBuffer *, int *, BOOLEAN, gint64, executable_code_t *);
 
+void populate_packages_list();
+
 GtkWindow *class_browser_window;
 
 GtkTreeView *packages_list;
@@ -62,6 +64,40 @@ extern OBJECT_PTR Object;
 
 extern stack_type *g_breakpointed_methods;
 
+void remove_all_from_packages_list(GtkTreeView *list)
+{
+  GtkTreeStore *store;
+  GtkTreeModel *model;
+  GtkTreeIter  iter;
+
+  model = gtk_tree_view_get_model (GTK_TREE_VIEW (list));
+
+  store = GTK_TREE_STORE(model);
+
+  if(gtk_tree_model_get_iter_first(model, &iter) == FALSE)
+    return;
+
+  gtk_tree_store_clear(store);
+}
+
+void refresh_system_browser()
+{
+  populate_packages_list();
+  //fetch_package_symbols();
+  gtk_widget_grab_focus((GtkWidget *)packages_list);
+}
+
+void refresh_sys_browser(GtkWidget *widget,
+                         gpointer data)
+{
+  action_triggering_window = class_browser_window;
+
+  //if(!check_for_sys_browser_changes())
+  //  return;
+
+  refresh_system_browser();
+}
+
 GtkToolbar *create_class_browser_toolbar()
 {
   GtkWidget *toolbar;
@@ -82,7 +118,7 @@ GtkToolbar *create_class_browser_toolbar()
 
   GtkToolItem *refresh_button = gtk_tool_button_new(refresh_icon, NULL);
   gtk_tool_item_set_tooltip_text(refresh_button, "Refresh (F5)");
-  //g_signal_connect (refresh_button, "clicked", G_CALLBACK (refresh_sys_browser), class_browser_window);
+  g_signal_connect (refresh_button, "clicked", G_CALLBACK (refresh_sys_browser), class_browser_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, refresh_button, 1);
 
   GtkToolItem *close_button = gtk_tool_button_new(exit_icon, NULL);
@@ -192,7 +228,7 @@ void print_package_details(GtkTreeStore *store,
 
 void populate_packages_list()
 {
-  remove_all_from_list(packages_list);
+  remove_all_from_packages_list(packages_list);
 
   GtkTreeStore *store;
   GtkTreeIter  iter;
