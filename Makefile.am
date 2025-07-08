@@ -45,5 +45,5 @@ icons_DATA  = icons/load_image.png icons/save_image.png icons/workspace.png icon
               icons/exit.png icons/evaluate.png icons/load_file.png icons/file_browser.png icons/clear32x32.png \
               icons/exit32x32.png icons/resume_with_val32x32.png icons/resume32x32.png icons/retry32x32.png \
               icons/continue.png icons/abort.png icons/step_into.png icons/step_over.png icons/step_out.png \
-              icons/accept.png icons/refresh.png
+              icons/accept.png icons/refresh.png icons/remove_breakpoint.png icons/remove_breakpoints.png
 

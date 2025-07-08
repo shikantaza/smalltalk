@@ -42,6 +42,8 @@ void debug_continue(GtkWidget *, gpointer);
 void debug_step_into(GtkWidget *, gpointer);
 void debug_step_over(GtkWidget *, gpointer);
 void debug_step_out(GtkWidget *, gpointer);
+void debug_delete_breakpoint(GtkWidget *, gpointer);
+void debug_delete_all_breakpoints(GtkWidget *, gpointer);
 
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
@@ -518,6 +520,9 @@ GtkToolbar *create_debug_toolbar()
   GtkWidget *step_over_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_over_new.png");
   GtkWidget *step_out_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_out.png");
 
+  GtkWidget *delete_breakpoint_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoint.png");
+  GtkWidget *delete_all_breakpoints_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoints.png");
+
   toolbar = gtk_toolbar_new ();
   gtk_orientable_set_orientation (GTK_ORIENTABLE (toolbar), GTK_ORIENTATION_HORIZONTAL);
   gtk_toolbar_set_style (GTK_TOOLBAR (toolbar), GTK_TOOLBAR_ICONS);
@@ -562,6 +567,16 @@ GtkToolbar *create_debug_toolbar()
   gtk_tool_item_set_tooltip_text(step_out_button, "Step out");
   g_signal_connect (step_out_button, "clicked", G_CALLBACK (debug_step_out), debugger_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, step_out_button, 7);
+
+  GtkToolItem *delete_breakpoint_button = gtk_tool_button_new(delete_breakpoint_icon, NULL);
+  gtk_tool_item_set_tooltip_text(delete_breakpoint_button, "Delete current breakpoint");
+  g_signal_connect (delete_breakpoint_button, "clicked", G_CALLBACK (debug_delete_breakpoint), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, delete_breakpoint_button, -1);
+
+  GtkToolItem *delete_all_breakpoints_button = gtk_tool_button_new(delete_all_breakpoints_icon, NULL);
+  gtk_tool_item_set_tooltip_text(delete_all_breakpoints_button, "Delete all breakpoints");
+  g_signal_connect (delete_all_breakpoints_button, "clicked", G_CALLBACK (debug_delete_all_breakpoints), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, delete_all_breakpoints_button, -2);
 
   return (GtkToolbar *)toolbar;
 }

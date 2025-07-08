@@ -37,6 +37,8 @@ GtkSourceBuffer *class_browser_source_buffer;
 GtkWidget *class_radio_button, *instance_radio_button;
 GtkWidget *raw_radio_button, *pretty_printed_radio_button;
 
+GtkWidget *breakpoint_check;
+
 extern OBJECT_PTR Package;
 
 extern GtkSourceLanguage *source_language;
@@ -57,6 +59,8 @@ extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 
 extern OBJECT_PTR Object;
+
+extern stack_type *g_breakpointed_methods;
 
 GtkToolbar *create_class_browser_toolbar()
 {
@@ -300,6 +304,8 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
     //gtk_statusbar_remove_all(class_browser_statusbar, 0);
   }
 
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(breakpoint_check), FALSE);
+
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
 }
 
@@ -476,6 +482,11 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 
     method_t *m = (method_t *)extract_ptr(method);
 
+    if(m->breakpointed)
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(breakpoint_check), TRUE);
+    else
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(breakpoint_check), FALSE);
+
     if(m->code_str != NIL)
     {
       char header[200];
@@ -511,6 +522,51 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
   }
 
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
+}
+
+void toggle_breakpoint(GtkWidget *list, gpointer selection1)
+{
+  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(methods_list)));
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
+  GtkTreeIter  iter;
+
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(methods_list));
+
+  if(!selection)
+    return;
+
+  action_triggering_window = class_browser_window;
+
+  /* if(!check_for_sys_browser_changes()) */
+  /* { */
+  /*   revert_to_prev_pkg_sym(); */
+  /*   return; */
+  /* } */
+
+  if(gtk_tree_selection_get_selected(selection, &model, &iter))
+  {
+    gint64 val;
+    gchar *name = NULL;
+
+    gtk_tree_model_get(model, &iter,
+                       0, &name, 1, &val,
+                       -1);
+
+    //TODO: check if this is relevant
+    //print_context_pkg_index = val;
+
+    OBJECT_PTR method = val;
+
+    method_t *m = (method_t *)extract_ptr(method);
+
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(breakpoint_check)))
+    {
+      m->breakpointed = true;
+      stack_push(g_breakpointed_methods, (void *)m);
+    }
+    else
+      m->breakpointed = false;
+  }
 }
 
 void create_class_browser_window(int posx, int posy, int width, int height)
@@ -569,7 +625,7 @@ void create_class_browser_window(int posx, int posy, int width, int height)
 
   g_signal_connect(G_OBJECT(classes_list), "cursor-changed",
                    G_CALLBACK(fetch_methods_for_class), NULL);
-  
+
   methods_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(methods_list), TRUE);
   gtk_widget_override_font(GTK_WIDGET(methods_list), pango_font_description_from_string(FONT));
@@ -614,7 +670,7 @@ void create_class_browser_window(int posx, int posy, int width, int height)
   gtk_box_pack_start(GTK_BOX (hbox), scrolled_win2, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX (hbox), method_box, TRUE, TRUE, 0);
 
-  GtkWidget *scrolled_win, *radio3, *radio4, *radio_box2, *code_box;
+  GtkWidget *scrolled_win, *radio3, *radio4, *radio_box2, *code_box, *code_header;
 
   set_up_class_browser_source_buffer();
 
@@ -631,6 +687,13 @@ void create_class_browser_window(int posx, int posy, int width, int height)
   gtk_container_add (GTK_CONTAINER (scrolled_win), GTK_WIDGET(class_browser_source_view));
 
   code_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+
+  code_header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+  breakpoint_check = gtk_check_button_new_with_label("Breakpoint Enabled");
+
+  g_signal_connect(G_OBJECT(breakpoint_check), "toggled",
+                   G_CALLBACK(toggle_breakpoint), NULL);
+
   radio_box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
   radio3 = gtk_radio_button_new_with_label(NULL, "Pretty Printed");
@@ -648,7 +711,10 @@ void create_class_browser_window(int posx, int posy, int width, int height)
   gtk_box_pack_start(GTK_BOX(radio_box2), radio3, FALSE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(radio_box2), radio4, FALSE, TRUE, 0);
 
-  gtk_box_pack_start(GTK_BOX(code_box), radio_box2, FALSE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(code_header), radio_box2, FALSE, TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(code_header), breakpoint_check, FALSE, TRUE, 0);
+
+  gtk_box_pack_start(GTK_BOX(code_box), code_header, FALSE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(code_box), scrolled_win, TRUE, TRUE, 0);
   
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);

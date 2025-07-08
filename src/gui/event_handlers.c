@@ -78,6 +78,10 @@ extern executable_code_t *g_exp;
 
 extern GtkTextTag *workspace_tag;
 
+extern GtkTreeView *call_chain_list;
+
+extern stack_type *g_breakpointed_methods;
+
 void evaluate()
 {
   char *expression = NULL;
@@ -680,4 +684,52 @@ void debug_step_out(GtkWidget *widget, gpointer data)
   g_debug_in_progress = false;
 
   //control passed pack to message_send_internal()
+}
+
+void debug_delete_breakpoint(GtkWidget *widget, gpointer data)
+{
+  if(g_debugger_invoked_for_exception)
+    return;
+
+  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(call_chain_list)));
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (call_chain_list));
+  GtkTreeIter  iter;
+
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(call_chain_list));
+
+  if(!selection)
+    return;
+
+  if(gtk_tree_selection_get_selected(selection, &model, &iter))
+  {
+    gint64 call_chain_entry_index;
+
+    gtk_tree_model_get(model, &iter,
+                       1, &call_chain_entry_index,
+                       -1);
+
+    if(call_chain_entry_index < 0 || call_chain_entry_index >= stack_count(g_call_chain))
+      return;
+
+    call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
+
+    call_chain_entry_t *entry = entries[call_chain_entry_index];
+    OBJECT_PTR method = entry->method;
+
+    method_t *m = (method_t *)extract_ptr(method);
+
+    m->breakpointed = false;
+  }
+}
+
+void debug_delete_all_breakpoints(GtkWidget *widget, gpointer data)
+{
+  if(g_debugger_invoked_for_exception)
+    return;
+
+  while(!stack_is_empty(g_breakpointed_methods))
+  {
+    method_t *m = (method_t *)stack_pop(g_breakpointed_methods);
+    m->breakpointed = false;
+  }
 }

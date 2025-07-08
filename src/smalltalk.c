@@ -30,6 +30,8 @@ OBJECT_PTR CompileError;
 
 OBJECT_PTR Package;
 
+stack_type *g_breakpointed_methods = NULL;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
