@@ -43,6 +43,7 @@ OBJECT_PTR assignment_conversion(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR translate_to_il(OBJECT_PTR);
 OBJECT_PTR desugar_il(OBJECT_PTR);
 OBJECT_PTR convert_int_to_object(int);
+OBJECT_PTR convert_float_to_object(double);
 binding_env_t *create_binding_env();
 OBJECT_PTR ren_transform(OBJECT_PTR, binding_env_t *);
 OBJECT_PTR simplify_il(OBJECT_PTR);
@@ -56,6 +57,7 @@ void create_Smalltalk();
 void create_Nil();
 void create_Transcript();
 void create_Integer();
+void create_Float();
 void create_NiladicBlock();
 void create_Boolean();
 void create_Exception();
@@ -136,6 +138,7 @@ extern stack_type *g_breakpointed_methods;
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
+BOOLEAN IS_FLOAT_OBJECT(OBJECT_PTR x)                    { return (x & BIT_MASK) == FLOAT_TAG;                    }
 BOOLEAN IS_NATIVE_FN_OBJECT(OBJECT_PTR x)                { return (x & BIT_MASK) == NATIVE_FN_TAG;                }
 BOOLEAN IS_CLOSURE_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == CLOSURE_TAG;                  }
 BOOLEAN IS_TRUE_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == TRUE_TAG;                     }
@@ -318,6 +321,7 @@ void initialize()
   //was thrown in the generated code.
   //moving this here made that error go away.
   create_Integer();
+  create_Float();
 
   create_NiladicBlock();
   create_MonadicBlock();
@@ -791,8 +795,7 @@ OBJECT_PTR convert_number_literal_to_atom(number_t *n)
   }
   else
   {
-    error("Not yet implemented\n");
-    return NIL;
+    return convert_float_to_object(atof(n->val));
   }
 }
 

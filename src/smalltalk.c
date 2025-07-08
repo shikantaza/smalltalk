@@ -38,6 +38,7 @@ extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR SELF;
 extern OBJECT_PTR Integer;
+extern OBJECT_PTR Float;
 extern OBJECT_PTR Transcript;
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
@@ -133,6 +134,7 @@ void initialize_top_level()
   add_binding_to_top_level(MESSAGE_SEND, cons(g_msg_snd_closure, NIL));
   add_binding_to_top_level(MESSAGE_SEND_SUPER, cons(g_msg_snd_super_closure, NIL));
   add_binding_to_top_level(get_symbol("Integer"), cons(Integer, NIL));
+  add_binding_to_top_level(get_symbol("Float"), cons(Float, NIL));
   add_binding_to_top_level(SELF, cons(NIL, NIL));
   add_binding_to_top_level(get_symbol("Object"), cons(Object, NIL));
   add_binding_to_top_level(get_symbol("Smalltalk"), cons(Smalltalk, NIL));

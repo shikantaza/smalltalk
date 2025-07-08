@@ -686,4 +686,20 @@ Smalltalk addClassMethod: #p1:p2:p3:p4:p5: toClass: ArgTest withBody: [:x1 :x2 :
 
 UnitTestFramework runTestCase: [(ArgTest p1: 1 p2: 2 p3: 3 p4: 4 p5: 5) = 15] withID: 126
 
+UnitTestFramework runTestCase: [ (1.0 + 2.0) = 3.0 ] withID: 127
+
+UnitTestFramework runTestCase: [ (1.0 - 2.0) = -1.0 ] withID: 128
+
+UnitTestFramework runTestCase: [ (1.0 * 2.0) = 2.0 ] withID: 129
+
+UnitTestFramework runTestCase: [ (1.0 / 2.0) = 0.5 ] withID: 130
+
+UnitTestFramework runTestCase: [ 1.0  = 1 ] withID: 131
+
+UnitTestFramework runTestCase: [ 1.0 < 2.0 ] withID: 132
+
+UnitTestFramework runNegativeTestCase: [ 1.0 > 2.0 ] withID: 133
+
+UnitTestFramework runExceptionTestCase: [ 1.0 / 0 ] exception: ZeroDivide withID: 134
+
 UnitTestFramework reportStatus

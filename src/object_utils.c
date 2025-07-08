@@ -19,6 +19,7 @@ extern OBJECT_PTR MESSAGE_SEND;
 extern OBJECT_PTR LAMBDA;
 extern package_t *g_compiler_package;
 extern OBJECT_PTR Integer;
+extern OBJECT_PTR Float;
 extern OBJECT_PTR NiladicBlock;
 extern OBJECT_PTR MonadicBlock;
 extern OBJECT_PTR DyadicValuable;
@@ -134,6 +135,21 @@ OBJECT_PTR convert_char_to_object(char c)
 char get_char_value(OBJECT_PTR char_object)
 {
   return char_object >> 8;
+}
+
+OBJECT_PTR convert_float_to_object(double v)
+{
+  uintptr_t ptr = object_alloc(1, FLOAT_TAG);
+
+  *((double *)ptr) = v;
+
+  return ptr + FLOAT_TAG;
+}
+
+double get_float_value(OBJECT_PTR obj)
+{
+  assert(IS_FLOAT_OBJECT(obj));
+  return *((double *)extract_ptr(obj));
 }
 
 OBJECT_PTR cdr(OBJECT_PTR cons_obj)
@@ -370,6 +386,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
     sprintf(str, "#%s", get_smalltalk_symbol_name(obj_ptr));
   else if(IS_INTEGER_OBJECT(obj_ptr))
     sprintf(str, "%d", get_int_value(obj_ptr));
+  else if(IS_FLOAT_OBJECT(obj_ptr))
+    sprintf(str, "%lf", get_float_value(obj_ptr));
   else if(IS_CONS_OBJECT(obj_ptr))
     print_cons_object(obj_ptr);
   else if(IS_CLOSURE_OBJECT(obj_ptr))
@@ -454,6 +472,7 @@ BOOLEAN is_atom(OBJECT_PTR obj)
   //TODO: add other atomic objects
   return IS_SYMBOL_OBJECT(obj)      ||
     IS_INTEGER_OBJECT(obj)          ||
+    IS_FLOAT_OBJECT(obj)            ||
     IS_CLASS_OBJECT(obj)            ||
     IS_OBJECT_OBJECT(obj)           ||
     IS_SMALLTALK_SYMBOL_OBJECT(obj) ||
@@ -631,6 +650,8 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
     return Symbol;
   else if(IS_INTEGER_OBJECT(obj))
     return Integer;
+  else if(IS_FLOAT_OBJECT(obj))
+    return Float;
   else if(IS_TRUE_OBJECT(obj))
     return Boolean;
   else if(IS_FALSE_OBJECT(obj))

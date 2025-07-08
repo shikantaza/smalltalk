@@ -8,6 +8,8 @@ Smalltalk assignClass: Transcript toPackage: 'core'
 
 Smalltalk assignClass: Integer toPackage: 'core'
 
+Smalltalk assignClass: Float toPackage: 'core'
+
 Smalltalk assignClass: NiladicBlock toPackage: 'core'
 
 Smalltalk assignClass: MonadicBlock toPackage: 'core'
