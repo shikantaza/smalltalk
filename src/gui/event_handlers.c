@@ -34,6 +34,8 @@ void close_application_window(GtkWidget **window);
 
 void quit_application();
 
+void refresh_system_browser();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -151,6 +153,15 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     close_application_window((GtkWidget **)&class_browser_window);
   else if(widget == (GtkWidget *)transcript_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_Q)
     quit_application();
+  else if(widget == (GtkWidget *)class_browser_window && event->keyval == GDK_KEY_F5)
+  {
+    action_triggering_window = class_browser_window;
+
+    //if(!check_for_sys_browser_changes())
+    //  return TRUE;
+
+    refresh_system_browser();
+  }
 
   return FALSE;
 }
