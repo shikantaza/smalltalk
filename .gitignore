@@ -80,3 +80,16 @@ plisp_parser.h
 plisp_parser.c
 plisp.c
 
+example.sh
+smalltalk
+smalltalk.st.for_later
+lex.c
+parser.c
+parser.h
+parser.tab.c
+parser.tab.h
+test_asm.c
+test_asm1.c
+test_asm2.c
+
+ordered_collection.st
