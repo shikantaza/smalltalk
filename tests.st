@@ -702,4 +702,48 @@ UnitTestFramework runNegativeTestCase: [ 1.0 > 2.0 ] withID: 133
 
 UnitTestFramework runExceptionTestCase: [ 1.0 / 0 ] exception: ZeroDivide withID: 134
 
+UnitTestFramework runTestCase: [ (1 + 2.0) = 3.0 ] withID: 135
+
+UnitTestFramework runExceptionTestCase: [ 1.0 + Transcript ] exception: InvalidArgument withID: 136
+
+UnitTestFramework runTestCase: [ (1 - 2.0) = -1.0 ] withID: 137
+
+UnitTestFramework runExceptionTestCase: [ 1 - Transcript ] exception: InvalidArgument withID: 138
+
+UnitTestFramework runTestCase: [ (1 * 2.0) = 2.0 ] withID: 139
+
+UnitTestFramework runExceptionTestCase: [ 1 * Transcript ] exception: InvalidArgument withID: 140
+
+UnitTestFramework runTestCase: [ (1 / 2.0) = 0.5 ] withID: 141
+
+UnitTestFramework runExceptionTestCase: [ 1 / Transcript ] exception: InvalidArgument withID: 142
+
+UnitTestFramework runTestCase: [ (1 = 1) ] withID: 143
+
+UnitTestFramework runTestCase: [ (1 = 1.0) ] withID: 144
+
+UnitTestFramework runNegativeTestCase: [ (1 = 2.0) ] withID: 145
+
+UnitTestFramework runNegativeTestCase: [ (1 = Transcript) ] withID: 146
+
+UnitTestFramework runTestCase: [ (1 < 2) ] withID: 147
+
+UnitTestFramework runTestCase: [ (1 < 2.0) ] withID: 148
+
+UnitTestFramework runNegativeTestCase: [ (1 < 0) ] withID: 149
+
+UnitTestFramework runNegativeTestCase: [ (1 < 0.5) ] withID: 150
+
+UnitTestFramework runExceptionTestCase: [ 1 < Transcript ] exception: InvalidArgument withID: 151
+
+UnitTestFramework runTestCase: [ (1 > 0) ] withID: 152
+
+UnitTestFramework runTestCase: [ (1 > 0.5) ] withID: 153
+
+UnitTestFramework runNegativeTestCase: [ (1 > 2) ] withID: 154
+
+UnitTestFramework runNegativeTestCase: [ (1 > 2.0) ] withID: 155
+
+UnitTestFramework runExceptionTestCase: [ 1 > Transcript ] exception: InvalidArgument withID: 156
+
 UnitTestFramework reportStatus

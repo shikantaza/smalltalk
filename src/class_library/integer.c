@@ -38,14 +38,17 @@ OBJECT_PTR plus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to plus\n");
 #endif
   
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) + get_int_value(arg)));
+  else
+    return invoke_cont_on_val(cont, convert_float_to_object(get_int_value(receiver) + get_float_value(arg)));
 }
 
 OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -60,14 +63,17 @@ OBJECT_PTR minus(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to minus\n");
 #endif
   
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
   
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) - get_int_value(arg)));
+  else
+    return invoke_cont_on_val(cont, convert_float_to_object(get_int_value(receiver) - get_float_value(arg)));
 }
 
 OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -82,14 +88,17 @@ OBJECT_PTR times(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to times\n");
 #endif
   
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
   
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) * get_int_value(arg)));
+  else
+    return invoke_cont_on_val(cont, convert_float_to_object(get_int_value(receiver) * get_float_value(arg)));
 }
 
 OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
@@ -104,7 +113,7 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   print_object(arg); printf(" is the arg passed to divide_by\n");
 #endif
   
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   assert(IS_CLOSURE_OBJECT(cont));
@@ -114,7 +123,10 @@ OBJECT_PTR divided_by(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
   
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, convert_int_to_object(get_int_value(receiver) / get_int_value(arg)));
+  else
+    return invoke_cont_on_val(cont, convert_float_to_object(get_int_value(receiver) / get_float_value(arg)));
 }
 
 //TODO: this can be subsumed by Object>>=
@@ -134,14 +146,17 @@ OBJECT_PTR eq(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
+  if(IS_FLOAT_OBJECT(arg))
+    return invoke_cont_on_val(cont, (get_int_value(receiver) == get_float_value(arg)) ? TRUE : FALSE );
+  else
+    return invoke_cont_on_val(cont, (receiver == arg) ? TRUE : FALSE );
 }
 
 OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
@@ -154,14 +169,17 @@ OBJECT_PTR lt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, (get_int_value(receiver) < get_int_value(arg)) ? TRUE : FALSE );
+  else
+    return invoke_cont_on_val(cont, (get_int_value(receiver) < get_float_value(arg)) ? TRUE : FALSE );
 }
 
 OBJECT_PTR gt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
-  if(!IS_INTEGER_OBJECT(arg))
+  if(!IS_INTEGER_OBJECT(arg) && !IS_FLOAT_OBJECT(arg))
     return create_and_signal_exception(InvalidArgument, cont);
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
@@ -174,7 +192,10 @@ OBJECT_PTR gt(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, (get_int_value(receiver) > get_int_value(arg)) ? TRUE : FALSE );
+  if(IS_INTEGER_OBJECT(arg))
+    return invoke_cont_on_val(cont, (get_int_value(receiver) > get_int_value(arg)) ? TRUE : FALSE );
+  else
+    return invoke_cont_on_val(cont, (get_int_value(receiver) > get_float_value(arg)) ? TRUE : FALSE );
 }
 
 OBJECT_PTR to(OBJECT_PTR closure, OBJECT_PTR stop, OBJECT_PTR cont)
