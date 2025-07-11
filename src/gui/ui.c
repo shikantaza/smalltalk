@@ -135,12 +135,6 @@ GtkToolbar *create_transcript_toolbar()
 
 void create_transcript_window(int posx, int posy, int width, int height, char *text)
 {
-
-  //TODO: find a better place for this (maybe an init_gui() function?)
-  lm = gtk_source_language_manager_get_default();
-  setup_language_manager_path(lm);
-  source_language = gtk_source_language_manager_get_language(lm, "smalltalk");
-
   GtkWidget *scrolled_win, *vbox;
 
   transcript_window = (GtkWindow *)gtk_window_new (GTK_WINDOW_TOPLEVEL);

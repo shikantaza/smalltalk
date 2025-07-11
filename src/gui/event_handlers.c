@@ -36,6 +36,8 @@ void quit_application();
 
 void refresh_system_browser();
 
+void do_auto_complete(GtkTextBuffer *);
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -161,6 +163,12 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     //  return TRUE;
 
     refresh_system_browser();
+  }
+  else if((widget == (GtkWidget *)workspace_window || widget == (GtkWidget *)class_browser_window) &&
+	  event->keyval == GDK_KEY_Tab)
+  {
+    do_auto_complete(widget == (GtkWidget *)workspace_window ? workspace_buffer : class_browser_source_buffer);
+    return TRUE;
   }
 
   return FALSE;

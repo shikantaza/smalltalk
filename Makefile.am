@@ -6,7 +6,7 @@ bin_PROGRAMS = smalltalk
 
 BUILT_SOURCES = libsmalltalkjitllvm.la
 
-smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c src/gui/ui.c src/gui/event_handlers.c src/gui/code_renderer.c src/block_conversion.c src/class_library/readable_string.c src/class_library/character.c src/class_library/dyadic_valuable.c src/gui/class_browser.c src/class_library/float.c
+smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c src/gui/ui.c src/gui/event_handlers.c src/gui/code_renderer.c src/block_conversion.c src/class_library/readable_string.c src/class_library/character.c src/class_library/dyadic_valuable.c src/gui/class_browser.c src/class_library/float.c src/gui/autocomplete.c
 
 AM_CFLAGS = -DSMALLTALKDATADIR=\"$(pkgdatadir)\" ${gtk_CFLAGS} ${gtksourceview_CFLAGS} -Wall
 

@@ -14,6 +14,8 @@
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
+void add_to_autocomplete_list(char *word);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -232,6 +234,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
+
+  add_to_autocomplete_list(cls_obj->name);
 
   pop_if_top(entry);
 
@@ -609,6 +613,8 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 		    exec_code);
   }
 
+  add_to_autocomplete_list(get_smalltalk_symbol_name(selector));
+
   return class_obj;
 }
 
@@ -733,6 +739,8 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 		    code_str,
 		    exec_code);
   }
+
+  add_to_autocomplete_list(get_smalltalk_symbol_name(selector));
 
   return class_obj;
 }
@@ -954,6 +962,8 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
   assert(IS_CLOSURE_OBJECT(cont));
 
   add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(global_sym)), cons(global_val, NIL));
+
+  add_to_autocomplete_list(get_smalltalk_symbol_name(global_sym));
 
   pop_if_top(entry);
 

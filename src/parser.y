@@ -42,6 +42,9 @@ void replace_block_constructor(executable_code_t *);
 
 void show_error_dialog(char *);
 
+void build_autocomplete_words();
+void set_up_autocomplete_words();
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -1151,6 +1154,9 @@ int main(int argc, char **argv)
   g_system_initialized = false;
 
   initialize();  
+
+  build_autocomplete_words();
+  set_up_autocomplete_words();
 
   load_core_library();
 
