@@ -2,6 +2,9 @@
 #include <gdk/gdkkeysyms.h>
 #include <gtksourceview/gtksource.h>
 
+#include <glib.h>
+#include <pthread.h>
+
 #include <assert.h>
 
 #include "gc.h"
@@ -37,6 +40,8 @@ void quit_application();
 void refresh_system_browser();
 
 void do_auto_complete(GtkTextBuffer *);
+
+void load_source();
 
 BOOLEAN g_debug_in_progress;
 
@@ -170,6 +175,8 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     do_auto_complete(widget == (GtkWidget *)workspace_window ? workspace_buffer : class_browser_source_buffer);
     return TRUE;
   }
+  else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_l)
+    load_source();
 
   return FALSE;
 }
@@ -330,11 +337,6 @@ void clear_transcript(GtkWidget *widget,
 void clear_workspace(GtkWidget *widget, gpointer data)
 {
   gtk_text_buffer_set_text(workspace_buffer, "", -1);
-}
-
-void load_source_file(GtkWidget *widget, gpointer data)
-{
-  show_info_dialog("To be implemented");
 }
 
 void show_file_browser_win(GtkWidget *widget, gpointer data)
@@ -751,4 +753,59 @@ void debug_delete_all_breakpoints(GtkWidget *widget, gpointer data)
     method_t *m = (method_t *)stack_pop(g_breakpointed_methods);
     m->breakpointed = false;
   }
+}
+
+static gpointer invoke_load_file_message(gpointer data)
+{
+  char *file_name = (char *)data;
+
+  OBJECT_PTR ret = message_send(g_msg_snd_closure,
+				Smalltalk,
+				NIL,
+				get_symbol("_loadFile:"),
+				convert_int_to_object(1),
+				get_string_obj(file_name),
+				g_idclo);
+
+  if(ret == NIL)
+    show_error_dialog("Error loading file");
+  else
+  {
+    show_info_dialog("File loaded successfully");
+  }
+
+  return NULL;
+}
+
+void load_source()
+{
+  GtkWidget *dialog;
+
+  dialog = gtk_file_chooser_dialog_new ("Load Smalltalk source file",
+                                        (GtkWindow *)workspace_window,
+                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                        "Cancel", GTK_RESPONSE_CANCEL,
+                                        "Open", GTK_RESPONSE_ACCEPT,
+                                        NULL);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+  {
+
+    char *loaded_source_file_name = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+    gtk_widget_destroy (dialog);
+
+    //TODO: invoking the load file in a separate thread (to
+    //close the dialog immediately) results in segfault
+    //g_thread_new("Load file", invoke_load_file_message, loaded_source_file_name);
+    invoke_load_file_message(loaded_source_file_name);
+  }
+  else
+    gtk_widget_destroy (dialog);
+}
+
+void load_source_file(GtkWidget *widget,
+                      gpointer data)
+{
+  load_source();
 }
