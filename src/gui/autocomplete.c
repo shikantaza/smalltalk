@@ -30,6 +30,9 @@ extern GtkSourceBuffer *workspace_source_buffer;
 extern GtkSourceView *class_browser_source_view;
 extern GtkSourceBuffer *class_browser_source_buffer;
 
+extern GtkTextView *curr_file_browser_text_view;
+extern GtkTextBuffer *curr_file_browser_buffer;
+
 BOOLEAN word_already_exists(char *word)
 {
   int i;
@@ -312,8 +315,8 @@ void do_auto_complete(GtkTextBuffer *buffer)
     view = (GtkTextView *)workspace_source_view;
   else if(buffer == (GtkTextBuffer *)class_browser_source_buffer)
     view = (GtkTextView *)class_browser_source_view;
-  /* else if(buffer == curr_file_browser_buffer) */
-  /*   view = curr_file_browser_text_view; */
+  else if(buffer == curr_file_browser_buffer)
+    view = curr_file_browser_text_view;
   else
     assert(false);
 

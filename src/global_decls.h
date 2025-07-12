@@ -90,12 +90,14 @@ uintptr_t            extract_ptr(OBJECT_PTR);
 int                  extract_symbol_index(OBJECT_PTR);
 char                *extract_variable_string(OBJECT_PTR, BOOLEAN);
 OBJECT_PTR           fifth(OBJECT_PTR);
+unsigned int         file_exists(char *);
 
 OBJECT_PTR           get_binding(binding_env_t *, OBJECT_PTR);
 OBJECT_PTR           get_binding_val(binding_env_t *, OBJECT_PTR);
 BOOLEAN              get_binding_val_regular(binding_env_t *, OBJECT_PTR, OBJECT_PTR *);
 char                 get_char_value(OBJECT_PTR);
 OBJECT_PTR           get_class_object(OBJECT_PTR);
+char                *get_file_contents(char *);
 double               get_float_value(OBJECT_PTR);
 OBJECT_PTR           get_free_variables(OBJECT_PTR);
 nativefn             get_function(void *, const char *);

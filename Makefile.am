@@ -6,7 +6,7 @@ bin_PROGRAMS = smalltalk
 
 BUILT_SOURCES = libsmalltalkjitllvm.la
 
-smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c src/gui/ui.c src/gui/event_handlers.c src/gui/code_renderer.c src/block_conversion.c src/class_library/readable_string.c src/class_library/character.c src/class_library/dyadic_valuable.c src/gui/class_browser.c src/class_library/float.c src/gui/autocomplete.c
+smalltalk_SOURCES = src/parser.y src/parser_utils.c src/lex.l src/compiler.c src/object_utils.c src/lisp_compiler.c src/metacont.c src/c_compiler.c src/util.c src/message.c src/primitives.c src/smalltalk.c src/class_library/integer.c src/class_library/transcript.c src/class_library/niladic_block.c src/exceptions.c src/class_library/boolean.c src/stack.c src/class_library/monadic_block.c src/class_library/collections/array.c src/class_library/collections/ordered_collection.c src/gui/ui.c src/gui/event_handlers.c src/gui/code_renderer.c src/block_conversion.c src/class_library/readable_string.c src/class_library/character.c src/class_library/dyadic_valuable.c src/gui/class_browser.c src/class_library/float.c src/gui/autocomplete.c src/gui/file_browser.c
 
 AM_CFLAGS = -DSMALLTALKDATADIR=\"$(pkgdatadir)\" ${gtk_CFLAGS} ${gtksourceview_CFLAGS} -Wall
 
@@ -45,5 +45,6 @@ icons_DATA  = icons/load_image.png icons/save_image.png icons/workspace.png icon
               icons/exit.png icons/evaluate.png icons/load_file.png icons/file_browser.png icons/clear32x32.png \
               icons/exit32x32.png icons/resume_with_val32x32.png icons/resume32x32.png icons/retry32x32.png \
               icons/continue.png icons/abort.png icons/step_into.png icons/step_over.png icons/step_out.png \
-              icons/accept.png icons/refresh.png icons/remove_breakpoint.png icons/remove_breakpoints.png
+              icons/accept.png icons/refresh.png icons/remove_breakpoint.png icons/remove_breakpoints.png \
+              icons/new_file.png icons/open_file.png icons/save_file.png icons/close_file.png icons/find.png
 

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include "gc.h"
 
@@ -234,4 +236,56 @@ char *prepend_char(char *s, char a)
   ret[n+1] = '\0';
 
   return ret;
+}
+
+//http://stackoverflow.com/questions/3747086/reading-the-whole-text-file-into-a-char-array-in-c
+char *get_file_contents(char *file_name)
+{
+  FILE *fp;
+  long lSize;
+  char *buffer;
+
+  fp = fopen(file_name, "r" );
+  if(!fp)
+    return NULL;
+
+  fseek(fp, 0L, SEEK_END);
+  lSize = ftell(fp);
+
+  //to handle zero-byte files
+  if(!lSize)
+  {
+    fclose(fp);
+    return (char *)-1;
+  }
+
+  rewind(fp);
+
+  /* allocate memory for entire content */
+  //buffer = calloc(1, lSize+1);
+  buffer = GC_MALLOC(lSize+1);
+
+  if(!buffer)
+  {
+    fclose(fp);
+    return NULL;
+  }
+
+  /* copy the file into the buffer */
+  size_t bytes_read = fread(buffer, lSize, 1, fp);
+  if(bytes_read != 1)
+  {
+    fclose(fp);
+    //free(buffer);
+    return NULL;
+  }
+
+  fclose(fp);
+
+  return(buffer);
+}
+
+unsigned int file_exists(char *fname)
+{
+  return access(fname, F_OK) != -1;
 }

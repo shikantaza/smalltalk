@@ -17,6 +17,7 @@ void show_info_dialog(char *msg);
 
 void create_workspace_window(int, int, int, int, char *);
 void create_class_browser_window(int, int, int, int);
+void create_file_browser_window(int, int, int, int);
 
 void print_object_to_string(OBJECT_PTR, char *);
 
@@ -32,6 +33,7 @@ void render_executable_code(GtkTextBuffer *, int *, BOOLEAN, gint64, executable_
 
 void show_system_browser_window();
 void show_workspace_window();
+void show_file_browser_window();
 
 void close_application_window(GtkWidget **window);
 
@@ -43,6 +45,14 @@ void do_auto_complete(GtkTextBuffer *);
 
 void load_source();
 
+void reload_file();
+void save_file();
+void close_file();
+void fb_load_source_file();
+void new_source_file();
+BOOLEAN quit_file_browser();
+void find_text();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -52,10 +62,12 @@ extern GtkWindow *action_triggering_window;
 extern GtkWindow *transcript_window;
 extern GtkWindow *workspace_window;
 extern GtkWindow *class_browser_window;
+extern GtkWindow *file_browser_window;
 
 extern GtkTextBuffer *transcript_buffer;
 extern GtkTextBuffer *workspace_buffer;
 extern GtkTextBuffer *class_browser_source_buffer;
+extern GtkTextBuffer *curr_file_browser_buffer;
 
 extern OBJECT_PTR g_last_eval_result;
 
@@ -95,15 +107,17 @@ void evaluate()
 {
   char *expression = NULL;
 
-  if(action_triggering_window == workspace_window)
+  if(action_triggering_window == workspace_window || action_triggering_window == file_browser_window)
   {
+    GtkTextBuffer *buf = action_triggering_window == workspace_window ? workspace_buffer : curr_file_browser_buffer;
+
     gboolean selected;
     GtkTextIter start_sel, end_sel;
 
-    selected = gtk_text_buffer_get_selection_bounds(workspace_buffer, &start_sel, &end_sel);
+    selected = gtk_text_buffer_get_selection_bounds(buf, &start_sel, &end_sel);
 
     if(selected)
-      expression = (char *) gtk_text_buffer_get_text(workspace_buffer, &start_sel, &end_sel, FALSE);
+      expression = (char *) gtk_text_buffer_get_text(buf, &start_sel, &end_sel, FALSE);
   }
   else if(action_triggering_window == class_browser_window)
   {
@@ -177,6 +191,40 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
   }
   else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_l)
     load_source();
+  else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_b)
+  {
+    show_file_browser_window();
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_d)
+  {
+    action_triggering_window = file_browser_window;
+    evaluate();
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_n)
+  {
+    new_source_file();
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_o)
+  {
+    fb_load_source_file();
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_s)
+    save_file();
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_w)
+    close_file();
+  else if(widget == (GtkWidget *)file_browser_window && event->keyval == GDK_KEY_F5)
+    reload_file();
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_f)
+    find_text();
+  else if(widget == (GtkWidget *)file_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_q)
+  {
+    quit_file_browser();
+    return TRUE;
+  }
 
   return FALSE;
 }
@@ -298,8 +346,10 @@ void close_window(GtkWidget *widget,
 {
   if((GtkWidget *)data == (GtkWidget *)workspace_window)
     close_application_window((GtkWidget **)&workspace_window);
-  if((GtkWidget *)data == (GtkWidget *)class_browser_window)
+  else if((GtkWidget *)data == (GtkWidget *)class_browser_window)
     close_application_window((GtkWidget **)&class_browser_window);
+  else if((GtkWidget *)data == (GtkWidget *)file_browser_window)
+    close_application_window((GtkWidget **)&file_browser_window);
 }
 
 gboolean delete_event(GtkWidget *widget,
@@ -337,11 +387,6 @@ void clear_transcript(GtkWidget *widget,
 void clear_workspace(GtkWidget *widget, gpointer data)
 {
   gtk_text_buffer_set_text(workspace_buffer, "", -1);
-}
-
-void show_file_browser_win(GtkWidget *widget, gpointer data)
-{
-  show_info_dialog("To be implemented");
 }
 
 void eval_expression(GtkWidget *widget, gpointer data)
@@ -770,9 +815,7 @@ static gpointer invoke_load_file_message(gpointer data)
   if(ret == NIL)
     show_error_dialog("Error loading file");
   else
-  {
     show_info_dialog("File loaded successfully");
-  }
 
   return NULL;
 }
@@ -795,8 +838,12 @@ void load_source()
 
     gtk_widget_destroy (dialog);
 
-    //TODO: invoking the load file in a separate thread (to
+    //invoking the load file in a separate thread (to
     //close the dialog immediately) results in segfault
+    //as there could be GUI updates triggered by the code
+    //in the loaded file (e.g. Transcript>>show:) - such GUI
+    //updates from worker threads are not recommended without
+    //proper synchronization.
     //g_thread_new("Load file", invoke_load_file_message, loaded_source_file_name);
     invoke_load_file_message(loaded_source_file_name);
   }
@@ -808,4 +855,23 @@ void load_source_file(GtkWidget *widget,
                       gpointer data)
 {
   load_source();
+}
+
+void show_file_browser_window()
+{
+  if(file_browser_window == NULL)
+    create_file_browser_window(DEFAULT_WORKSPACE_POSX,
+                               DEFAULT_WORKSPACE_POSY,
+                               DEFAULT_WORKSPACE_WIDTH,
+                               DEFAULT_WORKSPACE_HEIGHT);
+  else
+  {
+    gtk_window_present(file_browser_window);
+  }
+}
+
+void show_file_browser_win(GtkWidget *widget,
+                           gpointer  data)
+{
+  show_file_browser_window();
 }
