@@ -152,6 +152,7 @@ typedef struct
 typedef struct
 {
   nativefn nf;
+  char *source;
 } native_fn_obj_t;
 
 typedef struct

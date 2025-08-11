@@ -533,7 +533,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
-  void *state = compile_to_c(res);
+  void *state = compile_functions(reverse(cdr(res)));
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 
@@ -660,7 +660,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
-  void *state = compile_to_c(res);
+  void *state = compile_functions(reverse(cdr(res)));
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 

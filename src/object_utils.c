@@ -11,6 +11,9 @@
 int gen_sym_count = 0;
 OBJECT_PTR Symbol;
 
+unsigned int nof_native_fns = 0;
+native_fn_obj_t *native_fn_objects = NULL;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
 extern OBJECT_PTR SET;
@@ -559,6 +562,46 @@ OBJECT_PTR convert_native_fn_to_object(nativefn nf)
   *((native_fn_obj_t *)ptr) = *nfobj;
 
   return ptr + NATIVE_FN_TAG;
+}
+
+nativefn get_nativefn_value(OBJECT_PTR obj)
+{
+  assert(IS_NATIVE_FN_OBJECT(obj));
+  native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(obj);
+  return nfobj->nf;
+}
+
+void add_native_fn_source(nativefn nf, char *source)
+{
+  nof_native_fns++;
+
+  if(!native_fn_objects)
+    native_fn_objects = (native_fn_obj_t *)GC_MALLOC(nof_native_fns * sizeof(native_fn_obj_t));
+  else
+  {
+    native_fn_obj_t *temp = (native_fn_obj_t *)GC_REALLOC(native_fn_objects, nof_native_fns * sizeof(native_fn_obj_t));
+    assert(temp);
+    native_fn_objects = temp;
+  }
+
+  native_fn_objects[nof_native_fns-1].nf = nf;
+  native_fn_objects[nof_native_fns-1].source = GC_strdup(source);
+}
+
+char *get_native_fn_source(nativefn nf)
+{
+  if(nf == (nativefn)identity_function || nf == (nativefn)0xbaadf00d)
+    return "uintptr_t identity_function(uintptr_t closure, uintptr_t x) {  return x; }";
+  int i;
+  for(i=0; i<nof_native_fns; i++)
+  {
+    if(native_fn_objects[i].nf == nf)
+      return native_fn_objects[i].source;
+  }
+
+  assert(false);
+
+  return NULL;
 }
 
 OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *cls_obj)
