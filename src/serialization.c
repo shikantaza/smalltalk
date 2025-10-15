@@ -156,9 +156,10 @@ int struct_queue_item_exists(queue_t *q, void *value)
   return 0;
 }
 
-
 void add_obj_to_print_list_struct(void *struct_ptr, enum PointerType type)
 {
+  assert(struct_ptr);
+
   //this search is O(n), but this is OK because
   //the queue keeps growing and shrinking, so its
   //size at any point in time is quite small (<10)
@@ -1150,31 +1151,31 @@ void print_global_variables(FILE *fp)
 
   fprintf(fp, "[ ");
 
-  fprintf(fp, "\"g_message_selector\" : ");
+  fprintf(fp, "{ \"g_message_selector\" : ");
   print_json_object(fp, g_message_selector, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_nof_string_literals\" : ");
+  fprintf(fp, "{ \"g_nof_string_literals\" : ");
   fprintf(fp, "%d", g_nof_string_literals);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_msg_snd_closure\" : ");
+  fprintf(fp, "{ \"g_msg_snd_closure\" : ");
   print_json_object(fp, g_msg_snd_closure, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
   
-  fprintf(fp, "\"g_msg_snd_super_closure\" : ");
+  fprintf(fp, "{ \"g_msg_snd_super_closure\" : ");
   print_json_object(fp, g_msg_snd_super_closure, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_compile_time_method_selector\" : ");
+  fprintf(fp, "{ \"g_compile_time_method_selector\" : ");
   print_json_object(fp, g_compile_time_method_selector, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_run_till_cont\" : ");
+  fprintf(fp, "{ \"g_run_till_cont\" : ");
   print_json_object(fp, g_run_till_cont, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_debug_action\" : ");
+  fprintf(fp, "{ \"g_debug_action\" : ");
   if(g_debug_action == CONTINUE)
     fprintf(fp, "\"CONTINUE\"");
   else if(g_debug_action == STEP_INTO)
@@ -1187,88 +1188,112 @@ void print_global_variables(FILE *fp)
     fprintf(fp, "\"ABORT\"");
   else
     assert(false);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_smalltalk_symbols\" : ");
+  fprintf(fp, "{ \"g_smalltalk_symbols\" : ");
   print_json_object_struct(fp, PACKAGE_PTR, (void *)g_smalltalk_symbols);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
   
-  fprintf(fp, "\"g_compiler_package\" : ");
+  fprintf(fp, "{ \"g_compiler_package\" : ");
   print_json_object_struct(fp, PACKAGE_PTR, (void *)g_compiler_package);
-  fprintf(fp, ", ");
+  fprintf(fp, "} , ");
 
-  fprintf(fp, "\"g_string_literals\" : ");
+  fprintf(fp, "{ \"g_string_literals\" : ");
   unsigned int count = g_nof_string_literals;
 
   fprintf(fp, "[ ");
   for(i=0; i<count; i++)
   {
-    fprintf(fp, "\"%s\"", g_string_literals[i]);
+    unsigned int j, len = strlen(g_string_literals[i]);
+
+    fprintf(fp, "\"");
+
+    for(j=0; j<len; j++)
+    {
+      if(g_string_literals[i][j] == '\n')
+	fprintf(fp, "\\n");
+      else
+	fprintf(fp, "%c", g_string_literals[i][j]);
+    }
+    fprintf(fp, "\"");
+
     if(i != count - 1)
       fprintf(fp, ", ");
   }
-  fprintf(fp, "] ");
+  fprintf(fp, "] },  ");
 
-  fprintf(fp, "\"g_exception_environment\" : ");
+  fprintf(fp, "{ \"g_exception_environment\" : ");
   print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_exception_environment);
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
   
-  fprintf(fp, "\"g_call_chain\" : ");
+  fprintf(fp, "{ \"g_call_chain\" : ");
   g_sub_type = CALL_CHAIN_ENTRY_PTR;
   print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_call_chain);
   g_sub_type = NONE;
-  fprintf(fp, ", ");
+  fprintf(fp, "} , ");
 
-  fprintf(fp, "\"g_exception_contexts\" : ");
+  fprintf(fp, "{ \"g_exception_contexts\" : ");
   g_sub_type = OBJECT_PTR1;
   print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_exception_contexts);
   g_sub_type = NONE;
-  fprintf(fp, ", ");
+  fprintf(fp, "} , ");
 
-  fprintf(fp, "\"g_breakpointed_methods\" : ");
+  fprintf(fp, "{ \"g_breakpointed_methods\" : ");
   g_sub_type = METHOD_PTR;
   print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_breakpointed_methods);
   g_sub_type = NONE;
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_top_level\" : ");
+  fprintf(fp, "{ \"g_top_level\" : ");
   print_json_object_struct(fp, BINDING_ENV_PTR, (void *)g_top_level);
-  fprintf(fp, ", ");
+  fprintf(fp, "} , ");
 
-  fprintf(fp, "\"g_debugger_invoked_for_exception\" : ");
+  fprintf(fp, "{ \"g_debugger_invoked_for_exception\" : ");
   if(g_debugger_invoked_for_exception)
     fprintf(fp, "\"true\"");
   else
     fprintf(fp, "\"false\"");
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_active_handler\" : ");
-  print_json_object_struct(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
-  fprintf(fp, ", ");
+  //TODO: add this null check for other
+  //variables as required
+  if(g_active_handler)
+  {
+    fprintf(fp, "{ \"g_active_handler\" : ");
+    print_json_object_struct(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
+    fprintf(fp, " }, ");
+  }
 
-  fprintf(fp, "\"g_debug_in_progress\" : ");
+  fprintf(fp, "{ \"g_debug_in_progress\" : ");
   if(g_debug_in_progress)
     fprintf(fp, "\"true\"");
   else
     fprintf(fp, "\"false\"");
-  fprintf(fp, ", ");
+  fprintf(fp, " }, ");
 
-  fprintf(fp, "\"g_debug_cont\" : ");
+  fprintf(fp, "{ \"g_debug_cont\" : ");
   print_json_object(fp, g_debug_cont, false);
-  fprintf(fp, ", ");
+  fprintf(fp, " } ");
 
-  fprintf(fp, "\"g_handler_environment\" : ");
-  g_sub_type = EXCEPTION_HANDLER_PTR;
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
-  g_sub_type = NONE;
-  fprintf(fp, ", ");
+  if(g_handler_environment)
+  {
+    fprintf(fp, ", { \"g_handler_environment\" : ");
+    g_sub_type = EXCEPTION_HANDLER_PTR;
+    print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
+    g_sub_type = NONE;
+    fprintf(fp, " } ");
+  }
 
-  fprintf(fp, "\"g_signalling_environment\" : ");
-  g_sub_type = EXCEPTION_HANDLER_PTR;
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
-  g_sub_type = NONE;
+  if(g_signalling_environment)
+  {
+    fprintf(fp, ", { \"g_signalling_environment\" : ");
+    g_sub_type = EXCEPTION_HANDLER_PTR;
+    print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
+    g_sub_type = NONE;
+    fprintf(fp, " } ");
+  }
 
-  fprintf(fp, "] ");
+  fprintf(fp, " ] ");
 }
 
 //need a struct version of convert_heap() too
@@ -1289,8 +1314,30 @@ void create_image(char *file_name)
 
   print_global_variables(fp);
 
+  //heap for structs
+  fprintf(fp, ", \"heap_struct\" : [");
+
+  while(!queue_is_empty(print_queue_struct))
+  {
+    queue_item_t *queue_item = queue_dequeue(print_queue_struct);
+    struct_slot_t *s = (struct_slot_t *)queue_item->data;
+    print_heap_representation_struct(fp, s->ref, s->type);
+    if(!queue_is_empty(print_queue_struct))fprintf(fp, ", ");
+  }
+
+  queue_delete(print_queue_struct);
+  hashtable_delete(hashtable_struct);
+  hashtable_delete(printed_struct_objects);
+
+  fprintf(fp, "] ");
+  //end of heap for structs
+
   //OBJECT_PTR heap
-  fprintf(fp, "\"heap\" : [");
+  fprintf(fp, ", \"heap\" : [");
+
+  BOOLEAN beginning = true;
+
+  BOOLEAN message_send_native_fn_obj;
 
   while(!queue_is_empty(print_queue))
   {
@@ -1301,8 +1348,25 @@ void create_image(char *file_name)
       print_object(obj);printf("\n");
       assert(false);
     }
+
+    if(IS_NATIVE_FN_OBJECT(obj))
+    {
+      nativefn nf = get_nativefn_value(obj);
+      if(nf == (nativefn)message_send ||
+	 nf == (nativefn)message_send_super)
+	message_send_native_fn_obj = true;
+      else
+	message_send_native_fn_obj = false;
+    }
+    else
+      message_send_native_fn_obj = false;
+
+    if(!beginning && !message_send_native_fn_obj)
+      fprintf(fp, ", ");
+
     print_heap_representation(fp, obj, false);
-    if(!queue_is_empty(print_queue))fprintf(fp, ", ");
+
+    beginning = false;
   }
 
   queue_delete(print_queue);
@@ -1311,24 +1375,6 @@ void create_image(char *file_name)
 
   fprintf(fp, "] ");
   //end of OBJECT_PTR heap
-
-  //heap for structs
-  fprintf(fp, "\"heap_struct\" : [");
-
-  while(!queue_is_empty(print_queue_struct))
-  {
-    queue_item_t *queue_item = queue_dequeue(print_queue_struct);
-    struct_slot_t *s = (struct_slot_t *)queue_item->data;
-    print_heap_representation_struct(fp, s->ref, s->type);
-    if(!queue_is_empty(print_queue))fprintf(fp, ", ");
-  }
-
-  queue_delete(print_queue_struct);
-  hashtable_delete(hashtable_struct);
-  hashtable_delete(printed_struct_objects);
-
-  fprintf(fp, "] ");
-  //end of heap for structs
   
  fprintf(fp, "} "); 
 }
@@ -1394,8 +1440,10 @@ void print_heap_representation(FILE *fp,
       fprintf(fp, "\"%s\" ", get_symbol_name(obj));
       return; //TODO: why a return statement only here?
     }
+    //TODO: since we are already serializing g_string_literals,
+    //this needs to be changed
     else if(IS_STRING_LITERAL_OBJECT(obj))
-      fprintf(fp, "\"%s\"", g_string_literals[obj >> OBJECT_SHIFT]);
+      fprintf(fp, "%d ", obj >> OBJECT_SHIFT);
     else if(IS_CHARACTER_OBJECT(obj))
       fprintf(fp, "%d ", get_char_value(obj));
     else if(IS_TRUE_OBJECT(obj))
@@ -1450,7 +1498,32 @@ void print_heap_representation(FILE *fp,
     fprintf(fp, "] ");
   }
   else if(IS_NATIVE_FN_OBJECT(obj))
-    fprintf(fp, "\"%s\"", get_native_fn_source(get_nativefn_value(obj)));
+  {
+    nativefn nf = get_nativefn_value(obj);
+    if(nf != (nativefn)message_send &&
+       nf != (nativefn)message_send_super)
+    {
+      char *src = get_native_fn_source(nf);
+
+      if(src)
+      {
+	unsigned int i, len = strlen(src);
+
+	fprintf(fp, "\"");
+
+	for(i=0; i<len; i++)
+	{
+	  if(src[i] == '\n')
+	    fprintf(fp, "\\n");
+	  else
+	    fprintf(fp, "%c", src[i]);
+	}
+	fprintf(fp, "\"");
+      }
+      else
+	fprintf(fp, "NULL");
+    }
+  }
   else if(IS_INTEGER_OBJECT(obj))
     fprintf(fp, "%d", get_int_value(obj));
   else if(IS_FLOAT_OBJECT(obj))

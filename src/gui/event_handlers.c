@@ -293,7 +293,7 @@ void load_image_file(GtkWidget *widget,
 void save_image_file(GtkWidget *widget,
                      gpointer data)
 {
-  show_info_dialog("To be implemented");
+  create_image("smalltalk.json");
 }
 
 void show_system_browser_window()

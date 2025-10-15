@@ -68,7 +68,7 @@ call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
 					     OBJECT_PTR,
 					     BOOLEAN);
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
-void                 show_debug_window(BOOLEAN, OBJECT_PTR);
+void                 create_image(char *);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,
 					      OBJECT_PTR,
@@ -174,6 +174,7 @@ OBJECT_PTR           reverse(OBJECT_PTR);
 OBJECT_PTR           setcdr(OBJECT_PTR, OBJECT_PTR);
 void                 set_heap(uintptr_t, unsigned int, OBJECT_PTR);
 OBJECT_PTR           seventh(OBJECT_PTR);
+void                 show_debug_window(BOOLEAN, OBJECT_PTR);
 OBJECT_PTR           signal_exception(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           signal_exception_with_text(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           simplify_il(OBJECT_PTR);

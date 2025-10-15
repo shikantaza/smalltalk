@@ -533,7 +533,31 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
-  void *state = compile_functions(reverse(cdr(res)));
+  OBJECT_PTR lambdas = reverse(cdr(res));
+
+  void *state = compile_functions(lambdas);
+
+  while(lambdas != NIL)
+  {
+    OBJECT_PTR lambda = car(lambdas);
+
+    char *fname1 = extract_variable_string(first(lambda), true);
+
+    //TODO: confirm if this is this needed
+    //add_top_level_sym(first(lambda),
+    //                  convert_native_fn_to_object(get_function(state, fname1)));
+
+    char source[32000];
+    memset(source, '\0', 32000);
+    build_c_string(lambda, source, true);
+
+    assert(strlen(source)<=32000);
+
+    add_native_fn_source(get_function(state, fname1),
+                         source);
+
+    lambdas = cdr(lambdas);
+  }
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 
@@ -660,7 +684,31 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
   OBJECT_PTR res = apply_lisp_transforms(code1);
 
-  void *state = compile_functions(reverse(cdr(res)));
+  OBJECT_PTR lambdas = reverse(cdr(res));
+
+  void *state = compile_functions(lambdas);
+
+  while(lambdas != NIL)
+  {
+    OBJECT_PTR lambda = car(lambdas);
+
+    char *fname1 = extract_variable_string(first(lambda), true);
+
+    //TODO: confirm if this is this needed
+    //add_top_level_sym(first(lambda),
+    //                  convert_native_fn_to_object(get_function(state, fname1)));
+
+    char source[32000];
+    memset(source, '\0', 32000);
+    build_c_string(lambda, source, true);
+
+    assert(strlen(source)<=32000);
+
+    add_native_fn_source(get_function(state, fname1),
+                         source);
+
+    lambdas = cdr(lambdas);
+  }
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 

@@ -12,7 +12,7 @@ int gen_sym_count = 0;
 OBJECT_PTR Symbol;
 
 unsigned int nof_native_fns = 0;
-native_fn_obj_t *native_fn_objects = NULL;
+native_fn_src_mapping_t *native_fn_objects = NULL;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -576,10 +576,11 @@ void add_native_fn_source(nativefn nf, char *source)
   nof_native_fns++;
 
   if(!native_fn_objects)
-    native_fn_objects = (native_fn_obj_t *)GC_MALLOC(nof_native_fns * sizeof(native_fn_obj_t));
+    native_fn_objects = (native_fn_src_mapping_t *)GC_MALLOC(nof_native_fns * sizeof(native_fn_src_mapping_t));
   else
   {
-    native_fn_obj_t *temp = (native_fn_obj_t *)GC_REALLOC(native_fn_objects, nof_native_fns * sizeof(native_fn_obj_t));
+    native_fn_src_mapping_t *temp = (native_fn_src_mapping_t *)GC_REALLOC(native_fn_objects,
+									  nof_native_fns * sizeof(native_fn_src_mapping_t));
     assert(temp);
     native_fn_objects = temp;
   }
@@ -599,7 +600,9 @@ char *get_native_fn_source(nativefn nf)
       return native_fn_objects[i].source;
   }
 
-  assert(false);
+  //returning NULL if the native function doesn't
+  //have source code (cf. primitive methods)
+  //assert(false);
 
   return NULL;
 }
