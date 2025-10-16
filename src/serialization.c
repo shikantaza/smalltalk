@@ -68,7 +68,7 @@ typedef struct
   //unsigned int index; //don't think this is required
 } struct_slot_t;
 
-void print_json_object(FILE *, OBJECT_PTR, BOOLEAN);
+void print_object_ptr_reference(FILE *, OBJECT_PTR, BOOLEAN);
 void print_heap_representation(FILE *, OBJECT_PTR, BOOLEAN);
 BOOLEAN is_dynamic_memory_object(OBJECT_PTR);
 void hashtable_delete(hashtable_t *);
@@ -176,9 +176,9 @@ void add_obj_to_print_list_struct(void *struct_ptr, enum PointerType type)
   queue_enqueue(print_queue_struct, (void *)s);
 }
 
-void print_json_object_struct(FILE *fp,
-			      enum PointerType type,
-			      void *struct_ptr)
+void print_struct_obj_reference(FILE *fp,
+				enum PointerType type,
+				void *struct_ptr)
 {
   hashtable_entry_t *e = hashtable_get(hashtable_struct, struct_ptr);
 
@@ -210,7 +210,7 @@ void print_heap_representation_struct(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_json_object(fp, arr_obj->elements[i], false);
+      print_object_ptr_reference(fp, arr_obj->elements[i], false);
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -234,27 +234,27 @@ void print_heap_representation_struct(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    print_json_object_struct(fp, CLASS_OBJ_PTR, (void *)m->cls_obj);
+    print_struct_obj_reference(fp, CLASS_OBJ_PTR, (void *)m->cls_obj);
 
     fprintf(fp, "\"%s\"", (m->class_method == true) ? "true" : "false");
     fprintf(fp, ", ");
 
-    print_json_object(fp, m->nativefn_obj, false);
+    print_object_ptr_reference(fp, m->nativefn_obj, false);
     fprintf(fp, ", ");
 
-    print_json_object(fp, m->closed_syms, false);
+    print_object_ptr_reference(fp, m->closed_syms, false);
     fprintf(fp, ", ");
 
-    print_json_object(fp, m->temporaries, false);
+    print_object_ptr_reference(fp, m->temporaries, false);
     fprintf(fp, ", ");
 
     fprintf(fp, "%d", m->arity);
     fprintf(fp, ", ");
     
-    print_json_object(fp, m->code_str, false);
+    print_object_ptr_reference(fp, m->code_str, false);
     fprintf(fp, ", ");
 
-    print_json_object_struct(fp, EXEC_CODE_PTR, (void *)m->exec_code);
+    print_struct_obj_reference(fp, EXEC_CODE_PTR, (void *)m->exec_code);
     fprintf(fp, ", ");
     
     fprintf(fp, "\"%s\"", (m->breakpointed == true) ? "true" : "false");
@@ -269,11 +269,11 @@ void print_heap_representation_struct(FILE *fp,
     binding_env_t *instance_vars; //instance var name, value
     */
     fprintf(fp, "[ ");
-    print_json_object(fp, obj->class_object, false);
+    print_object_ptr_reference(fp, obj->class_object, false);
     fprintf(fp, ", ");
 
     g_sub_type = OBJECT_PTR1;
-    print_json_object_struct(fp, BINDING_ENV_PTR, (void *)obj->instance_vars);
+    print_struct_obj_reference(fp, BINDING_ENV_PTR, (void *)obj->instance_vars);
     g_sub_type = NONE;
     
     fprintf(fp, "] ");
@@ -300,13 +300,13 @@ void print_heap_representation_struct(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    print_json_object(fp, cls_obj->parent_class_object, false);
+    print_object_ptr_reference(fp, cls_obj->parent_class_object, false);
     fprintf(fp, ", ");
 
     fprintf(fp, "\"%s\"", cls_obj->name);
     fprintf(fp, ", ");
     
-    print_json_object(fp, cls_obj->package, false);
+    print_object_ptr_reference(fp, cls_obj->package, false);
     fprintf(fp, ", ");
 
     unsigned int nof_instances = cls_obj->nof_instances;
@@ -317,7 +317,7 @@ void print_heap_representation_struct(FILE *fp,
     fprintf(fp, "[ ");
     for(i=0; i<nof_instances; i++)
     {
-      print_json_object(fp, cls_obj->instances[i], false);
+      print_object_ptr_reference(fp, cls_obj->instances[i], false);
       if(i != nof_instances - 1)
 	fprintf(fp, ", ");
     }
@@ -331,22 +331,22 @@ void print_heap_representation_struct(FILE *fp,
     fprintf(fp, "[ ");
     for(i=0; i<nof_inst_vars; i++)
     {
-      print_json_object(fp, cls_obj->inst_vars[i], false);
+      print_object_ptr_reference(fp, cls_obj->inst_vars[i], false);
       if(i != nof_inst_vars - 1)
 	fprintf(fp, ", ");
     }
     fprintf(fp, "]], ");
 
     g_sub_type = OBJECT_PTR1;
-    print_json_object_struct(fp, BINDING_ENV_PTR, (void *)cls_obj->shared_vars);
+    print_struct_obj_reference(fp, BINDING_ENV_PTR, (void *)cls_obj->shared_vars);
     g_sub_type = NONE;
 
     g_sub_type = METHOD_PTR;
-    print_json_object_struct(fp, BINDING_ENV_PTR, (void *)cls_obj->instance_methods);
+    print_struct_obj_reference(fp, BINDING_ENV_PTR, (void *)cls_obj->instance_methods);
     g_sub_type = NONE;
 
     g_sub_type = METHOD_PTR;
-    print_json_object_struct(fp, BINDING_ENV_PTR, (void *)cls_obj->class_methods);
+    print_struct_obj_reference(fp, BINDING_ENV_PTR, (void *)cls_obj->class_methods);
     g_sub_type = NONE;
 
     fprintf(fp, "] ");
@@ -367,7 +367,7 @@ void print_heap_representation_struct(FILE *fp,
     for(i=0; i<count; i++)
     {
       fprintf(fp, "[ ");
-      print_json_object_struct(fp, BINDING_PTR, (void *)(env->bindings+i));
+      print_struct_obj_reference(fp, BINDING_PTR, (void *)(env->bindings+i));
       fprintf(fp, "]");
       if(i != count - 1)
 	fprintf(fp, ", ");
@@ -384,15 +384,15 @@ void print_heap_representation_struct(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    print_json_object(fp, binding->key, false);
+    print_object_ptr_reference(fp, binding->key, false);
     fprintf(fp, ", ");
     if(g_sub_type == METHOD_PTR)
     {
       method_t *m = (method_t *)extract_ptr(binding->val);
-      print_json_object_struct(fp, METHOD_PTR, (void *)m);
+      print_struct_obj_reference(fp, METHOD_PTR, (void *)m);
     }
     else if(g_sub_type == OBJECT_PTR1 || g_sub_type == NONE)
-      print_json_object(fp, binding->val, false);
+      print_object_ptr_reference(fp, binding->val, false);
     else
       assert(false);
 
@@ -414,12 +414,12 @@ void print_heap_representation_struct(FILE *fp,
     if(exp->type == ASSIGNMENT)
     {
       fprintf(fp, "ASSIGNMENT, ");
-      print_json_object_struct(fp, ASSIGNMENT_PTR, (void *)exp->asgn);
+      print_struct_obj_reference(fp, ASSIGNMENT_PTR, (void *)exp->asgn);
     }
     else if(exp->type == BASIC_EXPRESSION)
     {
       fprintf(fp, "BASIC_EXPRESSION, ");
-      print_json_object_struct(fp, BASIC_EXPRESSION_PTR, (void *)exp->basic_exp);
+      print_struct_obj_reference(fp, BASIC_EXPRESSION_PTR, (void *)exp->basic_exp);
     }      
     else
       assert(false);
@@ -431,7 +431,7 @@ void print_heap_representation_struct(FILE *fp,
     return_statement_t *ret_stmt = (return_statement_t *)struct_ptr;
 
     fprintf(fp, "[ ");
-    print_json_object_struct(fp, EXPRESSION_PTR, (void *)ret_stmt->exp);
+    print_struct_obj_reference(fp, EXPRESSION_PTR, (void *)ret_stmt->exp);
     fprintf(fp, "] ");
   }
   else if(type == PRIMARY_PTR)
@@ -455,17 +455,17 @@ void print_heap_representation_struct(FILE *fp,
     else if(prim->type == LITERAL)
     {
       fprintf(fp, "LITERAL, ");
-      print_json_object_struct(fp, LITERAL_PTR, (void *)prim->lit);
+      print_struct_obj_reference(fp, LITERAL_PTR, (void *)prim->lit);
     }
     else if(prim->type == BLOCK_CONSTRUCTOR)
     {
       fprintf(fp, "BLOCK_CONSTRUCTOR, ");
-      print_json_object_struct(fp, BLOCK_CONSTRUCTOR_PTR, (void *)prim->blk_cons);
+      print_struct_obj_reference(fp, BLOCK_CONSTRUCTOR_PTR, (void *)prim->blk_cons);
     }
     else if(prim->type == EXPRESSION1)
     {
       fprintf(fp, "EXPRESSION, ");
-      print_json_object_struct(fp, EXPRESSION_PTR, (void *)prim->exp);
+      print_struct_obj_reference(fp, EXPRESSION_PTR, (void *)prim->exp);
     }
     else
       assert(false);
@@ -488,17 +488,17 @@ void print_heap_representation_struct(FILE *fp,
     if(msg->type == UNARY_MESSAGE)
     {
       fprintf(fp, "UNARY_MESSAGE, ");
-      print_json_object_struct(fp, UNARY_MESSAGES_PTR, (void *)msg->unary_messages);
+      print_struct_obj_reference(fp, UNARY_MESSAGES_PTR, (void *)msg->unary_messages);
     }
     else if(msg->type == BINARY_MESSAGE)
     {
       fprintf(fp, "BINARY_MESSAGE, ");
-      print_json_object_struct(fp, BINARY_MESSAGES_PTR, (void *)msg->binary_messages);
+      print_struct_obj_reference(fp, BINARY_MESSAGES_PTR, (void *)msg->binary_messages);
     }
     else if(msg->type == KEYWORD_MESSAGE)
     {
       fprintf(fp, "KEYWORD_MESSAGE, ");
-      print_json_object_struct(fp, KEYWORD_MESSAGE_PTR, (void *)msg->kw_msg);
+      print_struct_obj_reference(fp, KEYWORD_MESSAGE_PTR, (void *)msg->kw_msg);
     }
     else
       assert(false);
@@ -520,7 +520,7 @@ void print_heap_representation_struct(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_json_object_struct(fp, MESSAGE_PTR, (void *)(casc_msgs->cascaded_msgs+i));
+      print_struct_obj_reference(fp, MESSAGE_PTR, (void *)(casc_msgs->cascaded_msgs+i));
       if(i != count - 1)
 	fprintf(fp, "] ");
     }
@@ -543,7 +543,7 @@ void print_heap_representation_struct(FILE *fp,
     if(lit->type == NUMBER_LITERAL)
     {
       fprintf(fp, "NUMBER_LITERAL, ");
-      print_json_object_struct(fp, LITERAL_PTR, (void *)lit->num);
+      print_struct_obj_reference(fp, LITERAL_PTR, (void *)lit->num);
     }
     else if(lit->type == STRING_LITERAL)
     {
@@ -568,7 +568,7 @@ void print_heap_representation_struct(FILE *fp,
     else if(lit->type == ARRAY_LITERAL)
     {
       fprintf(fp, "ARRAY_LITERAL, ");
-      print_json_object_struct(fp, ARRAY_ELEMENTS_PTR, (void *)lit->array_elements);
+      print_struct_obj_reference(fp, ARRAY_ELEMENTS_PTR, (void *)lit->array_elements);
     }
     else
       assert(false);
@@ -590,12 +590,12 @@ void print_heap_representation_struct(FILE *fp,
     if(constructor->type == BLOCK_ARGS)
     {
       fprintf(fp, "\"BLOCK_ARGS\", ");
-      print_json_object_struct(fp, BLOCK_ARGUMENT_PTR, (void *)constructor->block_args);
+      print_struct_obj_reference(fp, BLOCK_ARGUMENT_PTR, (void *)constructor->block_args);
     }
     else if(constructor->type == NO_BLOCK_ARGS)
     {
       fprintf(fp, "\"NO_BLOCK_ARGS\", ");
-      print_json_object_struct(fp, EXEC_CODE_PTR, (void *)constructor->exec_code);
+      print_struct_obj_reference(fp, EXEC_CODE_PTR, (void *)constructor->exec_code);
     }
     else
       assert(false);
@@ -636,7 +636,7 @@ void print_heap_representation_struct(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_json_object_struct(fp, MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
+      print_struct_obj_reference(fp, MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -654,7 +654,7 @@ void print_heap_representation_struct(FILE *fp,
    
     fprintf(fp, "[ ");
     fprintf(fp, "\"%s\", ", bin_msg->binary_selector);
-    print_json_object_struct(fp, BINARY_ARGUMENT_PTR, (void *)bin_msg->bin_arg);
+    print_struct_obj_reference(fp, BINARY_ARGUMENT_PTR, (void *)bin_msg->bin_arg);
     fprintf(fp, "] ");
   }
   else if(type == KEYWORD_MESSAGE_PTR)
@@ -672,7 +672,7 @@ void print_heap_representation_struct(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_json_object_struct(fp, KEYWORD_ARGUMENT_PAIR_PTR, (void *)(kw_msg->kw_arg_pairs+i));
+      print_struct_obj_reference(fp, KEYWORD_ARGUMENT_PAIR_PTR, (void *)(kw_msg->kw_arg_pairs+i));
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -689,9 +689,9 @@ void print_heap_representation_struct(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    print_json_object_struct(fp, PRIMARY_PTR, (void *)bin_arg->prim);
+    print_struct_obj_reference(fp, PRIMARY_PTR, (void *)bin_arg->prim);
     fprintf(fp, ", ");
-    print_json_object_struct(fp, UNARY_MESSAGES_PTR, (void *)bin_arg->unary_messages);
+    print_struct_obj_reference(fp, UNARY_MESSAGES_PTR, (void *)bin_arg->unary_messages);
     fprintf(fp, "] ");
   }
   else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
@@ -705,7 +705,7 @@ void print_heap_representation_struct(FILE *fp,
     
     fprintf(fp, "[ ");
     fprintf(fp, "\"%s\", ", kw_arg_pair->keyword);
-    print_json_object_struct(fp, KEYWORD_ARGUMENT_PTR, (void *)kw_arg_pair->kw_arg);
+    print_struct_obj_reference(fp, KEYWORD_ARGUMENT_PTR, (void *)kw_arg_pair->kw_arg);
     fprintf(fp, "] ");
   }
   else if(type == TEMPORARIES_PTR)
@@ -746,17 +746,17 @@ void print_heap_representation_struct(FILE *fp,
     if(stmt->type == RETURN_STATEMENT)
     {
       fprintf(fp, "\"RETURN_STATEMENT\", ");
-      print_json_object_struct(fp, RETURN_STATEMENT_PTR, (void *)stmt->ret_stmt);
+      print_struct_obj_reference(fp, RETURN_STATEMENT_PTR, (void *)stmt->ret_stmt);
     }
     if(stmt->type == EXPRESSION)
     { 
       fprintf(fp, "\"EXPRESSION\", ");
-      print_json_object_struct(fp, EXPRESSION_PTR, (void *)stmt->exp);
+      print_struct_obj_reference(fp, EXPRESSION_PTR, (void *)stmt->exp);
     }
     if(stmt->type == EXP_PLUS_STATEMENTS)
     {
       fprintf(fp, "\"EXP_PLUS_STATEMENTS\", ");
-      print_json_object_struct(fp, STATEMENTS_PTR, (void *)stmt->statements);
+      print_struct_obj_reference(fp, STATEMENTS_PTR, (void *)stmt->statements);
     }
     else
       assert(false);
@@ -795,9 +795,9 @@ void print_heap_representation_struct(FILE *fp,
     */
     
     fprintf(fp, "[ ");
-    print_json_object_struct(fp, TEMPORARIES_PTR, (void *)exec_code->temporaries);
+    print_struct_obj_reference(fp, TEMPORARIES_PTR, (void *)exec_code->temporaries);
     fprintf(fp, ", ");
-    print_json_object_struct(fp, STATEMENTS_PTR, (void *)exec_code->statements);
+    print_struct_obj_reference(fp, STATEMENTS_PTR, (void *)exec_code->statements);
     fprintf(fp, "] ");
   }
   else if(type == PACKAGE_PTR)
@@ -842,14 +842,14 @@ void print_heap_representation_struct(FILE *fp,
     for(i=0; i<count; i++)
     {
       if(g_sub_type == OBJECT_PTR1)
-	print_json_object(fp, (OBJECT_PTR)stack->data[i], false);
+	print_object_ptr_reference(fp, (OBJECT_PTR)stack->data[i], false);
       else if(g_sub_type == METHOD_PTR)
       {
 	method_t *m = (method_t *)extract_ptr((OBJECT_PTR)stack->data[i]);
-	print_json_object_struct(fp, METHOD_PTR, (void *)m);
+	print_struct_obj_reference(fp, METHOD_PTR, (void *)m);
       }
       else
-	print_json_object_struct(fp, g_sub_type, stack->data[i]);
+	print_struct_obj_reference(fp, g_sub_type, stack->data[i]);
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -868,19 +868,19 @@ void print_heap_representation_struct(FILE *fp,
     */
     
     fprintf(fp, "[ ");
-    print_json_object(fp, handler->protected_block, false);
+    print_object_ptr_reference(fp, handler->protected_block, false);
     fprintf(fp, ", ");
-    print_json_object(fp, handler->selector, false);
+    print_object_ptr_reference(fp, handler->selector, false);
     fprintf(fp, ", ");
-    print_json_object(fp, handler->exception_action, false);
+    print_object_ptr_reference(fp, handler->exception_action, false);
     fprintf(fp, ", ");
 
     g_sub_type = EXCEPTION_HANDLER_PTR;
-    print_json_object_struct(fp, STACK_TYPE_PTR, (void *)handler->exception_environment);
+    print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)handler->exception_environment);
     g_sub_type = NONE;
 
     fprintf(fp, ", ");
-    print_json_object(fp, handler->cont, false);
+    print_object_ptr_reference(fp, handler->cont, false);
     fprintf(fp, "] ");
   }
   else if(type == CALL_CHAIN_ENTRY_PTR)
@@ -904,7 +904,7 @@ void print_heap_representation_struct(FILE *fp,
     
     fprintf(fp, "[ ");
     debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
-    print_json_object_struct(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
+    print_struct_obj_reference(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
     fprintf(fp, ", ");
 
     if(entry->super)
@@ -913,16 +913,16 @@ void print_heap_representation_struct(FILE *fp,
       fprintf(fp, "\"false\"");
     fprintf(fp, ", ");
 
-    print_json_object(fp, entry->receiver, false);
+    print_object_ptr_reference(fp, entry->receiver, false);
     fprintf(fp, ", ");
     
-    print_json_object(fp, entry->selector, false);
+    print_object_ptr_reference(fp, entry->selector, false);
     fprintf(fp, ", ");
     
-    print_json_object(fp, entry->method, false);
+    print_object_ptr_reference(fp, entry->method, false);
     fprintf(fp, ", ");
 
-    print_json_object(fp, entry->closure, false);
+    print_object_ptr_reference(fp, entry->closure, false);
     fprintf(fp, ", ");
 
     unsigned int count = entry->nof_args;
@@ -930,19 +930,19 @@ void print_heap_representation_struct(FILE *fp,
     fprintf(fp, "[ ");
     for(i=0; i<count; i++)
     {
-      print_json_object(fp, entry->args[i], false);
+      print_object_ptr_reference(fp, entry->args[i], false);
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
 
-    print_json_object(fp, entry->local_vars_list, false);
+    print_object_ptr_reference(fp, entry->local_vars_list, false);
     fprintf(fp, ", ");
     
-    print_json_object(fp, entry->cont, false);
+    print_object_ptr_reference(fp, entry->cont, false);
     fprintf(fp, ", ");
     
-    print_json_object(fp, entry->termination_blk_closure, false);
+    print_object_ptr_reference(fp, entry->termination_blk_closure, false);
     fprintf(fp, ", ");
 
     if(entry->termination_blk_invoked)
@@ -967,17 +967,17 @@ void print_heap_representation_struct(FILE *fp,
     if(debug_exp->type == DEBUG_BASIC_EXPRESSION)
     {
       fprintf(fp, "\"DEBUG_BASIC_EXPRESSION\", ");
-      print_json_object_struct(fp, BASIC_EXPRESSION_PTR, (void *)debug_exp->be);
+      print_struct_obj_reference(fp, BASIC_EXPRESSION_PTR, (void *)debug_exp->be);
     }
     else if(debug_exp->type == DEBUG_BINARY_ARGUMENT)
     {
       fprintf(fp, "\"DEBUG_BINARY_ARGUMENT\", ");
-      print_json_object_struct(fp, BINARY_ARGUMENT_PTR, (void *)debug_exp->bin_arg);
+      print_struct_obj_reference(fp, BINARY_ARGUMENT_PTR, (void *)debug_exp->bin_arg);
     }
     else if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT)
     {
       fprintf(fp, "\"DEBUG_KEYWORD_ARGUMENT\", ");
-      print_json_object_struct(fp, KEYWORD_ARGUMENT_PTR, (void *)debug_exp->kw_arg);
+      print_struct_obj_reference(fp, KEYWORD_ARGUMENT_PTR, (void *)debug_exp->kw_arg);
     }
     else
       assert((false));
@@ -996,7 +996,7 @@ void print_heap_representation_struct(FILE *fp,
     fprintf(fp, "[ ");
     fprintf(fp, "\"%s\", ", asgn->identifier);
     fprintf(fp, ", ");
-    print_json_object_struct(fp, EXPRESSION_PTR, (void *)asgn->rvalue);
+    print_struct_obj_reference(fp, EXPRESSION_PTR, (void *)asgn->rvalue);
     fprintf(fp, "[ ");
   }
   else if(type == BASIC_EXPRESSION_PTR)
@@ -1014,14 +1014,14 @@ void print_heap_representation_struct(FILE *fp,
     if(basic_exp->type == PRIMARY)
     {
       fprintf(fp, "\"PRIMARY\", ");
-      print_json_object_struct(fp, PRIMARY_PTR, basic_exp->prim);
+      print_struct_obj_reference(fp, PRIMARY_PTR, basic_exp->prim);
     }
     else if(basic_exp->type == PRIMARY_PLUS_MESSAGES)
     {
       fprintf(fp, "\"PRIMARY_PLUS_MESSAGES\", ");
-      print_json_object_struct(fp, MESSAGE_PTR, basic_exp->msg);
+      print_struct_obj_reference(fp, MESSAGE_PTR, basic_exp->msg);
       fprintf(fp, ", ");
-      print_json_object_struct(fp, CASCADED_MESSAGES_PTR, basic_exp->cascaded_msgs);
+      print_struct_obj_reference(fp, CASCADED_MESSAGES_PTR, basic_exp->cascaded_msgs);
     }
     else
       assert(false);
@@ -1067,7 +1067,7 @@ void print_heap_representation_struct(FILE *fp,
     fprintf(fp, "[ ");
     for(i=0; i<count; i++)
     {
-      print_json_object_struct(fp, ARRAY_ELEMENT_PTR, (void *)(elems->elements+i));
+      print_struct_obj_reference(fp, ARRAY_ELEMENT_PTR, (void *)(elems->elements+i));
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -1090,7 +1090,7 @@ void print_heap_representation_struct(FILE *fp,
     if(elem->type == LITERAL1)
     {
       fprintf(fp, "\"LITERAL\", ");
-      print_json_object_struct(fp, LITERAL_PTR, (void *)elem->lit);
+      print_struct_obj_reference(fp, LITERAL_PTR, (void *)elem->lit);
     }
     else if(elem->type == IDENTIFIER1)
     {
@@ -1152,7 +1152,7 @@ void print_global_variables(FILE *fp)
   fprintf(fp, "[ ");
 
   fprintf(fp, "{ \"g_message_selector\" : ");
-  print_json_object(fp, g_message_selector, false);
+  print_object_ptr_reference(fp, g_message_selector, false);
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_nof_string_literals\" : ");
@@ -1160,19 +1160,19 @@ void print_global_variables(FILE *fp)
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_msg_snd_closure\" : ");
-  print_json_object(fp, g_msg_snd_closure, false);
+  print_object_ptr_reference(fp, g_msg_snd_closure, false);
   fprintf(fp, " }, ");
   
   fprintf(fp, "{ \"g_msg_snd_super_closure\" : ");
-  print_json_object(fp, g_msg_snd_super_closure, false);
+  print_object_ptr_reference(fp, g_msg_snd_super_closure, false);
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_compile_time_method_selector\" : ");
-  print_json_object(fp, g_compile_time_method_selector, false);
+  print_object_ptr_reference(fp, g_compile_time_method_selector, false);
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_run_till_cont\" : ");
-  print_json_object(fp, g_run_till_cont, false);
+  print_object_ptr_reference(fp, g_run_till_cont, false);
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_debug_action\" : ");
@@ -1191,11 +1191,11 @@ void print_global_variables(FILE *fp)
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_smalltalk_symbols\" : ");
-  print_json_object_struct(fp, PACKAGE_PTR, (void *)g_smalltalk_symbols);
+  print_struct_obj_reference(fp, PACKAGE_PTR, (void *)g_smalltalk_symbols);
   fprintf(fp, " }, ");
   
   fprintf(fp, "{ \"g_compiler_package\" : ");
-  print_json_object_struct(fp, PACKAGE_PTR, (void *)g_compiler_package);
+  print_struct_obj_reference(fp, PACKAGE_PTR, (void *)g_compiler_package);
   fprintf(fp, "} , ");
 
   fprintf(fp, "{ \"g_string_literals\" : ");
@@ -1223,29 +1223,29 @@ void print_global_variables(FILE *fp)
   fprintf(fp, "] },  ");
 
   fprintf(fp, "{ \"g_exception_environment\" : ");
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_exception_environment);
+  print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_exception_environment);
   fprintf(fp, " }, ");
   
   fprintf(fp, "{ \"g_call_chain\" : ");
   g_sub_type = CALL_CHAIN_ENTRY_PTR;
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_call_chain);
+  print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_call_chain);
   g_sub_type = NONE;
   fprintf(fp, "} , ");
 
   fprintf(fp, "{ \"g_exception_contexts\" : ");
   g_sub_type = OBJECT_PTR1;
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_exception_contexts);
+  print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_exception_contexts);
   g_sub_type = NONE;
   fprintf(fp, "} , ");
 
   fprintf(fp, "{ \"g_breakpointed_methods\" : ");
   g_sub_type = METHOD_PTR;
-  print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_breakpointed_methods);
+  print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_breakpointed_methods);
   g_sub_type = NONE;
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_top_level\" : ");
-  print_json_object_struct(fp, BINDING_ENV_PTR, (void *)g_top_level);
+  print_struct_obj_reference(fp, BINDING_ENV_PTR, (void *)g_top_level);
   fprintf(fp, "} , ");
 
   fprintf(fp, "{ \"g_debugger_invoked_for_exception\" : ");
@@ -1260,7 +1260,7 @@ void print_global_variables(FILE *fp)
   if(g_active_handler)
   {
     fprintf(fp, "{ \"g_active_handler\" : ");
-    print_json_object_struct(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
+    print_struct_obj_reference(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
     fprintf(fp, " }, ");
   }
 
@@ -1272,14 +1272,14 @@ void print_global_variables(FILE *fp)
   fprintf(fp, " }, ");
 
   fprintf(fp, "{ \"g_debug_cont\" : ");
-  print_json_object(fp, g_debug_cont, false);
+  print_object_ptr_reference(fp, g_debug_cont, false);
   fprintf(fp, " } ");
 
   if(g_handler_environment)
   {
     fprintf(fp, ", { \"g_handler_environment\" : ");
     g_sub_type = EXCEPTION_HANDLER_PTR;
-    print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
+    print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
     g_sub_type = NONE;
     fprintf(fp, " } ");
   }
@@ -1288,7 +1288,7 @@ void print_global_variables(FILE *fp)
   {
     fprintf(fp, ", { \"g_signalling_environment\" : ");
     g_sub_type = EXCEPTION_HANDLER_PTR;
-    print_json_object_struct(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
+    print_struct_obj_reference(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
     g_sub_type = NONE;
     fprintf(fp, " } ");
   }
@@ -1390,9 +1390,9 @@ BOOLEAN is_dynamic_memory_object(OBJECT_PTR obj)
           IS_NATIVE_FN_OBJECT(obj);
 }
 
-void print_json_object(FILE *fp, 
-                       OBJECT_PTR obj, 
-                       BOOLEAN single_object)
+void print_object_ptr_reference(FILE *fp,
+				OBJECT_PTR obj,
+				BOOLEAN single_object)
 {
   //TODO: is_valid_object() may not be able to provide correct answers
   //for pointers like debug_expression_t * which are wrapped to become
@@ -1464,22 +1464,22 @@ void print_heap_representation(FILE *fp,
     OBJECT_PTR cdr_obj = cdr(obj);
 
     fprintf(fp, "[");
-    print_json_object(fp, car_obj, single_object);
+    print_object_ptr_reference(fp, car_obj, single_object);
     fprintf(fp, ", ");
-    print_json_object(fp, cdr_obj, single_object);
+    print_object_ptr_reference(fp, cdr_obj, single_object);
     fprintf(fp, "] ");
   }
   else if(IS_ARRAY_OBJECT(obj))
   {
-    print_json_object_struct(fp, ARRAY_OBJ_PTR, (void *)extract_ptr(obj));
+    print_struct_obj_reference(fp, ARRAY_OBJ_PTR, (void *)extract_ptr(obj));
   }
   else if(IS_OBJECT_OBJECT(obj))
   {
-    print_json_object_struct(fp, OBJ_PTR, (void *)extract_ptr(obj));
+    print_struct_obj_reference(fp, OBJ_PTR, (void *)extract_ptr(obj));
   }
   else if(IS_CLASS_OBJECT(obj))
   {
-    print_json_object_struct(fp, CLASS_OBJ_PTR, (void *)extract_ptr(obj));
+    print_struct_obj_reference(fp, CLASS_OBJ_PTR, (void *)extract_ptr(obj));
   }
   else if(IS_CLOSURE_OBJECT(obj)) //TODO: confirm we need to serialize closure objects
   {
@@ -1490,11 +1490,11 @@ void print_heap_representation(FILE *fp,
     OBJECT_PTR arity = third(cons_form);
 
     fprintf(fp, "[");
-    print_json_object(fp, nativefn_obj, single_object);
+    print_object_ptr_reference(fp, nativefn_obj, single_object);
     fprintf(fp, ", ");
-    print_json_object(fp, closed_vals, single_object);
+    print_object_ptr_reference(fp, closed_vals, single_object);
     fprintf(fp, ", ");
-    print_json_object(fp, arity, single_object);
+    print_object_ptr_reference(fp, arity, single_object);
     fprintf(fp, "] ");
   }
   else if(IS_NATIVE_FN_OBJECT(obj))
