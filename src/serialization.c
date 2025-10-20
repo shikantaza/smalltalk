@@ -80,6 +80,8 @@ void hashtable_delete(hashtable_t *);
 nativefn get_nativefn_value(OBJECT_PTR);
 char *get_native_fn_source(nativefn);
 
+void print_native_functions(FILE *);
+
 queue_t *print_queue;
 hashtable_t *hashtable, *printed_objects;
 unsigned int obj_count = 0;
@@ -123,6 +125,9 @@ extern stack_type *g_handler_environment;
 extern stack_type *g_signalling_environment;
 
 extern OBJECT_PTR NIL;
+
+extern unsigned int nof_native_fns;
+extern native_fn_src_mapping_t *native_fn_objects;
 
 void add_obj_to_print_list(OBJECT_PTR obj)
 {
@@ -1314,6 +1319,10 @@ void create_image(char *file_name)
 
   print_global_variables(fp);
 
+  fprintf(fp, ",");
+
+  print_native_functions(fp);
+
   //heap for structs
   fprintf(fp, ", \"heap_struct\" : [");
 
@@ -1503,25 +1512,38 @@ void print_heap_representation(FILE *fp,
     if(nf != (nativefn)message_send &&
        nf != (nativefn)message_send_super)
     {
-      char *src = get_native_fn_source(nf);
+      /* char *src = get_native_fn_source(nf); */
 
-      if(src)
+      /* if(src) */
+      /* { */
+      /* 	unsigned int i, len = strlen(src); */
+
+      /* 	fprintf(fp, "\""); */
+
+      /* 	for(i=0; i<len; i++) */
+      /* 	{ */
+      /* 	  if(src[i] == '\n') */
+      /* 	    fprintf(fp, "\\n"); */
+      /* 	  else */
+      /* 	    fprintf(fp, "%c", src[i]); */
+      /* 	} */
+      /* 	fprintf(fp, "\""); */
+      /* } */
+      /* else */
+      /* 	fprintf(fp, "NULL"); */
+
+      BOOLEAN found = false;
+      unsigned int i;
+      for(i=0; i<nof_native_fns; i++)
       {
-	unsigned int i, len = strlen(src);
-
-	fprintf(fp, "\"");
-
-	for(i=0; i<len; i++)
+	if(native_fn_objects[i].nf == nf)
 	{
-	  if(src[i] == '\n')
-	    fprintf(fp, "\\n");
-	  else
-	    fprintf(fp, "%c", src[i]);
+	  fprintf(fp, "\"**%d**\"", i);
+	  found = true;
+	  break;
 	}
-	fprintf(fp, "\"");
       }
-      else
-	fprintf(fp, "NULL");
+      assert(found);
     }
   }
   else if(IS_INTEGER_OBJECT(obj))
@@ -1532,4 +1554,46 @@ void print_heap_representation(FILE *fp,
     if(!single_object)assert(false);
 
   hashtable_put(printed_objects, (void *)obj, (void *)1);
+}
+
+void print_native_functions(FILE *fp)
+{
+  fprintf(fp, "\"native_functions\": ");
+  unsigned int i;
+
+  fprintf(fp, "[ ");
+
+  for(i=0; i<nof_native_fns; i++)
+  {
+    fprintf(fp, "[ ");
+    fprintf(fp, "\"%p\", ", native_fn_objects[i].state);
+    fprintf(fp, "\"%s\", ", native_fn_objects[i].fname);
+
+    char *src = native_fn_objects[i].source;
+
+    if(src)
+    {
+      unsigned int j, len = strlen(src);
+
+      fprintf(fp, "\"");
+
+      for(j=0; j<len; j++)
+      {
+	if(src[j] == '\n')
+	  fprintf(fp, "\\n");
+	else
+	  fprintf(fp, "%c", src[j]);
+      }
+      fprintf(fp, "\"");
+    }
+    else
+      fprintf(fp, "NULL");
+
+    fprintf(fp, "]");
+
+    if(i != nof_native_fns - 1)
+      fprintf(fp, ", ");
+  }
+
+  fprintf(fp, "] ");
 }

@@ -1274,8 +1274,7 @@ OBJECT_PTR repl_common()
 
     assert(strlen(source)<=32000);
 
-    add_native_fn_source(get_function(state, fname1),
-                         source);
+    add_native_fn_source(state, fname1, get_function(state, fname1), source);
 
     lambdas = cdr(lambdas);
   }
