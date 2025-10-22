@@ -29,7 +29,7 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
 OBJECT_PTR           add_class_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, executable_code_t *);
 OBJECT_PTR           add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, executable_code_t *);
-void                 add_native_fn_source(void *, char *, nativefn, char *);
+void                 add_native_fn_source(unsigned int, char *, nativefn, char *);
 int                  add_symbol(char *);
 char                *append_char(char *, char);
 OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);

@@ -571,7 +571,7 @@ nativefn get_nativefn_value(OBJECT_PTR obj)
   return nfobj->nf;
 }
 
-void add_native_fn_source(void *state, char *fname, nativefn nf, char *source)
+void add_native_fn_source(unsigned int state_index, char *fname, nativefn nf, char *source)
 {
   nof_native_fns++;
 
@@ -585,7 +585,7 @@ void add_native_fn_source(void *state, char *fname, nativefn nf, char *source)
     native_fn_objects = temp;
   }
 
-  native_fn_objects[nof_native_fns-1].state = state;
+  native_fn_objects[nof_native_fns-1].state_index = state_index;
   native_fn_objects[nof_native_fns-1].fname = GC_strdup(fname);
   native_fn_objects[nof_native_fns-1].nf = nf;
   native_fn_objects[nof_native_fns-1].source = GC_strdup(source);

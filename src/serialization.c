@@ -1566,7 +1566,7 @@ void print_native_functions(FILE *fp)
   for(i=0; i<nof_native_fns; i++)
   {
     fprintf(fp, "[ ");
-    fprintf(fp, "\"%p\", ", native_fn_objects[i].state);
+    fprintf(fp, "%d, ", native_fn_objects[i].state_index);
     fprintf(fp, "\"%s\", ", native_fn_objects[i].fname);
 
     char *src = native_fn_objects[i].source;

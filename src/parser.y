@@ -77,6 +77,8 @@ extern enum DebugAction g_debug_action;
 extern BOOLEAN g_eval_aborted;
 
 extern GtkTextTag *error_tag;
+
+extern unsigned int nof_compiler_states;
 %}
 
 %union{
@@ -1255,8 +1257,10 @@ OBJECT_PTR repl_common()
 #endif
 
   OBJECT_PTR lambdas = reverse(cdr(res));
-  
+
   void *state = compile_functions(lambdas);
+
+  nof_compiler_states++;
 
   while(lambdas != NIL)
   {
@@ -1274,7 +1278,7 @@ OBJECT_PTR repl_common()
 
     assert(strlen(source)<=32000);
 
-    add_native_fn_source(state, fname1, get_function(state, fname1), source);
+    add_native_fn_source(nof_compiler_states, fname1, get_function(state, fname1), source);
 
     lambdas = cdr(lambdas);
   }

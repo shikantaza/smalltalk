@@ -156,7 +156,7 @@ typedef struct
 
 typedef struct native_fn_src_mapping
 {
-  void *state;
+  unsigned int state_index;
   char *fname;
   nativefn nf;
   char *source;
