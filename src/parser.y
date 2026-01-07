@@ -78,7 +78,9 @@ extern BOOLEAN g_eval_aborted;
 
 extern GtkTextTag *error_tag;
 
-extern unsigned int nof_compiler_states;
+extern unsigned int g_nof_compiler_states;
+
+extern int load_from_image(char *);
 %}
 
 %union{
@@ -1151,6 +1153,8 @@ void load_tests()
 #ifndef LEX
 int main(int argc, char **argv)
 {
+  //load_from_image("./smalltalk.json"); exit(0);
+
   g_ui_mode = CLI;
 
   g_system_initialized = false;
@@ -1260,7 +1264,7 @@ OBJECT_PTR repl_common()
 
   void *state = compile_functions(lambdas);
 
-  nof_compiler_states++;
+  g_nof_compiler_states++;
 
   while(lambdas != NIL)
   {
@@ -1278,7 +1282,7 @@ OBJECT_PTR repl_common()
 
     assert(strlen(source)<=32000);
 
-    add_native_fn_source(nof_compiler_states, fname1, get_function(state, fname1), source);
+    add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
     lambdas = cdr(lambdas);
   }

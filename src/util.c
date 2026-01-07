@@ -289,3 +289,28 @@ unsigned int file_exists(char *fname)
 {
   return access(fname, F_OK) != -1;
 }
+
+char *append_string(char *str1, char *str2)
+{
+  if(!str1)
+    return GC_strdup(str2);
+
+  if(!str2)
+    return str1;
+
+  unsigned int len1 = strlen(str1);
+  unsigned int len2 = strlen(str2);
+
+  int i;
+
+  char *temp = (char *)GC_REALLOC(str1, (len1+len2+1)*sizeof(char));
+
+  str1 = temp;
+
+  for(i=0; i<len2; i++)
+    str1[len1+i] = str2[i];
+
+  str1[len1+len2] = '\0';
+
+  return str1;
+}

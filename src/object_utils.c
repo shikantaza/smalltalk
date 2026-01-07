@@ -11,8 +11,8 @@
 int gen_sym_count = 0;
 OBJECT_PTR Symbol;
 
-unsigned int nof_native_fns = 0;
-native_fn_src_mapping_t *native_fn_objects = NULL;
+unsigned int g_nof_native_fns = 0;
+native_fn_src_mapping_t *g_native_fn_objects = NULL;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
@@ -573,22 +573,22 @@ nativefn get_nativefn_value(OBJECT_PTR obj)
 
 void add_native_fn_source(unsigned int state_index, char *fname, nativefn nf, char *source)
 {
-  nof_native_fns++;
+  g_nof_native_fns++;
 
-  if(!native_fn_objects)
-    native_fn_objects = (native_fn_src_mapping_t *)GC_MALLOC(nof_native_fns * sizeof(native_fn_src_mapping_t));
+  if(!g_native_fn_objects)
+    g_native_fn_objects = (native_fn_src_mapping_t *)GC_MALLOC(g_nof_native_fns * sizeof(native_fn_src_mapping_t));
   else
   {
-    native_fn_src_mapping_t *temp = (native_fn_src_mapping_t *)GC_REALLOC(native_fn_objects,
-									  nof_native_fns * sizeof(native_fn_src_mapping_t));
+    native_fn_src_mapping_t *temp = (native_fn_src_mapping_t *)GC_REALLOC(g_native_fn_objects,
+									  g_nof_native_fns * sizeof(native_fn_src_mapping_t));
     assert(temp);
-    native_fn_objects = temp;
+    g_native_fn_objects = temp;
   }
 
-  native_fn_objects[nof_native_fns-1].state_index = state_index;
-  native_fn_objects[nof_native_fns-1].fname = GC_strdup(fname);
-  native_fn_objects[nof_native_fns-1].nf = nf;
-  native_fn_objects[nof_native_fns-1].source = GC_strdup(source);
+  g_native_fn_objects[g_nof_native_fns-1].state_index = state_index;
+  g_native_fn_objects[g_nof_native_fns-1].fname = GC_strdup(fname);
+  g_native_fn_objects[g_nof_native_fns-1].nf = nf;
+  g_native_fn_objects[g_nof_native_fns-1].source = GC_strdup(source);
 }
 
 char *get_native_fn_source(nativefn nf)
@@ -596,10 +596,10 @@ char *get_native_fn_source(nativefn nf)
   if(nf == (nativefn)identity_function || nf == (nativefn)0xbaadf00d)
     return "uintptr_t identity_function(uintptr_t closure, uintptr_t x) {  return x; }";
   int i;
-  for(i=0; i<nof_native_fns; i++)
+  for(i=0; i<g_nof_native_fns; i++)
   {
-    if(native_fn_objects[i].nf == nf)
-      return native_fn_objects[i].source;
+    if(g_native_fn_objects[i].nf == nf)
+      return g_native_fn_objects[i].source;
   }
 
   //returning NULL if the native function doesn't

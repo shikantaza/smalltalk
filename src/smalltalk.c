@@ -34,7 +34,7 @@ OBJECT_PTR Package;
 
 stack_type *g_breakpointed_methods = NULL;
 
-unsigned int nof_compiler_states = 0;
+unsigned int g_nof_compiler_states = 0;
 
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
@@ -539,7 +539,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
   void *state = compile_functions(lambdas);
 
-  nof_compiler_states++;
+  g_nof_compiler_states++;
 
   while(lambdas != NIL)
   {
@@ -557,7 +557,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
     assert(strlen(source)<=3000);
 
-    add_native_fn_source(nof_compiler_states, fname1, get_function(state, fname1), source);
+    add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
     lambdas = cdr(lambdas);
   }
@@ -691,7 +691,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
   void *state = compile_functions(lambdas);
 
-  nof_compiler_states++;
+  g_nof_compiler_states++;
 
   while(lambdas != NIL)
   {
@@ -709,7 +709,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
     assert(strlen(source)<=3000);
 
-    add_native_fn_source(nof_compiler_states, fname1, get_function(state, fname1), source);
+    add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
     lambdas = cdr(lambdas);
   }

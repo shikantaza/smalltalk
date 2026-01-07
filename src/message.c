@@ -13,7 +13,9 @@
 
 void print_debug_expression(debug_expression_t *);
 
-OBJECT_PTR g_run_till_cont;
+//NIL; since NIL is declared later, using its value
+//TODO: ensure this is reset after a debug cycle is completed
+OBJECT_PTR g_run_till_cont = 1;
 
 //this will be set to true if the
 //abort option is selected in the

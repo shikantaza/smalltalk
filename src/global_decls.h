@@ -30,11 +30,14 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           add_class_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, executable_code_t *);
 OBJECT_PTR           add_instance_method(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, executable_code_t *);
 void                 add_native_fn_source(unsigned int, char *, nativefn, char *);
+int                  add_smalltalk_symbol(char *);
 int                  add_symbol(char *);
 char                *append_char(char *, char);
+char                *append_string(char *, char *);
 OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);
 OBJECT_PTR           assignment_conversion(OBJECT_PTR, OBJECT_PTR);
 unsigned int         build_c_string(OBJECT_PTR, char *, BOOLEAN);
+unsigned int         build_fn_prototypes(char *, unsigned int);
 OBJECT_PTR           build_selectors_list(OBJECT_PTR);
 OBJECT_PTR           CADR(OBJECT_PTR);
 BOOLEAN              call_chain_entry_exists(call_chain_entry_t *);
@@ -43,6 +46,7 @@ OBJECT_PTR           capture_local_var_names(OBJECT_PTR);
 OBJECT_PTR           clone_object(OBJECT_PTR);
 OBJECT_PTR           closure_conv_transform(OBJECT_PTR);
 void                *compile_functions(OBJECT_PTR);
+void                *compile_functions_from_string(char *);
 OBJECT_PTR           cons(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           convert_array_object_to_object_ptr(array_object_t *);
 OBJECT_PTR           convert_char_to_object(char);
@@ -187,3 +191,4 @@ int                  yyparse();
 int                  yy_scan_string(char *);
 
 #endif
+
