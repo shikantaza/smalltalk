@@ -219,19 +219,19 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   cls_obj->shared_vars->count = 0;
   cls_obj->shared_vars->bindings = NULL;
 
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 0;
   cls_obj->instance_methods->bindings = NULL;
   
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
   
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
   cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
-						 convert_native_fn_to_object((nativefn)new_object),
-						 NIL, NIL,
-						 0, NIL, NULL);
+							  convert_native_fn_to_object((nativefn)new_object),
+							  NIL, NIL,
+							  0, NIL, NULL);
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   
@@ -481,14 +481,14 @@ OBJECT_PTR add_class_method_str(OBJECT_PTR closure,
   return add_method_str_internal(class_obj, selector, code_str, cont, false);
 }
 
-OBJECT_PTR create_method(class_object_t *cls_obj,
-			 BOOLEAN class_method,
-			 OBJECT_PTR nfo,
-			 OBJECT_PTR closed_syms,
-			 OBJECT_PTR temporaries,
-			 unsigned int arity,
-			 OBJECT_PTR code_str,
-			 executable_code_t *exec_code)
+method_t *create_method(class_object_t *cls_obj,
+			BOOLEAN class_method,
+			OBJECT_PTR nfo,
+			OBJECT_PTR closed_syms,
+			OBJECT_PTR temporaries,
+			unsigned int arity,
+			OBJECT_PTR code_str,
+			executable_code_t *exec_code)
 {
   method_t *m;
 
@@ -508,7 +508,8 @@ OBJECT_PTR create_method(class_object_t *cls_obj,
   m->exec_code    = exec_code;
   m->breakpointed = false;
 
-  return (uintptr_t)m + OBJECT_TAG;
+  //return (uintptr_t)m + OBJECT_TAG;
+  return m;
 }
 
 OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
@@ -617,13 +618,13 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
     if(!cls_obj->instance_methods->bindings)
     {
       cls_obj->instance_methods->count = 1;
-      cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+      cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
     }
     else
     {
       cls_obj->instance_methods->count++;
-      binding_t *temp = (binding_t *)GC_REALLOC(cls_obj->instance_methods->bindings,
-						cls_obj->instance_methods->count * sizeof(binding_t));
+      method_binding_t *temp = (method_binding_t *)GC_REALLOC(cls_obj->instance_methods->bindings,
+							      cls_obj->instance_methods->count * sizeof(method_binding_t));
       assert(temp);
       cls_obj->instance_methods->bindings = temp;
     }
@@ -769,13 +770,13 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
     if(!cls_obj->class_methods->bindings)
     {
       cls_obj->class_methods->count = 1;
-      cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+      cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
     }
     else
     {
       cls_obj->class_methods->count++;
-      binding_t *temp = (binding_t *)GC_REALLOC(cls_obj->class_methods->bindings,
-						cls_obj->class_methods->count * sizeof(binding_t));
+      method_binding_t *temp = (method_binding_t *)GC_REALLOC(cls_obj->class_methods->bindings,
+							      cls_obj->class_methods->count * sizeof(method_binding_t));
       assert(temp);
       cls_obj->class_methods->bindings = temp;
     }
@@ -970,9 +971,9 @@ void create_Object()
   
   cls_obj->shared_vars = NULL;
 
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 2;
-  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
   
   cls_obj->instance_methods->bindings[0].key = get_symbol("_=");
   cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
@@ -986,9 +987,9 @@ void create_Object()
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_messageNotUnderstood:");
   cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
@@ -1175,7 +1176,7 @@ OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
     if(cls_obj->instance_methods->bindings[i].key == decorated_selector)
     {
       method_found = true;
-      method_t *m = (method_t *)extract_ptr(cls_obj->instance_methods->bindings[i].val);
+      method_t *m = cls_obj->instance_methods->bindings[i].val;
       m->breakpointed = add_breakpoint;
       break;
     }
@@ -1190,7 +1191,7 @@ OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
       if(cls_obj->class_methods->bindings[i].key == decorated_selector)
       {
 	method_found = true;
-	method_t *m = (method_t *)extract_ptr(cls_obj->class_methods->bindings[i].val);
+	method_t *m = cls_obj->class_methods->bindings[i].val;
 	m->breakpointed = add_breakpoint;
 	break;
       }
@@ -1294,13 +1295,13 @@ void create_Smalltalk()
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
   
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 0;    
   cls_obj->instance_methods->bindings = NULL;
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 14;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
 
   //addInstanceMethod and addClassMethod cannot be brought into
   //the Smalltalk class because we don't have a way to 'quote' blocks
@@ -1481,9 +1482,9 @@ void create_Nil()
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
   
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 1;
-  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_printString");
   cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
@@ -1491,7 +1492,7 @@ void create_Nil()
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
 
@@ -1532,7 +1533,7 @@ void print_call_chain()
     if(entry->nof_args > 0)
       printf("\b] ");
 
-    method_t *m = (method_t *)extract_ptr(entry->method);
+    method_t *m = entry->method;
 
     assert(cons_length(m->temporaries) == cons_length(entry->local_vars_list));
 
@@ -1829,13 +1830,13 @@ void create_Compiler()
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
 
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 0;
   cls_obj->instance_methods->bindings = NULL;
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 2;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_compile:");
   cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,

@@ -814,7 +814,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 
   unsigned int j, n;
 
-  OBJECT_PTR cls, method;
+  OBJECT_PTR cls;
 
   OBJECT_PTR selector = INITIALIZE_SELECTOR;
 
@@ -832,9 +832,9 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
     {
       if(cls_obj_int->instance_methods->bindings[j].key == selector)
       {
-	method = cls_obj_int->instance_methods->bindings[j].val;
+	method_t *m = cls_obj_int->instance_methods->bindings[j].val;
 
-	method_t *m = (method_t *)extract_ptr(method);
+	//method_t *m = (method_t *)extract_ptr(method);
 
 	native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(m->nativefn_obj);
 	nativefn nf = nfobj->nf;
@@ -901,7 +901,7 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	put_binding_val(g_top_level, SELF, cons(obj, NIL));
 	put_binding_val(g_top_level, SUPER, cons(obj, NIL));
 
-	stack_push(g_call_chain, create_call_chain_entry(NIL, false, obj, selector, method, closure_form, 0, NULL, g_idclo, NIL, false));
+	stack_push(g_call_chain, create_call_chain_entry(NIL, false, obj, selector, m, closure_form, 0, NULL, g_idclo, NIL, false));
 
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 

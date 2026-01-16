@@ -37,11 +37,11 @@ void create_Character()
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
 
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 0;
   cls_obj->instance_methods->bindings = NULL;
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
 

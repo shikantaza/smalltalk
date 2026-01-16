@@ -99,6 +99,21 @@ typedef struct binding_env
   binding_t *bindings;
 } binding_env_t;
 
+//forward declaration
+typedef struct method method_t;
+
+typedef struct method_binding
+{
+  OBJECT_PTR key;
+  method_t *val;
+} method_binding_t;
+
+typedef struct method_binding_env
+{
+  unsigned int count;
+  method_binding_t *bindings;
+} method_binding_env_t;
+
 typedef struct
 {
   unsigned int nof_elements;
@@ -125,15 +140,15 @@ typedef struct
   OBJECT_PTR *inst_vars;
   
   binding_env_t *shared_vars;
-  binding_env_t *instance_methods; //method selector and CONS of native function object and free vars 
-  binding_env_t *class_methods;  //method selector and CONS of native function object and free vars
+  method_binding_env_t *instance_methods; //method selector and method_t
+  method_binding_env_t *class_methods;  //method selector and method_t
   
   //note: if we are going to store the method source too,
   //the val component of the dictionary wiil be a CONS cell with the native funtion object
   //and the method source Lisp object
 } class_object_t;
 
-typedef struct
+typedef struct method
 {
   class_object_t *cls_obj;
   BOOLEAN class_method;
@@ -168,7 +183,7 @@ typedef struct
   BOOLEAN super;
   OBJECT_PTR receiver;
   OBJECT_PTR selector;
-  OBJECT_PTR method;
+  method_t *method;
   OBJECT_PTR closure;
   unsigned int nof_args;
   OBJECT_PTR *args;

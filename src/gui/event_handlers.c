@@ -425,9 +425,10 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
     call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
 
     call_chain_entry_t *entry = entries[call_chain_entry_index];
-    OBJECT_PTR method = entry->method;
+    //OBJECT_PTR method = entry->method;
 
-    method_t *m = (method_t *)extract_ptr(method);
+    //method_t *m = (method_t *)extract_ptr(method);
+    method_t *m = entry->method;
 
     remove_all_from_list(temp_vars_list);
 
@@ -704,7 +705,7 @@ void debug_step_into(GtkWidget *widget, gpointer data)
   assert(!stack_is_empty(g_call_chain));
 
   call_chain_entry_t *entry = stack_top(g_call_chain);
-  method_t *m = (method_t *)extract_ptr(entry->method);
+  method_t *m = entry->method;
 
   if(m->code_str == NIL)
   {
@@ -780,9 +781,10 @@ void debug_delete_breakpoint(GtkWidget *widget, gpointer data)
     call_chain_entry_t **entries = (call_chain_entry_t **)stack_data(g_call_chain);
 
     call_chain_entry_t *entry = entries[call_chain_entry_index];
-    OBJECT_PTR method = entry->method;
+    //OBJECT_PTR method = entry->method;
 
-    method_t *m = (method_t *)extract_ptr(method);
+    //method_t *m = (method_t *)extract_ptr(method);
+    method_t *m = entry->method;
 
     m->breakpointed = false;
   }

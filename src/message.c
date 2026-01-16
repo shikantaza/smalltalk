@@ -50,7 +50,7 @@ call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
 					    BOOLEAN super,
 					    OBJECT_PTR receiver,
 					    OBJECT_PTR selector,
-					    OBJECT_PTR method,
+					    method_t *method,
 					    OBJECT_PTR closure,
 					    unsigned int nof_args,
 					    OBJECT_PTR *args,
@@ -82,7 +82,7 @@ call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
   return entry;
 }
 
-OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
+method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
 {
   OBJECT_PTR cls_obj;
   BOOLEAN is_class_object;
@@ -108,7 +108,7 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
 #endif  
 
   BOOLEAN method_found = false;
-  OBJECT_PTR method;
+  method_t *method;
 
   unsigned int i, n;
 
@@ -165,7 +165,7 @@ OBJECT_PTR method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   if(method_found)
     return method;
   else
-    return NIL;
+    return NULL;
 }
 
 OBJECT_PTR message_send_internal(BOOLEAN super,
@@ -203,9 +203,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   //OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
   OBJECT_PTR stripped_selector = selector;
 
-  OBJECT_PTR method = method_lookup(super, receiver, stripped_selector);
+  method_t *m = method_lookup(super, receiver, stripped_selector);
 
-  if(method == NIL)
+  if(m == NULL)
   {
 #ifdef DEBUG    
     print_object(stripped_selector); printf(" is not understood by "); print_object(receiver); printf("\n");
@@ -224,7 +224,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 			args[count]); //cont
   }
 
-  method_t *m = (method_t *)extract_ptr(method);
+  //method_t *m = (method_t *)extract_ptr(method);
 
 #ifdef DEBUG
   print_object(method); printf(" is returned by method_lookup()\n");
@@ -326,7 +326,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 0, NULL, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
@@ -365,7 +365,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 1, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
@@ -405,7 +405,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 2, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
@@ -446,7 +446,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 3, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
@@ -488,7 +488,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
-    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+    stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 4, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
@@ -555,7 +555,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     stack_push(g_call_chain,
-	       create_call_chain_entry(exp_ptr, super, receiver, selector, method,
+	       create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 				       closure_form, count, args, stack_args[n-1], NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)

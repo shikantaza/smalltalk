@@ -451,7 +451,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
       for(i=0; i<n; i++)
       {
 	OBJECT_PTR key = cls_obj->class_methods->bindings[i].key;
-	OBJECT_PTR val = cls_obj->class_methods->bindings[i].val;
+	method_t *val = cls_obj->class_methods->bindings[i].val;
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);
@@ -465,7 +465,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
       for(i=0; i<n; i++)
       {
 	OBJECT_PTR key = cls_obj->instance_methods->bindings[i].key;
-	OBJECT_PTR val = cls_obj->instance_methods->bindings[i].val;
+	method_t *val = cls_obj->instance_methods->bindings[i].val;
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);

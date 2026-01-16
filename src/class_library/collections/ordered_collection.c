@@ -306,9 +306,9 @@ void create_OrderedCollection()
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
 
-  cls_obj->instance_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_t));
+  cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 7;
-  cls_obj->instance_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
 
   cls_obj->instance_methods->bindings[0].key = get_symbol("_initialize");
   cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
@@ -352,9 +352,9 @@ void create_OrderedCollection()
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->class_methods = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
+  cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
 
   cls_obj->class_methods->bindings[0].key = get_symbol("_new");
   cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
