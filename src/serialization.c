@@ -987,7 +987,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     BOOLEAN super;
     OBJECT_PTR receiver;
     OBJECT_PTR selector;
-    OBJECT_PTR method;
+    method_t *method;
     OBJECT_PTR closure;
     unsigned int nof_args;
     OBJECT_PTR *args;
@@ -1131,7 +1131,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     char **identifiers;
     */
 
-    fprintf(fp, "[ ");
+    //fprintf(fp, "[ ");
 
     unsigned int count = unary_msgs->nof_messages;
    
@@ -1144,7 +1144,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     }
     fprintf(fp, "] ");
     
-    fprintf(fp, "] ");
+    //fprintf(fp, "] ");
   }
   else if(type == ARRAY_ELEMENTS_PTR)
   {
@@ -1155,7 +1155,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     struct array_element *elements;
     */
 
-    fprintf(fp, "[ ");
+    //fprintf(fp, "[ ");
 
     unsigned int count = elems->nof_elements;
    
@@ -1168,7 +1168,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     }
     fprintf(fp, "] ");
     
-    fprintf(fp, "] ");
+    //fprintf(fp, "] ");
   }
   else if(type == ARRAY_ELEMENT_PTR)
   {
@@ -2705,6 +2705,329 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     return (void *)stack;
   }
+  else if(ptr_type == EXCEPTION_HANDLER_PTR)
+  {
+    exception_handler_t *handler = (exception_handler_t *)GC_MALLOC(sizeof(exception_handler_t));
+
+    hashtable_entry_t *e1;
+
+    long long ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      handler->protected_block = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)handler->protected_block, NONE, 0, 0);
+
+    long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref2);
+
+    if(e1)
+      handler->selector = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref2, (uintptr_t)handler->selector, NONE, 0, 0);
+
+    long long ref3 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref3);
+
+    if(e1)
+      handler->exception_action = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref3, (uintptr_t)handler->exception_action, NONE, 0, 0);
+
+    long long ref4 = JSON_get_array_item(ptr_entry, 3)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref4);
+
+    if(e1)
+      handler->exception_environment = (stack_type *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref4, (uintptr_t)handler->exception_environment, STACK_TYPE_PTR, 0, 0);
+
+    long long ref5 = JSON_get_array_item(ptr_entry, 5)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref5);
+
+    if(e1)
+      handler->cont = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref5, (uintptr_t)handler->cont, NONE, 0, 0);
+
+    return (void *)handler;
+  }
+  else if(ptr_type == CALL_CHAIN_ENTRY_PTR)
+  {
+    call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
+
+    hashtable_entry_t *e1;
+    long long ref1;
+
+    ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->exp_ptr = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->exp_ptr, NONE, 0, 0);
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
+      entry->super = true;
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "false"))
+      entry->super = false;
+    else
+      assert(false);
+
+    ref1 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->receiver = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->receiver, NONE, 0, 0);
+
+    ref1 = JSON_get_array_item(ptr_entry, 3)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->selector = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->selector, NONE, 0, 0);
+
+    ref1 = JSON_get_array_item(ptr_entry, 4)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+    if(e1)
+      entry->method = (method_t *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->method, METHOD_PTR, 0, 0);
+
+    ref1 = JSON_get_array_item(ptr_entry, 5)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->closure = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->closure, NONE, 0, 0);
+
+    struct JSONObject *args = JSON_get_array_item(ptr_entry, 6);
+
+    entry->nof_args = JSON_get_array_size(args);
+
+    entry->args = (OBJECT_PTR *)GC_MALLOC(sizeof(OBJECT_PTR));
+
+    for(i=0; i<entry->nof_args; i++)
+    {
+      ref1 = JSON_get_array_item(args, i)->ivalue;
+      e1 = hashtable_get(obj_ht, (void *)ref1);
+
+      if(e1)
+	entry->args[i] = (OBJECT_PTR)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->args+i, NONE, 0, 0);
+    }
+
+    ref1 = JSON_get_array_item(ptr_entry, 7)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->local_vars_list = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->local_vars_list, NONE, 0, 0);
+
+    ref1 = JSON_get_array_item(ptr_entry, 8)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->cont = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->cont, NONE, 0, 0);
+
+    ref1 = JSON_get_array_item(ptr_entry, 9)->ivalue;
+    e1 = hashtable_get(obj_ht, (void *)ref1);
+
+    if(e1)
+      entry->termination_blk_closure = (OBJECT_PTR)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->termination_blk_closure, NONE, 0, 0);
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 10)->strvalue, "true"))
+      entry->termination_blk_invoked = true;
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 10)->strvalue, "false"))
+      entry->termination_blk_invoked = false;
+    else
+      assert(false);
+
+    return (void *)entry;
+  }
+  else if(ptr_type == DEBUG_EXPRESSION_PTR)
+  {
+    debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
+
+    hashtable_entry_t *e1;
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "DEBUG_BASIC_EXPRESSION"))
+    {
+      debug_exp->type = DEBUG_BASIC_EXPRESSION;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	debug_exp->be = (struct basic_expression *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp->be, NONE, 0, 0);
+    }
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "DEBUG_BINARY_ARGUMENT"))
+    {
+      debug_exp->type = DEBUG_BINARY_ARGUMENT;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	debug_exp->bin_arg = (struct binary_argument *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp->bin_arg, NONE, 0, 0);
+    }
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "DEBUG_KEYWORD_ARGUMENT"))
+    {
+      debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	debug_exp->kw_arg = (struct keyword_argument *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp->kw_arg, NONE, 0, 0);
+    }
+    else
+      assert(false);
+
+    return (void *)debug_exp;
+  }
+  else if(ptr_type == ASSIGNMENT_PTR)
+  {
+    assignment_t *asgn = (assignment_t *)GC_MALLOC(sizeof(assignment_t));
+
+    hashtable_entry_t *e1;
+
+    asgn->identifier = GC_strdup(JSON_get_array_item(ptr_entry, 0)->strvalue);
+
+    long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+    if(e1)
+      asgn->rvalue = (struct expression *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)asgn->rvalue, NONE, 0, 0);
+
+    return (void *)asgn;
+  }
+  else if(ptr_type == BASIC_EXPRESSION_PTR)
+  {
+    basic_expression_t *basic_exp = (basic_expression_t *)GC_MALLOC(sizeof(basic_expression_t));
+
+    hashtable_entry_t *e1;
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "PRIMARY"))
+    {
+      basic_exp->type = PRIMARY;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	basic_exp->prim = (struct primary *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp->prim, PRIMARY_PTR, 0, 0);
+    }
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "PRIMARY_PLUS_MESSAGES"))
+    {
+      basic_exp->type = PRIMARY_PLUS_MESSAGES;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	basic_exp->msg = (struct message *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp->msg, MESSAGE_PTR, 0, 0);
+
+      long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	basic_exp->cascaded_msgs = (struct cascaded_messages *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp->cascaded_msgs, CASCADED_MESSAGES_PTR, 0, 0);
+    }
+    else
+      assert(false);
+
+    return (void *)basic_exp;
+  }
+  else if(ptr_type == UNARY_MESSAGES_PTR)
+  {
+    unary_messages_t *unary_msgs = (unary_messages_t *)GC_MALLOC(sizeof(unary_messages_t));
+
+    unary_msgs->nof_messages = JSON_get_array_size(ptr_entry);
+    unary_msgs->identifiers = (char **)GC_MALLOC(unary_msgs->nof_messages * sizeof(char *));
+
+    for(i=0; i<unary_msgs->nof_messages; i++)
+      unary_msgs->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
+
+    return (void *)unary_msgs;
+  }
+  else if(ptr_type == ARRAY_ELEMENTS_PTR)
+  {
+    array_elements_t *elems = (array_elements_t *)GC_MALLOC(sizeof(array_elements_t));
+
+    hashtable_entry_t *e1;
+
+    elems->nof_elements = JSON_get_array_size(ptr_entry);
+
+    for(i=0; i<elems->nof_elements; i++)
+    {
+      long long ref1 = JSON_get_array_item(ptr_entry, i)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	elems->elements[i] = *((struct array_element *)e1->value);
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)elems->elements, ARRAY_ELEMENT_PTR, 0, 0);
+    }
+
+    return (void *)elems;
+  }
+  else if(ptr_type == ARRAY_ELEMENT_PTR)
+  {
+    array_element_t *elem = (array_element_t *)GC_MALLOC(sizeof(array_element_t));
+
+    hashtable_entry_t *e1;
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "LITERAL"))
+    {
+      elem->type = LITERAL1;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+	elem->lit = (struct literal *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)elem->lit, LITERAL_PTR, 0, 0);
+    }
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "IDENTIFIER"))
+    {
+      elem->type = IDENTIFIER1;
+      elem->identifier = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
+    }
+    else
+      assert(false);
+
+    return (void *)elem;
+  }
+  else
+    assert(false);
 
   return NULL; //TODO
 }
