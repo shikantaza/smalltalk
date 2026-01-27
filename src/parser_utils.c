@@ -147,8 +147,8 @@ void print_cascaded_messages(cascaded_messages_t *c)
 
 void print_primary(primary_t *p)
 {
-  if(!p)
-    return;
+  if(!p) { printf("<null primary> ");
+    return; }
   
   if(p->type == IDENTIFIER)
     printf("%s\n", p->identifier);
@@ -265,8 +265,8 @@ void print_binary_message(binary_message_t *msg)
 
 void print_binary_argument(binary_argument_t *arg)
 {
-  if(!arg)
-    return;
+  if(!arg) { printf("<null binary argument> ");
+    return; }
   
   print_primary(arg->prim);
   print_unary_messages(arg->unary_messages);
@@ -296,8 +296,8 @@ void print_keyword_argument_pair(keyword_argument_pair_t *arg_pair)
 
 void print_keyword_argument(keyword_argument_t *arg)
 {
-  if(!arg)
-    return;
+  if(!arg) { printf("NULL! ");
+    return; }
   
   print_primary(arg->prim);
   print_unary_messages(arg->unary_messages);
@@ -337,16 +337,16 @@ void print_array_element(array_element_t *e)
 
 void print_number(number_t *n)
 {
-  if(!n)
-    return;
+  if(!n) { printf("<null number> ");
+    return; }
 
   printf("%s", n->val);
 }
 
 void print_literal(literal_t *lit)
 {
-  if(!lit)
-    return;
+  if(!lit) { printf("<null literal> ");
+    return; }
   
   if(lit->type == NUMBER_LITERAL)
     print_number(lit->num);

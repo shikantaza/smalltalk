@@ -1150,9 +1150,13 @@ void load_tests()
   g_running_tests = false;
 }
 
+void create_test_image(char *);
+int load_from_test_image(char *);
+
 #ifndef LEX
 int main(int argc, char **argv)
 {
+  //create_test_image("./test.json"); load_from_test_image("./test.json"); exit(0);
   //load_from_image("./smalltalk.json"); exit(0);
 
   g_ui_mode = CLI;

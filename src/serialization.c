@@ -11,6 +11,8 @@
 
 #include "json.h"
 
+#define NULL_NATIVE_PTR -1
+
 enum PointerType
 {
   OBJECT_PTR1,
@@ -29,6 +31,7 @@ enum PointerType
   MESSAGE_PTR,
   CASCADED_MESSAGES_PTR,
   LITERAL_PTR,
+  NUMBER_PTR,
   BLOCK_CONSTRUCTOR_PTR,
   BLOCK_ARGUMENT_PTR,
   BINARY_MESSAGES_PTR,
@@ -225,6 +228,12 @@ void print_native_ptr_reference(FILE *fp,
 				enum PointerType type,
 				void *native_ptr)
 {
+  if(!native_ptr)
+  {
+    fprintf(fp, "%d", NULL_NATIVE_PTR);
+    return;
+  }
+
   hashtable_entry_t *e = hashtable_get(native_ptr_hashtable, native_ptr);
 
   if(e)
@@ -511,12 +520,12 @@ void print_native_ptr_heap_representation(FILE *fp,
     //so we store string descriptions of the types
     if(exp->type == ASSIGNMENT)
     {
-      fprintf(fp, "ASSIGNMENT, ");
+      fprintf(fp, "\"ASSIGNMENT\", ");
       print_native_ptr_reference(fp, ASSIGNMENT_PTR, (void *)exp->asgn);
     }
     else if(exp->type == BASIC_EXPRESSION)
     {
-      fprintf(fp, "BASIC_EXPRESSION, ");
+      fprintf(fp, "\"BASIC_EXPRESSION\", ");
       print_native_ptr_reference(fp, BASIC_EXPRESSION_PTR, (void *)exp->basic_exp);
     }      
     else
@@ -548,21 +557,21 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     if(prim->type == IDENTIFIER)
     {
-      fprintf(fp, "IDENTIFIER, \"%s\"", prim->identifier);
+      fprintf(fp, "\"IDENTIFIER\", \"%s\"", prim->identifier);
     }
     else if(prim->type == LITERAL)
     {
-      fprintf(fp, "LITERAL, ");
+      fprintf(fp, "\"LITERAL\", ");
       print_native_ptr_reference(fp, LITERAL_PTR, (void *)prim->lit);
     }
     else if(prim->type == BLOCK_CONSTRUCTOR)
     {
-      fprintf(fp, "BLOCK_CONSTRUCTOR, ");
+      fprintf(fp, "\"BLOCK_CONSTRUCTOR\", ");
       print_native_ptr_reference(fp, BLOCK_CONSTRUCTOR_PTR, (void *)prim->blk_cons);
     }
     else if(prim->type == EXPRESSION1)
     {
-      fprintf(fp, "EXPRESSION, ");
+      fprintf(fp, "\"EXPRESSION\", ");
       print_native_ptr_reference(fp, EXPRESSION_PTR, (void *)prim->exp);
     }
     else
@@ -585,17 +594,17 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     if(msg->type == UNARY_MESSAGE)
     {
-      fprintf(fp, "UNARY_MESSAGE, ");
+      fprintf(fp, "\"UNARY_MESSAGE\", ");
       print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)msg->unary_messages);
     }
     else if(msg->type == BINARY_MESSAGE)
     {
-      fprintf(fp, "BINARY_MESSAGE, ");
+      fprintf(fp, "\"BINARY_MESSAGE\", ");
       print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)msg->binary_messages);
     }
     else if(msg->type == KEYWORD_MESSAGE)
     {
-      fprintf(fp, "KEYWORD_MESSAGE, ");
+      fprintf(fp, "\"KEYWORD_MESSAGE\", ");
       print_native_ptr_reference(fp, KEYWORD_MESSAGE_PTR, (void *)msg->kw_msg);
     }
     else
@@ -640,36 +649,60 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     if(lit->type == NUMBER_LITERAL)
     {
-      fprintf(fp, "NUMBER_LITERAL, ");
-      print_native_ptr_reference(fp, LITERAL_PTR, (void *)lit->num);
+      fprintf(fp, "\"NUMBER_LITERAL\", ");
+      print_native_ptr_reference(fp, NUMBER_PTR, (void *)lit->num);
     }
     else if(lit->type == STRING_LITERAL)
     {
-      fprintf(fp, "STRING_LITERAL, ");
+      fprintf(fp, "\"STRING_LITERAL\", ");
       fprintf(fp, "\"%s\"", lit->val);
     }
     else if(lit->type == CHAR_LITERAL)
     {
-      fprintf(fp, "CHAR_LITERAL, ");
+      fprintf(fp, "\"CHAR_LITERAL\", ");
       fprintf(fp, "\"%s\"", lit->val);
     }
     else if(lit->type == SYMBOL_LITERAL)
     {
-      fprintf(fp, "SYMBOL_LITERAL, ");
+      fprintf(fp, "\"SYMBOL_LITERAL\", ");
       fprintf(fp, "\"%s\"", lit->val);
     }
     else if(lit->type == SELECTOR_LITERAL)
     {
-      fprintf(fp, "SELECTOR_LITERAL, ");
+      fprintf(fp, "\"SELECTOR_LITERAL\", ");
       fprintf(fp, "\"%s\"", lit->val);
     }
     else if(lit->type == ARRAY_LITERAL)
     {
-      fprintf(fp, "ARRAY_LITERAL, ");
+      fprintf(fp, "\"ARRAY_LITERAL\", ");
       print_native_ptr_reference(fp, ARRAY_ELEMENTS_PTR, (void *)lit->array_elements);
     }
     else
       assert(false);
+
+    fprintf(fp, "] ");
+  }
+  else if(type == NUMBER_PTR)
+  {
+    number_t *num = (number_t *)native_ptr;
+
+    /*
+    enum NumberType type;
+    char *val;
+    */
+
+    fprintf(fp, "[ ");
+
+    if(num->type == INTEGER)
+      fprintf(fp, "\"INTEGER\", ");
+    else if(num->type == FLOAT)
+      fprintf(fp, "\"FLOAT\", ");
+    else if(num->type == SCALED_DECIMAL)
+      fprintf(fp, "\"SCALED_DECIMAL\", ");
+    else
+      assert(false);
+
+    fprintf(fp, "\"%s\"", num->val);
 
     fprintf(fp, "] ");
   }
@@ -689,6 +722,8 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"BLOCK_ARGS\", ");
       print_native_ptr_reference(fp, BLOCK_ARGUMENT_PTR, (void *)constructor->block_args);
+      fprintf(fp, ", ");
+      print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)constructor->exec_code);
     }
     else if(constructor->type == NO_BLOCK_ARGS)
     {
@@ -734,7 +769,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_native_ptr_reference(fp, MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
+      print_native_ptr_reference(fp, BINARY_MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
       if(i != count - 1)
 	fprintf(fp, ", ");
     }
@@ -792,6 +827,24 @@ void print_native_ptr_heap_representation(FILE *fp,
     print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)bin_arg->unary_messages);
     fprintf(fp, "] ");
   }
+  else if(type == KEYWORD_ARGUMENT_PTR)
+  {
+    keyword_argument_t *kw_arg = (keyword_argument_t *)native_ptr;
+
+    /*
+    struct primary *prim;
+    struct unary_messages *unary_messages;
+    struct binary_messages *binary_messages;
+    */
+
+    fprintf(fp, "[ ");
+    print_native_ptr_reference(fp, PRIMARY_PTR, (void *)kw_arg->prim);
+    fprintf(fp, ", ");
+    print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)kw_arg->unary_messages);
+    fprintf(fp, ", ");
+    print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)kw_arg->binary_messages);
+    fprintf(fp, "] ");
+  }
   else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
   {
     keyword_argument_pair_t *kw_arg_pair = (keyword_argument_pair_t *)native_ptr;
@@ -846,14 +899,16 @@ void print_native_ptr_heap_representation(FILE *fp,
       fprintf(fp, "\"RETURN_STATEMENT\", ");
       print_native_ptr_reference(fp, RETURN_STATEMENT_PTR, (void *)stmt->ret_stmt);
     }
-    if(stmt->type == EXPRESSION)
+    else if(stmt->type == EXPRESSION)
     { 
       fprintf(fp, "\"EXPRESSION\", ");
       print_native_ptr_reference(fp, EXPRESSION_PTR, (void *)stmt->exp);
     }
-    if(stmt->type == EXP_PLUS_STATEMENTS)
+    else if(stmt->type == EXP_PLUS_STATEMENTS)
     {
       fprintf(fp, "\"EXP_PLUS_STATEMENTS\", ");
+      print_native_ptr_reference(fp, EXPRESSION_PTR, (void *)stmt->exp);
+      fprintf(fp, ", ");
       print_native_ptr_reference(fp, STATEMENTS_PTR, (void *)stmt->statements);
     }
     else
@@ -1114,6 +1169,8 @@ void print_native_ptr_heap_representation(FILE *fp,
     else if(basic_exp->type == PRIMARY_PLUS_MESSAGES)
     {
       fprintf(fp, "\"PRIMARY_PLUS_MESSAGES\", ");
+      print_native_ptr_reference(fp, PRIMARY_PTR, basic_exp->prim);
+      fprintf(fp, ", ");
       print_native_ptr_reference(fp, MESSAGE_PTR, basic_exp->msg);
       fprintf(fp, ", ");
       print_native_ptr_reference(fp, CASCADED_MESSAGES_PTR, basic_exp->cascaded_msgs);
@@ -1692,7 +1749,7 @@ void print_native_functions(FILE *fp)
       fprintf(fp, "\"");
     }
     else
-      fprintf(fp, "NULL");
+      fprintf(fp, "\"NULL\"");
 
     fprintf(fp, "]");
 
@@ -1741,6 +1798,7 @@ void add_to_deserialization_queue(queue_t *q,
 				  unsigned int index1,
 				  unsigned int index2)
 {
+  assert(ptr);
   struct slot *s = (struct slot *)GC_MALLOC(sizeof(struct slot));
   s->ref = ref;
   s->ptr = ptr;
@@ -1785,1169 +1843,1250 @@ void convert_heap(struct JSONObject *object_heap,
 	set_heap(slot_obj->ptr, slot_obj->index1, obj);
       }
     }
-    else
+    else if(type == OBJ_PTR)
     {
-      if(type == OBJ_PTR)
+      object_t *obj = (object_t *)slot_obj->ptr;
+
+      if(index1 == 0) //object_t.class_object
       {
-	object_t *obj = (object_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(index1 == 0) //object_t.class_object
-	{
-	  hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
-
-	  if(e)
-	    obj->class_object = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    obj->class_object = cls_obj;
-	  }
-	}
-	else if(index1 == 1) //object_t.instance_vars
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    obj->instance_vars = (binding_env_t *)e->value;
-	  else
-	  {
-	    binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
-										   native_heap,
-										   BINDING_ENV_PTR,
-										   ref,
-										   obj_ht,
-										   native_ptr_ht,
-										   q);
-	    obj->instance_vars = env;
-	  }
-	}
+	if(e)
+	  obj->class_object = (OBJECT_PTR)e->value;
 	else
-	  assert(false);
+	{
+	  OBJECT_PTR cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  obj->class_object = cls_obj;
+	}
       }
-      else if(type == CLASS_OBJ_PTR)
+      else if(index1 == 1) //object_t.instance_vars
       {
-	class_object_t *cls_obj = (class_object_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(index1 == 0) //cls_obj->parent_class_object
-	{
-	  hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->parent_class_object = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR parent_cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    cls_obj->parent_class_object = parent_cls_obj;
-	  }
-	}
-	//index1 = 1 is the class name, which doesn't need a call to deserialize
-	else if(index1 == 2) //cls_obj->package
-	{
-	  hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->package = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR pkg = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    cls_obj->package = pkg;
-	  }
-	}
-	//index1 = 3 is the number of instances, which doesn't need a call to deserialize
-	else if(index1 == 4) //cls_obj->instances
-	{
-	  hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->instances[index2] = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR instance = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    cls_obj->instances[index2] = instance;
-	  }
-	}
-	//index1 = 5 is the number of instance variables, which doesn't need a call to deserialize
-	//index1 = 6 is the instance variable names, which don't need a call to deserialize
-	else if(index1 == 7) //cls_obj->shared_vars
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->shared_vars = (binding_env_t *)e->value;
-	  else
-	  {
-	    binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
-										   native_heap,
-										   BINDING_ENV_PTR,
-										   ref,
-										   obj_ht,
-										   native_ptr_ht,
-										   q);
-	    cls_obj->shared_vars = env;
-	  }
-	}
-	else if(index1 == 8) //cls_obj->instance_methods
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->instance_methods = (method_binding_env_t *)e->value;
-	  else
-	  {
-	    method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
-												 native_heap,
-												 METHOD_BINDING_ENV_PTR,
-												 ref,
-												 obj_ht,
-												 native_ptr_ht,
-												 q);
-	    cls_obj->instance_methods = env;
-	  }
-	}
-	else if(index1 == 9) //cls_obj->class_methods
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    cls_obj->class_methods = (method_binding_env_t *)e->value;
-	  else
-	  {
-	    method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
-												 native_heap,
-												 METHOD_BINDING_ENV_PTR,
-												 ref,
-												 obj_ht,
-												 native_ptr_ht,
-												 q);
-	    cls_obj->class_methods = env;
-	  }
-	}
+	if(e)
+	  obj->instance_vars = (binding_env_t *)e->value;
 	else
-	  assert(false);
-      }
-      else if(type == ARRAY_OBJ_PTR)
-      {
-	array_object_t *arr_obj = (array_object_t *)slot_obj->ptr;
-
-	if(index1 == 1) //arr_obj->elements
 	{
-	  hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
-
-	  if(e)
-	    arr_obj->elements[index2] = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR element = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    arr_obj->elements[index2] = element;
-	  }
+	  binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
+										 native_heap,
+										 BINDING_ENV_PTR,
+										 ref,
+										 obj_ht,
+										 native_ptr_ht,
+										 q);
+	  obj->instance_vars = env;
 	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == CLASS_OBJ_PTR)
+    {
+      class_object_t *cls_obj = (class_object_t *)slot_obj->ptr;
+
+      if(index1 == 0) //cls_obj->parent_class_object
+      {
+	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+
+	if(e)
+	  cls_obj->parent_class_object = (OBJECT_PTR)e->value;
 	else
-	  assert(false);
-      }
-      else if(type == BINDING_ENV_PTR)
-      {
-	binding_env_t *env = (binding_env_t *)slot_obj->ptr;
-
-	if(index1 == 1) //env->bindings
 	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    env->bindings[index2] = *((binding_t *)e->value);
-	  else
-	  {
-	    binding_t *binding = (binding_t *)deserialize_native_ptr_reference(object_heap,
-									       native_heap,
-									       BINDING_PTR,
-									       (uintptr_t)ref,
-									       obj_ht,
-									       native_ptr_ht,
-									       q);
-	    env->bindings[index2] = *binding;
-	  }
+	  OBJECT_PTR parent_cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  cls_obj->parent_class_object = parent_cls_obj;
 	}
+      }
+      //index1 = 1 is the class name, which doesn't need a call to deserialize
+      else if(index1 == 2) //cls_obj->package
+      {
+	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+
+	if(e)
+	  cls_obj->package = (OBJECT_PTR)e->value;
 	else
-	  assert(false);
+	{
+	  OBJECT_PTR pkg = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  cls_obj->package = pkg;
+	}
       }
-      else if(type == BINDING_PTR)
+      //index1 = 3 is the number of instances, which doesn't need a call to deserialize
+      else if(index1 == 4) //cls_obj->instances
       {
-	binding_t *binding = (binding_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(index1 == 1) //binding->key
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    binding->key = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    binding->key = key;
-	  }
-	}
-	else if(index1 == 2) //binding->val
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    binding->val = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR val = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    binding->val = val;
-	  }
-	}
+	if(e)
+	  cls_obj->instances[index2] = (OBJECT_PTR)e->value;
 	else
-	  assert(false);
-      }
-      else if(type == METHOD_BINDING_ENV_PTR)
-      {
-	method_binding_env_t *env = (method_binding_env_t *)slot_obj->ptr;
-
-	if(index1 == 1) //env->bindings
 	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    env->bindings[index2] = *((method_binding_t *)e->value);
-	  else
-	  {
-	    method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(object_heap,
-											     native_heap,
-											     METHOD_BINDING_PTR,
-											     (uintptr_t)ref,
-											     obj_ht,
-											     native_ptr_ht,
-											     q);
-	    env->bindings[index2] = *binding;
-	  }
+	  OBJECT_PTR instance = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  cls_obj->instances[index2] = instance;
 	}
+      }
+      //index1 = 5 is the number of instance variables, which doesn't need a call to deserialize
+      //index1 = 6 is the instance variable names, which don't need a call to deserialize
+      else if(index1 == 7) //cls_obj->shared_vars
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  cls_obj->shared_vars = (binding_env_t *)e->value;
 	else
-	  assert(false);
+	{
+	  binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
+										 native_heap,
+										 BINDING_ENV_PTR,
+										 ref,
+										 obj_ht,
+										 native_ptr_ht,
+										 q);
+	  cls_obj->shared_vars = env;
+	}
       }
-      else if(type == METHOD_BINDING_PTR)
+      else if(index1 == 8) //cls_obj->instance_methods
       {
-	method_binding_t *binding = (method_binding_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(index1 == 1) //binding->key
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    binding->key = (OBJECT_PTR)e->value;
-	  else
-	  {
-	    OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	    binding->key = key;
-	  }
-	}
-	else if(index1 == 2) //binding->val
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    binding->val = (method_t *)e->value;
-	  else
-	  {
-	    method_t *m = deserialize_native_ptr_reference(object_heap,
-							   native_heap,
-							   METHOD_PTR,
-							   ref,
-							   obj_ht,
-							   native_ptr_ht,
-							   q);
-	    binding->val = m;
-	  }
-	}
+	if(e)
+	  cls_obj->instance_methods = (method_binding_env_t *)e->value;
 	else
-	  assert(false);
+	{
+	  method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+											       native_heap,
+											       METHOD_BINDING_ENV_PTR,
+											       ref,
+											       obj_ht,
+											       native_ptr_ht,
+											       q);
+	  cls_obj->instance_methods = env;
+	}
       }
-      else if(type == EXPRESSION_PTR)
+      else if(index1 == 9) //cls_obj->class_methods
       {
-	expression_t *exp = (expression_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(index1 == 1) //exp->asgn
-	{
-	  assert(exp->type == ASSIGNMENT);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    exp->asgn = (assignment_t *)e->value;
-	  else
-	    exp->asgn = (assignment_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 ASSIGNMENT_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
-	}
-	else if(index1 == 2) //exp->basic_exp
-	{
-	  assert(exp->type == BASIC_EXPRESSION);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    exp->basic_exp = (basic_expression_t *)e->value;
-	  else
-	    exp->basic_exp = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
-										    native_heap,
-										    BASIC_EXPRESSION_PTR,
-										    (uintptr_t)ref,
-										    obj_ht,
-										    native_ptr_ht,
-										    q);
-	}
+	if(e)
+	  cls_obj->class_methods = (method_binding_env_t *)e->value;
 	else
-	  assert(false);
+	{
+	  method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+											       native_heap,
+											       METHOD_BINDING_ENV_PTR,
+											       ref,
+											       obj_ht,
+											       native_ptr_ht,
+											       q);
+	  cls_obj->class_methods = env;
+	}
       }
-      else if(type == RETURN_STATEMENT_PTR)
+      else
+	assert(false);
+    }
+    else if(type == ARRAY_OBJ_PTR)
+    {
+      array_object_t *arr_obj = (array_object_t *)slot_obj->ptr;
+
+      if(index1 == 1) //arr_obj->elements
       {
-	return_statement_t *ret_stmt = (return_statement_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+
+	if(e)
+	  arr_obj->elements[index2] = (OBJECT_PTR)e->value;
+	else
+	{
+	  OBJECT_PTR element = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  arr_obj->elements[index2] = element;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == BINDING_ENV_PTR)
+    {
+      binding_env_t *env = (binding_env_t *)slot_obj->ptr;
+
+      if(index1 == 1) //env->bindings
+      {
+	assert(index2 >=0 && index2 < env->count);
 
 	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
 	if(e)
-	  ret_stmt->exp = (expression_t *)e->value;
+	  env->bindings[index2] = *((binding_t *)e->value);
 	else
-	  ret_stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
-									   native_heap,
-									   EXPRESSION_PTR,
-									   (uintptr_t)ref,
-									   obj_ht,
-									   native_ptr_ht,
-									   q);
+	{
+	  binding_t *binding = (binding_t *)deserialize_native_ptr_reference(object_heap,
+									     native_heap,
+									     BINDING_PTR,
+									     (uintptr_t)ref,
+									     obj_ht,
+									     native_ptr_ht,
+									     q);
+	  env->bindings[index2] = *binding;
+	}
       }
-      else if(type == PRIMARY_PTR)
+      else
+	assert(false);
+    }
+    else if(type == BINDING_PTR)
+    {
+      binding_t *binding = (binding_t *)slot_obj->ptr;
+
+      if(index1 == 1) //binding->key
       {
-	primary_t *prim = (primary_t *)slot_obj->ptr;
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(index1 == 2) //prim->lit
+	if(e)
+	  binding->key = (OBJECT_PTR)e->value;
+	else
 	{
-	  assert(prim->type == LITERAL);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    prim->lit = (literal_t *)e->value;
-	  else
-	    prim->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
-								      native_heap,
-								      LITERAL_PTR,
-								      (uintptr_t)ref,
-								      obj_ht,
-								      native_ptr_ht,
-								      q);
+	  OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  binding->key = key;
 	}
-	else if(index1 == 3) //prim->blk_cons
+      }
+      else if(index1 == 2) //binding->val
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  binding->val = (OBJECT_PTR)e->value;
+	else
 	{
-	  assert(prim->type == BLOCK_CONSTRUCTOR);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    prim->blk_cons = (block_constructor_t *)e->value;
-	  else
-	    prim->blk_cons = (block_constructor_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     BLOCK_CONSTRUCTOR_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+	  OBJECT_PTR val = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  binding->val = val;
 	}
-	else if(index1 == 4) //prim->exp
+      }
+      else
+	assert(false);
+    }
+    else if(type == METHOD_BINDING_ENV_PTR)
+    {
+      method_binding_env_t *env = (method_binding_env_t *)slot_obj->ptr;
+
+      if(index1 == 1) //env->bindings
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  env->bindings[index2] = *((method_binding_t *)e->value);
+	else
 	{
-	  assert(prim->type == EXPRESSION1);
+	  method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(object_heap,
+											   native_heap,
+											   METHOD_BINDING_PTR,
+											   (uintptr_t)ref,
+											   obj_ht,
+											   native_ptr_ht,
+											   q);
+	  env->bindings[index2] = *binding;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == METHOD_BINDING_PTR)
+    {
+      method_binding_t *binding = (method_binding_t *)slot_obj->ptr;
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+      if(index1 == 1) //binding->key
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	  if(e)
-	    prim->exp = (expression_t *)e->value;
-	  else
-	    prim->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+	if(e)
+	  binding->key = (OBJECT_PTR)e->value;
+	else
+	{
+	  OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+	  binding->key = key;
+	}
+      }
+      else if(index1 == 2) //binding->val
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  binding->val = (method_t *)e->value;
+	else
+	{
+	  method_t *m = deserialize_native_ptr_reference(object_heap,
+							 native_heap,
+							 METHOD_PTR,
+							 ref,
+							 obj_ht,
+							 native_ptr_ht,
+							 q);
+	  binding->val = m;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == EXPRESSION_PTR)
+    {
+      expression_t *exp = (expression_t *)slot_obj->ptr;
+
+      if(index1 == 1) //exp->asgn
+      {
+	assert(exp->type == ASSIGNMENT);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  exp->asgn = (assignment_t *)e->value;
+	else
+	  exp->asgn = (assignment_t *)deserialize_native_ptr_reference(object_heap,
+								       native_heap,
+								       ASSIGNMENT_PTR,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else if(index1 == 2) //exp->basic_exp
+      {
+	assert(exp->type == BASIC_EXPRESSION);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  exp->basic_exp = (basic_expression_t *)e->value;
+	else
+	  exp->basic_exp = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+										  native_heap,
+										  BASIC_EXPRESSION_PTR,
+										  (uintptr_t)ref,
+										  obj_ht,
+										  native_ptr_ht,
+										  q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == RETURN_STATEMENT_PTR)
+    {
+      return_statement_t *ret_stmt = (return_statement_t *)slot_obj->ptr;
+
+      hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+      if(e)
+	ret_stmt->exp = (expression_t *)e->value;
+      else
+	ret_stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
 									 native_heap,
 									 EXPRESSION_PTR,
 									 (uintptr_t)ref,
 									 obj_ht,
 									 native_ptr_ht,
 									 q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == MESSAGE_PTR)
+    }
+    else if(type == PRIMARY_PTR)
+    {
+      primary_t *prim = (primary_t *)slot_obj->ptr;
+
+      if(index1 == 2) //prim->lit
       {
-	message_t *msg = (message_t *)slot_obj->ptr;
+	assert(prim->type == LITERAL);
 
-	if(index1 == 1) //msg->unary_messages
-	{
-	  assert(msg->type == UNARY_MESSAGE);
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+	if(e)
+	  prim->lit = (literal_t *)e->value;
+	else
+	  prim->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
+								    native_heap,
+								    LITERAL_PTR,
+								    (uintptr_t)ref,
+								    obj_ht,
+								    native_ptr_ht,
+								    q);
+      }
+      else if(index1 == 3) //prim->blk_cons
+      {
+	assert(prim->type == BLOCK_CONSTRUCTOR);
 
-	  if(e)
-	    msg->unary_messages = (unary_messages_t *)e->value;
-	  else
-	    msg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       UNARY_MESSAGES_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
-	}
-	else if(index1 == 2) //msg->binary_messages
-	{
-	  assert(msg->type == BINARY_MESSAGE);
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+	if(e)
+	  prim->blk_cons = (block_constructor_t *)e->value;
+	else
+	  prim->blk_cons = (block_constructor_t *)deserialize_native_ptr_reference(object_heap,
+										   native_heap,
+										   BLOCK_CONSTRUCTOR_PTR,
+										   (uintptr_t)ref,
+										   obj_ht,
+										   native_ptr_ht,
+										   q);
+      }
+      else if(index1 == 4) //prim->exp
+      {
+	assert(prim->type == EXPRESSION1);
 
-	  if(e)
-	    msg->binary_messages = (binary_messages_t *)e->value;
-	  else
-	    msg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  prim->exp = (expression_t *)e->value;
+	else
+	  prim->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+								       native_heap,
+								       EXPRESSION_PTR,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == MESSAGE_PTR)
+    {
+      message_t *msg = (message_t *)slot_obj->ptr;
+
+      if(index1 == 1) //msg->unary_messages
+      {
+	assert(msg->type == UNARY_MESSAGE);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  msg->unary_messages = (unary_messages_t *)e->value;
+	else
+	  msg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+										     native_heap,
+										     UNARY_MESSAGES_PTR,
+										     (uintptr_t)ref,
+										     obj_ht,
+										     native_ptr_ht,
+										     q);
+      }
+      else if(index1 == 2) //msg->binary_messages
+      {
+	assert(msg->type == BINARY_MESSAGE);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  msg->binary_messages = (binary_messages_t *)e->value;
+	else
+	  msg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
 										       native_heap,
 										       BINARY_MESSAGES_PTR,
 										       (uintptr_t)ref,
 										       obj_ht,
 										       native_ptr_ht,
 										       q);
-	}
-	else if(index1 == 3) //msg->kw_msg
-	{
-	  assert(msg->type == KEYWORD_MESSAGE);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    msg->kw_msg = (keyword_message_t *)e->value;
-	  else
-	    msg->kw_msg = (keyword_message_t *)deserialize_native_ptr_reference(object_heap,
-										native_heap,
-										KEYWORD_MESSAGE_PTR,
-										(uintptr_t)ref,
-										obj_ht,
-										native_ptr_ht,
-										q);
-	}
-	else
-	  assert(false);
       }
-      else if(type == CASCADED_MESSAGES_PTR)
+      else if(index1 == 3) //msg->kw_msg
       {
-	cascaded_messages_t *casc_msgs = (cascaded_messages_t *)slot_obj->ptr;
+	assert(msg->type == KEYWORD_MESSAGE);
 
-	if(index1 == 1) //casc_msgs->cascaded_msgs
-	{
-	  assert(index2 >= 0 && index2 < casc_msgs->nof_cascaded_msgs);
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    casc_msgs->cascaded_msgs[index2] = *((message_t *)e->value);
-	  else
-	  {
-	    message_t *msg = (message_t *)deserialize_native_ptr_reference(object_heap,
-									   native_heap,
-									   MESSAGE_PTR,
-									   (uintptr_t)ref,
-									   obj_ht,
-									   native_ptr_ht,
-									   q);
-	    casc_msgs->cascaded_msgs[index2] = *msg;
-	  }
-	}
+	if(e)
+	  msg->kw_msg = (keyword_message_t *)e->value;
 	else
-	  assert(false);
-      }
-      else if(type == LITERAL_PTR)
-      {
-	literal_t *lit = (literal_t *)slot_obj->ptr;
-
-	if(index1 == 3) //lit->array_elements
-	{
-	  assert(lit->type == ARRAY_LITERAL);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    lit->array_elements = (array_elements_t *)e->value;
-	  else
-	    lit->array_elements = (array_elements_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       ARRAY_ELEMENTS_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == BLOCK_CONSTRUCTOR_PTR)
-      {
-	block_constructor_t *cons = (block_constructor_t *)slot_obj->ptr;
-
-	if(index1 == 1) //cons->block_args
-	{
-	  assert(cons->type == BLOCK_ARGS);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    cons->block_args = (block_arguments_t *)e->value;
-	  else
-	    cons->block_args = (block_arguments_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     BLOCK_ARGUMENT_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
-	}
-	else if(index1 == 2) //cons->exec_code
-	{
-	  assert(cons->type == NO_BLOCK_ARGS);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    cons->exec_code = (executable_code_t *)e->value;
-	  else
-	    cons->exec_code = (executable_code_t *)deserialize_native_ptr_reference(object_heap,
-										    native_heap,
-										    EXEC_CODE_PTR,
-										    (uintptr_t)ref,
-										    obj_ht,
-										    native_ptr_ht,
-										    q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == BINARY_MESSAGES_PTR)
-      {
-	binary_messages_t *bin_msgs = (binary_messages_t *)slot_obj->ptr;
-
-	if(index1 == 1) //bin_msgs->bin_msgs
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    bin_msgs->bin_msgs = (binary_message_t *)e->value;
-	  else
-	    bin_msgs->bin_msgs = (binary_message_t *)deserialize_native_ptr_reference(object_heap,
-										      native_heap,
-										      BINARY_MESSAGE_PTR,
-										      (uintptr_t)ref,
-										      obj_ht,
-										      native_ptr_ht,
-										      q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == BINARY_MESSAGE_PTR)
-      {
-	binary_message_t *bin_msg = (binary_message_t *)slot_obj->ptr;
-
-	if(index1 == 1) //bin_msg->bin_arg
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    bin_msg->bin_arg = (binary_argument_t *)e->value;
-	  else
-	    bin_msg->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     BINARY_ARGUMENT_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == KEYWORD_MESSAGE_PTR)
-      {
-	keyword_message_t *kw_msg = (keyword_message_t *)slot_obj->ptr;
-
-	if(index1 == 1) //kw_msg->kw_arg_pairs
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    kw_msg->kw_arg_pairs = (keyword_argument_pair_t *)e->value;
-	  else
-	    kw_msg->kw_arg_pairs = (keyword_argument_pair_t *)deserialize_native_ptr_reference(object_heap,
-											       native_heap,
-											       KEYWORD_ARGUMENT_PAIR_PTR,
-											       (uintptr_t)ref,
-											       obj_ht,
-											       native_ptr_ht,
-											       q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == BINARY_ARGUMENT_PTR)
-      {
-	binary_argument_t *bin_arg = (binary_argument_t *)slot_obj->ptr;
-
-	if(index1 == 0) //bin_arg->prim
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    bin_arg->prim = (primary_t *)e->value;
-	  else
-	    bin_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
-									  native_heap,
-									  PRIMARY_PTR,
-									  (uintptr_t)ref,
-									  obj_ht,
-									  native_ptr_ht,
-									  q);
-	}
-	else if(index1 == 1) //bin_arg->unary_messages
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    bin_arg->unary_messages = (unary_messages_t *)e->value;
-	  else
-	    bin_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
-											   native_heap,
-											   UNARY_MESSAGES_PTR,
-											   (uintptr_t)ref,
-											   obj_ht,
-											   native_ptr_ht,
-											   q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
-      {
-	keyword_argument_pair_t *kw_arg_pair = (keyword_argument_pair_t *)slot_obj->ptr;
-
-	if(index1 == 1) //kw_arg_pair->kw_arg
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    kw_arg_pair->kw_arg = (keyword_argument_t *)e->value;
-	  else
-	    kw_arg_pair->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
-											 native_heap,
-											 KEYWORD_ARGUMENT_PTR,
-											 (uintptr_t)ref,
-											 obj_ht,
-											 native_ptr_ht,
-											 q);
-	}
-	else
-	  assert(false);
-      }
-      if(type == STATEMENTS_PTR)
-      {
-	statement_t *stmt = (statement_t *)slot_obj->ptr;
-
-	if(index1 == 1) //stmt->ret_stmt
-	{
-	  assert(stmt->type == RETURN_STATEMENT);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    stmt->ret_stmt = (return_statement_t *)e->value;
-	  else
-	    stmt->ret_stmt = (return_statement_t *)deserialize_native_ptr_reference(object_heap,
-										    native_heap,
-										    RETURN_STATEMENT_PTR,
-										    (uintptr_t)ref,
-										    obj_ht,
-										    native_ptr_ht,
-										    q);
-	}
-	else if(index1 == 2) //stmt->exp
-	{
-	  assert(stmt->type == EXPRESSION);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    stmt->exp = (expression_t *)e->value;
-	  else
-	    stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 EXPRESSION_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
-	}
-	else if(index1 == 3) //stmt->statements
-	{
-	  assert(stmt->type == EXP_PLUS_STATEMENTS);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    stmt->statements = (struct statement *)e->value;
-	  else
-	    stmt->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
-										    native_heap,
-										    STATEMENTS_PTR,
-										    (uintptr_t)ref,
-										    obj_ht,
-										    native_ptr_ht,
-										    q);
-	}
-	else
-	  assert(false);
-      }
-      if(type == EXEC_CODE_PTR)
-      {
-	executable_code_t *exec_code = (executable_code_t *)slot_obj->ptr;
-
-	if(index1 == 0) //exec_code->temporaries
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    exec_code->temporaries = (temporaries_t *)e->value;
-	  else
-	    exec_code->temporaries = (temporaries_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       TEMPORARIES_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
-	}
-	else if(index1 == 2) //exec_code->statements
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    exec_code->statements = (struct statement *)e->value;
-	  else
-	    exec_code->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
-											 native_heap,
-											 STATEMENTS_PTR,
-											 (uintptr_t)ref,
-											 obj_ht,
-											 native_ptr_ht,
-											 q);
-	}
-	else
-	  assert(false);
-      }
-      //no need to handle STACK_TYPE_PTR explicitly, see
-      //code in deserialize_native_ptr_reference() for STACK_TYPE_PTR
-      else if(type == EXCEPTION_HANDLER_PTR)
-      {
-	exception_handler_t *handler = (exception_handler_t *)slot_obj->ptr;
-
-	if(index1 == 0) //handler->protected_block
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    handler->protected_block = (OBJECT_PTR)e->value;
-	  else
-	    handler->protected_block = (OBJECT_PTR)deserialize_object_reference(object_heap,
-										native_heap,
-										(uintptr_t)ref,
-										obj_ht,
-										native_ptr_ht,
-										q);
-	}
-	else if(index1 == 1) //handler->selector
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    handler->selector = (OBJECT_PTR)e->value;
-	  else
-	    handler->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									 native_heap,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
-	}
-	else if(index1 == 2) //handler->exception_action
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    handler->exception_action = (OBJECT_PTR)e->value;
-	  else
-	    handler->exception_action = (OBJECT_PTR)deserialize_object_reference(object_heap,
-										 native_heap,
-										 (uintptr_t)ref,
-										 obj_ht,
-										 native_ptr_ht,
-										 q);
-	}
-	else if(index1 == 3) //handler->exception_environment
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    handler->exception_environment = (stack_type *)e->value;
-	  else
-	    handler->exception_environment = (stack_type *)deserialize_native_ptr_reference(object_heap,
-											    native_heap,
-											    STACK_TYPE_PTR,
-											    (uintptr_t)ref,
-											    obj_ht,
-											    native_ptr_ht,
-											    q);
-	}
-	else if(index1 == 4) //handler->cont
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    handler->cont = (OBJECT_PTR)e->value;
-	  else
-	    handler->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								     native_heap,
-								     (uintptr_t)ref,
-								     obj_ht,
-								     native_ptr_ht,
-								     q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == CALL_CHAIN_ENTRY_PTR)
-      {
-	call_chain_entry_t *entry = (call_chain_entry_t *)slot_obj->ptr;
-
-	if(index1 == 0) //entry->exp_ptr
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->exp_ptr = (OBJECT_PTR)e->value;
-	  else
-	    entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								      native_heap,
-								      (uintptr_t)ref,
-								      obj_ht,
-								      native_ptr_ht,
-								      q);
-	}
-	else if(index1 == 2) //entry->receiver
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->receiver = (OBJECT_PTR)e->value;
-	  else
-	    entry->receiver = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								       native_heap,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
-	}
-	else if(index1 == 3) //entry->selector
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->selector = (OBJECT_PTR)e->value;
-	  else
-	    entry->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								       native_heap,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
-	}
-	else if(index1 == 4) //entry->method
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->method = (method_t *)e->value;
-	  else
-	    entry->method = (method_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 METHOD_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
-	}
-	else if(index1 == 5) //entry->closure
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->closure = (OBJECT_PTR)e->value;
-	  else
-	    entry->closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								      native_heap,
-								      (uintptr_t)ref,
-								      obj_ht,
-								      native_ptr_ht,
-								      q);
-	}
-	else if(index1 == 6) //entry->args
-	{
-	  assert(index2 >= 0 && index2 < entry->nof_args);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->args[index2] = (OBJECT_PTR)e->value;
-	  else
-	    entry->args[index2] = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									   native_heap,
-									   (uintptr_t)ref,
-									   obj_ht,
-									   native_ptr_ht,
-									   q);
-	}
-	else if(index1 == 7) //entry->local_vars_list
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->local_vars_list = (OBJECT_PTR)e->value;
-	  else
-	    entry->local_vars_list = (OBJECT_PTR)deserialize_object_reference(object_heap,
+	  msg->kw_msg = (keyword_message_t *)deserialize_native_ptr_reference(object_heap,
 									      native_heap,
+									      KEYWORD_MESSAGE_PTR,
 									      (uintptr_t)ref,
 									      obj_ht,
 									      native_ptr_ht,
 									      q);
-	}
-	else if(index1 == 8) //entry->cont
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->cont = (OBJECT_PTR)e->value;
-	  else
-	    entry->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								   native_heap,
-								   (uintptr_t)ref,
-								   obj_ht,
-								   native_ptr_ht,
-								   q);
-	}
-	else if(index1 == 9) //entry->termination_blk_closure
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    entry->termination_blk_closure = (OBJECT_PTR)e->value;
-	  else
-	    entry->termination_blk_closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
-										      native_heap,
-										      (uintptr_t)ref,
-										      obj_ht,
-										      native_ptr_ht,
-										      q);
-	}
-	else
-	  assert(false);
       }
-      else if(type == DEBUG_EXPRESSION_PTR)
+      else
+	assert(false);
+    }
+    else if(type == CASCADED_MESSAGES_PTR)
+    {
+      cascaded_messages_t *casc_msgs = (cascaded_messages_t *)slot_obj->ptr;
+
+      if(index1 == 1) //casc_msgs->cascaded_msgs
       {
-	debug_expression_t *debug_exp = (debug_expression_t *)slot_obj->ptr;
+	assert(index2 >= 0 && index2 < casc_msgs->nof_cascaded_msgs);
 
-	if(index1 == 1) //debug_exp->be
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  casc_msgs->cascaded_msgs[index2] = *((message_t *)e->value);
+	else
 	{
-	  assert(debug_exp->type == DEBUG_BASIC_EXPRESSION);
+	  message_t *msg = (message_t *)deserialize_native_ptr_reference(object_heap,
+									 native_heap,
+									 MESSAGE_PTR,
+									 (uintptr_t)ref,
+									 obj_ht,
+									 native_ptr_ht,
+									 q);
+	  casc_msgs->cascaded_msgs[index2] = *msg;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == LITERAL_PTR)
+    {
+      literal_t *lit = (literal_t *)slot_obj->ptr;
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+      if(index1 == 1) //lit->num
+      {
+	assert(lit->type == NUMBER_LITERAL);
 
-	  if(e)
-	    debug_exp->be = (basic_expression_t *)e->value;
-	  else
-	    debug_exp->be = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  lit->num = (number_t *)e->value;
+	else
+	  lit->num = (number_t *)deserialize_native_ptr_reference(object_heap,
+								  native_heap,
+								  NUMBER_PTR,
+								  (uintptr_t)ref,
+								  obj_ht,
+								  native_ptr_ht,
+								  q);
+      }
+      else if(index1 == 3) //lit->array_elements
+      {
+	assert(lit->type == ARRAY_LITERAL);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  lit->array_elements = (array_elements_t *)e->value;
+	else
+	  lit->array_elements = (array_elements_t *)deserialize_native_ptr_reference(object_heap,
+										     native_heap,
+										     ARRAY_ELEMENTS_PTR,
+										     (uintptr_t)ref,
+										     obj_ht,
+										     native_ptr_ht,
+										     q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == BLOCK_CONSTRUCTOR_PTR)
+    {
+      block_constructor_t *cons = (block_constructor_t *)slot_obj->ptr;
+
+      if(index1 == 1) //cons->block_args
+      {
+	assert(cons->type == BLOCK_ARGS);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  cons->block_args = (block_arguments_t *)e->value;
+	else
+	  cons->block_args = (block_arguments_t *)deserialize_native_ptr_reference(object_heap,
 										   native_heap,
-										   BASIC_EXPRESSION_PTR,
+										   BLOCK_ARGUMENT_PTR,
 										   (uintptr_t)ref,
 										   obj_ht,
 										   native_ptr_ht,
 										   q);
-	}
-	else if(index1 == 2) //debug_exp->bin_arg
+      }
+      else if(index1 == 2) //cons->exec_code
+      {
+	assert(cons->type == NO_BLOCK_ARGS);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  cons->exec_code = (executable_code_t *)e->value;
+	else
+	  cons->exec_code = (executable_code_t *)deserialize_native_ptr_reference(object_heap,
+										  native_heap,
+										  EXEC_CODE_PTR,
+										  (uintptr_t)ref,
+										  obj_ht,
+										  native_ptr_ht,
+										  q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == BINARY_MESSAGES_PTR)
+    {
+      binary_messages_t *bin_msgs = (binary_messages_t *)slot_obj->ptr;
+
+      if(index1 == 1) //bin_msgs->bin_msgs
+      {
+	assert(index2 >=0 && index2 < bin_msgs->nof_messages);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  bin_msgs->bin_msgs[index2] = *((binary_message_t *)e->value);
+	else
 	{
-	  assert(debug_exp->type == DEBUG_BINARY_ARGUMENT);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    debug_exp->bin_arg = (binary_argument_t *)e->value;
-	  else
-	    debug_exp->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       BINARY_ARGUMENT_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
+	  binary_message_t *bin_msg = (binary_message_t *)deserialize_native_ptr_reference(object_heap,
+											   native_heap,
+											   BINARY_MESSAGE_PTR,
+											   (uintptr_t)ref,
+											   obj_ht,
+											   native_ptr_ht,
+											   q);
+	  bin_msgs->bin_msgs[index2] = *bin_msg;
 	}
-	else if(index1 == 3) //debug_exp->kw_arg
+      }
+      else
+	assert(false);
+    }
+    else if(type == BINARY_MESSAGE_PTR)
+    {
+      binary_message_t *bin_msg = (binary_message_t *)slot_obj->ptr;
+
+      if(index1 == 1) //bin_msg->bin_arg
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  bin_msg->bin_arg = (binary_argument_t *)e->value;
+	else
+	  bin_msg->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
+										   native_heap,
+										   BINARY_ARGUMENT_PTR,
+										   (uintptr_t)ref,
+										   obj_ht,
+										   native_ptr_ht,
+										   q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == KEYWORD_MESSAGE_PTR)
+    {
+      keyword_message_t *kw_msg = (keyword_message_t *)slot_obj->ptr;
+
+      if(index1 == 1) //kw_msg->kw_arg_pairs
+      {
+	assert(index2 >= 0 && index2 < kw_msg->nof_args);
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  kw_msg->kw_arg_pairs[index2] = *((keyword_argument_pair_t *)e->value);
+	else
 	{
-	  assert(debug_exp->type == DEBUG_KEYWORD_ARGUMENT);
+	  keyword_argument_pair_t *arg_pair = (keyword_argument_pair_t *)deserialize_native_ptr_reference(object_heap,
+													  native_heap,
+													  KEYWORD_ARGUMENT_PAIR_PTR,
+													  (uintptr_t)ref,
+													  obj_ht,
+													  native_ptr_ht,
+													  q);
+	  kw_msg->kw_arg_pairs[index2] = *arg_pair;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == BINARY_ARGUMENT_PTR)
+    {
+      binary_argument_t *bin_arg = (binary_argument_t *)slot_obj->ptr;
 
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+      if(index1 == 0) //bin_arg->prim
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	  if(e)
-	    debug_exp->kw_arg = (keyword_argument_t *)e->value;
-	  else
-	    debug_exp->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
+	if(e)
+	  bin_arg->prim = (primary_t *)e->value;
+	else
+	  bin_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+									native_heap,
+									PRIMARY_PTR,
+									(uintptr_t)ref,
+									obj_ht,
+									native_ptr_ht,
+									q);
+      }
+      else if(index1 == 1) //bin_arg->unary_messages
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  bin_arg->unary_messages = (unary_messages_t *)e->value;
+	else
+	  bin_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+											 native_heap,
+											 UNARY_MESSAGES_PTR,
+											 (uintptr_t)ref,
+											 obj_ht,
+											 native_ptr_ht,
+											 q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == KEYWORD_ARGUMENT_PTR)
+    {
+      keyword_argument_t *kw_arg = (keyword_argument_t *)slot_obj->ptr;
+
+      if(index1 == 0) //kw_arg->prim
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  kw_arg->prim = (primary_t *)e->value;
+	else
+	  kw_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+								       native_heap,
+								       PRIMARY_PTR,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else if(index1 == 1) //kw_arg->unary_messages
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  kw_arg->unary_messages = (unary_messages_t *)e->value;
+	else
+	  kw_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+											native_heap,
+											UNARY_MESSAGES_PTR,
+											(uintptr_t)ref,
+											obj_ht,
+											native_ptr_ht,
+											q);
+      }
+      else if(index1 == 2) //kw_arg->binary_messages
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  kw_arg->binary_messages = (binary_messages_t *)e->value;
+	else
+	  kw_arg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
+											  native_heap,
+											  BINARY_MESSAGES_PTR,
+											  (uintptr_t)ref,
+											  obj_ht,
+											  native_ptr_ht,
+											  q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
+    {
+      printf("here\n");
+      keyword_argument_pair_t *kw_arg_pair = (keyword_argument_pair_t *)slot_obj->ptr;
+
+      if(index1 == 1) //kw_arg_pair->kw_arg
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  kw_arg_pair->kw_arg = (keyword_argument_t *)e->value;
+	else
+	  kw_arg_pair->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
 										       native_heap,
 										       KEYWORD_ARGUMENT_PTR,
 										       (uintptr_t)ref,
 										       obj_ht,
 										       native_ptr_ht,
 										       q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == ASSIGNMENT_PTR)
-      {
-	assignment_t *asgn = (assignment_t *)slot_obj->ptr;
-
-	if(index1 == 1) //asgn->rvalue
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    asgn->rvalue = (expression_t *)e->value;
-	  else
-	    asgn->rvalue = (expression_t *)deserialize_native_ptr_reference(object_heap,
-									    native_heap,
-									    EXPRESSION_PTR,
-									    (uintptr_t)ref,
-									    obj_ht,
-									    native_ptr_ht,
-									    q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == BASIC_EXPRESSION_PTR)
-      {
-	basic_expression_t *basic_exp = (basic_expression_t *)slot_obj->ptr;
-
-	if(index1 == 1) //basic_exp->prim
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    basic_exp->prim = (primary_t *)e->value;
-	  else
-	    basic_exp->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
-									    native_heap,
-									    PRIMARY_PTR,
-									    (uintptr_t)ref,
-									    obj_ht,
-									    native_ptr_ht,
-									    q);
-	}
-	else if(index1 == 2) //basic_exp->msg
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    basic_exp->msg = (message_t *)e->value;
-	  else
-	    basic_exp->msg = (message_t *)deserialize_native_ptr_reference(object_heap,
-									   native_heap,
-									   MESSAGE_PTR,
-									   (uintptr_t)ref,
-									   obj_ht,
-									   native_ptr_ht,
-									   q);
-	}
-	else if(index1 == 3) //basic_exp->cascaded_msgs
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    basic_exp->cascaded_msgs = (cascaded_messages_t *)e->value;
-	  else
-	    basic_exp->cascaded_msgs = (cascaded_messages_t *)deserialize_native_ptr_reference(object_heap,
-											       native_heap,
-											       CASCADED_MESSAGES_PTR,
-											       (uintptr_t)ref,
-											       obj_ht,
-											       native_ptr_ht,
-											       q);
-	}
-	else
-	  assert(false);
-      }
-      else if(type == ARRAY_ELEMENTS_PTR)
-      {
-	array_elements_t *elems = (array_elements_t *)slot_obj->ptr;
-
-	if(index1 == 1) //elems->elements
-	{
-	  assert(index2 >= 0 && index2 < elems->nof_elements);
-
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    elems->elements[index2] = *((array_element_t *)e->value);
-	  else
-	  {
-	    array_element_t *elem = (array_element_t *)deserialize_native_ptr_reference(object_heap,
-											native_heap,
-											ARRAY_ELEMENT_PTR,
-											(uintptr_t)ref,
-											obj_ht,
-											native_ptr_ht,
-											q);
-	    elems->elements[index2] = *elem;
-	  }
-	}
-	else
-	  assert(false);
-      }
-      else if(type == ARRAY_ELEMENT_PTR)
-      {
-	array_element_t *elem = (array_element_t *)slot_obj->ptr;
-
-	if(index1 == 1) //elem->lit
-	{
-	  hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
-
-	  if(e)
-	    elem->lit = (literal_t *)e->value;
-	  else
-	    elem->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
-								      native_heap,
-								      LITERAL_PTR,
-								      (uintptr_t)ref,
-								      obj_ht,
-								      native_ptr_ht,
-								      q);
-	}
-	else
-	  assert(false);
+	printf("in if\n");
+	print_keyword_argument(kw_arg_pair->kw_arg);
+	printf("after printing keyword arg\n");
       }
       else
 	assert(false);
     }
+    else if(type == STATEMENTS_PTR)
+    {
+      statement_t *stmt = (statement_t *)slot_obj->ptr;
+
+      if(index1 == 1) //stmt->ret_stmt
+      {
+	assert(stmt->type == RETURN_STATEMENT);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  stmt->ret_stmt = (return_statement_t *)e->value;
+	else
+	  stmt->ret_stmt = (return_statement_t *)deserialize_native_ptr_reference(object_heap,
+										  native_heap,
+										  RETURN_STATEMENT_PTR,
+										  (uintptr_t)ref,
+										  obj_ht,
+										  native_ptr_ht,
+										  q);
+      }
+      else if(index1 == 2) //stmt->exp
+      {
+	assert(stmt->type == EXPRESSION);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  stmt->exp = (expression_t *)e->value;
+	else
+	  stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+								       native_heap,
+								       EXPRESSION_PTR,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else if(index1 == 3) //stmt->statements
+      {
+	assert(stmt->type == EXP_PLUS_STATEMENTS);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  stmt->statements = (struct statement *)e->value;
+	else
+	  stmt->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+										  native_heap,
+										  STATEMENTS_PTR,
+										  (uintptr_t)ref,
+										  obj_ht,
+										  native_ptr_ht,
+										  q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == EXEC_CODE_PTR)
+    {
+      executable_code_t *exec_code = (executable_code_t *)slot_obj->ptr;
+
+      if(index1 == 0) //exec_code->temporaries
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  exec_code->temporaries = (temporaries_t *)e->value;
+	else
+	  exec_code->temporaries = (temporaries_t *)deserialize_native_ptr_reference(object_heap,
+										     native_heap,
+										     TEMPORARIES_PTR,
+										     (uintptr_t)ref,
+										     obj_ht,
+										     native_ptr_ht,
+										     q);
+      }
+      else if(index1 == 1) //exec_code->statements
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  exec_code->statements = (struct statement *)e->value;
+	else
+	  exec_code->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+										       native_heap,
+										       STATEMENTS_PTR,
+										       (uintptr_t)ref,
+										       obj_ht,
+										       native_ptr_ht,
+										       q);
+      }
+      else
+	assert(false);
+    }
+    //no need to handle STACK_TYPE_PTR explicitly, see
+    //code in deserialize_native_ptr_reference() for STACK_TYPE_PTR
+    else if(type == EXCEPTION_HANDLER_PTR)
+    {
+      exception_handler_t *handler = (exception_handler_t *)slot_obj->ptr;
+
+      if(index1 == 0) //handler->protected_block
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  handler->protected_block = (OBJECT_PTR)e->value;
+	else
+	  handler->protected_block = (OBJECT_PTR)deserialize_object_reference(object_heap,
+									      native_heap,
+									      (uintptr_t)ref,
+									      obj_ht,
+									      native_ptr_ht,
+									      q);
+      }
+      else if(index1 == 1) //handler->selector
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  handler->selector = (OBJECT_PTR)e->value;
+	else
+	  handler->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								       native_heap,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else if(index1 == 2) //handler->exception_action
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  handler->exception_action = (OBJECT_PTR)e->value;
+	else
+	  handler->exception_action = (OBJECT_PTR)deserialize_object_reference(object_heap,
+									       native_heap,
+									       (uintptr_t)ref,
+									       obj_ht,
+									       native_ptr_ht,
+									       q);
+      }
+      else if(index1 == 3) //handler->exception_environment
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  handler->exception_environment = (stack_type *)e->value;
+	else
+	  handler->exception_environment = (stack_type *)deserialize_native_ptr_reference(object_heap,
+											  native_heap,
+											  STACK_TYPE_PTR,
+											  (uintptr_t)ref,
+											  obj_ht,
+											  native_ptr_ht,
+											  q);
+      }
+      else if(index1 == 4) //handler->cont
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  handler->cont = (OBJECT_PTR)e->value;
+	else
+	  handler->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								   native_heap,
+								   (uintptr_t)ref,
+								   obj_ht,
+								   native_ptr_ht,
+								   q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == CALL_CHAIN_ENTRY_PTR)
+    {
+      call_chain_entry_t *entry = (call_chain_entry_t *)slot_obj->ptr;
+
+      if(index1 == 0) //entry->exp_ptr
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->exp_ptr = (OBJECT_PTR)e->value;
+	else
+	  entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								    native_heap,
+								    (uintptr_t)ref,
+								    obj_ht,
+								    native_ptr_ht,
+								    q);
+      }
+      else if(index1 == 2) //entry->receiver
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->receiver = (OBJECT_PTR)e->value;
+	else
+	  entry->receiver = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								     native_heap,
+								     (uintptr_t)ref,
+								     obj_ht,
+								     native_ptr_ht,
+								     q);
+      }
+      else if(index1 == 3) //entry->selector
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->selector = (OBJECT_PTR)e->value;
+	else
+	  entry->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								     native_heap,
+								     (uintptr_t)ref,
+								     obj_ht,
+								     native_ptr_ht,
+								     q);
+      }
+      else if(index1 == 4) //entry->method
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->method = (method_t *)e->value;
+	else
+	  entry->method = (method_t *)deserialize_native_ptr_reference(object_heap,
+								       native_heap,
+								       METHOD_PTR,
+								       (uintptr_t)ref,
+								       obj_ht,
+								       native_ptr_ht,
+								       q);
+      }
+      else if(index1 == 5) //entry->closure
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->closure = (OBJECT_PTR)e->value;
+	else
+	  entry->closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								    native_heap,
+								    (uintptr_t)ref,
+								    obj_ht,
+								    native_ptr_ht,
+								    q);
+      }
+      else if(index1 == 6) //entry->args
+      {
+	assert(index2 >= 0 && index2 < entry->nof_args);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->args[index2] = (OBJECT_PTR)e->value;
+	else
+	  entry->args[index2] = (OBJECT_PTR)deserialize_object_reference(object_heap,
+									 native_heap,
+									 (uintptr_t)ref,
+									 obj_ht,
+									 native_ptr_ht,
+									 q);
+      }
+      else if(index1 == 7) //entry->local_vars_list
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->local_vars_list = (OBJECT_PTR)e->value;
+	else
+	  entry->local_vars_list = (OBJECT_PTR)deserialize_object_reference(object_heap,
+									    native_heap,
+									    (uintptr_t)ref,
+									    obj_ht,
+									    native_ptr_ht,
+									    q);
+      }
+      else if(index1 == 8) //entry->cont
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->cont = (OBJECT_PTR)e->value;
+	else
+	  entry->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+								 native_heap,
+								 (uintptr_t)ref,
+								 obj_ht,
+								 native_ptr_ht,
+								 q);
+      }
+      else if(index1 == 9) //entry->termination_blk_closure
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  entry->termination_blk_closure = (OBJECT_PTR)e->value;
+	else
+	  entry->termination_blk_closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+										    native_heap,
+										    (uintptr_t)ref,
+										    obj_ht,
+										    native_ptr_ht,
+										    q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == DEBUG_EXPRESSION_PTR)
+    {
+      debug_expression_t *debug_exp = (debug_expression_t *)slot_obj->ptr;
+
+      if(index1 == 1) //debug_exp->be
+      {
+	assert(debug_exp->type == DEBUG_BASIC_EXPRESSION);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  debug_exp->be = (basic_expression_t *)e->value;
+	else
+	  debug_exp->be = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+										 native_heap,
+										 BASIC_EXPRESSION_PTR,
+										 (uintptr_t)ref,
+										 obj_ht,
+										 native_ptr_ht,
+										 q);
+      }
+      else if(index1 == 2) //debug_exp->bin_arg
+      {
+	assert(debug_exp->type == DEBUG_BINARY_ARGUMENT);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  debug_exp->bin_arg = (binary_argument_t *)e->value;
+	else
+	  debug_exp->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
+										     native_heap,
+										     BINARY_ARGUMENT_PTR,
+										     (uintptr_t)ref,
+										     obj_ht,
+										     native_ptr_ht,
+										     q);
+      }
+      else if(index1 == 3) //debug_exp->kw_arg
+      {
+	assert(debug_exp->type == DEBUG_KEYWORD_ARGUMENT);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  debug_exp->kw_arg = (keyword_argument_t *)e->value;
+	else
+	  debug_exp->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
+										     native_heap,
+										     KEYWORD_ARGUMENT_PTR,
+										     (uintptr_t)ref,
+										     obj_ht,
+										     native_ptr_ht,
+										     q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == ASSIGNMENT_PTR)
+    {
+      assignment_t *asgn = (assignment_t *)slot_obj->ptr;
+
+      if(index1 == 1) //asgn->rvalue
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  asgn->rvalue = (expression_t *)e->value;
+	else
+	  asgn->rvalue = (expression_t *)deserialize_native_ptr_reference(object_heap,
+									  native_heap,
+									  EXPRESSION_PTR,
+									  (uintptr_t)ref,
+									  obj_ht,
+									  native_ptr_ht,
+									  q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == BASIC_EXPRESSION_PTR)
+    {
+      basic_expression_t *basic_exp = (basic_expression_t *)slot_obj->ptr;
+
+      if(index1 == 1) //basic_exp->prim
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  basic_exp->prim = (primary_t *)e->value;
+	else
+	  basic_exp->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+									  native_heap,
+									  PRIMARY_PTR,
+									  (uintptr_t)ref,
+									  obj_ht,
+									  native_ptr_ht,
+									  q);
+      }
+      else if(index1 == 2) //basic_exp->msg
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  basic_exp->msg = (message_t *)e->value;
+	else
+	  basic_exp->msg = (message_t *)deserialize_native_ptr_reference(object_heap,
+									 native_heap,
+									 MESSAGE_PTR,
+									 (uintptr_t)ref,
+									 obj_ht,
+									 native_ptr_ht,
+									 q);
+      }
+      else if(index1 == 3) //basic_exp->cascaded_msgs
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  basic_exp->cascaded_msgs = (cascaded_messages_t *)e->value;
+	else
+	  basic_exp->cascaded_msgs = (cascaded_messages_t *)deserialize_native_ptr_reference(object_heap,
+											     native_heap,
+											     CASCADED_MESSAGES_PTR,
+											     (uintptr_t)ref,
+											     obj_ht,
+											     native_ptr_ht,
+											     q);
+      }
+      else
+	assert(false);
+    }
+    else if(type == ARRAY_ELEMENTS_PTR)
+    {
+      array_elements_t *elems = (array_elements_t *)slot_obj->ptr;
+
+      if(index1 == 1) //elems->elements
+      {
+	assert(index2 >= 0 && index2 < elems->nof_elements);
+
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  elems->elements[index2] = *((array_element_t *)e->value);
+	else
+	{
+	  array_element_t *elem = (array_element_t *)deserialize_native_ptr_reference(object_heap,
+										      native_heap,
+										      ARRAY_ELEMENT_PTR,
+										      (uintptr_t)ref,
+										      obj_ht,
+										      native_ptr_ht,
+										      q);
+	  elems->elements[index2] = *elem;
+	}
+      }
+      else
+	assert(false);
+    }
+    else if(type == ARRAY_ELEMENT_PTR)
+    {
+      array_element_t *elem = (array_element_t *)slot_obj->ptr;
+
+      if(index1 == 1) //elem->lit
+      {
+	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+
+	if(e)
+	  elem->lit = (literal_t *)e->value;
+	else
+	  elem->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
+								    native_heap,
+								    LITERAL_PTR,
+								    (uintptr_t)ref,
+								    obj_ht,
+								    native_ptr_ht,
+								    q);
+      }
+      else
+	assert(false);
+    }
+    else
+      assert(false);
   }
 }
 
@@ -2964,6 +3103,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 				       queue_t *queue)
 {
   int i;
+
+  if(ref == NULL_NATIVE_PTR)
+    return NULL;
 
   hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
@@ -2989,6 +3131,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       else
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, BINDING_PTR, 1, i);
     }
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
+
     return (void *)env;
   }
   else if(ptr_type == BINDING_PTR)
@@ -3017,6 +3162,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, NONE, 0, 0);
     //end val
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
+
     return (void *)binding;
   }
   else if(ptr_type == METHOD_BINDING_ENV_PTR)
@@ -3036,6 +3183,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       else
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, METHOD_BINDING_PTR, 1, i);
     }
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
+
     return (void *)env;
   }
   else if(ptr_type == METHOD_BINDING_PTR)
@@ -3063,6 +3213,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, METHOD_PTR, 0, 0);
     //end val
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
 
     return (void *)binding;
   }
@@ -3099,6 +3251,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)exp);
+
     return (void *)exp;
   }
   else if(ptr_type == RETURN_STATEMENT_PTR)
@@ -3115,6 +3269,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       ret_stmt->exp = (expression_t *)e1->value;
     else
       add_to_deserialization_queue(queue, ref1, (uintptr_t)ret_stmt, RETURN_STATEMENT_PTR, 0, 0);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)ret_stmt);
 
     return (void *)ret_stmt;
   }
@@ -3164,10 +3320,12 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         prim->exp = (struct expression *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 0, 0);
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 4, 0);
     }
     else
       assert(false);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)prim);
 
     return (void *)prim;
   }
@@ -3216,6 +3374,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)msg);
+
     return (void *)msg;
   }
   else if(ptr_type == CASCADED_MESSAGES_PTR)
@@ -3239,6 +3399,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)casc_msgs, CASCADED_MESSAGES_PTR, 1, i);
     }
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)casc_msgs);
+
     return (void *)casc_msgs;
   }
   else if(ptr_type == LITERAL_PTR)
@@ -3250,7 +3412,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "NUMBER_LITERAL"))
     {
       lit->type = NUMBER_LITERAL;
-      lit->val = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+        lit->num = (number_t *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)lit, LITERAL_PTR, 1, 0);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "STRING_LITERAL"))
     {
@@ -3287,6 +3456,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)lit);
+
     return (void *)lit;
   }
   else if(ptr_type == BLOCK_CONSTRUCTOR_PTR)
@@ -3306,6 +3477,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
         cons->block_args = (struct block_arguments *)e1->value;
       else
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 1, 0);
+
+      long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref2);
+
+      if(e1)
+        cons->exec_code = (struct executable_code *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref2, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "NO_BLOCK_ARGS"))
     {
@@ -3320,6 +3499,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
     }
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)cons);
+
     return (void *)cons;
   }
   else if(ptr_type == BLOCK_ARGUMENT_PTR)
@@ -3331,6 +3512,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     for(i=0; i<args->nof_args; i++)
       args->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)args);
 
     return (void *)args;
   }
@@ -3354,6 +3537,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msgs, BINARY_MESSAGES_PTR, 1, i);
     }
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msgs);
+
     return (void *)bin_msgs;
   }
   else if(ptr_type == BINARY_MESSAGE_PTR)
@@ -3371,6 +3556,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       bin_msg->bin_arg = (struct binary_argument *)e1->value;
     else
       add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msg, BINARY_MESSAGE_PTR, 1, 0);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msg);
 
     return (void *)bin_msg;
   }
@@ -3393,6 +3580,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       else
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_msg, KEYWORD_MESSAGE_PTR, 1, i);
     }
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_msg);
 
     return (void *)kw_msg;
   }
@@ -3418,7 +3607,43 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       add_to_deserialization_queue(queue, ref2, (uintptr_t)bin_arg, BINARY_ARGUMENT_PTR, 1, 0);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_arg);
+
     return (void *)bin_arg;
+  }
+  else if(ptr_type == KEYWORD_ARGUMENT_PTR)
+  {
+    keyword_argument_t *kw_arg = (keyword_argument_t *)GC_MALLOC(sizeof(keyword_argument_t));
+
+    hashtable_entry_t *e1;
+
+    long long ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+    if(e1)
+      kw_arg->prim = (struct primary *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 0, 0);
+
+    long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref2);
+
+    if(e1)
+      kw_arg->unary_messages = (struct unary_messages *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref2, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 1, 0);
+
+    long long ref3 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+    e1 = hashtable_get(native_ptr_ht, (void *)ref3);
+
+    if(e1)
+      kw_arg->binary_messages = (struct binary_messages *)e1->value;
+    else
+      add_to_deserialization_queue(queue, ref3, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 2, 0);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg);
+
+    return (void *)kw_arg;
   }
   else if(ptr_type == KEYWORD_ARGUMENT_PAIR_PTR)
   {
@@ -3436,6 +3661,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg_pair, KEYWORD_ARGUMENT_PAIR_PTR, 1, 0);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg_pair);
+
     return (void *)kw_arg_pair;
   }
   else if(ptr_type == TEMPORARIES_PTR)
@@ -3447,6 +3674,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     for(i=0; i<temps->nof_temporaries; i++)
       temps->temporaries[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)temps);
 
     return (void *)temps;
   }
@@ -3495,6 +3724,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)stmt);
+
     return (void *)stmt;
   }
   else if(ptr_type == IDENTIFIERS_PTR)
@@ -3506,6 +3737,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     for(i=0; i<ids->nof_identifiers; i++)
       ids->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)ids);
 
     return (void *)ids;
   }
@@ -3531,6 +3764,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       add_to_deserialization_queue(queue, ref2, (uintptr_t)exec_code, EXEC_CODE_PTR, 1, 0);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)exec_code);
+
     return (void *)exec_code;
   }
   else if(ptr_type == PACKAGE_PTR)
@@ -3546,6 +3781,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     for(i=0; i<pkg->nof_symbols; i++)
       pkg->symbols[i] = GC_strdup(JSON_get_array_item(symbols, i)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)pkg);
 
     return (void *)pkg;
   }
@@ -3581,6 +3818,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 							  native_ptr_ht,
 							  queue);
     }
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)stack);
 
     return (void *)stack;
   }
@@ -3629,6 +3868,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       handler->cont = (OBJECT_PTR)e1->value;
     else
       add_to_deserialization_queue(queue, ref5, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 4, 0);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)handler);
 
     return (void *)handler;
   }
@@ -3734,6 +3975,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)entry);
+
     return (void *)entry;
   }
   else if(ptr_type == DEBUG_EXPRESSION_PTR)
@@ -3781,6 +4024,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)debug_exp);
+
     return (void *)debug_exp;
   }
   else if(ptr_type == ASSIGNMENT_PTR)
@@ -3798,6 +4043,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       asgn->rvalue = (struct expression *)e1->value;
     else
       add_to_deserialization_queue(queue, ref1, (uintptr_t)asgn, ASSIGNMENT_PTR, 1, 0);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)asgn);
 
     return (void *)asgn;
   }
@@ -3827,20 +4074,30 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	basic_exp->msg = (struct message *)e1->value;
+	basic_exp->prim = (struct primary *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 2, 0);
+	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 1, 0);
 
       long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
-      e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+      e1 = hashtable_get(native_ptr_ht, (void *)ref2);
+
+      if(e1)
+	basic_exp->msg = (struct message *)e1->value;
+      else
+	add_to_deserialization_queue(queue, ref2, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 2, 0);
+
+      long long ref3 = JSON_get_array_item(ptr_entry, 3)->ivalue;
+      e1 = hashtable_get(native_ptr_ht, (void *)ref3);
 
       if(e1)
 	basic_exp->cascaded_msgs = (struct cascaded_messages *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 3, 0);
+	add_to_deserialization_queue(queue, ref3, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 3, 0);
     }
     else
       assert(false);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)basic_exp);
 
     return (void *)basic_exp;
   }
@@ -3853,6 +4110,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     for(i=0; i<unary_msgs->nof_messages; i++)
       unary_msgs->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)unary_msgs);
 
     return (void *)unary_msgs;
   }
@@ -3874,6 +4133,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       else
 	add_to_deserialization_queue(queue, ref1, (uintptr_t)elems, ARRAY_ELEMENTS_PTR, 1, i);
     }
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)elems);
 
     return (void *)elems;
   }
@@ -3903,11 +4164,31 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)elem);
+
     return (void *)elem;
+  }
+  else if(ptr_type == NUMBER_PTR)
+  {
+    number_t *num = (number_t *)GC_MALLOC(sizeof(number_t));
+
+    if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "INTEGER"))
+      num->type = INTEGER;
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "FLOAT"))
+      num->type = FLOAT;
+    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "SCALED_DECIMAL"))
+      num->type = SCALED_DECIMAL;
+
+    num->val = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)num);
+
+    return (void *)num;
   }
   else
     assert(false);
 
+  printf("Control shouldn't reach here\n");
   return NULL; //control shouldn't reach here
 }
 
@@ -3939,8 +4220,6 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
      object_type == FALSE_TAG          ||
      object_type == SMALLTALK_SYMBOL_TAG)
     return ref;
-
-  //TODO: FLOAT_TAG
 
   hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
@@ -4014,6 +4293,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
     else
       add_to_deserialization_queue(queue, binding_env, (uintptr_t)obj, OBJ_PTR, 1, 0);
     /* end of instance_vars */
+
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
 
     return (uintptr_t)obj + object_type;
   }
@@ -4123,6 +4404,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
       add_to_deserialization_queue(queue, class_methods, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 9, 0);
     /* end of class methods */
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
+
     return (uintptr_t)cls_obj + object_type;
   }
   else if(object_type == ARRAY_TAG)
@@ -4153,6 +4436,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 	add_to_deserialization_queue(queue, element, (uintptr_t)arr_obj->elements+i, NONE, 0, 0);
     }
     /* end of elements */
+
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)arr_obj + object_type));
 
     return (uintptr_t)arr_obj + object_type;
   }
@@ -4195,6 +4480,17 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
     /* end of arity */
 
     set_heap(ptr1, 1, ptr2);
+
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
+
+    return (uintptr_t)ptr + object_type;
+  }
+  else if(object_type == FLOAT_TAG)
+  {
+    ptr = object_alloc(1, FLOAT_TAG);
+    (*(double *)ptr) = heap_obj->fvalue;
+
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
 
     return (uintptr_t)ptr + object_type;
   }
@@ -4421,5 +4717,181 @@ int load_from_image(char *file_name)
   //   or by using deserialize_object_reference()
   //2. call convert_heap() to set all the other object references
   //3. also need to handle native_heap (similar strategy as above may be needed)
+  return 0;
+}
+
+void initialize();
+int call_repl(char *);
+
+extern executable_code_t *g_exp;
+
+void create_test_image(char *file_name)
+{
+  initialize();
+
+  FILE *fp = fopen(file_name, "w");
+
+  obj_print_queue = queue_create();
+  obj_hashtable = hashtable_create(1000001);
+  printed_objects = hashtable_create(1000001);
+
+  native_ptr_print_queue = queue_create();
+  native_ptr_hashtable = hashtable_create(1000001);
+  printed_native_objects = hashtable_create(1000001);
+
+  stack_type *test_stack = stack_create();
+
+  OBJECT_PTR cons_obj1 = cons(convert_int_to_object(5), cons(convert_char_to_object('a'),NIL));
+
+  stack_push(test_stack, (void *)convert_int_to_object(1));
+  stack_push(test_stack, (void *)convert_int_to_object(2));
+  stack_push(test_stack, (void *)convert_int_to_object(3));
+  stack_push(test_stack, (void *)cons(convert_int_to_object(4), cons_obj1));
+
+  stack_push(test_stack, (void *)get_symbol("SOME_SYMBOL"));
+  stack_push(test_stack, (void *)get_string_obj("Some string"));
+  stack_push(test_stack, (void *)convert_float_to_object(3.14));
+
+  //call_repl("Smalltalk createClassPreInitialize: #Error parentClass: Exception");
+  //call_repl("1+2+3");
+  call_repl("1+2");
+
+  //print_executable_code(g_exp);printf("\n");
+  //print_binary_message(g_exp->statements->exp->basic_exp->msg->binary_messages->bin_msgs+1);
+  //printf("\n");
+
+  fprintf(fp, "{ ");
+
+  fprintf(fp, "\"stack_obj\" : ");
+  print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)test_stack);
+  fflush(fp);
+  //fprintf(fp, ", \"g_exp\" : ");
+  //print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
+  fprintf(fp, ", \"bin_msgs\" : ");
+  print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)(g_exp->statements->exp->basic_exp->msg->binary_messages));
+  fflush(fp);
+  fprintf(fp, ", \"native_heap\" : [");
+
+  while(!queue_is_empty(native_ptr_print_queue))
+  {
+    queue_item_t *queue_item = queue_dequeue(native_ptr_print_queue);
+    native_ptr_slot_t *s = (native_ptr_slot_t *)queue_item->data;
+    print_native_ptr_heap_representation(fp, s->ref, s->type);
+    fflush(fp);
+    if(!queue_is_empty(native_ptr_print_queue))fprintf(fp, ", ");
+  }
+
+  fprintf(fp, "] ");
+  fflush(fp);
+  //OBJECT_PTR heap
+  fprintf(fp, ", \"object_heap\" : [");
+
+  BOOLEAN beginning = true;
+
+  BOOLEAN message_send_native_fn_obj;
+
+  while(!queue_is_empty(obj_print_queue))
+  {
+    queue_item_t *queue_item = queue_dequeue(obj_print_queue);
+    OBJECT_PTR obj = (OBJECT_PTR)(queue_item->data);
+    if(!is_dynamic_memory_object(obj))
+    {
+      print_object(obj);printf("\n");
+      assert(false);
+    }
+
+    if(IS_NATIVE_FN_OBJECT(obj))
+    {
+      nativefn nf = get_nativefn_value(obj);
+      if(nf == (nativefn)message_send ||
+	 nf == (nativefn)message_send_super)
+	message_send_native_fn_obj = true;
+      else
+	message_send_native_fn_obj = false;
+    }
+    else
+      message_send_native_fn_obj = false;
+
+    if(!beginning && !message_send_native_fn_obj)
+      fprintf(fp, ", ");
+
+    print_heap_representation(fp, obj, false);
+    fflush(fp);
+    beginning = false;
+  }
+
+  fprintf(fp, "] ");
+  //end of OBJECT_PTR heap
+
+  fprintf(fp, "}");
+
+  queue_delete(obj_print_queue);
+  hashtable_delete(obj_hashtable);
+  hashtable_delete(printed_objects);
+
+  queue_delete(native_ptr_print_queue);
+  hashtable_delete(native_ptr_hashtable);
+  hashtable_delete(printed_native_objects);
+
+  fclose(fp);
+}
+
+int load_from_test_image(char *file_name)
+{
+  int i, j;
+
+  struct JSONObject *root = JSON_parse(file_name);
+
+  if(!root)
+  {
+    printf("Error reading root object\n");
+    return 1;
+  }
+
+  struct JSONObject *stack_obj = JSON_get_object_item(root, "stack_obj");
+  //struct JSONObject *ec_obj = JSON_get_object_item(root, "g_exp");
+  struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
+  struct JSONObject *object_heap = JSON_get_object_item(root, "object_heap");
+  struct JSONObject *native_heap = JSON_get_object_item(root, "native_heap");
+
+  hashtable_t *object_hashtable = hashtable_create(1001);
+  hashtable_t *native_ptr_hashtable = hashtable_create(1001);
+  queue_t *queue = queue_create();
+
+  stack_type *stack = deserialize_native_ptr_reference(object_heap,
+						       native_heap,
+						       STACK_TYPE_PTR,
+						       stack_obj->ivalue,
+						       object_hashtable,
+						       native_ptr_hashtable,
+						       queue);
+
+  /* executable_code_t *ec = deserialize_native_ptr_reference(object_heap, */
+  /* 							   native_heap, */
+  /* 							   EXEC_CODE_PTR, */
+  /* 							   ec_obj->ivalue, */
+  /* 							   object_hashtable, */
+  /* 							   native_ptr_hashtable, */
+  /* 							   queue); */
+
+  binary_messages_t *bin_msgs1 = deserialize_native_ptr_reference(object_heap,
+							native_heap,
+							BINARY_MESSAGES_PTR,
+							bin_msgs->ivalue,
+							object_hashtable,
+							native_ptr_hashtable,
+							queue);
+
+  convert_heap(object_heap, native_heap, object_hashtable, native_ptr_hashtable, queue);
+
+  /* while(!stack_is_empty(stack)) */
+  /* { */
+  /*   OBJECT_PTR obj = (OBJECT_PTR)stack_pop(stack); */
+  /*   print_object(obj); */
+  /*   printf("\n"); */
+  /* } */
+
+  //print_executable_code(ec);
+  print_binary_messages(bin_msgs1); printf("\n");
   return 0;
 }
