@@ -13,6 +13,8 @@
 
 #define NULL_NATIVE_PTR -1
 
+binary_message_t *g_bin_msg;
+
 enum PointerType
 {
   OBJECT_PTR1,
@@ -158,18 +160,18 @@ extern native_fn_src_mapping_t *g_native_fn_objects;
 
 //forward declarations
 OBJECT_PTR deserialize_object_reference(struct JSONObject *,
-					struct JSONObject *,
-					OBJECT_PTR,
-					hashtable_t *,
-					hashtable_t *,
-					queue_t *);
+                                        struct JSONObject *,
+                                        OBJECT_PTR,
+                                        hashtable_t *,
+                                        hashtable_t *,
+                                        queue_t *);
 void *deserialize_native_ptr_reference(struct JSONObject *,
-				       struct JSONObject *,
-				       enum PointerType ptr_type,
-				       OBJECT_PTR ,
-				       hashtable_t *,
-				       hashtable_t *,
-				       queue_t *);
+                                       struct JSONObject *,
+                                       enum PointerType ptr_type,
+                                       OBJECT_PTR ,
+                                       hashtable_t *,
+                                       hashtable_t *,
+                                       queue_t *);
 //end forward declarations
 
 void add_obj_to_print_list(OBJECT_PTR obj)
@@ -225,8 +227,8 @@ void add_obj_to_native_ptr_print_list(void *native_ptr, enum PointerType type)
 }
 
 void print_native_ptr_reference(FILE *fp,
-				enum PointerType type,
-				void *native_ptr)
+                                enum PointerType type,
+                                void *native_ptr)
 {
   if(!native_ptr)
   {
@@ -249,8 +251,8 @@ void print_native_ptr_reference(FILE *fp,
 }
 
 void print_native_ptr_heap_representation(FILE *fp,
-					  void *native_ptr,
-					  enum PointerType type)
+                                          void *native_ptr,
+                                          enum PointerType type)
 {
   unsigned int i;
 
@@ -266,7 +268,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_object_ptr_reference(fp, arr_obj->elements[i], false);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
 
     fprintf(fp, "] ");
@@ -373,7 +375,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_object_ptr_reference(fp, cls_obj->instances[i], false);
       if(i != nof_instances - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     //fprintf(fp, "]], ");
     fprintf(fp, "], ");
@@ -388,7 +390,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_object_ptr_reference(fp, cls_obj->inst_vars[i], false);
       if(i != nof_inst_vars - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     //fprintf(fp, "]], ");
     fprintf(fp, "], ");
@@ -426,7 +428,7 @@ void print_native_ptr_heap_representation(FILE *fp,
       print_native_ptr_reference(fp, BINDING_PTR, (void *)(env->bindings+i));
       //fprintf(fp, "]");
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
   }
@@ -475,7 +477,7 @@ void print_native_ptr_heap_representation(FILE *fp,
       print_native_ptr_reference(fp, METHOD_BINDING_PTR, (void *)(env->bindings+i));
       //fprintf(fp, "]");
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
   }
@@ -629,7 +631,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_native_ptr_reference(fp, MESSAGE_PTR, (void *)(casc_msgs->cascaded_msgs+i));
       if(i != count - 1)
-	fprintf(fp, "] ");
+        fprintf(fp, "] ");
     }
 
     fprintf(fp, "] ");
@@ -750,7 +752,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"%s\"", args->identifiers[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     
     fprintf(fp, "] ");
@@ -771,7 +773,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_native_ptr_reference(fp, BINARY_MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
 
     fprintf(fp, "] ");
@@ -807,7 +809,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_native_ptr_reference(fp, KEYWORD_ARGUMENT_PAIR_PTR, (void *)(kw_msg->kw_arg_pairs+i));
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
 
     fprintf(fp, "] ");
@@ -876,7 +878,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"%s\"", temps->temporaries[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
 
     fprintf(fp, "] ");
@@ -933,7 +935,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"%s\"", ids->identifiers[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
 
     fprintf(fp, "] ");
@@ -974,7 +976,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"%s\"", pkg->symbols[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
     
@@ -997,11 +999,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     for(i=0; i<count; i++)
     {
       if(g_sub_type == OBJECT_PTR1)
-	print_object_ptr_reference(fp, (OBJECT_PTR)stack->data[i], false);
+        print_object_ptr_reference(fp, (OBJECT_PTR)stack->data[i], false);
       else
-	print_native_ptr_reference(fp, g_sub_type, stack->data[i]);
+        print_native_ptr_reference(fp, g_sub_type, stack->data[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "]] ");
   }
@@ -1082,7 +1084,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_object_ptr_reference(fp, entry->args[i], false);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
 
@@ -1197,7 +1199,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"%s\"", unary_msgs->identifiers[i]);
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
     
@@ -1221,7 +1223,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       print_native_ptr_reference(fp, ARRAY_ELEMENT_PTR, (void *)(elems->elements+i));
       if(i != count - 1)
-	fprintf(fp, ", ");
+        fprintf(fp, ", ");
     }
     fprintf(fp, "] ");
     
@@ -1363,9 +1365,9 @@ void print_global_variables(FILE *fp)
     for(j=0; j<len; j++)
     {
       if(g_string_literals[i][j] == '\n')
-	fprintf(fp, "\\n");
+        fprintf(fp, "\\n");
       else
-	fprintf(fp, "%c", g_string_literals[i][j]);
+        fprintf(fp, "%c", g_string_literals[i][j]);
     }
     fprintf(fp, "\"");
 
@@ -1512,10 +1514,10 @@ void create_image(char *file_name)
     {
       nativefn nf = get_nativefn_value(obj);
       if(nf == (nativefn)message_send ||
-	 nf == (nativefn)message_send_super)
-	message_send_native_fn_obj = true;
+         nf == (nativefn)message_send_super)
+        message_send_native_fn_obj = true;
       else
-	message_send_native_fn_obj = false;
+        message_send_native_fn_obj = false;
     }
     else
       message_send_native_fn_obj = false;
@@ -1550,8 +1552,8 @@ BOOLEAN is_dynamic_memory_object(OBJECT_PTR obj)
 }
 
 void print_object_ptr_reference(FILE *fp,
-				OBJECT_PTR obj,
-				BOOLEAN single_object)
+                                OBJECT_PTR obj,
+                                BOOLEAN single_object)
 {
   //TODO: is_valid_object() may not be able to provide correct answers
   //for pointers like debug_expression_t * which are wrapped to become
@@ -1587,28 +1589,28 @@ void print_object_ptr_reference(FILE *fp,
     {
       if(IS_NATIVE_FN_OBJECT(obj))
       {
-	nativefn nf = get_nativefn_value(obj);
-	if(nf != (nativefn)message_send &&
-	   nf != (nativefn)message_send_super)
-	{
-	  BOOLEAN found = false;
-	  unsigned int i;
-	  for(i=0; i<g_nof_native_fns; i++)
-	  {
-	    if(g_native_fn_objects[i].nf == nf)
-	    {
-	      fprintf(fp, "%d", i);
-	      found = true;
-	      break;
-	    }
-	  }
-	  assert(found);
-	}
-	else
-	  fprintf(fp, "-1"); //for message_send and message_send_super
+        nativefn nf = get_nativefn_value(obj);
+        if(nf != (nativefn)message_send &&
+           nf != (nativefn)message_send_super)
+        {
+          BOOLEAN found = false;
+          unsigned int i;
+          for(i=0; i<g_nof_native_fns; i++)
+          {
+            if(g_native_fn_objects[i].nf == nf)
+            {
+              fprintf(fp, "%d", i);
+              found = true;
+              break;
+            }
+          }
+          assert(found);
+        }
+        else
+          fprintf(fp, "-1"); //for message_send and message_send_super
       }
       else
-	fprintf(fp, "%lu", obj);
+        fprintf(fp, "%lu", obj);
     }
   }
 }
@@ -1695,12 +1697,12 @@ void print_heap_representation(FILE *fp,
       unsigned int i;
       for(i=0; i<nof_native_fns; i++)
       {
-	if(native_fn_objects[i].nf == nf)
-	{
-	  fprintf(fp, "%d", i);
-	  found = true;
-	  break;
-	}
+        if(native_fn_objects[i].nf == nf)
+        {
+          fprintf(fp, "%d", i);
+          found = true;
+          break;
+        }
       }
       assert(found);
     }
@@ -1741,10 +1743,10 @@ void print_native_functions(FILE *fp)
 
       for(j=0; j<len; j++)
       {
-	if(src[j] == '\n')
-	  fprintf(fp, "\\n");
-	else
-	  fprintf(fp, "%c", src[j]);
+        if(src[j] == '\n')
+          fprintf(fp, "\\n");
+        else
+          fprintf(fp, "%c", src[j]);
       }
       fprintf(fp, "\"");
     }
@@ -1792,11 +1794,11 @@ char *get_json_smalltalk_symbol(struct JSONObject *native_heap, int index)
 //on the fact the the struct definition will not change; ideally
 //the index should be replaced by an enum
 void add_to_deserialization_queue(queue_t *q,
-				  OBJECT_PTR ref,
-				  uintptr_t ptr,
-				  enum PointerType type,
-				  unsigned int index1,
-				  unsigned int index2)
+                                  OBJECT_PTR ref,
+                                  uintptr_t ptr,
+                                  enum PointerType type,
+                                  unsigned int index1,
+                                  unsigned int index2)
 {
   assert(ptr);
   struct slot *s = (struct slot *)GC_MALLOC(sizeof(struct slot));
@@ -1813,10 +1815,10 @@ void add_to_deserialization_queue(queue_t *q,
 //hashtable cache or by invoking deserialize_object_reference()
 //or deserialize_native_ptr_reference())
 void convert_heap(struct JSONObject *object_heap,
-		  struct JSONObject *native_heap,
-		  hashtable_t *obj_ht,
-		  hashtable_t *native_ptr_ht,
-		  queue_t *q)
+                  struct JSONObject *native_heap,
+                  hashtable_t *obj_ht,
+                  hashtable_t *native_ptr_ht,
+                  queue_t *q)
 {
   //TODO
   while(!queue_is_empty(q))
@@ -1836,11 +1838,11 @@ void convert_heap(struct JSONObject *object_heap,
       hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
       if(e)
-	set_heap(slot_obj->ptr, slot_obj->index1, (OBJECT_PTR)e->value);
+        set_heap(slot_obj->ptr, slot_obj->index1, (OBJECT_PTR)e->value);
       else
       {
-	OBJECT_PTR obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	set_heap(slot_obj->ptr, slot_obj->index1, obj);
+        OBJECT_PTR obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+        set_heap(slot_obj->ptr, slot_obj->index1, obj);
       }
     }
     else if(type == OBJ_PTR)
@@ -1849,36 +1851,36 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //object_t.class_object
       {
-	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(e)
-	  obj->class_object = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  obj->class_object = cls_obj;
-	}
+        if(e)
+          obj->class_object = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          obj->class_object = cls_obj;
+        }
       }
       else if(index1 == 1) //object_t.instance_vars
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  obj->instance_vars = (binding_env_t *)e->value;
-	else
-	{
-	  binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
-										 native_heap,
-										 BINDING_ENV_PTR,
-										 ref,
-										 obj_ht,
-										 native_ptr_ht,
-										 q);
-	  obj->instance_vars = env;
-	}
+        if(e)
+          obj->instance_vars = (binding_env_t *)e->value;
+        else
+        {
+          binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 BINDING_ENV_PTR,
+                                                                                 ref,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 q);
+          obj->instance_vars = env;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == CLASS_OBJ_PTR)
     {
@@ -1886,100 +1888,100 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //cls_obj->parent_class_object
       {
-	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->parent_class_object = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR parent_cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  cls_obj->parent_class_object = parent_cls_obj;
-	}
+        if(e)
+          cls_obj->parent_class_object = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR parent_cls_obj = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          cls_obj->parent_class_object = parent_cls_obj;
+        }
       }
       //index1 = 1 is the class name, which doesn't need a call to deserialize
       else if(index1 == 2) //cls_obj->package
       {
-	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->package = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR pkg = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  cls_obj->package = pkg;
-	}
+        if(e)
+          cls_obj->package = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR pkg = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          cls_obj->package = pkg;
+        }
       }
       //index1 = 3 is the number of instances, which doesn't need a call to deserialize
       else if(index1 == 4) //cls_obj->instances
       {
-	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->instances[index2] = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR instance = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  cls_obj->instances[index2] = instance;
-	}
+        if(e)
+          cls_obj->instances[index2] = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR instance = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          cls_obj->instances[index2] = instance;
+        }
       }
       //index1 = 5 is the number of instance variables, which doesn't need a call to deserialize
       //index1 = 6 is the instance variable names, which don't need a call to deserialize
       else if(index1 == 7) //cls_obj->shared_vars
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->shared_vars = (binding_env_t *)e->value;
-	else
-	{
-	  binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
-										 native_heap,
-										 BINDING_ENV_PTR,
-										 ref,
-										 obj_ht,
-										 native_ptr_ht,
-										 q);
-	  cls_obj->shared_vars = env;
-	}
+        if(e)
+          cls_obj->shared_vars = (binding_env_t *)e->value;
+        else
+        {
+          binding_env_t *env = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 BINDING_ENV_PTR,
+                                                                                 ref,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 q);
+          cls_obj->shared_vars = env;
+        }
       }
       else if(index1 == 8) //cls_obj->instance_methods
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->instance_methods = (method_binding_env_t *)e->value;
-	else
-	{
-	  method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
-											       native_heap,
-											       METHOD_BINDING_ENV_PTR,
-											       ref,
-											       obj_ht,
-											       native_ptr_ht,
-											       q);
-	  cls_obj->instance_methods = env;
-	}
+        if(e)
+          cls_obj->instance_methods = (method_binding_env_t *)e->value;
+        else
+        {
+          method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                               native_heap,
+                                                                                               METHOD_BINDING_ENV_PTR,
+                                                                                               ref,
+                                                                                               obj_ht,
+                                                                                               native_ptr_ht,
+                                                                                               q);
+          cls_obj->instance_methods = env;
+        }
       }
       else if(index1 == 9) //cls_obj->class_methods
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  cls_obj->class_methods = (method_binding_env_t *)e->value;
-	else
-	{
-	  method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
-											       native_heap,
-											       METHOD_BINDING_ENV_PTR,
-											       ref,
-											       obj_ht,
-											       native_ptr_ht,
-											       q);
-	  cls_obj->class_methods = env;
-	}
+        if(e)
+          cls_obj->class_methods = (method_binding_env_t *)e->value;
+        else
+        {
+          method_binding_env_t *env = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                               native_heap,
+                                                                                               METHOD_BINDING_ENV_PTR,
+                                                                                               ref,
+                                                                                               obj_ht,
+                                                                                               native_ptr_ht,
+                                                                                               q);
+          cls_obj->class_methods = env;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == ARRAY_OBJ_PTR)
     {
@@ -1987,18 +1989,18 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //arr_obj->elements
       {
-	hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(obj_ht, (void *)ref);
 
-	if(e)
-	  arr_obj->elements[index2] = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR element = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  arr_obj->elements[index2] = element;
-	}
+        if(e)
+          arr_obj->elements[index2] = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR element = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          arr_obj->elements[index2] = element;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BINDING_ENV_PTR)
     {
@@ -2006,26 +2008,26 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //env->bindings
       {
-	assert(index2 >=0 && index2 < env->count);
+        assert(index2 >=0 && index2 < env->count);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  env->bindings[index2] = *((binding_t *)e->value);
-	else
-	{
-	  binding_t *binding = (binding_t *)deserialize_native_ptr_reference(object_heap,
-									     native_heap,
-									     BINDING_PTR,
-									     (uintptr_t)ref,
-									     obj_ht,
-									     native_ptr_ht,
-									     q);
-	  env->bindings[index2] = *binding;
-	}
+        if(e)
+          env->bindings[index2] = *((binding_t *)e->value);
+        else
+        {
+          binding_t *binding = (binding_t *)deserialize_native_ptr_reference(object_heap,
+                                                                             native_heap,
+                                                                             BINDING_PTR,
+                                                                             (uintptr_t)ref,
+                                                                             obj_ht,
+                                                                             native_ptr_ht,
+                                                                             q);
+          env->bindings[index2] = *binding;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BINDING_PTR)
     {
@@ -2033,30 +2035,30 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //binding->key
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  binding->key = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  binding->key = key;
-	}
+        if(e)
+          binding->key = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          binding->key = key;
+        }
       }
       else if(index1 == 2) //binding->val
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  binding->val = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR val = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  binding->val = val;
-	}
+        if(e)
+          binding->val = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR val = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          binding->val = val;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == METHOD_BINDING_ENV_PTR)
     {
@@ -2064,24 +2066,24 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //env->bindings
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  env->bindings[index2] = *((method_binding_t *)e->value);
-	else
-	{
-	  method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(object_heap,
-											   native_heap,
-											   METHOD_BINDING_PTR,
-											   (uintptr_t)ref,
-											   obj_ht,
-											   native_ptr_ht,
-											   q);
-	  env->bindings[index2] = *binding;
-	}
+        if(e)
+          env->bindings[index2] = *((method_binding_t *)e->value);
+        else
+        {
+          method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                           native_heap,
+                                                                                           METHOD_BINDING_PTR,
+                                                                                           (uintptr_t)ref,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht,
+                                                                                           q);
+          env->bindings[index2] = *binding;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == METHOD_BINDING_PTR)
     {
@@ -2089,36 +2091,36 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //binding->key
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  binding->key = (OBJECT_PTR)e->value;
-	else
-	{
-	  OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
-	  binding->key = key;
-	}
+        if(e)
+          binding->key = (OBJECT_PTR)e->value;
+        else
+        {
+          OBJECT_PTR key = deserialize_object_reference(object_heap, native_heap, ref, obj_ht, native_ptr_ht, q);
+          binding->key = key;
+        }
       }
       else if(index1 == 2) //binding->val
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  binding->val = (method_t *)e->value;
-	else
-	{
-	  method_t *m = deserialize_native_ptr_reference(object_heap,
-							 native_heap,
-							 METHOD_PTR,
-							 ref,
-							 obj_ht,
-							 native_ptr_ht,
-							 q);
-	  binding->val = m;
-	}
+        if(e)
+          binding->val = (method_t *)e->value;
+        else
+        {
+          method_t *m = deserialize_native_ptr_reference(object_heap,
+                                                         native_heap,
+                                                         METHOD_PTR,
+                                                         ref,
+                                                         obj_ht,
+                                                         native_ptr_ht,
+                                                         q);
+          binding->val = m;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == EXPRESSION_PTR)
     {
@@ -2126,40 +2128,40 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //exp->asgn
       {
-	assert(exp->type == ASSIGNMENT);
+        assert(exp->type == ASSIGNMENT);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  exp->asgn = (assignment_t *)e->value;
-	else
-	  exp->asgn = (assignment_t *)deserialize_native_ptr_reference(object_heap,
-								       native_heap,
-								       ASSIGNMENT_PTR,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          exp->asgn = (assignment_t *)e->value;
+        else
+          exp->asgn = (assignment_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       ASSIGNMENT_PTR,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else if(index1 == 2) //exp->basic_exp
       {
-	assert(exp->type == BASIC_EXPRESSION);
+        assert(exp->type == BASIC_EXPRESSION);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  exp->basic_exp = (basic_expression_t *)e->value;
-	else
-	  exp->basic_exp = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
-										  native_heap,
-										  BASIC_EXPRESSION_PTR,
-										  (uintptr_t)ref,
-										  obj_ht,
-										  native_ptr_ht,
-										  q);
+        if(e)
+          exp->basic_exp = (basic_expression_t *)e->value;
+        else
+          exp->basic_exp = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                  native_heap,
+                                                                                  BASIC_EXPRESSION_PTR,
+                                                                                  (uintptr_t)ref,
+                                                                                  obj_ht,
+                                                                                  native_ptr_ht,
+                                                                                  q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == RETURN_STATEMENT_PTR)
     {
@@ -2168,15 +2170,15 @@ void convert_heap(struct JSONObject *object_heap,
       hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
       if(e)
-	ret_stmt->exp = (expression_t *)e->value;
+        ret_stmt->exp = (expression_t *)e->value;
       else
-	ret_stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 EXPRESSION_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
+        ret_stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                         native_heap,
+                                                                         EXPRESSION_PTR,
+                                                                         (uintptr_t)ref,
+                                                                         obj_ht,
+                                                                         native_ptr_ht,
+                                                                         q);
     }
     else if(type == PRIMARY_PTR)
     {
@@ -2184,57 +2186,57 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 2) //prim->lit
       {
-	assert(prim->type == LITERAL);
+        assert(prim->type == LITERAL);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  prim->lit = (literal_t *)e->value;
-	else
-	  prim->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
-								    native_heap,
-								    LITERAL_PTR,
-								    (uintptr_t)ref,
-								    obj_ht,
-								    native_ptr_ht,
-								    q);
+        if(e)
+          prim->lit = (literal_t *)e->value;
+        else
+          prim->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
+                                                                    native_heap,
+                                                                    LITERAL_PTR,
+                                                                    (uintptr_t)ref,
+                                                                    obj_ht,
+                                                                    native_ptr_ht,
+                                                                    q);
       }
       else if(index1 == 3) //prim->blk_cons
       {
-	assert(prim->type == BLOCK_CONSTRUCTOR);
+        assert(prim->type == BLOCK_CONSTRUCTOR);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  prim->blk_cons = (block_constructor_t *)e->value;
-	else
-	  prim->blk_cons = (block_constructor_t *)deserialize_native_ptr_reference(object_heap,
-										   native_heap,
-										   BLOCK_CONSTRUCTOR_PTR,
-										   (uintptr_t)ref,
-										   obj_ht,
-										   native_ptr_ht,
-										   q);
+        if(e)
+          prim->blk_cons = (block_constructor_t *)e->value;
+        else
+          prim->blk_cons = (block_constructor_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                   native_heap,
+                                                                                   BLOCK_CONSTRUCTOR_PTR,
+                                                                                   (uintptr_t)ref,
+                                                                                   obj_ht,
+                                                                                   native_ptr_ht,
+                                                                                   q);
       }
       else if(index1 == 4) //prim->exp
       {
-	assert(prim->type == EXPRESSION1);
+        assert(prim->type == EXPRESSION1);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  prim->exp = (expression_t *)e->value;
-	else
-	  prim->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
-								       native_heap,
-								       EXPRESSION_PTR,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          prim->exp = (expression_t *)e->value;
+        else
+          prim->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       EXPRESSION_PTR,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == MESSAGE_PTR)
     {
@@ -2242,57 +2244,57 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //msg->unary_messages
       {
-	assert(msg->type == UNARY_MESSAGE);
+        assert(msg->type == UNARY_MESSAGE);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  msg->unary_messages = (unary_messages_t *)e->value;
-	else
-	  msg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     UNARY_MESSAGES_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+        if(e)
+          msg->unary_messages = (unary_messages_t *)e->value;
+        else
+          msg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     UNARY_MESSAGES_PTR,
+                                                                                     (uintptr_t)ref,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     q);
       }
       else if(index1 == 2) //msg->binary_messages
       {
-	assert(msg->type == BINARY_MESSAGE);
+        assert(msg->type == BINARY_MESSAGE);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  msg->binary_messages = (binary_messages_t *)e->value;
-	else
-	  msg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       BINARY_MESSAGES_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
+        if(e)
+          msg->binary_messages = (binary_messages_t *)e->value;
+        else
+          msg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                       native_heap,
+                                                                                       BINARY_MESSAGES_PTR,
+                                                                                       (uintptr_t)ref,
+                                                                                       obj_ht,
+                                                                                       native_ptr_ht,
+                                                                                       q);
       }
       else if(index1 == 3) //msg->kw_msg
       {
-	assert(msg->type == KEYWORD_MESSAGE);
+        assert(msg->type == KEYWORD_MESSAGE);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  msg->kw_msg = (keyword_message_t *)e->value;
-	else
-	  msg->kw_msg = (keyword_message_t *)deserialize_native_ptr_reference(object_heap,
-									      native_heap,
-									      KEYWORD_MESSAGE_PTR,
-									      (uintptr_t)ref,
-									      obj_ht,
-									      native_ptr_ht,
-									      q);
+        if(e)
+          msg->kw_msg = (keyword_message_t *)e->value;
+        else
+          msg->kw_msg = (keyword_message_t *)deserialize_native_ptr_reference(object_heap,
+                                                                              native_heap,
+                                                                              KEYWORD_MESSAGE_PTR,
+                                                                              (uintptr_t)ref,
+                                                                              obj_ht,
+                                                                              native_ptr_ht,
+                                                                              q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == CASCADED_MESSAGES_PTR)
     {
@@ -2300,26 +2302,26 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //casc_msgs->cascaded_msgs
       {
-	assert(index2 >= 0 && index2 < casc_msgs->nof_cascaded_msgs);
+        assert(index2 >= 0 && index2 < casc_msgs->nof_cascaded_msgs);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  casc_msgs->cascaded_msgs[index2] = *((message_t *)e->value);
-	else
-	{
-	  message_t *msg = (message_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 MESSAGE_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
-	  casc_msgs->cascaded_msgs[index2] = *msg;
-	}
+        if(e)
+          casc_msgs->cascaded_msgs[index2] = *((message_t *)e->value);
+        else
+        {
+          message_t *msg = (message_t *)deserialize_native_ptr_reference(object_heap,
+                                                                         native_heap,
+                                                                         MESSAGE_PTR,
+                                                                         (uintptr_t)ref,
+                                                                         obj_ht,
+                                                                         native_ptr_ht,
+                                                                         q);
+          casc_msgs->cascaded_msgs[index2] = *msg;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == LITERAL_PTR)
     {
@@ -2327,40 +2329,40 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //lit->num
       {
-	assert(lit->type == NUMBER_LITERAL);
+        assert(lit->type == NUMBER_LITERAL);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  lit->num = (number_t *)e->value;
-	else
-	  lit->num = (number_t *)deserialize_native_ptr_reference(object_heap,
-								  native_heap,
-								  NUMBER_PTR,
-								  (uintptr_t)ref,
-								  obj_ht,
-								  native_ptr_ht,
-								  q);
+        if(e)
+          lit->num = (number_t *)e->value;
+        else
+          lit->num = (number_t *)deserialize_native_ptr_reference(object_heap,
+                                                                  native_heap,
+                                                                  NUMBER_PTR,
+                                                                  (uintptr_t)ref,
+                                                                  obj_ht,
+                                                                  native_ptr_ht,
+                                                                  q);
       }
       else if(index1 == 3) //lit->array_elements
       {
-	assert(lit->type == ARRAY_LITERAL);
+        assert(lit->type == ARRAY_LITERAL);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  lit->array_elements = (array_elements_t *)e->value;
-	else
-	  lit->array_elements = (array_elements_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     ARRAY_ELEMENTS_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+        if(e)
+          lit->array_elements = (array_elements_t *)e->value;
+        else
+          lit->array_elements = (array_elements_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     ARRAY_ELEMENTS_PTR,
+                                                                                     (uintptr_t)ref,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BLOCK_CONSTRUCTOR_PTR)
     {
@@ -2368,40 +2370,40 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //cons->block_args
       {
-	assert(cons->type == BLOCK_ARGS);
+        assert(cons->type == BLOCK_ARGS);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  cons->block_args = (block_arguments_t *)e->value;
-	else
-	  cons->block_args = (block_arguments_t *)deserialize_native_ptr_reference(object_heap,
-										   native_heap,
-										   BLOCK_ARGUMENT_PTR,
-										   (uintptr_t)ref,
-										   obj_ht,
-										   native_ptr_ht,
-										   q);
+        if(e)
+          cons->block_args = (block_arguments_t *)e->value;
+        else
+          cons->block_args = (block_arguments_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                   native_heap,
+                                                                                   BLOCK_ARGUMENT_PTR,
+                                                                                   (uintptr_t)ref,
+                                                                                   obj_ht,
+                                                                                   native_ptr_ht,
+                                                                                   q);
       }
       else if(index1 == 2) //cons->exec_code
       {
-	assert(cons->type == NO_BLOCK_ARGS);
+        assert(cons->type == NO_BLOCK_ARGS);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  cons->exec_code = (executable_code_t *)e->value;
-	else
-	  cons->exec_code = (executable_code_t *)deserialize_native_ptr_reference(object_heap,
-										  native_heap,
-										  EXEC_CODE_PTR,
-										  (uintptr_t)ref,
-										  obj_ht,
-										  native_ptr_ht,
-										  q);
+        if(e)
+          cons->exec_code = (executable_code_t *)e->value;
+        else
+          cons->exec_code = (executable_code_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                  native_heap,
+                                                                                  EXEC_CODE_PTR,
+                                                                                  (uintptr_t)ref,
+                                                                                  obj_ht,
+                                                                                  native_ptr_ht,
+                                                                                  q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BINARY_MESSAGES_PTR)
     {
@@ -2409,26 +2411,26 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //bin_msgs->bin_msgs
       {
-	assert(index2 >=0 && index2 < bin_msgs->nof_messages);
+        assert(index2 >=0 && index2 < bin_msgs->nof_messages);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  bin_msgs->bin_msgs[index2] = *((binary_message_t *)e->value);
-	else
-	{
-	  binary_message_t *bin_msg = (binary_message_t *)deserialize_native_ptr_reference(object_heap,
-											   native_heap,
-											   BINARY_MESSAGE_PTR,
-											   (uintptr_t)ref,
-											   obj_ht,
-											   native_ptr_ht,
-											   q);
-	  bin_msgs->bin_msgs[index2] = *bin_msg;
-	}
+        if(e)
+          bin_msgs->bin_msgs[index2] = *((binary_message_t *)e->value);
+        else
+        {
+          binary_message_t *bin_msg = (binary_message_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                           native_heap,
+                                                                                           BINARY_MESSAGE_PTR,
+                                                                                           (uintptr_t)ref,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht,
+                                                                                           q);
+          bin_msgs->bin_msgs[index2] = *bin_msg;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BINARY_MESSAGE_PTR)
     {
@@ -2436,21 +2438,21 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //bin_msg->bin_arg
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  bin_msg->bin_arg = (binary_argument_t *)e->value;
-	else
-	  bin_msg->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
-										   native_heap,
-										   BINARY_ARGUMENT_PTR,
-										   (uintptr_t)ref,
-										   obj_ht,
-										   native_ptr_ht,
-										   q);
+        if(e)
+          bin_msg->bin_arg = (binary_argument_t *)e->value;
+        else
+          bin_msg->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                   native_heap,
+                                                                                   BINARY_ARGUMENT_PTR,
+                                                                                   (uintptr_t)ref,
+                                                                                   obj_ht,
+                                                                                   native_ptr_ht,
+                                                                                   q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == KEYWORD_MESSAGE_PTR)
     {
@@ -2458,25 +2460,25 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //kw_msg->kw_arg_pairs
       {
-	assert(index2 >= 0 && index2 < kw_msg->nof_args);
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        assert(index2 >= 0 && index2 < kw_msg->nof_args);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  kw_msg->kw_arg_pairs[index2] = *((keyword_argument_pair_t *)e->value);
-	else
-	{
-	  keyword_argument_pair_t *arg_pair = (keyword_argument_pair_t *)deserialize_native_ptr_reference(object_heap,
-													  native_heap,
-													  KEYWORD_ARGUMENT_PAIR_PTR,
-													  (uintptr_t)ref,
-													  obj_ht,
-													  native_ptr_ht,
-													  q);
-	  kw_msg->kw_arg_pairs[index2] = *arg_pair;
-	}
+        if(e)
+          kw_msg->kw_arg_pairs[index2] = *((keyword_argument_pair_t *)e->value);
+        else
+        {
+          keyword_argument_pair_t *arg_pair = (keyword_argument_pair_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                                          native_heap,
+                                                                                                          KEYWORD_ARGUMENT_PAIR_PTR,
+                                                                                                          (uintptr_t)ref,
+                                                                                                          obj_ht,
+                                                                                                          native_ptr_ht,
+                                                                                                          q);
+          kw_msg->kw_arg_pairs[index2] = *arg_pair;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BINARY_ARGUMENT_PTR)
     {
@@ -2484,36 +2486,36 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //bin_arg->prim
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  bin_arg->prim = (primary_t *)e->value;
-	else
-	  bin_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
-									native_heap,
-									PRIMARY_PTR,
-									(uintptr_t)ref,
-									obj_ht,
-									native_ptr_ht,
-									q);
+        if(e)
+          bin_arg->prim = (primary_t *)e->value;
+        else
+          bin_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+                                                                        native_heap,
+                                                                        PRIMARY_PTR,
+                                                                        (uintptr_t)ref,
+                                                                        obj_ht,
+                                                                        native_ptr_ht,
+                                                                        q);
       }
       else if(index1 == 1) //bin_arg->unary_messages
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  bin_arg->unary_messages = (unary_messages_t *)e->value;
-	else
-	  bin_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
-											 native_heap,
-											 UNARY_MESSAGES_PTR,
-											 (uintptr_t)ref,
-											 obj_ht,
-											 native_ptr_ht,
-											 q);
+        if(e)
+          bin_arg->unary_messages = (unary_messages_t *)e->value;
+        else
+          bin_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                         native_heap,
+                                                                                         UNARY_MESSAGES_PTR,
+                                                                                         (uintptr_t)ref,
+                                                                                         obj_ht,
+                                                                                         native_ptr_ht,
+                                                                                         q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == KEYWORD_ARGUMENT_PTR)
     {
@@ -2521,51 +2523,51 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //kw_arg->prim
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  kw_arg->prim = (primary_t *)e->value;
-	else
-	  kw_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
-								       native_heap,
-								       PRIMARY_PTR,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          kw_arg->prim = (primary_t *)e->value;
+        else
+          kw_arg->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       PRIMARY_PTR,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else if(index1 == 1) //kw_arg->unary_messages
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  kw_arg->unary_messages = (unary_messages_t *)e->value;
-	else
-	  kw_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
-											native_heap,
-											UNARY_MESSAGES_PTR,
-											(uintptr_t)ref,
-											obj_ht,
-											native_ptr_ht,
-											q);
+        if(e)
+          kw_arg->unary_messages = (unary_messages_t *)e->value;
+        else
+          kw_arg->unary_messages = (unary_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        UNARY_MESSAGES_PTR,
+                                                                                        (uintptr_t)ref,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        q);
       }
       else if(index1 == 2) //kw_arg->binary_messages
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  kw_arg->binary_messages = (binary_messages_t *)e->value;
-	else
-	  kw_arg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
-											  native_heap,
-											  BINARY_MESSAGES_PTR,
-											  (uintptr_t)ref,
-											  obj_ht,
-											  native_ptr_ht,
-											  q);
+        if(e)
+          kw_arg->binary_messages = (binary_messages_t *)e->value;
+        else
+          kw_arg->binary_messages = (binary_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                          native_heap,
+                                                                                          BINARY_MESSAGES_PTR,
+                                                                                          (uintptr_t)ref,
+                                                                                          obj_ht,
+                                                                                          native_ptr_ht,
+                                                                                          q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
     {
@@ -2574,24 +2576,24 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //kw_arg_pair->kw_arg
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  kw_arg_pair->kw_arg = (keyword_argument_t *)e->value;
-	else
-	  kw_arg_pair->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       KEYWORD_ARGUMENT_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
-	printf("in if\n");
-	print_keyword_argument(kw_arg_pair->kw_arg);
-	printf("after printing keyword arg\n");
+        if(e)
+          kw_arg_pair->kw_arg = (keyword_argument_t *)e->value;
+        else
+          kw_arg_pair->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                       native_heap,
+                                                                                       KEYWORD_ARGUMENT_PTR,
+                                                                                       (uintptr_t)ref,
+                                                                                       obj_ht,
+                                                                                       native_ptr_ht,
+                                                                                       q);
+        printf("in if\n");
+        print_keyword_argument(kw_arg_pair->kw_arg);
+        printf("after printing keyword arg\n");
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == STATEMENTS_PTR)
     {
@@ -2599,57 +2601,57 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //stmt->ret_stmt
       {
-	assert(stmt->type == RETURN_STATEMENT);
+        assert(stmt->type == RETURN_STATEMENT);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  stmt->ret_stmt = (return_statement_t *)e->value;
-	else
-	  stmt->ret_stmt = (return_statement_t *)deserialize_native_ptr_reference(object_heap,
-										  native_heap,
-										  RETURN_STATEMENT_PTR,
-										  (uintptr_t)ref,
-										  obj_ht,
-										  native_ptr_ht,
-										  q);
+        if(e)
+          stmt->ret_stmt = (return_statement_t *)e->value;
+        else
+          stmt->ret_stmt = (return_statement_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                  native_heap,
+                                                                                  RETURN_STATEMENT_PTR,
+                                                                                  (uintptr_t)ref,
+                                                                                  obj_ht,
+                                                                                  native_ptr_ht,
+                                                                                  q);
       }
       else if(index1 == 2) //stmt->exp
       {
-	assert(stmt->type == EXPRESSION);
+        assert(stmt->type == EXPRESSION);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  stmt->exp = (expression_t *)e->value;
-	else
-	  stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
-								       native_heap,
-								       EXPRESSION_PTR,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          stmt->exp = (expression_t *)e->value;
+        else
+          stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       EXPRESSION_PTR,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else if(index1 == 3) //stmt->statements
       {
-	assert(stmt->type == EXP_PLUS_STATEMENTS);
+        assert(stmt->type == EXP_PLUS_STATEMENTS);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  stmt->statements = (struct statement *)e->value;
-	else
-	  stmt->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
-										  native_heap,
-										  STATEMENTS_PTR,
-										  (uintptr_t)ref,
-										  obj_ht,
-										  native_ptr_ht,
-										  q);
+        if(e)
+          stmt->statements = (struct statement *)e->value;
+        else
+          stmt->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+                                                                                  native_heap,
+                                                                                  STATEMENTS_PTR,
+                                                                                  (uintptr_t)ref,
+                                                                                  obj_ht,
+                                                                                  native_ptr_ht,
+                                                                                  q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == EXEC_CODE_PTR)
     {
@@ -2657,36 +2659,36 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //exec_code->temporaries
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  exec_code->temporaries = (temporaries_t *)e->value;
-	else
-	  exec_code->temporaries = (temporaries_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     TEMPORARIES_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+        if(e)
+          exec_code->temporaries = (temporaries_t *)e->value;
+        else
+          exec_code->temporaries = (temporaries_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     TEMPORARIES_PTR,
+                                                                                     (uintptr_t)ref,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     q);
       }
       else if(index1 == 1) //exec_code->statements
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  exec_code->statements = (struct statement *)e->value;
-	else
-	  exec_code->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
-										       native_heap,
-										       STATEMENTS_PTR,
-										       (uintptr_t)ref,
-										       obj_ht,
-										       native_ptr_ht,
-										       q);
+        if(e)
+          exec_code->statements = (struct statement *)e->value;
+        else
+          exec_code->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+                                                                                       native_heap,
+                                                                                       STATEMENTS_PTR,
+                                                                                       (uintptr_t)ref,
+                                                                                       obj_ht,
+                                                                                       native_ptr_ht,
+                                                                                       q);
       }
       else
-	assert(false);
+        assert(false);
     }
     //no need to handle STACK_TYPE_PTR explicitly, see
     //code in deserialize_native_ptr_reference() for STACK_TYPE_PTR
@@ -2696,77 +2698,77 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //handler->protected_block
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  handler->protected_block = (OBJECT_PTR)e->value;
-	else
-	  handler->protected_block = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									      native_heap,
-									      (uintptr_t)ref,
-									      obj_ht,
-									      native_ptr_ht,
-									      q);
+        if(e)
+          handler->protected_block = (OBJECT_PTR)e->value;
+        else
+          handler->protected_block = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                              native_heap,
+                                                                              (uintptr_t)ref,
+                                                                              obj_ht,
+                                                                              native_ptr_ht,
+                                                                              q);
       }
       else if(index1 == 1) //handler->selector
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  handler->selector = (OBJECT_PTR)e->value;
-	else
-	  handler->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								       native_heap,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          handler->selector = (OBJECT_PTR)e->value;
+        else
+          handler->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                       native_heap,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else if(index1 == 2) //handler->exception_action
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  handler->exception_action = (OBJECT_PTR)e->value;
-	else
-	  handler->exception_action = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									       native_heap,
-									       (uintptr_t)ref,
-									       obj_ht,
-									       native_ptr_ht,
-									       q);
+        if(e)
+          handler->exception_action = (OBJECT_PTR)e->value;
+        else
+          handler->exception_action = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                               native_heap,
+                                                                               (uintptr_t)ref,
+                                                                               obj_ht,
+                                                                               native_ptr_ht,
+                                                                               q);
       }
       else if(index1 == 3) //handler->exception_environment
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  handler->exception_environment = (stack_type *)e->value;
-	else
-	  handler->exception_environment = (stack_type *)deserialize_native_ptr_reference(object_heap,
-											  native_heap,
-											  STACK_TYPE_PTR,
-											  (uintptr_t)ref,
-											  obj_ht,
-											  native_ptr_ht,
-											  q);
+        if(e)
+          handler->exception_environment = (stack_type *)e->value;
+        else
+          handler->exception_environment = (stack_type *)deserialize_native_ptr_reference(object_heap,
+                                                                                          native_heap,
+                                                                                          STACK_TYPE_PTR,
+                                                                                          (uintptr_t)ref,
+                                                                                          obj_ht,
+                                                                                          native_ptr_ht,
+                                                                                          q);
       }
       else if(index1 == 4) //handler->cont
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  handler->cont = (OBJECT_PTR)e->value;
-	else
-	  handler->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								   native_heap,
-								   (uintptr_t)ref,
-								   obj_ht,
-								   native_ptr_ht,
-								   q);
+        if(e)
+          handler->cont = (OBJECT_PTR)e->value;
+        else
+          handler->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                   native_heap,
+                                                                   (uintptr_t)ref,
+                                                                   obj_ht,
+                                                                   native_ptr_ht,
+                                                                   q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == CALL_CHAIN_ENTRY_PTR)
     {
@@ -2774,135 +2776,135 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 0) //entry->exp_ptr
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->exp_ptr = (OBJECT_PTR)e->value;
-	else
-	  entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								    native_heap,
-								    (uintptr_t)ref,
-								    obj_ht,
-								    native_ptr_ht,
-								    q);
+        if(e)
+          entry->exp_ptr = (OBJECT_PTR)e->value;
+        else
+          entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                    native_heap,
+                                                                    (uintptr_t)ref,
+                                                                    obj_ht,
+                                                                    native_ptr_ht,
+                                                                    q);
       }
       else if(index1 == 2) //entry->receiver
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->receiver = (OBJECT_PTR)e->value;
-	else
-	  entry->receiver = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								     native_heap,
-								     (uintptr_t)ref,
-								     obj_ht,
-								     native_ptr_ht,
-								     q);
+        if(e)
+          entry->receiver = (OBJECT_PTR)e->value;
+        else
+          entry->receiver = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                     native_heap,
+                                                                     (uintptr_t)ref,
+                                                                     obj_ht,
+                                                                     native_ptr_ht,
+                                                                     q);
       }
       else if(index1 == 3) //entry->selector
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->selector = (OBJECT_PTR)e->value;
-	else
-	  entry->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								     native_heap,
-								     (uintptr_t)ref,
-								     obj_ht,
-								     native_ptr_ht,
-								     q);
+        if(e)
+          entry->selector = (OBJECT_PTR)e->value;
+        else
+          entry->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                     native_heap,
+                                                                     (uintptr_t)ref,
+                                                                     obj_ht,
+                                                                     native_ptr_ht,
+                                                                     q);
       }
       else if(index1 == 4) //entry->method
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->method = (method_t *)e->value;
-	else
-	  entry->method = (method_t *)deserialize_native_ptr_reference(object_heap,
-								       native_heap,
-								       METHOD_PTR,
-								       (uintptr_t)ref,
-								       obj_ht,
-								       native_ptr_ht,
-								       q);
+        if(e)
+          entry->method = (method_t *)e->value;
+        else
+          entry->method = (method_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       METHOD_PTR,
+                                                                       (uintptr_t)ref,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       q);
       }
       else if(index1 == 5) //entry->closure
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->closure = (OBJECT_PTR)e->value;
-	else
-	  entry->closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								    native_heap,
-								    (uintptr_t)ref,
-								    obj_ht,
-								    native_ptr_ht,
-								    q);
+        if(e)
+          entry->closure = (OBJECT_PTR)e->value;
+        else
+          entry->closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                    native_heap,
+                                                                    (uintptr_t)ref,
+                                                                    obj_ht,
+                                                                    native_ptr_ht,
+                                                                    q);
       }
       else if(index1 == 6) //entry->args
       {
-	assert(index2 >= 0 && index2 < entry->nof_args);
+        assert(index2 >= 0 && index2 < entry->nof_args);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->args[index2] = (OBJECT_PTR)e->value;
-	else
-	  entry->args[index2] = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									 native_heap,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
+        if(e)
+          entry->args[index2] = (OBJECT_PTR)e->value;
+        else
+          entry->args[index2] = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                         native_heap,
+                                                                         (uintptr_t)ref,
+                                                                         obj_ht,
+                                                                         native_ptr_ht,
+                                                                         q);
       }
       else if(index1 == 7) //entry->local_vars_list
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->local_vars_list = (OBJECT_PTR)e->value;
-	else
-	  entry->local_vars_list = (OBJECT_PTR)deserialize_object_reference(object_heap,
-									    native_heap,
-									    (uintptr_t)ref,
-									    obj_ht,
-									    native_ptr_ht,
-									    q);
+        if(e)
+          entry->local_vars_list = (OBJECT_PTR)e->value;
+        else
+          entry->local_vars_list = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                            native_heap,
+                                                                            (uintptr_t)ref,
+                                                                            obj_ht,
+                                                                            native_ptr_ht,
+                                                                            q);
       }
       else if(index1 == 8) //entry->cont
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->cont = (OBJECT_PTR)e->value;
-	else
-	  entry->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
-								 native_heap,
-								 (uintptr_t)ref,
-								 obj_ht,
-								 native_ptr_ht,
-								 q);
+        if(e)
+          entry->cont = (OBJECT_PTR)e->value;
+        else
+          entry->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                 native_heap,
+                                                                 (uintptr_t)ref,
+                                                                 obj_ht,
+                                                                 native_ptr_ht,
+                                                                 q);
       }
       else if(index1 == 9) //entry->termination_blk_closure
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  entry->termination_blk_closure = (OBJECT_PTR)e->value;
-	else
-	  entry->termination_blk_closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
-										    native_heap,
-										    (uintptr_t)ref,
-										    obj_ht,
-										    native_ptr_ht,
-										    q);
+        if(e)
+          entry->termination_blk_closure = (OBJECT_PTR)e->value;
+        else
+          entry->termination_blk_closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                                    native_heap,
+                                                                                    (uintptr_t)ref,
+                                                                                    obj_ht,
+                                                                                    native_ptr_ht,
+                                                                                    q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == DEBUG_EXPRESSION_PTR)
     {
@@ -2910,57 +2912,57 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //debug_exp->be
       {
-	assert(debug_exp->type == DEBUG_BASIC_EXPRESSION);
+        assert(debug_exp->type == DEBUG_BASIC_EXPRESSION);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  debug_exp->be = (basic_expression_t *)e->value;
-	else
-	  debug_exp->be = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
-										 native_heap,
-										 BASIC_EXPRESSION_PTR,
-										 (uintptr_t)ref,
-										 obj_ht,
-										 native_ptr_ht,
-										 q);
+        if(e)
+          debug_exp->be = (basic_expression_t *)e->value;
+        else
+          debug_exp->be = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 BASIC_EXPRESSION_PTR,
+                                                                                 (uintptr_t)ref,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 q);
       }
       else if(index1 == 2) //debug_exp->bin_arg
       {
-	assert(debug_exp->type == DEBUG_BINARY_ARGUMENT);
+        assert(debug_exp->type == DEBUG_BINARY_ARGUMENT);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  debug_exp->bin_arg = (binary_argument_t *)e->value;
-	else
-	  debug_exp->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     BINARY_ARGUMENT_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+        if(e)
+          debug_exp->bin_arg = (binary_argument_t *)e->value;
+        else
+          debug_exp->bin_arg = (binary_argument_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     BINARY_ARGUMENT_PTR,
+                                                                                     (uintptr_t)ref,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     q);
       }
       else if(index1 == 3) //debug_exp->kw_arg
       {
-	assert(debug_exp->type == DEBUG_KEYWORD_ARGUMENT);
+        assert(debug_exp->type == DEBUG_KEYWORD_ARGUMENT);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  debug_exp->kw_arg = (keyword_argument_t *)e->value;
-	else
-	  debug_exp->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
-										     native_heap,
-										     KEYWORD_ARGUMENT_PTR,
-										     (uintptr_t)ref,
-										     obj_ht,
-										     native_ptr_ht,
-										     q);
+        if(e)
+          debug_exp->kw_arg = (keyword_argument_t *)e->value;
+        else
+          debug_exp->kw_arg = (keyword_argument_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     KEYWORD_ARGUMENT_PTR,
+                                                                                     (uintptr_t)ref,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == ASSIGNMENT_PTR)
     {
@@ -2968,21 +2970,21 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //asgn->rvalue
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  asgn->rvalue = (expression_t *)e->value;
-	else
-	  asgn->rvalue = (expression_t *)deserialize_native_ptr_reference(object_heap,
-									  native_heap,
-									  EXPRESSION_PTR,
-									  (uintptr_t)ref,
-									  obj_ht,
-									  native_ptr_ht,
-									  q);
+        if(e)
+          asgn->rvalue = (expression_t *)e->value;
+        else
+          asgn->rvalue = (expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                          native_heap,
+                                                                          EXPRESSION_PTR,
+                                                                          (uintptr_t)ref,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == BASIC_EXPRESSION_PTR)
     {
@@ -2990,51 +2992,51 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //basic_exp->prim
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  basic_exp->prim = (primary_t *)e->value;
-	else
-	  basic_exp->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
-									  native_heap,
-									  PRIMARY_PTR,
-									  (uintptr_t)ref,
-									  obj_ht,
-									  native_ptr_ht,
-									  q);
+        if(e)
+          basic_exp->prim = (primary_t *)e->value;
+        else
+          basic_exp->prim = (primary_t *)deserialize_native_ptr_reference(object_heap,
+                                                                          native_heap,
+                                                                          PRIMARY_PTR,
+                                                                          (uintptr_t)ref,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          q);
       }
       else if(index1 == 2) //basic_exp->msg
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  basic_exp->msg = (message_t *)e->value;
-	else
-	  basic_exp->msg = (message_t *)deserialize_native_ptr_reference(object_heap,
-									 native_heap,
-									 MESSAGE_PTR,
-									 (uintptr_t)ref,
-									 obj_ht,
-									 native_ptr_ht,
-									 q);
+        if(e)
+          basic_exp->msg = (message_t *)e->value;
+        else
+          basic_exp->msg = (message_t *)deserialize_native_ptr_reference(object_heap,
+                                                                         native_heap,
+                                                                         MESSAGE_PTR,
+                                                                         (uintptr_t)ref,
+                                                                         obj_ht,
+                                                                         native_ptr_ht,
+                                                                         q);
       }
       else if(index1 == 3) //basic_exp->cascaded_msgs
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  basic_exp->cascaded_msgs = (cascaded_messages_t *)e->value;
-	else
-	  basic_exp->cascaded_msgs = (cascaded_messages_t *)deserialize_native_ptr_reference(object_heap,
-											     native_heap,
-											     CASCADED_MESSAGES_PTR,
-											     (uintptr_t)ref,
-											     obj_ht,
-											     native_ptr_ht,
-											     q);
+        if(e)
+          basic_exp->cascaded_msgs = (cascaded_messages_t *)e->value;
+        else
+          basic_exp->cascaded_msgs = (cascaded_messages_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                             native_heap,
+                                                                                             CASCADED_MESSAGES_PTR,
+                                                                                             (uintptr_t)ref,
+                                                                                             obj_ht,
+                                                                                             native_ptr_ht,
+                                                                                             q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == ARRAY_ELEMENTS_PTR)
     {
@@ -3042,26 +3044,26 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //elems->elements
       {
-	assert(index2 >= 0 && index2 < elems->nof_elements);
+        assert(index2 >= 0 && index2 < elems->nof_elements);
 
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  elems->elements[index2] = *((array_element_t *)e->value);
-	else
-	{
-	  array_element_t *elem = (array_element_t *)deserialize_native_ptr_reference(object_heap,
-										      native_heap,
-										      ARRAY_ELEMENT_PTR,
-										      (uintptr_t)ref,
-										      obj_ht,
-										      native_ptr_ht,
-										      q);
-	  elems->elements[index2] = *elem;
-	}
+        if(e)
+          elems->elements[index2] = *((array_element_t *)e->value);
+        else
+        {
+          array_element_t *elem = (array_element_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                      native_heap,
+                                                                                      ARRAY_ELEMENT_PTR,
+                                                                                      (uintptr_t)ref,
+                                                                                      obj_ht,
+                                                                                      native_ptr_ht,
+                                                                                      q);
+          elems->elements[index2] = *elem;
+        }
       }
       else
-	assert(false);
+        assert(false);
     }
     else if(type == ARRAY_ELEMENT_PTR)
     {
@@ -3069,21 +3071,21 @@ void convert_heap(struct JSONObject *object_heap,
 
       if(index1 == 1) //elem->lit
       {
-	hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
+        hashtable_entry_t *e = hashtable_get(native_ptr_ht, (void *)ref);
 
-	if(e)
-	  elem->lit = (literal_t *)e->value;
-	else
-	  elem->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
-								    native_heap,
-								    LITERAL_PTR,
-								    (uintptr_t)ref,
-								    obj_ht,
-								    native_ptr_ht,
-								    q);
+        if(e)
+          elem->lit = (literal_t *)e->value;
+        else
+          elem->lit = (literal_t *)deserialize_native_ptr_reference(object_heap,
+                                                                    native_heap,
+                                                                    LITERAL_PTR,
+                                                                    (uintptr_t)ref,
+                                                                    obj_ht,
+                                                                    native_ptr_ht,
+                                                                    q);
       }
       else
-	assert(false);
+        assert(false);
     }
     else
       assert(false);
@@ -3095,12 +3097,12 @@ void convert_heap(struct JSONObject *object_heap,
 //It enqueues the internal references
 //that this reference may have, for processing by convert_heap()
 void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
-				       struct JSONObject *native_heap,
-				       enum PointerType ptr_type,
-				       OBJECT_PTR ref, //this should match the type of JSONObject->ivalue
-				       hashtable_t *obj_ht,
-				       hashtable_t *native_ptr_ht,
-				       queue_t *queue)
+                                       struct JSONObject *native_heap,
+                                       enum PointerType ptr_type,
+                                       OBJECT_PTR ref, //this should match the type of JSONObject->ivalue
+                                       hashtable_t *obj_ht,
+                                       hashtable_t *native_ptr_ht,
+                                       queue_t *queue)
 {
   int i;
 
@@ -3118,6 +3120,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     binding_env_t *env = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
+
     env->count = JSON_get_array_size(ptr_entry);
     env->bindings = (binding_t *)GC_MALLOC(env->count * sizeof(binding_t));
 
@@ -3127,9 +3131,19 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       hashtable_entry_t *e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	env->bindings[i] = *((binding_t *)e1->value);
+        env->bindings[i] = *((binding_t *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, BINDING_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, BINDING_PTR, 1, i);
+        binding_t *binding = (binding_t *)deserialize_native_ptr_reference(object_heap,
+                                                                           native_heap,
+                                                                           BINDING_PTR,
+                                                                           ref1,
+                                                                           obj_ht,
+                                                                           native_ptr_ht,
+                                                                           queue);
+        env->bindings[i] = *binding;
+      }
     }
 
     hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
@@ -3140,6 +3154,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     binding_t *binding = (binding_t *)GC_MALLOC(sizeof(binding_env_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
+
     hashtable_entry_t *e1;
 
     //key
@@ -3149,7 +3165,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       binding->key = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)binding->key, NONE, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)binding->key, NONE, 0, 0);
+      binding->key = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                              native_heap,
+                                                              ref1,
+                                                              obj_ht,
+                                                              native_ptr_ht,
+                                                              queue);
     //end key
 
     //val
@@ -3159,16 +3181,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       binding->val = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, NONE, 0, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, NONE, 0, 0);
+      binding->val = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                              native_heap,
+                                                              ref2,
+                                                              obj_ht,
+                                                              native_ptr_ht,
+                                                              queue);
     //end val
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
 
     return (void *)binding;
   }
   else if(ptr_type == METHOD_BINDING_ENV_PTR)
   {
     method_binding_env_t *env = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
 
     env->count = JSON_get_array_size(ptr_entry);
     env->bindings = (method_binding_t *)GC_MALLOC(env->count * sizeof(method_binding_t));
@@ -3179,18 +3209,30 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       hashtable_entry_t *e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	env->bindings[i] = *((method_binding_t *)e1->value);
+        env->bindings[i] = *((method_binding_t *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, METHOD_BINDING_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)env->bindings+i, METHOD_BINDING_PTR, 1, i);
+        method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                         native_heap,
+                                                                                         METHOD_BINDING_PTR,
+                                                                                         ref1,
+                                                                                         obj_ht,
+                                                                                         native_ptr_ht,
+                                                                                         queue);
+        env->bindings[i] = *binding;
+      }
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
 
     return (void *)env;
   }
   else if(ptr_type == METHOD_BINDING_PTR)
   {
     method_binding_t *binding = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
 
     hashtable_entry_t *e1;
 
@@ -3201,7 +3243,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       binding->key = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)binding->key, NONE, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)binding->key, NONE, 0, 0);
+      binding->key = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                              native_heap,
+                                                              ref1,
+                                                              obj_ht,
+                                                              native_ptr_ht,
+                                                              queue);
+
     //end key
 
     //val
@@ -3211,16 +3260,25 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       binding->val = (method_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, METHOD_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)binding->val, METHOD_PTR, 0, 0);
+      binding->val = (method_t *)deserialize_native_ptr_reference(object_heap,
+                                                                  native_heap,
+                                                                  METHOD_PTR,
+                                                                  ref2,
+                                                                  obj_ht,
+                                                                  native_ptr_ht,
+                                                                  queue);
     //end val
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
 
     return (void *)binding;
   }
   else if(ptr_type == EXPRESSION_PTR)
   {
     expression_t *exp = (expression_t *)GC_MALLOC(sizeof(expression_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)exp);
 
     hashtable_entry_t *e1;
 
@@ -3234,7 +3292,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         exp->asgn = (assignment_t *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)exp, EXPRESSION_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)exp, EXPRESSION_PTR, 1, 0);
+        exp->asgn = (assignment_t *)deserialize_native_ptr_reference(object_heap,
+                                                                     native_heap,
+                                                                     ASSIGNMENT_PTR,
+                                                                     ref1,
+                                                                     obj_ht,
+                                                                     native_ptr_ht,
+                                                                     queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "BASIC_EXPRESSION"))
     {
@@ -3246,18 +3311,27 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         exp->basic_exp = (basic_expression_t *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)exp, EXPRESSION_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)exp, EXPRESSION_PTR, 2, 0);
+        exp->basic_exp = (basic_expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                native_heap,
+                                                                                BASIC_EXPRESSION_PTR,
+                                                                                ref1,
+                                                                                obj_ht,
+                                                                                native_ptr_ht,
+                                                                                queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)exp);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)exp);
 
     return (void *)exp;
   }
   else if(ptr_type == RETURN_STATEMENT_PTR)
   {
     return_statement_t *ret_stmt = (return_statement_t *)GC_MALLOC(sizeof(return_statement_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)ret_stmt);
 
     hashtable_entry_t *e1;
 
@@ -3268,15 +3342,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       ret_stmt->exp = (expression_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)ret_stmt, RETURN_STATEMENT_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)ret_stmt, RETURN_STATEMENT_PTR, 0, 0);
+      ret_stmt->exp = (expression_t *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       EXPRESSION_PTR,
+                                                                       ref1,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)ret_stmt);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)ret_stmt);
 
     return (void *)ret_stmt;
   }
   else if(ptr_type == PRIMARY_PTR)
   {
     primary_t *prim = (primary_t *)GC_MALLOC(sizeof(primary_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)prim);
 
     hashtable_entry_t *e1;
 
@@ -3296,7 +3379,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         prim->lit = (struct literal *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 2, 0);
+        prim->lit = (struct literal *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       LITERAL_PTR,
+                                                                       ref1,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "BLOCK_CONSTRUCTOR"))
     {
@@ -3308,7 +3398,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         prim->blk_cons = (struct block_constructor *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 3, 0);
+        prim->blk_cons = (struct block_constructor *)deserialize_native_ptr_reference(object_heap,
+                                                                                      native_heap,
+                                                                                      BLOCK_CONSTRUCTOR_PTR,
+                                                                                      ref1,
+                                                                                      obj_ht,
+                                                                                      native_ptr_ht,
+                                                                                      queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "EXPRESSION"))
     {
@@ -3320,18 +3417,27 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         prim->exp = (struct expression *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 4, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)prim, PRIMARY_PTR, 4, 0);
+        prim->exp = (struct expression *)deserialize_native_ptr_reference(object_heap,
+                                                                          native_heap,
+                                                                          EXPRESSION_PTR,
+                                                                          ref1,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)prim);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)prim);
 
     return (void *)prim;
   }
   else if(ptr_type == MESSAGE_PTR)
   {
     message_t *msg = (message_t *)GC_MALLOC(sizeof(message_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)msg);
 
     hashtable_entry_t *e1;
 
@@ -3345,7 +3451,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         msg->unary_messages = (struct unary_messages *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 1, 0);
+        msg->unary_messages = (struct unary_messages *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        UNARY_MESSAGES_PTR,
+                                                                                        ref1,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "BINARY_MESSAGE"))
     {
@@ -3357,7 +3470,15 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         msg->binary_messages = (struct binary_messages *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 2, 0);
+        msg->binary_messages = (struct binary_messages *)deserialize_native_ptr_reference(object_heap,
+                                                                                          native_heap,
+                                                                                          BINARY_MESSAGES_PTR,
+                                                                                          ref1,
+                                                                                          obj_ht,
+                                                                                          native_ptr_ht,
+                                                                                          queue);
+
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "KEYWORD_MESSAGE"))
     {
@@ -3369,18 +3490,28 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         msg->kw_msg = (struct keyword_message *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)msg, MESSAGE_PTR, 3, 0);
+        msg->kw_msg = (struct keyword_message *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 KEYWORD_MESSAGE_PTR,
+                                                                                 ref1,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 queue);
+
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)msg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)msg);
 
     return (void *)msg;
   }
   else if(ptr_type == CASCADED_MESSAGES_PTR)
   {
     cascaded_messages_t *casc_msgs = (cascaded_messages_t *)GC_MALLOC(sizeof(cascaded_messages_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)casc_msgs);
 
     hashtable_entry_t *e1;
 
@@ -3396,16 +3527,28 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         casc_msgs->cascaded_msgs[i] = *((struct message *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)casc_msgs, CASCADED_MESSAGES_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)casc_msgs, CASCADED_MESSAGES_PTR, 1, i);
+        struct message *msg = (struct message *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 MESSAGE_PTR,
+                                                                                 ref1,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 queue);
+        casc_msgs->cascaded_msgs[i] = *msg;
+      }
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)casc_msgs);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)casc_msgs);
 
     return (void *)casc_msgs;
   }
   else if(ptr_type == LITERAL_PTR)
   {
     literal_t *lit = (literal_t *)GC_MALLOC(sizeof(literal_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)lit);
 
     hashtable_entry_t *e1;
 
@@ -3419,7 +3562,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         lit->num = (number_t *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)lit, LITERAL_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)lit, LITERAL_PTR, 1, 0);
+        lit->num = (number_t *)deserialize_native_ptr_reference(object_heap,
+                                                                native_heap,
+                                                                NUMBER_PTR,
+                                                                ref1,
+                                                                obj_ht,
+                                                                native_ptr_ht,
+                                                                queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "STRING_LITERAL"))
     {
@@ -3451,18 +3601,27 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         lit->array_elements = (struct array_elements *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)lit, LITERAL_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)lit, LITERAL_PTR, 3, 0);
+        lit->array_elements = (struct array_elements *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        ARRAY_ELEMENTS_PTR,
+                                                                                        ref1,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)lit);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)lit);
 
     return (void *)lit;
   }
   else if(ptr_type == BLOCK_CONSTRUCTOR_PTR)
   {
     block_constructor_t *cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)cons);
 
     hashtable_entry_t *e1;
 
@@ -3476,7 +3635,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         cons->block_args = (struct block_arguments *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 1, 0);
+        cons->block_args = (struct block_arguments *)deserialize_native_ptr_reference(object_heap,
+                                                                                      native_heap,
+                                                                                      BLOCK_ARGUMENT_PTR,
+                                                                                      ref1,
+                                                                                      obj_ht,
+                                                                                      native_ptr_ht,
+                                                                                      queue);
 
       long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
       e1 = hashtable_get(native_ptr_ht, (void *)ref2);
@@ -3484,7 +3650,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         cons->exec_code = (struct executable_code *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref2, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref2, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
+        cons->exec_code = (struct executable_code *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     EXEC_CODE_PTR,
+                                                                                     ref2,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "NO_BLOCK_ARGS"))
     {
@@ -3496,10 +3669,18 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         cons->exec_code = (struct executable_code *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)cons, BLOCK_CONSTRUCTOR_PTR, 2, 0);
+        cons->exec_code = (struct executable_code *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     EXEC_CODE_PTR,
+                                                                                     ref1,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     queue);
+
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)cons);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)cons);
 
     return (void *)cons;
   }
@@ -3507,19 +3688,23 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     block_arguments_t *args = (block_arguments_t *)GC_MALLOC(sizeof(block_arguments_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)args);
+
     args->nof_args = JSON_get_array_size(ptr_entry);
     args->identifiers = (char **)GC_MALLOC(args->nof_args * sizeof(char *));
 
     for(i=0; i<args->nof_args; i++)
       args->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)args);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)args);
 
     return (void *)args;
   }
   else if(ptr_type == BINARY_MESSAGES_PTR)
   {
     binary_messages_t *bin_msgs = (binary_messages_t *)GC_MALLOC(sizeof(binary_messages_t));
+
+    hashtable_put(native_ptr_hashtable, (void *)ref, (void *)bin_msgs);
 
     hashtable_entry_t *e1;
 
@@ -3534,16 +3719,28 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         bin_msgs->bin_msgs[i] = *((struct binary_message *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msgs, BINARY_MESSAGES_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msgs, BINARY_MESSAGES_PTR, 1, i);
+        struct binary_message *bin_msg = (struct binary_message *)deserialize_native_ptr_reference(object_heap,
+                                                                                                   native_heap,
+                                                                                                   BINARY_MESSAGE_PTR,
+                                                                                                   ref1,
+                                                                                                   obj_ht,
+                                                                                                   native_ptr_ht,
+                                                                                                   queue);
+        bin_msgs->bin_msgs[i] = *bin_msg;
+      }
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msgs);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msgs);
 
     return (void *)bin_msgs;
   }
   else if(ptr_type == BINARY_MESSAGE_PTR)
   {
     binary_message_t *bin_msg = (binary_message_t *)GC_MALLOC(sizeof(binary_message_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msg);
 
     hashtable_entry_t *e1;
 
@@ -3555,15 +3752,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       bin_msg->bin_arg = (struct binary_argument *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msg, BINARY_MESSAGE_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_msg, BINARY_MESSAGE_PTR, 1, 0);
+      bin_msg->bin_arg = (struct binary_argument *)deserialize_native_ptr_reference(object_heap,
+                                                                                    native_heap,
+                                                                                    BINARY_ARGUMENT_PTR,
+                                                                                    ref1,
+                                                                                    obj_ht,
+                                                                                    native_ptr_ht,
+                                                                                    queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msg);
 
     return (void *)bin_msg;
   }
   else if(ptr_type == KEYWORD_MESSAGE_PTR)
   {
     keyword_message_t *kw_msg = (keyword_message_t *)GC_MALLOC(sizeof(keyword_message_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_msg);
 
     hashtable_entry_t *e1;
 
@@ -3578,16 +3784,29 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         kw_msg->kw_arg_pairs[i] = *((struct keyword_argument_pair *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_msg, KEYWORD_MESSAGE_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_msg, KEYWORD_MESSAGE_PTR, 1, i);
+        struct keyword_argument_pair *arg_pair =
+          (struct keyword_argument_pair *)deserialize_native_ptr_reference(object_heap,
+                                                                           native_heap,
+                                                                           KEYWORD_ARGUMENT_PAIR_PTR,
+                                                                           ref1,
+                                                                           obj_ht,
+                                                                           native_ptr_ht,
+                                                                           queue);
+        kw_msg->kw_arg_pairs[i] = *arg_pair;
+      }
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_msg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_msg);
 
     return (void *)kw_msg;
   }
   else if(ptr_type == BINARY_ARGUMENT_PTR)
   {
     binary_argument_t *bin_arg = (binary_argument_t *)GC_MALLOC(sizeof(binary_argument_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_arg);
 
     hashtable_entry_t *e1;
 
@@ -3597,7 +3816,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       bin_arg->prim = (struct primary *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_arg, BINARY_ARGUMENT_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)bin_arg, BINARY_ARGUMENT_PTR, 0, 0);
+      bin_arg->prim = (struct primary *)deserialize_native_ptr_reference(object_heap,
+                                                                         native_heap,
+                                                                         PRIMARY_PTR,
+                                                                         ref1,
+                                                                         obj_ht,
+                                                                         native_ptr_ht,
+                                                                         queue);
 
     long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref2);
@@ -3605,15 +3831,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       bin_arg->unary_messages = (struct unary_messages *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)bin_arg, BINARY_ARGUMENT_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)bin_arg, BINARY_ARGUMENT_PTR, 1, 0);
+      bin_arg->unary_messages = (struct unary_messages *) deserialize_native_ptr_reference(object_heap,
+                                                                                           native_heap,
+                                                                                           UNARY_MESSAGES_PTR,
+                                                                                           ref2,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht,
+                                                                                           queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_arg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_arg);
 
     return (void *)bin_arg;
   }
   else if(ptr_type == KEYWORD_ARGUMENT_PTR)
   {
     keyword_argument_t *kw_arg = (keyword_argument_t *)GC_MALLOC(sizeof(keyword_argument_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg);
 
     hashtable_entry_t *e1;
 
@@ -3623,7 +3858,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       kw_arg->prim = (struct primary *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 0, 0);
+      kw_arg->prim = (struct primary *)deserialize_native_ptr_reference(object_heap,
+                                                                        native_heap,
+                                                                        PRIMARY_PTR,
+                                                                        ref1,
+                                                                        obj_ht,
+                                                                        native_ptr_ht,
+                                                                        queue);
 
     long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref2);
@@ -3631,7 +3873,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       kw_arg->unary_messages = (struct unary_messages *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 1, 0);
+      kw_arg->unary_messages = (struct unary_messages *)deserialize_native_ptr_reference(object_heap,
+                                                                                         native_heap,
+                                                                                         UNARY_MESSAGES_PTR,
+                                                                                         ref2,
+                                                                                         obj_ht,
+                                                                                         native_ptr_ht,
+                                                                                         queue);
 
     long long ref3 = JSON_get_array_item(ptr_entry, 2)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref3);
@@ -3639,15 +3888,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       kw_arg->binary_messages = (struct binary_messages *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref3, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 2, 0);
+      //add_to_deserialization_queue(queue, ref3, (uintptr_t)kw_arg, KEYWORD_ARGUMENT_PTR, 2, 0);
+      kw_arg->binary_messages = (struct binary_messages *)deserialize_native_ptr_reference(object_heap,
+                                                                                           native_heap,
+                                                                                           BINARY_MESSAGES_PTR,
+                                                                                           ref3,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht,
+                                                                                           queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg);
 
     return (void *)kw_arg;
   }
   else if(ptr_type == KEYWORD_ARGUMENT_PAIR_PTR)
   {
     keyword_argument_pair_t *kw_arg_pair = (keyword_argument_pair_t *)GC_MALLOC(sizeof(keyword_argument_pair_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg_pair);
 
     hashtable_entry_t *e1;
 
@@ -3659,9 +3917,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       kw_arg_pair->kw_arg = (struct keyword_argument *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg_pair, KEYWORD_ARGUMENT_PAIR_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)kw_arg_pair, KEYWORD_ARGUMENT_PAIR_PTR, 1, 0);
+      kw_arg_pair->kw_arg = (struct keyword_argument *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        KEYWORD_ARGUMENT_PTR,
+                                                                                        ref1,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg_pair);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_arg_pair);
 
     return (void *)kw_arg_pair;
   }
@@ -3669,19 +3934,23 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     temporaries_t *temps = (temporaries_t *)GC_MALLOC(sizeof(temporaries_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)temps);
+
     temps->nof_temporaries = JSON_get_array_size(ptr_entry);
     temps->temporaries = (char **)GC_MALLOC(temps->nof_temporaries * sizeof(char *));
 
     for(i=0; i<temps->nof_temporaries; i++)
       temps->temporaries[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)temps);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)temps);
 
     return (void *)temps;
   }
   else if(ptr_type == STATEMENTS_PTR)
   {
     statement_t *stmt = (statement_t *)GC_MALLOC(sizeof(statement_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)stmt);
 
     hashtable_entry_t *e1;
 
@@ -3695,7 +3964,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         stmt->ret_stmt = (struct return_statement *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 1, 0);
+        stmt->ret_stmt = (struct return_statement *)deserialize_native_ptr_reference(object_heap,
+                                                                                     native_heap,
+                                                                                     RETURN_STATEMENT_PTR,
+                                                                                     ref1,
+                                                                                     obj_ht,
+                                                                                     native_ptr_ht,
+                                                                                     queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "EXPRESSION"))
     {
@@ -3707,7 +3983,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         stmt->exp = (struct expression *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 2, 0);
+        stmt->exp = (struct expression *)deserialize_native_ptr_reference(object_heap,
+                                                                          native_heap,
+                                                                          EXPRESSION_PTR,
+                                                                          ref1,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "EXP_PLUS_STATEMENTS"))
     {
@@ -3719,12 +4002,19 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       if(e1)
         stmt->statements = (struct statement *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)stmt, STATEMENTS_PTR, 3, 0);
+        stmt->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+                                                                                native_heap,
+                                                                                STATEMENTS_PTR,
+                                                                                ref1,
+                                                                                obj_ht,
+                                                                                native_ptr_ht,
+                                                                                queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)stmt);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)stmt);
 
     return (void *)stmt;
   }
@@ -3732,19 +4022,23 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     identifiers_t *ids = (identifiers_t *)GC_MALLOC(sizeof(identifiers_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)ids);
+
     ids->nof_identifiers = JSON_get_array_size(ptr_entry);
     ids->identifiers = (char **)GC_MALLOC(ids->nof_identifiers * sizeof(char *));
 
     for(i=0; i<ids->nof_identifiers; i++)
       ids->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)ids);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)ids);
 
     return (void *)ids;
   }
   else if(ptr_type == EXEC_CODE_PTR)
   {
     executable_code_t *exec_code = (executable_code_t *)GC_MALLOC(sizeof(executable_code_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)exec_code);
 
     hashtable_entry_t *e1;
 
@@ -3754,7 +4048,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       exec_code->temporaries = (temporaries_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)exec_code, EXEC_CODE_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)exec_code, EXEC_CODE_PTR, 0, 0);
+      exec_code->temporaries = (temporaries_t *)deserialize_native_ptr_reference(object_heap,
+                                                                                 native_heap,
+                                                                                 EXEC_CODE_PTR,
+                                                                                 ref1,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht,
+                                                                                 queue);
 
     long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref2);
@@ -3762,15 +4063,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       exec_code->statements = (struct statement *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)exec_code, EXEC_CODE_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)exec_code, EXEC_CODE_PTR, 1, 0);
+      exec_code->statements = (struct statement *)deserialize_native_ptr_reference(object_heap,
+                                                                                   native_heap,
+                                                                                   STATEMENTS_PTR,
+                                                                                   ref2,
+                                                                                   obj_ht,
+                                                                                   native_ptr_ht,
+                                                                                   queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)exec_code);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)exec_code);
 
     return (void *)exec_code;
   }
   else if(ptr_type == PACKAGE_PTR)
   {
     package_t *pkg = (package_t *)GC_MALLOC(sizeof(package_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)pkg);
 
     pkg->name = GC_strdup(JSON_get_array_item(ptr_entry, 0)->strvalue);
 
@@ -3782,13 +4092,15 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     for(i=0; i<pkg->nof_symbols; i++)
       pkg->symbols[i] = GC_strdup(JSON_get_array_item(symbols, i)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)pkg);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)pkg);
 
     return (void *)pkg;
   }
   else if(ptr_type == STACK_TYPE_PTR)
   {
     stack_type *stack = (stack_type *)GC_MALLOC(sizeof(stack_type));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)stack);
 
     enum PointerType stack_content_type = JSON_get_array_item(ptr_entry, 0)->ivalue;
 
@@ -3800,32 +4112,34 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(stack_content_type == OBJECT_PTR1)
     {
       for(i=0; i<stack->count; i++)
-	stack->data[i] = (void *)deserialize_object_reference(object_heap,
-							      native_heap,
-							      JSON_get_array_item(stack_data, i)->ivalue,
-							      obj_ht,
-							      native_ptr_ht,
-							      queue);
+        stack->data[i] = (void *)deserialize_object_reference(object_heap,
+                                                              native_heap,
+                                                              JSON_get_array_item(stack_data, i)->ivalue,
+                                                              obj_ht,
+                                                              native_ptr_ht,
+                                                              queue);
     }
     else
     {
       for(i=0; i<stack->count; i++)
-	stack->data[i] = deserialize_native_ptr_reference(object_heap,
-							  native_heap,
-							  stack_content_type,
-							  JSON_get_array_item(stack_data, i)->ivalue,
-							  obj_ht,
-							  native_ptr_ht,
-							  queue);
+        stack->data[i] = deserialize_native_ptr_reference(object_heap,
+                                                          native_heap,
+                                                          stack_content_type,
+                                                          JSON_get_array_item(stack_data, i)->ivalue,
+                                                          obj_ht,
+                                                          native_ptr_ht,
+                                                          queue);
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)stack);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)stack);
 
     return (void *)stack;
   }
   else if(ptr_type == EXCEPTION_HANDLER_PTR)
   {
     exception_handler_t *handler = (exception_handler_t *)GC_MALLOC(sizeof(exception_handler_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)handler);
 
     hashtable_entry_t *e1;
 
@@ -3835,7 +4149,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       handler->protected_block = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 0, 0);
+      handler->protected_block = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                          native_heap,
+                                                                          ref1,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          queue);
 
     long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref2);
@@ -3843,7 +4163,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       handler->selector = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref2, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref2, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 1, 0);
+      handler->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                          native_heap,
+                                                                          ref2,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          queue);
 
     long long ref3 = JSON_get_array_item(ptr_entry, 2)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref3);
@@ -3851,7 +4177,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       handler->exception_action = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref3, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 2, 0);
+      //add_to_deserialization_queue(queue, ref3, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 2, 0);
+      handler->exception_action = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                          native_heap,
+                                                                          ref3,
+                                                                          obj_ht,
+                                                                          native_ptr_ht,
+                                                                          queue);
 
     long long ref4 = JSON_get_array_item(ptr_entry, 3)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref4);
@@ -3859,7 +4191,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       handler->exception_environment = (stack_type *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref4, (uintptr_t)handler, STACK_TYPE_PTR, 3, 0);
+      //add_to_deserialization_queue(queue, ref4, (uintptr_t)handler, STACK_TYPE_PTR, 3, 0);
+      handler->exception_environment = (stack_type *)deserialize_native_ptr_reference(object_heap,
+                                                                                      native_heap,
+                                                                                      STACK_TYPE_PTR,
+                                                                                      ref4,
+                                                                                      obj_ht,
+                                                                                      native_ptr_ht,
+                                                                                      queue);
 
     long long ref5 = JSON_get_array_item(ptr_entry, 5)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref5);
@@ -3867,15 +4206,23 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       handler->cont = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref5, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 4, 0);
+      //add_to_deserialization_queue(queue, ref5, (uintptr_t)handler, EXCEPTION_HANDLER_PTR, 4, 0);
+      handler->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                               native_heap,
+                                                               ref5,
+                                                               obj_ht,
+                                                               native_ptr_ht,
+                                                               queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)handler);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)handler);
 
     return (void *)handler;
   }
   else if(ptr_type == CALL_CHAIN_ENTRY_PTR)
   {
     call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)entry);
 
     hashtable_entry_t *e1;
     long long ref1;
@@ -3886,7 +4233,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->exp_ptr = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 0, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 0, 0);
+      entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                native_heap,
+                                                                ref1,
+                                                                obj_ht,
+                                                                native_ptr_ht,
+                                                                queue);
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
       entry->super = true;
@@ -3901,7 +4254,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->receiver = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 2, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 2, 0);
+      entry->receiver = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                 native_heap,
+                                                                 ref1,
+                                                                 obj_ht,
+                                                                 native_ptr_ht,
+                                                                 queue);
 
     ref1 = JSON_get_array_item(ptr_entry, 3)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref1);
@@ -3909,7 +4268,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->selector = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 3, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 3, 0);
+      entry->selector = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                 native_heap,
+                                                                 ref1,
+                                                                 obj_ht,
+                                                                 native_ptr_ht,
+                                                                 queue);
 
     ref1 = JSON_get_array_item(ptr_entry, 4)->ivalue;
     e1 = hashtable_get(native_ptr_ht, (void *)ref1);
@@ -3917,7 +4282,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->method = (method_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, METHOD_PTR, 4, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, METHOD_PTR, 4, 0);
+      entry->method = (method_t *)deserialize_native_ptr_reference(object_heap,
+                                                                   native_heap,
+                                                                   METHOD_PTR,
+                                                                   ref1,
+                                                                   obj_ht,
+                                                                   native_ptr_ht,
+                                                                   queue);
 
     ref1 = JSON_get_array_item(ptr_entry, 5)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref1);
@@ -3925,7 +4297,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->closure = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 5, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 5, 0);
+      entry->closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                native_heap,
+                                                                ref1,
+                                                                obj_ht,
+                                                                native_ptr_ht,
+                                                                queue);
 
     struct JSONObject *args = JSON_get_array_item(ptr_entry, 6);
 
@@ -3939,9 +4317,15 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(obj_ht, (void *)ref1);
 
       if(e1)
-	entry->args[i] = (OBJECT_PTR)e1->value;
+        entry->args[i] = (OBJECT_PTR)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->args+i, NONE, 6, i);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry->args+i, NONE, 6, i);
+        entry->args[i] = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                  native_heap,
+                                                                  ref1,
+                                                                  obj_ht,
+                                                                  native_ptr_ht,
+                                                                  queue);
     }
 
     ref1 = JSON_get_array_item(ptr_entry, 7)->ivalue;
@@ -3950,7 +4334,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->local_vars_list = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 7, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 7, 0);
+      entry->local_vars_list = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                        native_heap,
+                                                                        ref1,
+                                                                        obj_ht,
+                                                                        native_ptr_ht,
+                                                                        queue);
 
     ref1 = JSON_get_array_item(ptr_entry, 8)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref1);
@@ -3958,7 +4348,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->cont = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 8, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 8, 0);
+      entry->cont = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                             native_heap,
+                                                             ref1,
+                                                             obj_ht,
+                                                             native_ptr_ht,
+                                                             queue);
 
     ref1 = JSON_get_array_item(ptr_entry, 9)->ivalue;
     e1 = hashtable_get(obj_ht, (void *)ref1);
@@ -3966,7 +4362,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       entry->termination_blk_closure = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 9, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)entry, NONE, 9, 0);
+      entry->termination_blk_closure = (OBJECT_PTR)deserialize_object_reference(object_heap,
+                                                                                native_heap,
+                                                                                ref1,
+                                                                                obj_ht,
+                                                                                native_ptr_ht,
+                                                                                queue);
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 10)->strvalue, "true"))
       entry->termination_blk_invoked = true;
@@ -3975,13 +4377,15 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)entry);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)entry);
 
     return (void *)entry;
   }
   else if(ptr_type == DEBUG_EXPRESSION_PTR)
   {
     debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)debug_exp);
 
     hashtable_entry_t *e1;
 
@@ -3993,9 +4397,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	debug_exp->be = (struct basic_expression *)e1->value;
+        debug_exp->be = (struct basic_expression *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 1, 0);
+        debug_exp->be = (struct basic_expression *)deserialize_native_ptr_reference(object_heap,
+                                                                                    native_heap,
+                                                                                    BASIC_EXPRESSION_PTR,
+                                                                                    ref1,
+                                                                                    obj_ht,
+                                                                                    native_ptr_ht,
+                                                                                    queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "DEBUG_BINARY_ARGUMENT"))
     {
@@ -4005,9 +4416,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	debug_exp->bin_arg = (struct binary_argument *)e1->value;
+        debug_exp->bin_arg = (struct binary_argument *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 2, 0);
+        debug_exp->bin_arg = (struct binary_argument *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        BINARY_ARGUMENT_PTR,
+                                                                                        ref1,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "DEBUG_KEYWORD_ARGUMENT"))
     {
@@ -4017,20 +4435,29 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	debug_exp->kw_arg = (struct keyword_argument *)e1->value;
+        debug_exp->kw_arg = (struct keyword_argument *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)debug_exp, DEBUG_EXPRESSION_PTR, 3, 0);
+        debug_exp->kw_arg = (struct keyword_argument *)deserialize_native_ptr_reference(object_heap,
+                                                                                        native_heap,
+                                                                                        KEYWORD_ARGUMENT_PTR,
+                                                                                        ref1,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht,
+                                                                                        queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)debug_exp);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)debug_exp);
 
     return (void *)debug_exp;
   }
   else if(ptr_type == ASSIGNMENT_PTR)
   {
     assignment_t *asgn = (assignment_t *)GC_MALLOC(sizeof(assignment_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)asgn);
 
     hashtable_entry_t *e1;
 
@@ -4042,15 +4469,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     if(e1)
       asgn->rvalue = (struct expression *)e1->value;
     else
-      add_to_deserialization_queue(queue, ref1, (uintptr_t)asgn, ASSIGNMENT_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, ref1, (uintptr_t)asgn, ASSIGNMENT_PTR, 1, 0);
+      asgn->rvalue = (struct expression *)deserialize_native_ptr_reference(object_heap,
+                                                                           native_heap,
+                                                                           EXPRESSION_PTR,
+                                                                           ref1,
+                                                                           obj_ht,
+                                                                           native_ptr_ht,
+                                                                           queue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)asgn);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)asgn);
 
     return (void *)asgn;
   }
   else if(ptr_type == BASIC_EXPRESSION_PTR)
   {
     basic_expression_t *basic_exp = (basic_expression_t *)GC_MALLOC(sizeof(basic_expression_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)basic_exp);
 
     hashtable_entry_t *e1;
 
@@ -4062,9 +4498,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	basic_exp->prim = (struct primary *)e1->value;
+        basic_exp->prim = (struct primary *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 1, 0);
+        basic_exp->prim = (struct primary *)deserialize_native_ptr_reference(object_heap,
+                                                                             native_heap,
+                                                                             PRIMARY_PTR,
+                                                                             ref1,
+                                                                             obj_ht,
+                                                                             native_ptr_ht,
+                                                                             queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "PRIMARY_PLUS_MESSAGES"))
     {
@@ -4074,30 +4517,51 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	basic_exp->prim = (struct primary *)e1->value;
+        basic_exp->prim = (struct primary *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 1, 0);
+        basic_exp->prim = (struct primary *)deserialize_native_ptr_reference(object_heap,
+                                                                             native_heap,
+                                                                             PRIMARY_PTR,
+                                                                             ref1,
+                                                                             obj_ht,
+                                                                             native_ptr_ht,
+                                                                             queue);
 
       long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
       e1 = hashtable_get(native_ptr_ht, (void *)ref2);
 
       if(e1)
-	basic_exp->msg = (struct message *)e1->value;
+        basic_exp->msg = (struct message *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref2, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 2, 0);
+        //add_to_deserialization_queue(queue, ref2, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 2, 0);
+        basic_exp->msg = (struct message *)deserialize_native_ptr_reference(object_heap,
+                                                                            native_heap,
+                                                                            MESSAGE_PTR,
+                                                                            ref2,
+                                                                            obj_ht,
+                                                                            native_ptr_ht,
+                                                                            queue);
 
       long long ref3 = JSON_get_array_item(ptr_entry, 3)->ivalue;
       e1 = hashtable_get(native_ptr_ht, (void *)ref3);
 
       if(e1)
-	basic_exp->cascaded_msgs = (struct cascaded_messages *)e1->value;
+        basic_exp->cascaded_msgs = (struct cascaded_messages *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref3, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 3, 0);
+        //add_to_deserialization_queue(queue, ref3, (uintptr_t)basic_exp, BASIC_EXPRESSION_PTR, 3, 0);
+        basic_exp->cascaded_msgs = (struct cascaded_messages *)deserialize_native_ptr_reference(object_heap,
+                                                                                                native_heap,
+                                                                                                CASCADED_MESSAGES_PTR,
+                                                                                                ref3,
+                                                                                                obj_ht,
+                                                                                                native_ptr_ht,
+                                                                                                queue);
     }
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)basic_exp);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)basic_exp);
 
     return (void *)basic_exp;
   }
@@ -4105,19 +4569,23 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
   {
     unary_messages_t *unary_msgs = (unary_messages_t *)GC_MALLOC(sizeof(unary_messages_t));
 
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)unary_msgs);
+
     unary_msgs->nof_messages = JSON_get_array_size(ptr_entry);
     unary_msgs->identifiers = (char **)GC_MALLOC(unary_msgs->nof_messages * sizeof(char *));
 
     for(i=0; i<unary_msgs->nof_messages; i++)
       unary_msgs->identifiers[i] = GC_strdup(JSON_get_array_item(ptr_entry, i)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)unary_msgs);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)unary_msgs);
 
     return (void *)unary_msgs;
   }
   else if(ptr_type == ARRAY_ELEMENTS_PTR)
   {
     array_elements_t *elems = (array_elements_t *)GC_MALLOC(sizeof(array_elements_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)elems);
 
     hashtable_entry_t *e1;
 
@@ -4129,18 +4597,30 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	elems->elements[i] = *((struct array_element *)e1->value);
+        elems->elements[i] = *((struct array_element *)e1->value);
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)elems, ARRAY_ELEMENTS_PTR, 1, i);
+      {
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)elems, ARRAY_ELEMENTS_PTR, 1, i);
+        struct array_element *elem = deserialize_native_ptr_reference(object_heap,
+                                                                      native_heap,
+                                                                      ARRAY_ELEMENT_PTR,
+                                                                      ref1,
+                                                                      obj_ht,
+                                                                      native_ptr_ht,
+                                                                      queue);
+        elems->elements[i] = *elem;
+      }
     }
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)elems);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)elems);
 
     return (void *)elems;
   }
   else if(ptr_type == ARRAY_ELEMENT_PTR)
   {
     array_element_t *elem = (array_element_t *)GC_MALLOC(sizeof(array_element_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)elem);
 
     hashtable_entry_t *e1;
 
@@ -4152,9 +4632,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-	elem->lit = (struct literal *)e1->value;
+        elem->lit = (struct literal *)e1->value;
       else
-	add_to_deserialization_queue(queue, ref1, (uintptr_t)elem, ARRAY_ELEMENT_PTR, 1, 0);
+        //add_to_deserialization_queue(queue, ref1, (uintptr_t)elem, ARRAY_ELEMENT_PTR, 1, 0);
+        elem->lit = (struct literal *)deserialize_native_ptr_reference(object_heap,
+                                                                       native_heap,
+                                                                       LITERAL_PTR,
+                                                                       ref1,
+                                                                       obj_ht,
+                                                                       native_ptr_ht,
+                                                                       queue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "IDENTIFIER"))
     {
@@ -4164,13 +4651,15 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
     else
       assert(false);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)elem);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)elem);
 
     return (void *)elem;
   }
   else if(ptr_type == NUMBER_PTR)
   {
     number_t *num = (number_t *)GC_MALLOC(sizeof(number_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)num);
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "INTEGER"))
       num->type = INTEGER;
@@ -4181,7 +4670,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 
     num->val = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
 
-    hashtable_put(native_ptr_ht, (void *)ref, (void *)num);
+    //hashtable_put(native_ptr_ht, (void *)ref, (void *)num);
 
     return (void *)num;
   }
@@ -4197,11 +4686,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *object_heap,
 //It enqueues the internal references
 //that this reference may have, for processing by convert_heap()
 OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
-					struct JSONObject *native_heap,
-					OBJECT_PTR ref, //this should match the type of JSONObject->ivalue
-					hashtable_t *obj_ht,
-					hashtable_t *native_ptr_ht,
-					queue_t *queue)
+                                        struct JSONObject *native_heap,
+                                        OBJECT_PTR ref, //this should match the type of JSONObject->ivalue
+                                        hashtable_t *obj_ht,
+                                        hashtable_t *native_ptr_ht,
+                                        queue_t *queue)
 {
   int i;
 
@@ -4234,6 +4723,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
   {
     ptr = object_alloc(2, CONS_TAG);
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
+
     OBJECT_PTR car_ref = JSON_get_array_item(heap_obj, 0)->ivalue;
     OBJECT_PTR cdr_ref = JSON_get_array_item(heap_obj, 1)->ivalue;
 
@@ -4243,7 +4734,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
       if(e)
         set_heap(ptr, 0, (OBJECT_PTR)(e->value));
       else
-        add_to_deserialization_queue(queue, car_ref, ptr, NONE, 0, 0);
+        //add_to_deserialization_queue(queue, car_ref, ptr, NONE, 0, 0);
+	set_heap(ptr, 0, deserialize_object_reference(object_heap, native_heap, car_ref, obj_ht, native_ptr_ht, queue));
     }
     else
       set_heap(ptr, 0, car_ref);
@@ -4254,7 +4746,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
       if(e)
         set_heap(ptr, 1, (OBJECT_PTR)(e->value));
       else
-        add_to_deserialization_queue(queue, cdr_ref, ptr, NONE, 1, 0);
+        //add_to_deserialization_queue(queue, cdr_ref, ptr, NONE, 1, 0);
+	set_heap(ptr, 1, deserialize_object_reference(object_heap, native_heap, cdr_ref, obj_ht, native_ptr_ht, queue));
     }
     else
       set_heap(ptr, 1, cdr_ref);
@@ -4267,34 +4760,38 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 
     object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
+
     /* class_object */
     //we index into the native heap to get the object_t 'pointer',
     //and then take the first element of the array there (which maps
     //to the object_t struct)
     OBJECT_PTR cls_obj = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-					     0)->ivalue;
+                                             0)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)cls_obj);
 
     if(e1)
       obj->class_object = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, cls_obj, (uintptr_t)obj, OBJ_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, cls_obj, (uintptr_t)obj, OBJ_PTR, 0, 0);
+      obj->class_object = deserialize_object_reference(object_heap, native_heap, cls_obj, obj_ht, native_ptr_ht, queue);
     /* end of class_object */
 
     /* instance_vars */
     OBJECT_PTR binding_env = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						 1)->ivalue;
+                                                 1)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)binding_env);
 
     if(e1)
       obj->class_object = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, binding_env, (uintptr_t)obj, OBJ_PTR, 1, 0);
+      //add_to_deserialization_queue(queue, binding_env, (uintptr_t)obj, OBJ_PTR, 1, 0);
+      obj->class_object = deserialize_object_reference(object_heap, native_heap, binding_env, obj_ht, native_ptr_ht, queue);
     /* end of instance_vars */
 
-    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
+    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
 
     return (uintptr_t)obj + object_type;
   }
@@ -4304,36 +4801,50 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 
     class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
+
     /* parent_class_object */
     OBJECT_PTR parent_cls_obj = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						    0)->ivalue;
+                                                    0)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)parent_cls_obj);
 
     if(e1)
       cls_obj->parent_class_object = (OBJECT_PTR)e1->value;
     else
-      add_to_deserialization_queue(queue, parent_cls_obj, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 0, 0);
+      //add_to_deserialization_queue(queue, parent_cls_obj, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 0, 0);
+      cls_obj->parent_class_object = deserialize_object_reference(object_heap,
+								  native_heap,
+								  parent_cls_obj,
+								  obj_ht,
+								  native_ptr_ht,
+								  queue);
     /* end of parent_class_object */
 
     /* name */
     cls_obj->name = GC_strdup(JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						  1)->strvalue);
+                                                  1)->strvalue);
     /* package */
     OBJECT_PTR pkg = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-					 2)->ivalue;
+                                         2)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)pkg);
 
     if(e1)
       cls_obj->package = (OBJECT_PTR)e->value;
     else
-      add_to_deserialization_queue(queue, pkg, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 2, 0);
+      //add_to_deserialization_queue(queue, pkg, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 2, 0);
+      cls_obj->package = deserialize_object_reference(object_heap,
+						      native_heap,
+						      pkg,
+						      obj_ht,
+						      native_ptr_ht,
+						      queue);
     /* end of parent_class_object */
 
     /* nof_instances */
     cls_obj->nof_instances = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						 3)->ivalue;
+                                                 3)->ivalue;
 
     /* instances */
     cls_obj->instances = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instances * sizeof(OBJECT_PTR));
@@ -4348,15 +4859,21 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(obj_ht, (void *)instance);
 
       if(e1)
-	cls_obj->instances[i] = (OBJECT_PTR)e1->value;
+        cls_obj->instances[i] = (OBJECT_PTR)e1->value;
       else
-	add_to_deserialization_queue(queue, instance, (uintptr_t)cls_obj->instances+i, NONE, 0, 0);
+        //add_to_deserialization_queue(queue, instance, (uintptr_t)cls_obj->instances+i, NONE, 0, 0);
+	cls_obj->instances[i] = deserialize_object_reference(object_heap,
+							     native_heap,
+							     instance,
+							     obj_ht,
+							     native_ptr_ht,
+							     queue);
     }
     /* end of instances */
 
     /* nof_inst_vars */
     cls_obj->nof_instance_vars = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						     5)->ivalue;
+                                                     5)->ivalue;
 
     /* instance vars */
     cls_obj->inst_vars = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
@@ -4370,41 +4887,62 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 
     /* shared vars */
     OBJECT_PTR shared_vars = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						 7)->ivalue;
+                                                 7)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)shared_vars);
 
     if(e1)
       cls_obj->shared_vars = (binding_env_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, shared_vars, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 7, 0);
+      //add_to_deserialization_queue(queue, shared_vars, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 7, 0);
+      cls_obj->shared_vars = (binding_env_t *)deserialize_native_ptr_reference(object_heap,
+									       native_heap,
+									       BINDING_ENV_PTR,
+									       shared_vars,
+									       obj_ht,
+									       native_ptr_ht,
+									       queue);
     /* end of shared vars */
 
     /* instance methods */
     OBJECT_PTR instance_methods = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						      8)->ivalue;
+                                                      8)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)instance_methods);
 
     if(e1)
       cls_obj->instance_methods = (method_binding_env_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, instance_methods, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 8, 0);
+      //add_to_deserialization_queue(queue, instance_methods, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 8, 0);
+      cls_obj->instance_methods = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+											   native_heap,
+											   METHOD_BINDING_ENV_PTR,
+											   instance_methods,
+											   obj_ht,
+											   native_ptr_ht,
+											   queue);
     /* end of instance methods */
 
     /* class methods */
     OBJECT_PTR class_methods = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						   9)->ivalue;
+                                                   9)->ivalue;
 
     e1 = hashtable_get(native_ptr_ht, (void *)class_methods);
 
     if(e1)
       cls_obj->class_methods = (method_binding_env_t *)e1->value;
     else
-      add_to_deserialization_queue(queue, class_methods, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 9, 0);
+      //add_to_deserialization_queue(queue, class_methods, (uintptr_t)cls_obj, CLASS_OBJ_PTR, 9, 0);
+      cls_obj->class_methods = (method_binding_env_t *)deserialize_native_ptr_reference(object_heap,
+											native_heap,
+											METHOD_BINDING_ENV_PTR,
+											class_methods,
+											obj_ht,
+											native_ptr_ht,
+											queue);
     /* end of class methods */
 
-    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
+    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
 
     return (uintptr_t)cls_obj + object_type;
   }
@@ -4414,9 +4952,11 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 
     array_object_t *arr_obj = (array_object_t *)GC_MALLOC(sizeof(array_object_t));
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)arr_obj + object_type));
+
     /* nof_elements */
     arr_obj->nof_elements = JSON_get_array_item(JSON_get_array_item(native_heap, ref >> OBJECT_SHIFT),
-						0)->ivalue;
+                                                0)->ivalue;
 
     /* elements */
     arr_obj->elements = (OBJECT_PTR *)GC_MALLOC(arr_obj->nof_elements * sizeof(OBJECT_PTR));
@@ -4431,13 +4971,19 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
       e1 = hashtable_get(obj_ht, (void *)element);
 
       if(e1)
-	arr_obj->elements[i] = (OBJECT_PTR)e1->value;
+        arr_obj->elements[i] = (OBJECT_PTR)e1->value;
       else
-	add_to_deserialization_queue(queue, element, (uintptr_t)arr_obj->elements+i, NONE, 0, 0);
+        //add_to_deserialization_queue(queue, element, (uintptr_t)arr_obj->elements+i, NONE, 0, 0);
+	arr_obj->elements[i] = deserialize_object_reference(object_heap,
+							    native_heap,
+							    element,
+							    obj_ht,
+							    native_ptr_ht,
+							    queue);
     }
     /* end of elements */
 
-    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)arr_obj + object_type));
+    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)arr_obj + object_type));
 
     return (uintptr_t)arr_obj + object_type;
   }
@@ -4447,16 +4993,18 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
 
     ptr = object_alloc(2, CONS_TAG);
 
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
+
     /* native fn object */
     int native_fn_index = JSON_get_array_item(JSON_get_array_item(object_heap, ref >> OBJECT_SHIFT),
-					      0)->ivalue;
+                                              0)->ivalue;
 
     set_heap(ptr, 0, convert_native_fn_to_object(g_native_fn_objects[native_fn_index].nf));
     /* end of native fn object */
 
     /* closed vals */
     OBJECT_PTR closed_vals = JSON_get_array_item(JSON_get_array_item(object_heap, ref >> OBJECT_SHIFT),
-						 1)->ivalue;
+                                                 1)->ivalue;
 
     uintptr_t ptr1 = object_alloc(2, CONS_TAG);
 
@@ -4465,7 +5013,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
     if(e1)
       set_heap(ptr1, 0, (OBJECT_PTR)e1->value);
     else
-      add_to_deserialization_queue(queue, closed_vals, ptr1, NONE, 0, 0);
+      //add_to_deserialization_queue(queue, closed_vals, ptr1, NONE, 0, 0);
+      set_heap(ptr1, 0, deserialize_object_reference(object_heap, native_heap, closed_vals, obj_ht, native_ptr_ht, queue));
 
     set_heap(ptr, 1, ptr1);
     /* end of closed vals */
@@ -4473,24 +5022,27 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *object_heap,
     /* arity */
     uintptr_t ptr2 = object_alloc(2, CONS_TAG);
     set_heap(ptr2,
-	     0,
-	     convert_int_to_object(JSON_get_array_item(JSON_get_array_item(object_heap, ref >> OBJECT_SHIFT),
-						       2)->ivalue));
+             0,
+             convert_int_to_object(JSON_get_array_item(JSON_get_array_item(object_heap, ref >> OBJECT_SHIFT),
+                                                       2)->ivalue));
     set_heap(ptr2, 1, NIL);
     /* end of arity */
 
     set_heap(ptr1, 1, ptr2);
 
-    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
+    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
 
     return (uintptr_t)ptr + object_type;
   }
   else if(object_type == FLOAT_TAG)
   {
     ptr = object_alloc(1, FLOAT_TAG);
-    (*(double *)ptr) = heap_obj->fvalue;
 
     hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
+
+    (*(double *)ptr) = heap_obj->fvalue;
+
+    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
 
     return (uintptr_t)ptr + object_type;
   }
@@ -4539,9 +5091,9 @@ void load_native_functions(struct JSONObject *native_functions)
     if(g_native_fn_objects[i].state_index == curr_state_index)
     {
       if(!source) //for the first time
-	source = GC_strdup(g_native_fn_objects[i].source);
+        source = GC_strdup(g_native_fn_objects[i].source);
       else
-	source = append_string(source, g_native_fn_objects[i].source);
+        source = append_string(source, g_native_fn_objects[i].source);
     }
     else //'source' now contains all the sources that belong to one state and can now be compiled
     {
@@ -4554,7 +5106,7 @@ void load_native_functions(struct JSONObject *native_functions)
       state = compile_functions_from_string(source_with_fn_decls);
 
       for(j=prev_state_start_index; j<i; j++)
-	g_native_fn_objects[j].nf = get_function(state, g_native_fn_objects[j].fname);
+        g_native_fn_objects[j].nf = get_function(state, g_native_fn_objects[j].fname);
 
       source = GC_strdup(g_native_fn_objects[i].source);
     }
@@ -4601,8 +5153,8 @@ int load_from_image(char *file_name)
     struct JSONObject *binding = JSON_get_array_item(top_level_bindings, i);
     struct JSONObject *key_val_pair = JSON_get_array_item(native_heap, binding->ivalue);
     printf("%s : %d\n", get_json_core_symbol(native_heap,
-					     extract_symbol_index(JSON_get_array_item(key_val_pair, 0)->ivalue)),
-	   JSON_get_array_item(key_val_pair, 1)->ivalue);
+                                             extract_symbol_index(JSON_get_array_item(key_val_pair, 0)->ivalue)),
+           JSON_get_array_item(key_val_pair, 1)->ivalue);
   }
   */
 
@@ -4664,16 +5216,16 @@ int load_from_image(char *file_name)
   int object_heap_index = msg_snd_closure->ivalue >> OBJECT_SHIFT;
 
   int arity = JSON_get_array_item(JSON_get_array_item(object_heap, object_heap_index),
-				  2)->ivalue;
+                                  2)->ivalue;
   assert(arity == 0);
 
   OBJECT_PTR closed_vals = JSON_get_array_item(JSON_get_array_item(object_heap, object_heap_index),
-					       1)->ivalue;
+                                               1)->ivalue;
   assert(closed_vals == NIL);
 
   g_msg_snd_closure = create_closure(convert_int_to_object(arity),
-				     convert_int_to_object(cons_length(closed_vals)),
-				     (nativefn)message_send);
+                                     convert_int_to_object(cons_length(closed_vals)),
+                                     (nativefn)message_send);
   /////
 
   /////
@@ -4683,16 +5235,16 @@ int load_from_image(char *file_name)
   object_heap_index = msg_snd_super_closure->ivalue >> OBJECT_SHIFT;
 
   arity = JSON_get_array_item(JSON_get_array_item(object_heap, object_heap_index),
-			      2)->ivalue;
+                              2)->ivalue;
   assert(arity == 0);
 
   closed_vals = JSON_get_array_item(JSON_get_array_item(object_heap, object_heap_index),
-				    1)->ivalue;
+                                    1)->ivalue;
   assert(closed_vals == NIL);
 
   g_msg_snd_super_closure = create_closure(convert_int_to_object(arity),
-					   convert_int_to_object(cons_length(closed_vals)),
-					   (nativefn)message_send_super);
+                                           convert_int_to_object(cons_length(closed_vals)),
+                                           (nativefn)message_send_super);
   /////
 
   /////
@@ -4752,9 +5304,9 @@ void create_test_image(char *file_name)
   stack_push(test_stack, (void *)get_string_obj("Some string"));
   stack_push(test_stack, (void *)convert_float_to_object(3.14));
 
-  //call_repl("Smalltalk createClassPreInitialize: #Error parentClass: Exception");
+  call_repl("Smalltalk createClassPreInitialize: #Error parentClass: Exception");
   //call_repl("1+2+3");
-  call_repl("1+2");
+  //call_repl("1+2");
 
   //print_executable_code(g_exp);printf("\n");
   //print_binary_message(g_exp->statements->exp->basic_exp->msg->binary_messages->bin_msgs+1);
@@ -4765,10 +5317,10 @@ void create_test_image(char *file_name)
   fprintf(fp, "\"stack_obj\" : ");
   print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)test_stack);
   fflush(fp);
-  //fprintf(fp, ", \"g_exp\" : ");
-  //print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
-  fprintf(fp, ", \"bin_msgs\" : ");
-  print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)(g_exp->statements->exp->basic_exp->msg->binary_messages));
+  fprintf(fp, ", \"g_exp\" : ");
+  print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
+  //fprintf(fp, "\"bin_msgs\" : ");
+  //print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)(g_exp->statements->exp->basic_exp->msg->binary_messages));
   fflush(fp);
   fprintf(fp, ", \"native_heap\" : [");
 
@@ -4804,10 +5356,10 @@ void create_test_image(char *file_name)
     {
       nativefn nf = get_nativefn_value(obj);
       if(nf == (nativefn)message_send ||
-	 nf == (nativefn)message_send_super)
-	message_send_native_fn_obj = true;
+         nf == (nativefn)message_send_super)
+        message_send_native_fn_obj = true;
       else
-	message_send_native_fn_obj = false;
+        message_send_native_fn_obj = false;
     }
     else
       message_send_native_fn_obj = false;
@@ -4849,8 +5401,8 @@ int load_from_test_image(char *file_name)
   }
 
   struct JSONObject *stack_obj = JSON_get_object_item(root, "stack_obj");
-  //struct JSONObject *ec_obj = JSON_get_object_item(root, "g_exp");
-  struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
+  struct JSONObject *ec_obj = JSON_get_object_item(root, "g_exp");
+  //struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
   struct JSONObject *object_heap = JSON_get_object_item(root, "object_heap");
   struct JSONObject *native_heap = JSON_get_object_item(root, "native_heap");
 
@@ -4859,39 +5411,39 @@ int load_from_test_image(char *file_name)
   queue_t *queue = queue_create();
 
   stack_type *stack = deserialize_native_ptr_reference(object_heap,
-						       native_heap,
-						       STACK_TYPE_PTR,
-						       stack_obj->ivalue,
-						       object_hashtable,
-						       native_ptr_hashtable,
-						       queue);
+                                                    native_heap,
+                                                    STACK_TYPE_PTR,
+                                                    stack_obj->ivalue,
+                                                    object_hashtable,
+                                                    native_ptr_hashtable,
+                                                    queue);
 
-  /* executable_code_t *ec = deserialize_native_ptr_reference(object_heap, */
-  /* 							   native_heap, */
-  /* 							   EXEC_CODE_PTR, */
-  /* 							   ec_obj->ivalue, */
-  /* 							   object_hashtable, */
-  /* 							   native_ptr_hashtable, */
-  /* 							   queue); */
+  executable_code_t *ec = deserialize_native_ptr_reference(object_heap,
+                                                        native_heap,
+                                                        EXEC_CODE_PTR,
+                                                        ec_obj->ivalue,
+                                                        object_hashtable,
+                                                        native_ptr_hashtable,
+                                                        queue);
 
-  binary_messages_t *bin_msgs1 = deserialize_native_ptr_reference(object_heap,
-							native_heap,
-							BINARY_MESSAGES_PTR,
-							bin_msgs->ivalue,
-							object_hashtable,
-							native_ptr_hashtable,
-							queue);
+  /* binary_messages_t *bin_msgs1 = (binary_messages_t *)deserialize_native_ptr_reference(object_heap, */
+  /*                                                       native_heap, */
+  /*                                                       BINARY_MESSAGES_PTR, */
+  /*                                                       bin_msgs->ivalue, */
+  /*                                                       object_hashtable, */
+  /*                                                       native_ptr_hashtable, */
+  /*                                                       queue); */
 
-  convert_heap(object_heap, native_heap, object_hashtable, native_ptr_hashtable, queue);
+  //convert_heap(object_heap, native_heap, object_hashtable, native_ptr_hashtable, queue);
 
-  /* while(!stack_is_empty(stack)) */
-  /* { */
-  /*   OBJECT_PTR obj = (OBJECT_PTR)stack_pop(stack); */
-  /*   print_object(obj); */
-  /*   printf("\n"); */
-  /* } */
+  while(!stack_is_empty(stack))
+  {
+    OBJECT_PTR obj = (OBJECT_PTR)stack_pop(stack);
+    print_object(obj);
+    printf("\n");
+  }
 
-  //print_executable_code(ec);
-  print_binary_messages(bin_msgs1); printf("\n");
+  print_executable_code(ec);
+  //print_binary_messages(bin_msgs1); printf("\n");
   return 0;
 }
