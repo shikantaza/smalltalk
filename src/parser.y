@@ -21,6 +21,7 @@ int yy_scan_string(char *);
 
 void initialize();
 void initialize_pass2();
+void initialize_inbuiltfns();
 
 BOOLEAN is_create_class_exp(OBJECT_PTR);
 BOOLEAN is_add_var_exp(OBJECT_PTR, char *);
@@ -1173,6 +1174,8 @@ int main(int argc, char **argv)
   initialize_pass2();
 
   load_core_library2();
+
+  initialize_inbuiltfns();
 
   g_system_initialized = true;
 

@@ -13,141 +13,140 @@
 
 #define NULL_NATIVE_PTR -1
 
-#define NOF_INBUILT_FNS 99
+#define NOF_INBUILT_FNS 100
 
 //Object
-extern nativefn object_eq;
-extern nativefn object_message_not_understood;
+OBJECT_PTR object_eq(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR object_message_not_understood(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //Smalltalk
-extern nativefn create_class;
-extern nativefn create_class_no_parent_class;
-extern nativefn add_instance_var;
-extern nativefn add_class_var;
-extern nativefn create_global_valued;
-extern nativefn create_global;
-extern nativefn smalltalk_gensym;
-extern nativefn add_instance_method_str;
-extern nativefn add_class_method_str;
-extern nativefn smalltalk_eval;
-extern nativefn smalltalk_load_file;
-extern nativefn smalltalk_add_breakpoint;
-extern nativefn smalltalk_remove_breakpoint;
-extern nativefn smalltalk_assign_class_to_package;
+OBJECT_PTR create_class(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR create_class_no_parent_class(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_instance_var(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_class_var(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR create_global_valued(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR create_global(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_gensym(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_instance_method_str(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR add_class_method_str(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_eval(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_load_file(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_add_breakpoint(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_remove_breakpoint(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //Nil
-extern nativefn nil_print_string;
+OBJECT_PTR nil_print_string(OBJECT_PTR, OBJECT_PTR);
 
 //Transcript
-extern nativefn transcript_show;
-extern nativefn transcript_cr;
+OBJECT_PTR transcript_show(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR transcript_cr(OBJECT_PTR, OBJECT_PTR);
 
 //Integer
-extern nativefn plus;
-extern nativefn minus;
-extern nativefn times;
-extern nativefn divided_by;
-extern nativefn eq;
-extern nativefn lt;
-extern nativefn gt;
-extern nativefn to;
+OBJECT_PTR plus(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR minus(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR times(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR divided_by(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR eq(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR lt(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR gt(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR to(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //Float
-extern nativefn float_plus;
-extern nativefn float_minus;
-extern nativefn float_times;
-extern nativefn float_divided_by;
-extern nativefn float_eq;
-extern nativefn float_lt;
-extern nativefn float_gt;
+OBJECT_PTR float_plus(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_minus(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_times(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_divided_by(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_eq(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_lt(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR float_gt(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //NiladicBlock
-extern nativefn niladic_block_arg_count;
-//since this conflicts with the definition in global_decls.h
-//extern nativefn niladic_block_value;
-extern nativefn niladic_block_on_do;
-extern nativefn niladic_block_ensure;
-extern nativefn niladic_block_ifcurtailed;
-extern nativefn niladic_block_while_true_iter;
-extern nativefn niladic_block_while_false_iter;
+OBJECT_PTR niladic_block_arg_count(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_value(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_on_do(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_ensure(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_ifcurtailed(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_while_true_iter(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR niladic_block_while_false_iter(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //MonadicBlock
-extern nativefn monadic_block_value;
+OBJECT_PTR monadic_block_value(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //DyadicValuable
-extern nativefn dyadic_valuable_value;
+OBJECT_PTR dyadic_valuable_value(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //Boolean
-extern nativefn boolean_and;
-extern nativefn boolean_or;
-extern nativefn boolean_short_circuit_and;
-extern nativefn boolean_equiv;
-extern nativefn boolean_if_false;
-extern nativefn boolean_if_false_if_true;
-extern nativefn boolean_if_true;
-extern nativefn boolean_if_true_if_false;
-extern nativefn boolean_not;
-extern nativefn boolean_short_circuit_or;
-extern nativefn boolean_xor;
-extern nativefn boolean_print_string;
+OBJECT_PTR boolean_and(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_or(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_short_circuit_and(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_equiv(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_if_false(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_if_false_if_true(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_if_true(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_if_true_if_false(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_not(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_short_circuit_or(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_xor(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR boolean_print_string(OBJECT_PTR, OBJECT_PTR);
 
 //Exception
-extern nativefn exception_return;
-extern nativefn exception_return_val;
-extern nativefn exception_retry;
-extern nativefn exception_retry_using;
-extern nativefn exception_resume;
-extern nativefn exception_resume_with_val;
-extern nativefn exception_pass;
-extern nativefn exception_outer;
-extern nativefn exception_signal;
-extern nativefn exception_resignal_as;
-extern nativefn exception_signal_with_text;
-//since this conflicts with the definition in global_decls.h
-//extern nativefn new_object;
+OBJECT_PTR exception_return(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_return_val(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_retry(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_retry_using(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_resume(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_resume_with_val(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_pass(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_outer(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_signal(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_resignal_as(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR exception_signal_with_text(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR new_object(OBJECT_PTR, OBJECT_PTR);
 
 //Array
-extern nativefn array_at_put;
-extern nativefn array_at;
-extern nativefn array_size;
-extern nativefn array_do;
-extern nativefn array_do_separated_by;
-extern nativefn array_new;
+OBJECT_PTR array_at_put(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR array_at(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR array_size(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR array_do(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR array_do_separated_by(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR array_new(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //OrderedCollection
-extern nativefn ordered_collection_initialize;
-extern nativefn ordered_collection_size;
-extern nativefn ordered_collection_add;
-extern nativefn ordered_collection_at;
-extern nativefn ordered_collection_add_last;
-extern nativefn ordered_collection_remove_last;
-extern nativefn ordered_collection_do;
-extern nativefn ordered_collection_new;
+OBJECT_PTR ordered_collection_initialize(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_size(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_add(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_at(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_add_last(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_remove_last(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_do(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR ordered_collection_new(OBJECT_PTR, OBJECT_PTR);
 
 //Compiler
-extern nativefn compiler_compile;
-extern nativefn compiler_compile_pass;
+OBJECT_PTR compiler_compile(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR compiler_compile_pass(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //ReadableString
-extern nativefn readable_string_size;
-extern nativefn readable_string_is_empty;
-extern nativefn readable_string_not_empty;
-extern nativefn readable_string_do;
-extern nativefn readable_string_do_separated_by;
-extern nativefn readable_string_select;
-extern nativefn readable_string_reject;
-extern nativefn readable_string_occurrences_of;
-extern nativefn readable_string_includes;
-extern nativefn readable_string_detect_if_none;
-extern nativefn readable_string_detect;
-extern nativefn readable_string_collect;
-extern nativefn readable_string_substring;
-extern nativefn readable_string_concat;
+OBJECT_PTR readable_string_size(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_is_empty(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_not_empty(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_do(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_do_separated_by(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_select(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_reject(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_occurrences_of(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_includes(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_detect_if_none(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_detect(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_collect(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_substring(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR readable_string_concat(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //to correctly handle nativefns that are generated
 //from Smalltalk code (as compared to built-ins)
 
-nativefn inbuiltfns[NOF_INBUILT_FNS];
+//nativefn inbuiltfns[NOF_INBUILT_FNS];
+nativefn *inbuiltfns;
 
 enum PointerType
 {
@@ -305,135 +304,138 @@ void *deserialize_native_ptr_reference(struct JSONObject *,
 
 void initialize_inbuiltfns()
 {
+  inbuiltfns = (nativefn *)GC_MALLOC(NOF_INBUILT_FNS * sizeof(nativefn));
+
   //Object
-  inbuiltfns[0] = object_eq;
-  inbuiltfns[1] = object_message_not_understood;
+  inbuiltfns[0] = (nativefn)object_eq;
+  inbuiltfns[1] = (nativefn)object_message_not_understood;
 
   //Smalltalk
-  inbuiltfns[2] = create_class;
-  inbuiltfns[3] = create_class_no_parent_class;
-  inbuiltfns[4] = add_instance_var;
-  inbuiltfns[5] = add_class_var;
-  inbuiltfns[6] = create_global_valued;
-  inbuiltfns[7] = create_global;
-  inbuiltfns[8] = smalltalk_gensym;
-  inbuiltfns[9] = add_instance_method_str;
-  inbuiltfns[10] = add_class_method_str;
-  inbuiltfns[11] = smalltalk_eval;
-  inbuiltfns[12] = smalltalk_load_file;
-  inbuiltfns[13] = smalltalk_add_breakpoint;
-  inbuiltfns[14] = smalltalk_remove_breakpoint;
-  inbuiltfns[15] = smalltalk_assign_class_to_package;
+  inbuiltfns[2] = (nativefn)create_class;
+  inbuiltfns[3] = (nativefn)create_class_no_parent_class;
+  inbuiltfns[4] = (nativefn)add_instance_var;
+  inbuiltfns[5] = (nativefn)add_class_var;
+  inbuiltfns[6] = (nativefn)create_global_valued;
+  inbuiltfns[7] = (nativefn)create_global;
+  inbuiltfns[8] = (nativefn)smalltalk_gensym;
+  inbuiltfns[9] = (nativefn)add_instance_method_str;
+  inbuiltfns[10] = (nativefn)add_class_method_str;
+  inbuiltfns[11] = (nativefn)smalltalk_eval;
+  inbuiltfns[12] = (nativefn)smalltalk_load_file;
+  inbuiltfns[13] = (nativefn)smalltalk_add_breakpoint;
+  inbuiltfns[14] = (nativefn)smalltalk_remove_breakpoint;
+  inbuiltfns[15] = (nativefn)smalltalk_assign_class_to_package;
 
   //Nil
-  inbuiltfns[16] = nil_print_string;
+  inbuiltfns[16] = (nativefn)nil_print_string;
 
   //Transcript
-  inbuiltfns[17] = transcript_show;
-  inbuiltfns[18] = transcript_cr;
+  inbuiltfns[17] = (nativefn)transcript_show;
+  inbuiltfns[18] = (nativefn)transcript_cr;
 
   //Integer
-  inbuiltfns[19] = plus;
-  inbuiltfns[20] = minus;
-  inbuiltfns[21] = times;
-  inbuiltfns[22] = divided_by;
-  inbuiltfns[23] = eq;
-  inbuiltfns[24] = lt;
-  inbuiltfns[25] = gt;
-  inbuiltfns[26] = to;
+  inbuiltfns[19] = (nativefn)plus;
+  inbuiltfns[20] = (nativefn)minus;
+  inbuiltfns[21] = (nativefn)times;
+  inbuiltfns[22] = (nativefn)divided_by;
+  inbuiltfns[23] = (nativefn)eq;
+  inbuiltfns[24] = (nativefn)lt;
+  inbuiltfns[25] = (nativefn)gt;
+  inbuiltfns[26] = (nativefn)to;
 
   //Float
-  inbuiltfns[27] = float_plus;
-  inbuiltfns[28] = float_minus;
-  inbuiltfns[29] = float_times;
-  inbuiltfns[30] = float_divided_by;
-  inbuiltfns[31] = float_eq;
-  inbuiltfns[32] = float_lt;
-  inbuiltfns[33] = float_gt;
+  inbuiltfns[27] = (nativefn)float_plus;
+  inbuiltfns[28] = (nativefn)float_minus;
+  inbuiltfns[29] = (nativefn)float_times;
+  inbuiltfns[30] = (nativefn)float_divided_by;
+  inbuiltfns[31] = (nativefn)float_eq;
+  inbuiltfns[32] = (nativefn)float_lt;
+  inbuiltfns[33] = (nativefn)float_gt;
 
   //NiladicBlock
-  inbuiltfns[34] = niladic_block_arg_count;
+  inbuiltfns[34] = (nativefn)niladic_block_arg_count;
   inbuiltfns[35] = (nativefn)niladic_block_value;
-  inbuiltfns[36] = niladic_block_on_do;
-  inbuiltfns[37] = niladic_block_ensure;
-  inbuiltfns[38] = niladic_block_ifcurtailed;
-  inbuiltfns[39] = niladic_block_while_true_iter;
-  inbuiltfns[40] = niladic_block_while_false_iter;
+  inbuiltfns[36] = (nativefn)niladic_block_on_do;
+  inbuiltfns[37] = (nativefn)niladic_block_ensure;
+  inbuiltfns[38] = (nativefn)niladic_block_ifcurtailed;
+  inbuiltfns[39] = (nativefn)niladic_block_while_true_iter;
+  inbuiltfns[40] = (nativefn)niladic_block_while_false_iter;
 
   //MonadicBlock
-  inbuiltfns[41] = monadic_block_value;
+  inbuiltfns[41] = (nativefn)monadic_block_value;
 
   //DyadicValuable
-  inbuiltfns[42] = dyadic_valuable_value;
+  inbuiltfns[42] = (nativefn)dyadic_valuable_value;
 
   //Boolean
-  inbuiltfns[43] = boolean_and;
-  inbuiltfns[44] = boolean_or;
-  inbuiltfns[45] = boolean_short_circuit_and;
-  inbuiltfns[46] = boolean_equiv;
-  inbuiltfns[47] = boolean_if_false;
-  inbuiltfns[48] = boolean_if_false_if_true;
-  inbuiltfns[49] = boolean_if_true;
-  inbuiltfns[50] = boolean_if_true_if_false;
-  inbuiltfns[51] = boolean_not;
-  inbuiltfns[52] = boolean_short_circuit_or;
-  inbuiltfns[53] = boolean_xor;
-  inbuiltfns[54] = boolean_print_string;
+  inbuiltfns[43] = (nativefn)boolean_and;
+  inbuiltfns[44] = (nativefn)boolean_or;
+  inbuiltfns[45] = (nativefn)boolean_short_circuit_and;
+  inbuiltfns[46] = (nativefn)boolean_equiv;
+  inbuiltfns[47] = (nativefn)boolean_if_false;
+  inbuiltfns[48] = (nativefn)boolean_if_false_if_true;
+  inbuiltfns[49] = (nativefn)boolean_if_true;
+  inbuiltfns[50] = (nativefn)boolean_if_true_if_false;
+  inbuiltfns[51] = (nativefn)boolean_not;
+  inbuiltfns[52] = (nativefn)boolean_short_circuit_or;
+  inbuiltfns[53] = (nativefn)boolean_xor;
+  inbuiltfns[54] = (nativefn)boolean_print_string;
 
   //Exception
-  inbuiltfns[55] = exception_return;
-  inbuiltfns[56] = exception_return_val;
-  inbuiltfns[57] = exception_retry;
-  inbuiltfns[58] = exception_retry_using;
-  inbuiltfns[59] = exception_resume;
-  inbuiltfns[60] = exception_resume_with_val;
-  inbuiltfns[61] = exception_pass;
-  inbuiltfns[62] = exception_outer;
-  inbuiltfns[63] = exception_signal;
-  inbuiltfns[64] = exception_resignal_as;
-  inbuiltfns[65] = exception_signal_with_text;
+  inbuiltfns[55] = (nativefn)exception_return;
+  inbuiltfns[56] = (nativefn)exception_return_val;
+  inbuiltfns[57] = (nativefn)exception_retry;
+  inbuiltfns[58] = (nativefn)exception_retry_using;
+  inbuiltfns[59] = (nativefn)exception_resume;
+  inbuiltfns[60] = (nativefn)exception_resume_with_val;
+  inbuiltfns[61] = (nativefn)exception_pass;
+  inbuiltfns[62] = (nativefn)exception_outer;
+  inbuiltfns[63] = (nativefn)exception_signal;
+  inbuiltfns[64] = (nativefn)exception_resignal_as;
+  inbuiltfns[65] = (nativefn)exception_signal_with_text;
   inbuiltfns[66] = (nativefn)new_object;
 
   //Array
-  inbuiltfns[67] = array_at_put;
-  inbuiltfns[68] = array_at;
-  inbuiltfns[69] = array_size;
-  inbuiltfns[70] = array_do;
-  inbuiltfns[71] = array_do_separated_by;
-  inbuiltfns[72] = array_new;
+  inbuiltfns[67] = (nativefn)array_at_put;
+  inbuiltfns[68] = (nativefn)array_at;
+  inbuiltfns[69] = (nativefn)array_size;
+  inbuiltfns[70] = (nativefn)array_do;
+  inbuiltfns[71] = (nativefn)array_do_separated_by;
+  inbuiltfns[72] = (nativefn)array_new;
 
   //OrderedCollection
-  inbuiltfns[73] = ordered_collection_initialize;
-  inbuiltfns[74] = ordered_collection_size;
-  inbuiltfns[75] = ordered_collection_add;
-  inbuiltfns[76] = ordered_collection_at;
-  inbuiltfns[77] = ordered_collection_add_last;
-  inbuiltfns[78] = ordered_collection_remove_last;
-  inbuiltfns[79] = ordered_collection_do;
-  inbuiltfns[80] = ordered_collection_new;
+  inbuiltfns[73] = (nativefn)ordered_collection_initialize;
+  inbuiltfns[74] = (nativefn)ordered_collection_size;
+  inbuiltfns[75] = (nativefn)ordered_collection_add;
+  inbuiltfns[76] = (nativefn)ordered_collection_at;
+  inbuiltfns[77] = (nativefn)ordered_collection_add_last;
+  inbuiltfns[78] = (nativefn)ordered_collection_remove_last;
+  inbuiltfns[79] = (nativefn)ordered_collection_do;
+  inbuiltfns[80] = (nativefn)ordered_collection_new;
 
   //Compiler
-  inbuiltfns[81] = compiler_compile;
-  inbuiltfns[82] = compiler_compile_pass;
+  inbuiltfns[81] = (nativefn)compiler_compile;
+  inbuiltfns[82] = (nativefn)compiler_compile_pass;
 
   //ReadableString
-  inbuiltfns[83] = readable_string_size;
-  inbuiltfns[84] = readable_string_is_empty;
-  inbuiltfns[85] = readable_string_not_empty;
-  inbuiltfns[86] = readable_string_do;
-  inbuiltfns[87] = readable_string_do_separated_by;
-  inbuiltfns[88] = readable_string_select;
-  inbuiltfns[89] = readable_string_reject;
-  inbuiltfns[90] = readable_string_occurrences_of;
-  inbuiltfns[91] = readable_string_includes;
-  inbuiltfns[92] = readable_string_detect_if_none;
-  inbuiltfns[93] = readable_string_detect;
-  inbuiltfns[93] = readable_string_collect;
-  inbuiltfns[95] = readable_string_substring;
-  inbuiltfns[96] = readable_string_concat ;
+  inbuiltfns[83] = (nativefn)readable_string_size;
+  inbuiltfns[84] = (nativefn)readable_string_is_empty;
+  inbuiltfns[85] = (nativefn)readable_string_not_empty;
+  inbuiltfns[86] = (nativefn)readable_string_do;
+  inbuiltfns[87] = (nativefn)readable_string_do_separated_by;
+  inbuiltfns[88] = (nativefn)readable_string_select;
+  inbuiltfns[89] = (nativefn)readable_string_reject;
+  inbuiltfns[90] = (nativefn)readable_string_occurrences_of;
+  inbuiltfns[91] = (nativefn)readable_string_includes;
+  inbuiltfns[92] = (nativefn)readable_string_detect_if_none;
+  inbuiltfns[93] = (nativefn)readable_string_detect;
+  inbuiltfns[93] = (nativefn)readable_string_collect;
+  inbuiltfns[95] = (nativefn)readable_string_substring;
+  inbuiltfns[96] = (nativefn)readable_string_concat ;
 
   inbuiltfns[97] = (nativefn)message_send;
   inbuiltfns[98] = (nativefn)message_send_super;
+  inbuiltfns[99] = (nativefn)identity_function;
 }
 
 int get_inbuiltfn_index(nativefn fn)
@@ -567,7 +569,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     fprintf(fp, "[ ");
     print_native_ptr_reference(fp, CLASS_OBJ_PTR, (void *)m->cls_obj);
 
-    fprintf(fp, "\"%s\"", (m->class_method == true) ? "true" : "false");
+    fprintf(fp, ", \"%s\"", (m->class_method == true) ? "true" : "false");
     fprintf(fp, ", ");
 
     print_object_ptr_reference(fp, m->nativefn_obj);
@@ -1854,17 +1856,21 @@ void print_heap_representation(FILE *fp,
   }
   else if(IS_ARRAY_OBJECT(obj))
   {
-    print_native_ptr_reference(fp, ARRAY_OBJ_PTR, (void *)extract_ptr(obj));
+    print_native_ptr_heap_representation(fp, (void *)extract_ptr(obj), ARRAY_OBJ_PTR);
   }
   else if(IS_OBJECT_OBJECT(obj))
   {
     //TODO: this does not handle method_t pointers which
-    //are tagged with OBJECT_TAG
-    print_native_ptr_reference(fp, OBJ_PTR, (void *)extract_ptr(obj));
+    //are tagged with OBJECT_TAG (HANDLED; confirm and remove comment)
+
+    //TODO: convert into a call to print_native_heap_ptr_representation()
+    //print_native_ptr_reference(fp, OBJ_PTR, (void *)extract_ptr(obj));
+    print_native_ptr_heap_representation(fp, (void *)extract_ptr(obj), OBJ_PTR);
   }
   else if(IS_CLASS_OBJECT(obj))
   {
-    print_native_ptr_reference(fp, CLASS_OBJ_PTR, (void *)extract_ptr(obj));
+    //print_native_ptr_reference(fp, CLASS_OBJ_PTR, (void *)extract_ptr(obj));
+    print_native_ptr_heap_representation(fp, (void *)extract_ptr(obj), CLASS_OBJ_PTR);
   }
   else if(IS_CLOSURE_OBJECT(obj)) //TODO: confirm we need to serialize closure objects
   {
@@ -1893,13 +1899,22 @@ void print_heap_representation(FILE *fp,
     {
       fprintf(fp, "[ \"false\", ");
       unsigned int i;
+      BOOLEAN found = false;
       for(i=0; i<g_nof_native_fns; i++)
       {
         if(g_native_fn_objects[i].nf == nf)
         {
+          found = true;
           fprintf(fp, "%d ]", i);
           break;
         }
+      }
+      fflush(fp);
+      if(!found)
+      {
+        printf("%p\n", nf);
+        fflush(stdout);
+        assert(false);
       }
     }
     else
@@ -3471,14 +3486,12 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     hashtable_put(native_ptr_ht, (void *)ref, (void *)arr_obj);
 
-    struct JSONObject *array_json_obj = JSON_get_array_item(heap, ptr_entry->ivalue);
-
-    arr_obj->nof_elements = JSON_get_array_size(array_json_obj);
+    arr_obj->nof_elements = JSON_get_array_size(ptr_entry);
     arr_obj->elements = (OBJECT_PTR *)GC_MALLOC(arr_obj->nof_elements * sizeof(OBJECT_PTR));
 
     for(i=0; i<arr_obj->nof_elements; i++)
     {
-      long long ref1 = JSON_get_array_item(array_json_obj, i)->ivalue;
+      long long ref1 = JSON_get_array_item(ptr_entry, i)->ivalue;
       hashtable_entry_t *e1 = hashtable_get(obj_ht, (void *)ref1);
 
       if(e1)
@@ -3493,6 +3506,165 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     }
 
     return (void *)arr_obj;
+  }
+  else if(ptr_type == CLASS_OBJ_PTR)
+  {
+    hashtable_entry_t *e1;
+
+    class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)cls_obj);
+
+    /* parent_class_object */
+    OBJECT_PTR parent_cls_obj = JSON_get_array_item(ptr_entry, 0)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)parent_cls_obj);
+
+    if(e1)
+      cls_obj->parent_class_object = (OBJECT_PTR)e1->value;
+    else
+      cls_obj->parent_class_object = deserialize_object_reference(heap,
+                                                                  parent_cls_obj,
+                                                                  obj_ht,
+                                                                  native_ptr_ht);
+    /* end of parent_class_object */
+
+    /* name */
+    cls_obj->name = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
+
+    /* package */
+    OBJECT_PTR pkg = JSON_get_array_item(ptr_entry, 2)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)pkg);
+
+    if(e1)
+      cls_obj->package = (OBJECT_PTR)e->value;
+    else
+      cls_obj->package = deserialize_object_reference(heap,
+                                                      pkg,
+                                                      obj_ht,
+                                                      native_ptr_ht);
+    /* end of parent_class_object */
+
+    /* nof_instances */
+    cls_obj->nof_instances = JSON_get_array_item(ptr_entry, 3)->ivalue;
+
+    /* instances */
+    cls_obj->instances = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instances * sizeof(OBJECT_PTR));
+
+    struct JSONObject *instances = JSON_get_array_item(ptr_entry, 4);
+    assert(JSON_get_array_size(instances) == cls_obj->nof_instances);
+
+    for(i=0; i< cls_obj->nof_instances; i++)
+    {
+      OBJECT_PTR instance = JSON_get_array_item(instances, i)->ivalue;
+
+      e1 = hashtable_get(obj_ht, (void *)instance);
+
+      if(e1)
+        cls_obj->instances[i] = (OBJECT_PTR)e1->value;
+      else
+        cls_obj->instances[i] = deserialize_object_reference(heap,
+                                                             instance,
+                                                             obj_ht,
+                                                             native_ptr_ht);
+    }
+    /* end of instances */
+
+    /* nof_inst_vars */
+    cls_obj->nof_instance_vars = JSON_get_array_item(ptr_entry, 5)->ivalue;
+
+    /* instance vars */
+    cls_obj->inst_vars = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
+
+    struct JSONObject *instance_vars = JSON_get_array_item(ptr_entry, 6);
+    assert(JSON_get_array_size(instance_vars) == cls_obj->nof_instance_vars);
+
+    for(i=0; i< cls_obj->nof_instance_vars; i++)
+      cls_obj->inst_vars[i] = JSON_get_array_item(instance_vars, i)->ivalue;
+    /* end of instance vars */
+
+    /* shared vars */
+    OBJECT_PTR shared_vars = JSON_get_array_item(ptr_entry, 7)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)shared_vars);
+
+    if(e1)
+      cls_obj->shared_vars = (binding_env_t *)e1->value;
+    else
+      cls_obj->shared_vars = (binding_env_t *)deserialize_native_ptr_reference(heap,
+                                                                               BINDING_ENV_PTR,
+                                                                               shared_vars,
+                                                                               obj_ht,
+                                                                               native_ptr_ht);
+    /* end of shared vars */
+
+    /* instance methods */
+    OBJECT_PTR instance_methods = JSON_get_array_item(ptr_entry, 8)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)instance_methods);
+
+    if(e1)
+      cls_obj->instance_methods = (method_binding_env_t *)e1->value;
+    else
+      cls_obj->instance_methods = (method_binding_env_t *)deserialize_native_ptr_reference(heap,
+                                                                                           METHOD_BINDING_ENV_PTR,
+                                                                                           instance_methods,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht);
+    /* end of instance methods */
+
+    /* class methods */
+    OBJECT_PTR class_methods = JSON_get_array_item(ptr_entry, 9)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)class_methods);
+
+    if(e1)
+      cls_obj->class_methods = (method_binding_env_t *)e1->value;
+    else
+      cls_obj->class_methods = (method_binding_env_t *)deserialize_native_ptr_reference(heap,
+                                                                                        METHOD_BINDING_ENV_PTR,
+                                                                                        class_methods,
+                                                                                        obj_ht,
+                                                                                        native_ptr_ht);
+    /* end of class methods */
+
+    return (void *)cls_obj;
+  }
+  else if(ptr_type == OBJ_PTR)
+  {
+    hashtable_entry_t *e1;
+
+    object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)obj);
+
+    /* class_object */
+    //we index into the native heap to get the object_t 'pointer',
+    //and then take the first element of the array there (which maps
+    //to the object_t struct)
+    OBJECT_PTR cls_obj = JSON_get_array_item(ptr_entry, 0)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)cls_obj);
+
+    if(e1)
+      obj->class_object = (OBJECT_PTR)e1->value;
+    else
+      obj->class_object = deserialize_object_reference(heap, cls_obj, obj_ht, native_ptr_ht);
+    /* end of class_object */
+
+    /* instance_vars */
+    OBJECT_PTR binding_env = JSON_get_array_item(ptr_entry, 1)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)binding_env);
+
+    if(e1)
+      obj->class_object = (OBJECT_PTR)e1->value;
+    else
+      obj->class_object = deserialize_object_reference(heap, binding_env, obj_ht, native_ptr_ht);
+    /* end of instance_vars */
+
+    return (void *)obj;
   }
   else
     assert(false);
@@ -3570,52 +3742,63 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
   }
   else if(object_type == OBJECT_TAG)
   {
-    hashtable_entry_t *e1;
+    /* hashtable_entry_t *e1; */
 
-    object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t));
+    /* object_t *obj = (object_t *)GC_MALLOC(sizeof(object_t)); */
+
+    /* hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type)); */
+
+    /* /\* class_object *\/ */
+    /* //we index into the native heap to get the object_t 'pointer', */
+    /* //and then take the first element of the array there (which maps */
+    /* //to the object_t struct) */
+    /* OBJECT_PTR cls_obj = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT), */
+    /*                                          0)->ivalue; */
+
+    /* e1 = hashtable_get(native_ptr_ht, (void *)cls_obj); */
+
+    /* if(e1) */
+    /*   obj->class_object = (OBJECT_PTR)e1->value; */
+    /* else */
+    /*   obj->class_object = deserialize_object_reference(heap, cls_obj, obj_ht, native_ptr_ht); */
+    /* /\* end of class_object *\/ */
+
+    /* /\* instance_vars *\/ */
+    /* OBJECT_PTR binding_env = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT), */
+    /*                                              1)->ivalue; */
+
+    /* e1 = hashtable_get(native_ptr_ht, (void *)binding_env); */
+
+    /* if(e1) */
+    /*   obj->class_object = (OBJECT_PTR)e1->value; */
+    /* else */
+    /*   obj->class_object = deserialize_object_reference(heap, binding_env, obj_ht, native_ptr_ht); */
+    /* /\* end of instance_vars *\/ */
+
+    /* //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type)); */
+
+    /* return (uintptr_t)obj + object_type; */
+    object_t *obj = (object_t *)deserialize_native_ptr_reference(heap,
+                                                                 OBJ_PTR,
+                                                                 ref >> OBJECT_SHIFT,
+                                                                 obj_ht,
+                                                                 native_ptr_ht);
 
     hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
 
-    /* class_object */
-    //we index into the native heap to get the object_t 'pointer',
-    //and then take the first element of the array there (which maps
-    //to the object_t struct)
-    OBJECT_PTR cls_obj = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
-                                             0)->ivalue;
-
-    e1 = hashtable_get(native_ptr_ht, (void *)cls_obj);
-
-    if(e1)
-      obj->class_object = (OBJECT_PTR)e1->value;
-    else
-      obj->class_object = deserialize_object_reference(heap, cls_obj, obj_ht, native_ptr_ht);
-    /* end of class_object */
-
-    /* instance_vars */
-    OBJECT_PTR binding_env = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
-                                                 1)->ivalue;
-
-    e1 = hashtable_get(native_ptr_ht, (void *)binding_env);
-
-    if(e1)
-      obj->class_object = (OBJECT_PTR)e1->value;
-    else
-      obj->class_object = deserialize_object_reference(heap, binding_env, obj_ht, native_ptr_ht);
-    /* end of instance_vars */
-
-    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)obj + object_type));
-
     return (uintptr_t)obj + object_type;
+
   }
   else if(object_type == CLASS_OBJECT_TAG)
   {
+    /*
     hashtable_entry_t *e1;
 
     class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
 
     hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
 
-    /* parent_class_object */
+    /-* parent_class_object *-/
     OBJECT_PTR parent_cls_obj = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                     0)->ivalue;
 
@@ -3628,12 +3811,12 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                                   parent_cls_obj,
                                                                   obj_ht,
                                                                   native_ptr_ht);
-    /* end of parent_class_object */
+    /-* end of parent_class_object *-/
 
-    /* name */
+    /-* name *-/
     cls_obj->name = GC_strdup(JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                   1)->strvalue);
-    /* package */
+    /-* package *-/
     OBJECT_PTR pkg = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                          2)->ivalue;
 
@@ -3646,13 +3829,13 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                       pkg,
                                                       obj_ht,
                                                       native_ptr_ht);
-    /* end of parent_class_object */
+    /-* end of parent_class_object *-/
 
-    /* nof_instances */
+    /-* nof_instances *-/
     cls_obj->nof_instances = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                  3)->ivalue;
 
-    /* instances */
+    /-* instances *-/
     cls_obj->instances = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instances * sizeof(OBJECT_PTR));
 
     struct JSONObject *instances = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT), 4);
@@ -3672,13 +3855,13 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                              obj_ht,
                                                              native_ptr_ht);
     }
-    /* end of instances */
+    /-* end of instances *-/
 
-    /* nof_inst_vars */
+    /-* nof_inst_vars *-/
     cls_obj->nof_instance_vars = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                      5)->ivalue;
 
-    /* instance vars */
+    /-* instance vars *-/
     cls_obj->inst_vars = (OBJECT_PTR *)GC_MALLOC(cls_obj->nof_instance_vars * sizeof(OBJECT_PTR));
 
     struct JSONObject *instance_vars = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT), 6);
@@ -3686,9 +3869,9 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
 
     for(i=0; i< cls_obj->nof_instance_vars; i++)
       cls_obj->inst_vars[i] = JSON_get_array_item(instance_vars, i)->ivalue;
-    /* end of instance vars */
+    /-* end of instance vars *-/
 
-    /* shared vars */
+    /-* shared vars *-/
     OBJECT_PTR shared_vars = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                  7)->ivalue;
 
@@ -3702,9 +3885,9 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                                                shared_vars,
                                                                                obj_ht,
                                                                                native_ptr_ht);
-    /* end of shared vars */
+    /-* end of shared vars *-/
 
-    /* instance methods */
+    /-* instance methods *-/
     OBJECT_PTR instance_methods = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                       8)->ivalue;
 
@@ -3718,9 +3901,9 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                                                            instance_methods,
                                                                                            obj_ht,
                                                                                            native_ptr_ht);
-    /* end of instance methods */
+    /-* end of instance methods *-/
 
-    /* class methods */
+    /-* class methods *-/
     OBJECT_PTR class_methods = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                    9)->ivalue;
 
@@ -3734,9 +3917,16 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                                                         class_methods,
                                                                                         obj_ht,
                                                                                         native_ptr_ht);
-    /* end of class methods */
+    /-* end of class methods *-/
+    */
 
-    //hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
+    class_object_t *cls_obj = (class_object_t *)deserialize_native_ptr_reference(heap,
+                                                                                 CLASS_OBJ_PTR,
+                                                                                 ref >> OBJECT_SHIFT,
+                                                                                 obj_ht,
+                                                                                 native_ptr_ht);
+
+    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)cls_obj + object_type));
 
     return (uintptr_t)cls_obj + object_type;
   }
@@ -3747,6 +3937,7 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                                                  ref >> OBJECT_SHIFT,
                                                                                  obj_ht,
                                                                                  native_ptr_ht);
+
     hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)arr_obj + object_type));
 
     return (uintptr_t)arr_obj + object_type;
@@ -4034,14 +4225,26 @@ int load_from_image(char *file_name)
   return 0;
 }
 
-void initialize();
+/* void initialize(); */
+/* void load_core_library(); */
+/* void initialize_pass2(); */
+/* void load_core_library2(); */
+
 int call_repl(char *);
 
-extern executable_code_t *g_exp;
+/* extern executable_code_t *g_exp; */
+/* extern BOOLEAN g_system_initialized; */
 
 void create_test_image(char *file_name)
 {
-  initialize();
+  /* g_system_initialized = false; */
+  /* initialize();   */
+  /* load_core_library(); */
+  /* initialize_pass2(); */
+  /* load_core_library2(); */
+  /* g_system_initialized = true; */
+
+  /* initialize_inbuiltfns(); */
 
   FILE *fp = fopen(file_name, "w");
 
@@ -4080,13 +4283,17 @@ void create_test_image(char *file_name)
   call_repl("Smalltalk createGlobal: #anArray valued: (Array new: 10)");
   call_repl("anArray at: 7 put: 42");
 
-  print_executable_code(g_exp); printf("\n");
+  call_repl("Smalltalk createClass: #TestClass");
+  call_repl("Smalltalk addClassMethod: #hello toClass: TestClass withBody: [ ^ 100 ]");
+  /* call_repl("Smalltalk createGlobal: #val valued: (TestClass hello)"); */
+
+  /* print_executable_code(g_exp); printf("\n"); */
 
   fprintf(fp, "{ ");
 
   fprintf(fp, "\"stack_obj\" : ");
   print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)test_stack);
-  fflush(fp);
+
   fprintf(fp, ", \"g_exp\" : ");
   print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
   fprintf(fp, ", \"an_array\" : ");
@@ -4098,11 +4305,34 @@ void create_test_image(char *file_name)
   array_object_t *native_arr_obj = (array_object_t *)extract_ptr(car(arr_obj));
   printf("count = %d\n", native_arr_obj->nof_elements);
   printf("val at 7 = %d\n", get_int_value(native_arr_obj->elements[6]));
-
   print_object_ptr_reference(fp, car(arr_obj));
+
   //fprintf(fp, "\"bin_msgs\" : ");
   //print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)(g_exp->statements->exp->basic_exp->msg->binary_messages));
-  fflush(fp);
+
+  /* fprintf(fp, ", \"val\" : "); */
+
+  /* OBJECT_PTR hello_result; */
+  /* assert(get_top_level_val(get_symbol("val"), &hello_result)); */
+  /* print_object_ptr_reference(fp, car(hello_result)); */
+
+  /* fprintf(fp, ", \"test_class\" : "); */
+
+  OBJECT_PTR test_class;
+  assert(get_top_level_val(get_symbol("TestClass"), &test_class));
+  print_object_ptr_reference(fp, car(test_class));
+
+  /* class_object_t *tt = (class_object_t *)extract_ptr(car(test_class)); */
+
+  /* int j; */
+  /* for(j=0; j<tt->class_methods->count; j++) */
+  /* { */
+  /*   OBJECT_PTR nf_obj = tt->class_methods->bindings[j].val->nativefn_obj; */
+  /*   assert(IS_NATIVE_FN_OBJECT(nf_obj)); */
+  /*   nativefn nnff = get_nativefn_value(nf_obj); */
+  /*   printf("native function of the class method is %p (%s)\n", nnff, get_symbol_name(tt->class_methods->bindings[j].key)); */
+  /* } */
+
   fprintf(fp, ", \"heap\" : [");
 
   BOOLEAN beginning = true;
@@ -4114,12 +4344,10 @@ void create_test_image(char *file_name)
     queue_item_t *queue_item = queue_dequeue(native_ptr_print_queue);
     native_ptr_slot_t *s = (native_ptr_slot_t *)queue_item->data;
     print_native_ptr_heap_representation(fp, s->ref, s->type);
-    fflush(fp);
     if(!queue_is_empty(native_ptr_print_queue))fprintf(fp, ", ");
   }
 
   fprintf(fp, "] ");
-  fflush(fp);
 
   fprintf(fp, "}");
 
@@ -4149,6 +4377,8 @@ int load_from_test_image(char *file_name)
   struct JSONObject *stack_obj = JSON_get_object_item(root, "stack_obj");
   struct JSONObject *ec_obj = JSON_get_object_item(root, "g_exp");
   struct JSONObject *arr_obj_json = JSON_get_object_item(root, "an_array");
+  /* struct JSONObject *hello_obj_json = JSON_get_object_item(root, "val"); */
+  /* struct JSONObject *test_class_json = JSON_get_object_item(root, "test_class"); */
   //struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
   struct JSONObject *heap = JSON_get_object_item(root, "heap");
 
@@ -4179,6 +4409,18 @@ int load_from_test_image(char *file_name)
   array_object_t *native_arr_obj = (array_object_t *)extract_ptr(arr_obj);
 
   print_object(native_arr_obj->elements[6]);printf("\n");
+
+  /* OBJECT_PTR hello_obj_ptr = deserialize_object_reference(heap, */
+  /*                                                         hello_obj_json->ivalue, */
+  /*                                                         object_hashtable, */
+  /*                                                         native_ptr_hashtable); */
+  /* print_object(hello_obj_ptr); printf("\n"); */
+
+  /* OBJECT_PTR test_class_ptr = deserialize_object_reference(heap, */
+  /*                                                          test_class_json->ivalue, */
+  /*                                                          object_hashtable, */
+  /*                                                          native_ptr_hashtable); */
+  /* print_object(test_class_ptr); printf("\n"); */
 
   while(!stack_is_empty(stack))
   {
