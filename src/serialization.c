@@ -300,8 +300,28 @@ void *deserialize_native_ptr_reference(struct JSONObject *,
                                        OBJECT_PTR ,
                                        hashtable_t *,
                                        hashtable_t *);
+
+void print_queue(queue_t *);
 //end forward declarations
 
+BOOLEAN is_valid_object(OBJECT_PTR x)
+{
+  return IS_SYMBOL_OBJECT(x)      ||
+    IS_CONS_OBJECT(x)             ||
+    IS_INTEGER_OBJECT(x)          ||
+    IS_FLOAT_OBJECT(x)            ||
+    IS_NATIVE_FN_OBJECT(x)        ||
+    IS_CLOSURE_OBJECT(x)          ||
+    IS_TRUE_OBJECT(x)             ||
+    IS_FALSE_OBJECT(x)            ||
+    IS_CLASS_OBJECT(x)            ||
+    IS_OBJECT_OBJECT(x)           ||
+    IS_STRING_OBJECT(x)           ||
+    IS_SMALLTALK_SYMBOL_OBJECT(x) ||
+    IS_CHARACTER_OBJECT(x)        ||
+    IS_STRING_LITERAL_OBJECT(x)   ||
+    IS_ARRAY_OBJECT(x);
+}
 void initialize_inbuiltfns()
 {
   inbuiltfns = (nativefn *)GC_MALLOC(NOF_INBUILT_FNS * sizeof(nativefn));
@@ -429,7 +449,7 @@ void initialize_inbuiltfns()
   inbuiltfns[91] = (nativefn)readable_string_includes;
   inbuiltfns[92] = (nativefn)readable_string_detect_if_none;
   inbuiltfns[93] = (nativefn)readable_string_detect;
-  inbuiltfns[93] = (nativefn)readable_string_collect;
+  inbuiltfns[94] = (nativefn)readable_string_collect;
   inbuiltfns[95] = (nativefn)readable_string_substring;
   inbuiltfns[96] = (nativefn)readable_string_concat ;
 
@@ -487,21 +507,28 @@ void add_obj_to_native_ptr_print_list(void *native_ptr, enum PointerType type)
 {
   assert(native_ptr);
 
+  native_ptr_slot_t *s = (native_ptr_slot_t *)GC_MALLOC(sizeof(native_ptr_slot_t));
+  s->type     = type;
+  s->sub_type = g_sub_type;
+  s->ref      = native_ptr;
+
   //this search is O(n), but this is OK because
   //the queue keeps growing and shrinking, so its
   //size at any point in time is quite small (<10)
   if(native_ptr != NULL &&
-     (native_ptr_queue_item_exists(native_ptr_print_queue, native_ptr) ||
+     (native_ptr_queue_item_exists(native_ptr_print_queue, (void *)s) ||
       hashtable_get(printed_native_objects, native_ptr)))
     return;
 
-  native_ptr_slot_t *s = (native_ptr_slot_t *)GC_MALLOC(sizeof(native_ptr_slot_t));
-  s->type = type;
-  s->sub_type = g_sub_type;
-  s->ref = native_ptr;
+  /* native_ptr_slot_t *s = (native_ptr_slot_t *)GC_MALLOC(sizeof(native_ptr_slot_t)); */
+  /* s->type = type; */
+  /* s->sub_type = g_sub_type; */
+  /* s->ref = native_ptr; */
 
   queue_enqueue(native_ptr_print_queue, (void *)s);
 }
+
+primary_t *g_prim = NULL;
 
 void print_native_ptr_reference(FILE *fp,
                                 enum PointerType type,
@@ -674,10 +701,12 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     //g_sub_type = OBJECT_PTR1;
     print_native_ptr_reference(fp, BINDING_ENV_PTR, (void *)cls_obj->shared_vars);
+    fprintf(fp, ", ");
     //g_sub_type = NONE;
 
     //g_sub_type = METHOD_PTR;
     print_native_ptr_reference(fp, METHOD_BINDING_ENV_PTR, (void *)cls_obj->instance_methods);
+    fprintf(fp, ", ");
     //g_sub_type = NONE;
 
     //g_sub_type = METHOD_PTR;
@@ -1437,10 +1466,10 @@ void print_native_ptr_heap_representation(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    fprintf(fp, "\"%s\", ", asgn->identifier);
+    fprintf(fp, "\"%s\"", asgn->identifier);
     fprintf(fp, ", ");
     print_native_ptr_reference(fp, EXPRESSION_PTR, (void *)asgn->rvalue);
-    fprintf(fp, "[ ");
+    fprintf(fp, "] ");
   }
   else if(type == BASIC_EXPRESSION_PTR)
   {
@@ -1550,6 +1579,7 @@ void print_native_ptr_heap_representation(FILE *fp,
   else
   {
     assert(type == NONE); //it is an OBJECT_PTR
+    assert(is_valid_object((OBJECT_PTR)native_ptr));
     print_heap_representation(fp, (OBJECT_PTR)native_ptr);
   }
 
@@ -2282,8 +2312,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                           obj_ht,
                                                                           native_ptr_ht);
     }
-    else
-      assert(false);
+    else { printf("%s\n", JSON_get_array_item(ptr_entry, 0)->strvalue);
+      assert(false); }
 
     //hashtable_put(native_ptr_ht, (void *)ref, (void *)prim);
 
@@ -4225,10 +4255,12 @@ int load_from_image(char *file_name)
   return 0;
 }
 
-/* void initialize(); */
-/* void load_core_library(); */
-/* void initialize_pass2(); */
-/* void load_core_library2(); */
+void initialize();
+void build_autocomplete_words();
+void set_up_autocomplete_words();
+void load_core_library();
+void initialize_pass2();
+void load_core_library2();
 
 int call_repl(char *);
 
@@ -4237,18 +4269,21 @@ int call_repl(char *);
 
 void create_test_image(char *file_name)
 {
-  /* g_system_initialized = false; */
-  /* initialize();   */
-  /* load_core_library(); */
-  /* initialize_pass2(); */
-  /* load_core_library2(); */
-  /* g_system_initialized = true; */
+  g_ui_mode = CLI;
+  g_system_initialized = false;
+  initialize();
+  build_autocomplete_words();
+  set_up_autocomplete_words();
+  load_core_library();
+  initialize_pass2();
+  load_core_library2();
+  initialize_inbuiltfns();
+  g_system_initialized = true;
 
-  /* initialize_inbuiltfns(); */
+  print_diagnostics();
 
   FILE *fp = fopen(file_name, "w");
 
-  obj_print_queue = queue_create();
   obj_hashtable = hashtable_create(1000001);
   printed_objects = hashtable_create(1000001);
 
@@ -4276,26 +4311,24 @@ void create_test_image(char *file_name)
   //call_repl("Smalltalk createClassPreInitialize: #SomeClass");
   //call_repl("Smalltalk addClassMethod: #hello toClass: SomeClass withBody: [ Transcript show: 'Henlo world!' ]");
 
-  //print_executable_code(g_exp);printf("\n");
+  //print_executable_code(stdout, g_exp);printf("\n");
   //print_binary_message(g_exp->statements->exp->basic_exp->msg->binary_messages->bin_msgs+1);
   //printf("\n");
-
-  call_repl("Smalltalk createGlobal: #anArray valued: (Array new: 10)");
-  call_repl("anArray at: 7 put: 42");
-
-  call_repl("Smalltalk createClass: #TestClass");
-  call_repl("Smalltalk addClassMethod: #hello toClass: TestClass withBody: [ ^ 100 ]");
-  /* call_repl("Smalltalk createGlobal: #val valued: (TestClass hello)"); */
-
-  /* print_executable_code(g_exp); printf("\n"); */
 
   fprintf(fp, "{ ");
 
   fprintf(fp, "\"stack_obj\" : ");
   print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)test_stack);
 
+  call_repl("[ :x :y | ^ (x + y) ]");
+  print_executable_code(stdout, g_exp); printf("\n");
+
   fprintf(fp, ", \"g_exp\" : ");
   print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
+
+  call_repl("Smalltalk createGlobal: #anArray valued: (Array new: 10)");
+  call_repl("anArray at: 7 put: 42");
+
   fprintf(fp, ", \"an_array\" : ");
 
   OBJECT_PTR arr_obj;
@@ -4316,11 +4349,37 @@ void create_test_image(char *file_name)
   /* assert(get_top_level_val(get_symbol("val"), &hello_result)); */
   /* print_object_ptr_reference(fp, car(hello_result)); */
 
-  /* fprintf(fp, ", \"test_class\" : "); */
+  /*
+  call_repl("Smalltalk createClass: #TestClass");
+  call_repl("Smalltalk addClassMethod: #hello toClass: TestClass withBody: [ Transcript show: 'Hello world!'; cr ]");
+  call_repl("Smalltalk createGlobal: #val valued: (TestClass hello)");
+  */
 
-  OBJECT_PTR test_class;
-  assert(get_top_level_val(get_symbol("TestClass"), &test_class));
-  print_object_ptr_reference(fp, car(test_class));
+  call_repl("Smalltalk createClass: #TestClass");
+  executable_code_t *g_exp1 = g_exp;
+
+  call_repl("Smalltalk addClassMethod: #hello toClass: TestClass withBody: [ Transcript show: 'Hello world!'; cr ]");
+  executable_code_t *g_exp2 = g_exp;
+
+  call_repl("Smalltalk createGlobal: #val valued: (TestClass hello)");
+  executable_code_t *g_exp3 = g_exp;
+
+  /* fprintf(fp, ", \"test_class\" : "); */
+  /* OBJECT_PTR test_class; */
+  /* assert(get_top_level_val(get_symbol("TestClass"), &test_class)); */
+  /* print_object_ptr_reference(fp, car(test_class)); */
+
+  fprintf(fp, ", \"g_exp1\" : ");
+  print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp1);
+  print_executable_code(stdout, g_exp1); printf("\n");
+
+  fprintf(fp, ", \"g_exp2\" : ");
+  print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp2);
+  print_executable_code(stdout, g_exp2); printf("\n");
+
+  fprintf(fp, ", \"g_exp3\" : ");
+  print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp3);
+  print_executable_code(stdout, g_exp3); printf("\n");
 
   /* class_object_t *tt = (class_object_t *)extract_ptr(car(test_class)); */
 
@@ -4334,24 +4393,27 @@ void create_test_image(char *file_name)
   /* } */
 
   fprintf(fp, ", \"heap\" : [");
-
-  BOOLEAN beginning = true;
-
-  BOOLEAN message_send_native_fn_obj;
-
+  int ii = 0;
   while(!queue_is_empty(native_ptr_print_queue))
   {
+    /* printf("queue begin\n"); */
+    /* print_queue(native_ptr_print_queue); */
+    /* printf("queue end\n"); */
+    /* getchar(); */
+
     queue_item_t *queue_item = queue_dequeue(native_ptr_print_queue);
     native_ptr_slot_t *s = (native_ptr_slot_t *)queue_item->data;
+    if(ii == 22 || ii == 37)
+      printf("while printing heap representation (ii = %d): %d, %p\n", ii, s->type, s->ref);
     print_native_ptr_heap_representation(fp, s->ref, s->type);
     if(!queue_is_empty(native_ptr_print_queue))fprintf(fp, ", ");
+    ii++;
   }
 
   fprintf(fp, "] ");
 
   fprintf(fp, "}");
 
-  queue_delete(obj_print_queue);
   hashtable_delete(obj_hashtable);
   hashtable_delete(printed_objects);
 
@@ -4376,11 +4438,16 @@ int load_from_test_image(char *file_name)
 
   struct JSONObject *stack_obj = JSON_get_object_item(root, "stack_obj");
   struct JSONObject *ec_obj = JSON_get_object_item(root, "g_exp");
+  struct JSONObject *ec_obj1 = JSON_get_object_item(root, "g_exp1");
+  struct JSONObject *ec_obj2 = JSON_get_object_item(root, "g_exp2");
+  struct JSONObject *ec_obj3 = JSON_get_object_item(root, "g_exp3");
   struct JSONObject *arr_obj_json = JSON_get_object_item(root, "an_array");
   /* struct JSONObject *hello_obj_json = JSON_get_object_item(root, "val"); */
-  /* struct JSONObject *test_class_json = JSON_get_object_item(root, "test_class"); */
+  //struct JSONObject *test_class_json = JSON_get_object_item(root, "test_class");
   //struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
   struct JSONObject *heap = JSON_get_object_item(root, "heap");
+
+  printf("**** output of deserialization ****\n");
 
   hashtable_t *object_hashtable = hashtable_create(1001);
   hashtable_t *native_ptr_hashtable = hashtable_create(1001);
@@ -4398,6 +4465,23 @@ int load_from_test_image(char *file_name)
                                                            object_hashtable,
                                                            native_ptr_hashtable);
 
+  executable_code_t *ec1 = deserialize_native_ptr_reference(heap,
+                                                            EXEC_CODE_PTR,
+                                                            ec_obj1->ivalue,
+                                                            object_hashtable,
+                                                            native_ptr_hashtable);
+
+  executable_code_t *ec2 = deserialize_native_ptr_reference(heap,
+                                                            EXEC_CODE_PTR,
+                                                            ec_obj2->ivalue,
+                                                            object_hashtable,
+                                                            native_ptr_hashtable);
+
+  executable_code_t *ec3 = deserialize_native_ptr_reference(heap,
+                                                           EXEC_CODE_PTR,
+                                                           ec_obj3->ivalue,
+                                                            object_hashtable,
+                                                            native_ptr_hashtable);
   OBJECT_PTR arr_obj = deserialize_object_reference(heap,
                                                     arr_obj_json->ivalue,
                                                     object_hashtable,
@@ -4429,7 +4513,25 @@ int load_from_test_image(char *file_name)
     printf("\n");
   }
 
-  print_executable_code(ec);
+  print_executable_code(stdout, ec);
+  print_executable_code(stdout, ec1);
+  print_executable_code(stdout, ec2);
+  print_executable_code(stdout, ec3);
   //print_binary_messages(bin_msgs1); printf("\n");
   return 0;
+}
+
+void print_queue(queue_t *q)
+{
+  queue_item_t *np = q->first;
+
+  unsigned int i=0;
+
+  while(np)
+  {
+    native_ptr_slot_t *s = (native_ptr_slot_t *)np->data;
+    printf("%d. type = %d, native_ptr = %p\n", i, s->type, s->ref);
+    i++;
+    np = np->next;
+  }
 }

@@ -166,6 +166,7 @@ BOOLEAN              pop_if_top(call_chain_entry_t *);
 char                *prepend_char(char *, char);
 BOOLEAN              primop(OBJECT_PTR);
 void                 print_call_chain();
+void                 print_diagnostics();
 void                 print_exception_contexts();
 void                 print_object(OBJECT_PTR);
 void                 print_object_to_string(OBJECT_PTR, char *);

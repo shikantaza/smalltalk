@@ -208,13 +208,13 @@ char *strip_last_colon(char *s)
 //(decorate_message_selectors())
 char *append_char(char *s, char a)
 {
-  unsigned int n;
+  size_t n;
 
   n = strlen(s);
 
   char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
 
-  strcpy(ret, s);
+  strncpy(ret,s,n);
 
   ret[n] = a;
   ret[n+1] = '\0';
@@ -224,13 +224,13 @@ char *append_char(char *s, char a)
 
 char *prepend_char(char *s, char a)
 {
-  unsigned int n;
+  size_t n;
 
   n = strlen(s);
 
   char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
 
-  strcpy(ret+1, s);
+  strncpy(ret+1,s,n);
 
   ret[0] = a;
   ret[n+1] = '\0';

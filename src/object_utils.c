@@ -334,6 +334,58 @@ OBJECT_PTR list(int count, ...)
   return ret;
 }
 
+//it is assumed that 'str' points to already-allocated memory
+void print_cons_object_to_string(OBJECT_PTR obj, char *str)
+{
+  assert(IS_CONS_OBJECT(obj));
+
+  unsigned int len = 0;
+
+  OBJECT_PTR car_obj = car(obj);
+  OBJECT_PTR cdr_obj = cdr(obj);
+
+  if(is_atom(cdr_obj)
+     && cdr_obj != NIL)
+  {
+    len += sprintf(str+len, "(");
+    print_object_to_string(car_obj, str+len);
+    len = strlen(str);
+    len += sprintf(str+len, " . ");
+    print_object_to_string(cdr_obj, str+len);
+    len = strlen(str);
+    len += sprintf(str+len, ")");
+  }
+  else
+  {
+    OBJECT_PTR rest = obj;
+
+    len += sprintf(str+len, "(");
+
+    while(rest != NIL &&
+          !is_atom(rest))
+    {
+      print_object_to_string(car(rest), str+len);
+      len = strlen(str);
+      len += sprintf(str+len, " ");
+      rest = cdr(rest);
+    }
+
+    if(is_atom(rest)
+       && rest != NIL)
+    {
+      len += sprintf(str+len, ". ");
+      print_object_to_string(rest, str+len);
+      len = strlen(str);
+      len += sprintf(str+len, ")");
+    }
+    else
+    {
+      len--;
+      len += sprintf(str+len, ")");
+    }
+  }
+}
+
 void print_cons_object(OBJECT_PTR obj)
 {
   OBJECT_PTR car_obj = car(obj);
@@ -392,7 +444,7 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
   else if(IS_FLOAT_OBJECT(obj_ptr))
     sprintf(str, "%lf", get_float_value(obj_ptr));
   else if(IS_CONS_OBJECT(obj_ptr))
-    print_cons_object(obj_ptr);
+    print_cons_object_to_string(obj_ptr, str);
   else if(IS_CLOSURE_OBJECT(obj_ptr))
   {
     OBJECT_PTR lst_form = extract_ptr(obj_ptr) + CONS_TAG;
