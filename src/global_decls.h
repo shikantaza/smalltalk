@@ -23,6 +23,8 @@
 #include "smalltalk.h"
 #include "parser_header.h"
 
+#define MAX_SOURCE_LENGTH 64000
+
 //workaround for variadic function arguments
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
@@ -134,6 +136,8 @@ BOOLEAN              IS_STRING_OBJECT(OBJECT_PTR);
 BOOLEAN              is_super_class(OBJECT_PTR, OBJECT_PTR);
 BOOLEAN              IS_TRUE_OBJECT(OBJECT_PTR);
 call_chain_entry_t  *is_termination_block_not_invoked(OBJECT_PTR);
+BOOLEAN              is_valid_array_obj(OBJECT_PTR);
+BOOLEAN              is_valid_object(OBJECT_PTR);
 OBJECT_PTR           last_cell(OBJECT_PTR);
 OBJECT_PTR           lift_transform(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           mcps_transform(OBJECT_PTR);

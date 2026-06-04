@@ -178,6 +178,8 @@ BOOLEAN exists_in_top_level(OBJECT_PTR sym)
   return false;
 }
 
+class_object_t *g_package = NULL;
+
 OBJECT_PTR create_class(OBJECT_PTR closure,
 			OBJECT_PTR class_sym,
 			OBJECT_PTR parent_class_object,
@@ -208,6 +210,9 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   
   cls_obj->parent_class_object = parent_class_object;
   cls_obj->name = GC_strdup(get_smalltalk_symbol_name(class_sym));
+
+  if(!strcmp(cls_obj->name, "Package"))
+    g_package = cls_obj;
 
   cls_obj->nof_instances = 0;
   cls_obj->instances = NULL;
@@ -552,11 +557,11 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
     //add_top_level_sym(first(lambda),
     //                  convert_native_fn_to_object(get_function(state, fname1)));
 
-    char source[3000];
-    memset(source, '\0', 3000);
+    char source[MAX_SOURCE_LENGTH];
+    memset(source, '\0', MAX_SOURCE_LENGTH);
     build_c_string(lambda, source, true);
 
-    assert(strlen(source)<=3000);
+    assert(strlen(source)<=MAX_SOURCE_LENGTH);
 
     add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
@@ -704,11 +709,11 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
     //add_top_level_sym(first(lambda),
     //                  convert_native_fn_to_object(get_function(state, fname1)));
 
-    char source[3000];
-    memset(source, '\0', 3000);
+    char source[MAX_SOURCE_LENGTH];
+    memset(source, '\0', MAX_SOURCE_LENGTH);
     build_c_string(lambda, source, true);
 
-    assert(strlen(source)<=3000);
+    assert(strlen(source)<=MAX_SOURCE_LENGTH);
 
     add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 

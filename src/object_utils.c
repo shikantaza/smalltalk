@@ -459,20 +459,50 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
       sprintf(str, "#<CLOSURE %p> (arity = %d)", (void *)obj_ptr, arity);
   }
   else if(IS_CLASS_OBJECT(obj_ptr))
-    //sprintf(str, "#<CLASS %p> (%s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(obj_ptr))->name);
-    sprintf(str, "Class %s", ((class_object_t *)extract_ptr(obj_ptr))->name);
-  //sprintf(str, "#<CLASS %p>", (void *)obj_ptr);
+  {
+    unsigned int len = 0;
+    class_object_t *cls_obj = (class_object_t *)extract_ptr(obj_ptr);
+    len += sprintf(str+len, "Class %s", cls_obj->name);
+    binding_env_t *shared_vars = cls_obj->shared_vars;
+
+    if(shared_vars)
+    {
+      unsigned int nof_shared_vars = shared_vars->count;
+      unsigned int i;
+
+      for(i=0; i<nof_shared_vars; i++)
+      {
+	if(!is_valid_object(shared_vars->bindings[i].val))
+	len += sprintf(str+len, "ERROR: shared variable %s is an invalid object", get_symbol_name(shared_vars->bindings[i].key));
+      }
+    }
+  }
   else if(IS_NATIVE_FN_OBJECT(obj_ptr))
     sprintf(str, "#<NATIVEFN %p> ", (void *)obj_ptr);
   else if(IS_OBJECT_OBJECT(obj_ptr))
   {
+    unsigned int len = 0;
     object_t *obj = (object_t *)extract_ptr(obj_ptr);
     OBJECT_PTR cls_obj = obj->class_object;
-    //sprintf(str, "#<OBJECT %p> (instance of %s)", (void *)obj_ptr, ((class_object_t *)extract_ptr(cls_obj))->name);
+
     if(IS_CLASS_OBJECT(cls_obj))
-      sprintf(str, "An instance of %s", ((class_object_t *)extract_ptr(cls_obj))->name);
+      len += sprintf(str+len, "An instance of %s", ((class_object_t *)extract_ptr(cls_obj))->name);
     else
-      sprintf(str, "<Unknown object %p>", (void *)obj_ptr);
+      len += sprintf(str+len, "<Unknown object %p>", (void *)obj_ptr);
+
+    binding_env_t *inst_vars = obj->instance_vars;
+
+    if(inst_vars)
+    {
+      unsigned int nof_inst_vars = inst_vars->count;
+      unsigned int i;
+
+      for(i=0; i<nof_inst_vars; i++)
+      {
+	if(!is_valid_object(inst_vars->bindings[i].val))
+	  len += sprintf(str+len, "ERROR: instance variable %s is an invalid object", get_symbol_name(inst_vars->bindings[i].key));
+      }
+    }
   }
   else if(IS_CHARACTER_OBJECT(obj_ptr))
     sprintf(str, "$%c", get_char_value(obj_ptr));
@@ -481,7 +511,11 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
   else if(IS_TRUE_OBJECT(obj_ptr) || IS_FALSE_OBJECT(obj_ptr))
     sprintf(str, "%s", obj_ptr == TRUE ? "true" : "false");
   else if(IS_ARRAY_OBJECT(obj_ptr))
+  {
     sprintf(str, "#<OBJECT %p> (instance of Array)", (void *)obj_ptr);
+    if(!is_valid_array_obj(obj_ptr))
+      sprintf(str, "ERROR: array contains invalid element(s)");
+  }
   else
     sprintf(str, "<invalid object %p>", (void *)obj_ptr);
 }
@@ -994,4 +1028,90 @@ OBJECT_PTR get_binding(binding_env_t *env, OBJECT_PTR key)
       return env->bindings[i].val;
 
   return 0;
+}
+
+BOOLEAN is_valid_object(OBJECT_PTR x)
+{
+  if(!(IS_SYMBOL_OBJECT(x)           ||
+       IS_CONS_OBJECT(x)             ||
+       IS_INTEGER_OBJECT(x)          ||
+       IS_FLOAT_OBJECT(x)            ||
+       IS_NATIVE_FN_OBJECT(x)        ||
+       IS_CLOSURE_OBJECT(x)          ||
+       IS_TRUE_OBJECT(x)             ||
+       IS_FALSE_OBJECT(x)            ||
+       IS_CLASS_OBJECT(x)            ||
+       IS_OBJECT_OBJECT(x)           ||
+       IS_STRING_OBJECT(x)           ||
+       IS_SMALLTALK_SYMBOL_OBJECT(x) ||
+       IS_CHARACTER_OBJECT(x)        ||
+       IS_STRING_LITERAL_OBJECT(x)   ||
+       IS_ARRAY_OBJECT(x)))
+    return false;
+
+  if(IS_CONS_OBJECT(x))
+  {
+    if(!is_valid_object(car(x)))
+      return false;
+    else if(!is_valid_object(cdr(x)))
+      return false;
+    else
+      return true;
+  }
+
+  if(IS_ARRAY_OBJECT(x))
+  {
+    if(!is_valid_array_obj(x))
+    {
+      printf("ERROR: Invalid array object\n");
+      return false;
+    }
+    else
+      return true;
+  }
+
+  if(IS_OBJECT_OBJECT(x))
+  {
+    object_t *obj = (object_t *)extract_ptr(x);
+
+    binding_env_t *inst_vars = obj->instance_vars;
+
+    unsigned int nof_inst_vars = inst_vars->count;
+    unsigned int i;
+
+    for(i=0; i<nof_inst_vars; i++)
+    {
+      if(!is_valid_object(inst_vars->bindings[i].val))
+      {
+	printf("ERROR: object contains invalid instance variable %s\n", get_symbol_name(inst_vars->bindings[i].key));
+	return false;
+      }
+    }
+
+    return true;
+  }
+
+  return true;
+}
+
+BOOLEAN is_valid_array_obj(OBJECT_PTR arr_obj_ptr)
+{
+  assert(IS_ARRAY_OBJECT(arr_obj_ptr));
+
+  array_object_t *arr_obj = (array_object_t *)extract_ptr(arr_obj_ptr);
+
+  unsigned int i, nof_elems=arr_obj->nof_elements;
+
+  for(i=0; i<nof_elems; i++)
+  {
+    if(is_valid_object(arr_obj->elements[i]))
+      continue;
+    else
+    {
+      printf("Array element at index %d is not valid: %p\n", i, (void *)arr_obj->elements[i]);
+      return false;
+    }
+  }
+
+  return true;
 }

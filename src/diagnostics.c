@@ -35,8 +35,18 @@ extern stack_type          *g_handler_environment;
 extern stack_type          *g_signalling_environment;
 extern unsigned int         g_nof_compiler_states;
 
+//forward declaration
+void print_class_object(class_object_t *, FILE *);
+
 void print_object_to_file(OBJECT_PTR obj, FILE *fp)
 {
+  if(!is_valid_object(obj))
+  {
+    printf("print_object_to_file(): invalid object passed: %p\n", obj);
+    fflush(fp);
+    assert(false);
+  }
+
   char buf[10000];
   memset(buf,'\0',10000);
   print_object_to_string(obj, buf);
@@ -46,12 +56,36 @@ void print_object_to_file(OBJECT_PTR obj, FILE *fp)
 void print_binding(binding_t *binding, FILE*fp)
 {
   fprintf(fp, "key: "); print_object_to_file(binding->key, fp);fprintf(fp, "\n");
-  fprintf(fp, "val: "); print_object_to_file(binding->val, fp);fprintf(fp, "\n");
+  fprintf(fp, "val: ");
+
+  OBJECT_PTR val = binding->val;
+
+  if(!IS_CONS_OBJECT(val)) {
+    print_object_to_file(binding->val, fp); fprintf(fp, "\n"); return;
+  }
+
+  if(cons_length(val) != 1) {
+    print_object_to_file(binding->val, fp); fprintf(fp, "\n"); return;
+  }
+
+  if(IS_CLASS_OBJECT(car(val)))
+  {
+    fprintf(fp, "\n");
+    print_class_object((class_object_t *)extract_ptr(car(val)), fp);
+    fprintf(fp, "\n");
+  }
+  else {
+    print_object_to_file(binding->val, fp); fprintf(fp, "\n"); return;
+  }
 }
 
 void print_binding_env(binding_env_t *env, FILE *fp)
 {
   fprintf(fp, "binding_env:\n");
+
+  if(!env)
+    return;
+
   int i;
   fprintf(fp, "count = %d\n", env->count);
   for(i=0; i<env->count; i++)
@@ -61,13 +95,10 @@ void print_binding_env(binding_env_t *env, FILE *fp)
   }
 }
 
-//forward declaration
-void print_class_object(class_object_t *, FILE *);
-
 void print_method(method_t *m, FILE *fp)
 {
   fprintf(fp, "method: \n");
-  print_class_object(m->cls_obj, fp);
+  fprintf(fp, "class : %s\n", m->cls_obj->name);
   fprintf(fp, "class_method: %s\n", m->class_method ? "true" : "false");
   fprintf(fp, "nativefn_obj: "); print_object_to_file(m->nativefn_obj, fp); fprintf(fp, "\n");
   fprintf(fp, "closed_syms: ");  print_object_to_file(m->closed_syms, fp); fprintf(fp, "\n");
@@ -102,6 +133,7 @@ void print_class_object(class_object_t *cls_obj, FILE *fp)
   fprintf(fp, "class object:\n");
 
   fprintf(fp, "parent_class_object: "); print_object_to_file(cls_obj->parent_class_object, fp); fprintf(fp, "\n");
+  fflush(fp);
   fprintf(fp, "name: %s\n", cls_obj->name);
 
   fprintf(fp, "package: "); print_object_to_file(cls_obj->package, fp); fprintf(fp, "\n");
@@ -122,6 +154,9 @@ void print_class_object(class_object_t *cls_obj, FILE *fp)
     print_object_to_file(cls_obj->inst_vars[i], fp);
     fprintf(fp, "\n");
   }
+
+  if(!strcmp(cls_obj->name, "Package"))
+    printf("printing Package\n");
 
   print_binding_env(cls_obj->shared_vars, fp);
   print_method_binding_env(cls_obj->instance_methods, fp);

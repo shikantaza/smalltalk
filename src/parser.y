@@ -1283,11 +1283,11 @@ OBJECT_PTR repl_common()
     //add_top_level_sym(first(lambda),
     //                  convert_native_fn_to_object(get_function(state, fname1)));
 
-    char source[32000];
-    memset(source, '\0', 32000);
+    char source[MAX_SOURCE_LENGTH];
+    memset(source, '\0', MAX_SOURCE_LENGTH);
     build_c_string(lambda, source, true);
 
-    assert(strlen(source)<=32000);
+    assert(strlen(source)<=MAX_SOURCE_LENGTH);
 
     add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 

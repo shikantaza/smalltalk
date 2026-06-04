@@ -135,6 +135,8 @@ extern OBJECT_PTR Package;
 
 extern stack_type *g_breakpointed_methods;
 
+extern OBJECT_PTR g_debug_cont;
+
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
@@ -349,6 +351,8 @@ void initialize()
   g_exception_contexts = stack_create();
 
   g_breakpointed_methods = stack_create();
+
+  g_debug_cont = NIL;
 }
 
 //this is used to initialize globals
