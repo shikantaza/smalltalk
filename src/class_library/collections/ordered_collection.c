@@ -308,56 +308,64 @@ void create_OrderedCollection()
 
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 7;
-  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("_initialize");
-  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[0]->key = get_symbol("_initialize");
+  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_initialize),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[1]->key = get_symbol("_size");
+  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_size),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("_add:");
-  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[2]->key = get_symbol("_add:");
+  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_add),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("_at:");
-  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[3]->key = get_symbol("_at:");
+  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_at),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[4].key = get_symbol("_addLast:");
-  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[4]->key = get_symbol("_addLast:");
+  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_add_last),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("_removeLast");
-  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[5] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[5]->key = get_symbol("_removeLast");
+  cls_obj->instance_methods->bindings[5]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_remove_last),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[6].key = get_symbol("_do:");
-  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[6] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[6]->key = get_symbol("_do:");
+  cls_obj->instance_methods->bindings[6]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)ordered_collection_do),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 1;
-  cls_obj->class_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t));
+  cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
-  cls_obj->class_methods->bindings[0].key = get_symbol("_new");
-  cls_obj->class_methods->bindings[0].val = create_method(cls_obj, true,
+  cls_obj->class_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[0]->key = get_symbol("_new");
+  cls_obj->class_methods->bindings[0]->val = create_method(cls_obj, true,
 						 convert_native_fn_to_object((nativefn)ordered_collection_new),
 						 NIL, NIL,
 						 0, NIL, NULL);

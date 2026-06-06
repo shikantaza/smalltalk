@@ -130,10 +130,10 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   
       for(i=0; i<n; i++)
       {
-	if(cls_obj_int->class_methods->bindings[i].key == selector)
+	if(cls_obj_int->class_methods->bindings[i]->key == selector)
 	{
 	  method_found = true;
-	  method = cls_obj_int->class_methods->bindings[i].val;
+	  method = cls_obj_int->class_methods->bindings[i]->val;
 	  break;
 	}
       }    
@@ -144,10 +144,10 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   
       for(i=0; i<n; i++)
       {
-	if(cls_obj_int->instance_methods->bindings[i].key == selector)
+	if(cls_obj_int->instance_methods->bindings[i]->key == selector)
 	{
 	  method_found = true;
-	  method = cls_obj_int->instance_methods->bindings[i].val;
+	  method = cls_obj_int->instance_methods->bindings[i]->val;
 	  break;
 	}
       }

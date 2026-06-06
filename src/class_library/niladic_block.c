@@ -325,46 +325,53 @@ void create_NiladicBlock()
   
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 7;
-  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("_argumentCount");
-  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[0]->key = get_symbol("_argumentCount");
+  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_arg_count),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("_value");
-  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[1]->key = get_symbol("_value");
+  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_value),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("_on:do:");
-  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[2]->key = get_symbol("_on:do:");
+  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_on_do),
 						    NIL, NIL,
 						    2, NIL, NULL);
   
-  cls_obj->instance_methods->bindings[3].key = get_symbol("_ensure:");
-  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[3]->key = get_symbol("_ensure:");
+  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_ensure),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("_ifCurtailed:");
-  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[4]->key = get_symbol("_ifCurtailed:");
+  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_ifcurtailed),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("_whileTrue:");
-  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[5] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[5]->key = get_symbol("_whileTrue:");
+  cls_obj->instance_methods->bindings[5]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_while_true_iter),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[6].key = get_symbol("_whileFalse:");
-  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[6] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[6]->key = get_symbol("_whileFalse:");
+  cls_obj->instance_methods->bindings[6]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)niladic_block_while_false_iter),
 						    NIL, NIL,
 						    1, NIL, NULL);

@@ -274,53 +274,61 @@ void create_Integer()
   
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 8;
-  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("_+");
-  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[0]->key = get_symbol("_+");
+  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)plus),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("_-");
-  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[1]->key = get_symbol("_-");
+  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)minus),
 						    NIL, NIL,
 						    1, NIL, NULL);
 					
   
-  cls_obj->instance_methods->bindings[2].key = get_symbol("_*");
-  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[2]->key = get_symbol("_*");
+  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)times),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("_/");
-  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[3]->key = get_symbol("_/");
+  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)divided_by),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
-  cls_obj->instance_methods->bindings[4].key = get_symbol("_=");
-  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[4]->key = get_symbol("_=");
+  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)eq),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("_<");
-  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[5] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[5]->key = get_symbol("_<");
+  cls_obj->instance_methods->bindings[5]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)lt),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[6].key = get_symbol("_>");
-  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[6] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[6]->key = get_symbol("_>");
+  cls_obj->instance_methods->bindings[6]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)gt),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[7].key = get_symbol("_to:");
-  cls_obj->instance_methods->bindings[7].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[7] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[7]->key = get_symbol("_to:");
+  cls_obj->instance_methods->bindings[7]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)to),
 						    NIL, NIL,
 						    1, NIL, NULL);

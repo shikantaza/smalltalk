@@ -2033,7 +2033,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
 
     env->count = JSON_get_array_size(ptr_entry);
-    env->bindings = (binding_t *)GC_MALLOC(env->count * sizeof(binding_t));
+    env->bindings = (binding_t **)GC_MALLOC(env->count * sizeof(binding_t *));
 
     for(i=0; i<env->count; i++)
     {
@@ -2041,7 +2041,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
       hashtable_entry_t *e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-        env->bindings[i] = *((binding_t *)e1->value);
+        env->bindings[i] = (binding_t *)e1->value;
       else
       {
         binding_t *binding = (binding_t *)deserialize_native_ptr_reference(heap,
@@ -2049,7 +2049,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                            ref1,
                                                                            obj_ht,
                                                                            native_ptr_ht);
-        env->bindings[i] = *binding;
+        env->bindings[i] = binding;
       }
     }
 
@@ -2102,7 +2102,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     hashtable_put(native_ptr_ht, (void *)ref, (void *)env);
 
     env->count = JSON_get_array_size(ptr_entry);
-    env->bindings = (method_binding_t *)GC_MALLOC(env->count * sizeof(method_binding_t));
+    env->bindings = (method_binding_t **)GC_MALLOC(env->count * sizeof(method_binding_t *));
 
     for(i=0; i<env->count; i++)
     {
@@ -2110,7 +2110,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
       hashtable_entry_t *e1 = hashtable_get(native_ptr_ht, (void *)ref1);
 
       if(e1)
-        env->bindings[i] = *((method_binding_t *)e1->value);
+        env->bindings[i] = (method_binding_t *)e1->value;
       else
       {
         method_binding_t *binding = (method_binding_t *)deserialize_native_ptr_reference(heap,
@@ -2118,7 +2118,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                          ref1,
                                                                                          obj_ht,
                                                                                          native_ptr_ht);
-        env->bindings[i] = *binding;
+        env->bindings[i] = binding;
       }
     }
 

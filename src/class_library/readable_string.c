@@ -550,88 +550,102 @@ void create_ReadableString()
 
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 14;
-  cls_obj->instance_methods->bindings = (method_binding_t *)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
-  cls_obj->instance_methods->bindings[0].key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[0].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[0]->key = get_symbol("_size");
+  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_size),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[1].key = get_symbol("_isEmpty");
-  cls_obj->instance_methods->bindings[1].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[1]->key = get_symbol("_isEmpty");
+  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_is_empty),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[2].key = get_symbol("_notEmpty");
-  cls_obj->instance_methods->bindings[2].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[2]->key = get_symbol("_notEmpty");
+  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_not_empty),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[3].key = get_symbol("_do:");
-  cls_obj->instance_methods->bindings[3].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[3]->key = get_symbol("_do:");
+  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_do),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[4].key = get_symbol("_do:separatedBy:");
-  cls_obj->instance_methods->bindings[4].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[4]->key = get_symbol("_do:separatedBy:");
+  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_do_separated_by),
 						    NIL, NIL,
 						    2, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[5].key = get_symbol("_select:");
-  cls_obj->instance_methods->bindings[5].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[5] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[5]->key = get_symbol("_select:");
+  cls_obj->instance_methods->bindings[5]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_select),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[6].key = get_symbol("_reject:");
-  cls_obj->instance_methods->bindings[6].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[6] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[6]->key = get_symbol("_reject:");
+  cls_obj->instance_methods->bindings[6]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_reject),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[7].key = get_symbol("_occurrencesOf:");
-  cls_obj->instance_methods->bindings[7].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[7] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[7]->key = get_symbol("_occurrencesOf:");
+  cls_obj->instance_methods->bindings[7]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_occurrences_of),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[8].key = get_symbol("_includes:");
-  cls_obj->instance_methods->bindings[8].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[8] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[8]->key = get_symbol("_includes:");
+  cls_obj->instance_methods->bindings[8]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_includes),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[9].key = get_symbol("_detect:ifNone:");
-  cls_obj->instance_methods->bindings[9].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[9] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[9]->key = get_symbol("_detect:ifNone:");
+  cls_obj->instance_methods->bindings[9]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_detect_if_none),
 						    NIL, NIL,
 						    2, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[10].key = get_symbol("_detect:");
-  cls_obj->instance_methods->bindings[10].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[10] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[10]->key = get_symbol("_detect:");
+  cls_obj->instance_methods->bindings[10]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_detect),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[11].key = get_symbol("_collect:");
-  cls_obj->instance_methods->bindings[11].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[11] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[11]->key = get_symbol("_collect:");
+  cls_obj->instance_methods->bindings[11]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_collect),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[12].key = get_symbol("_substringFrom:to:");
-  cls_obj->instance_methods->bindings[12].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[12] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[12]->key = get_symbol("_substringFrom:to:");
+  cls_obj->instance_methods->bindings[12]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_substring),
 						    NIL, NIL,
 						    2, NIL, NULL);
 
-  cls_obj->instance_methods->bindings[13].key = get_symbol("_,");
-  cls_obj->instance_methods->bindings[13].val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[13] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[13]->key = get_symbol("_,");
+  cls_obj->instance_methods->bindings[13]->val = create_method(cls_obj, false,
 						    convert_native_fn_to_object((nativefn)readable_string_concat),
 						    NIL, NIL,
 						    1, NIL, NULL);

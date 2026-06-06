@@ -96,7 +96,7 @@ typedef struct binding
 typedef struct binding_env
 {
   unsigned int count;
-  binding_t *bindings;
+  binding_t **bindings;
 } binding_env_t;
 
 //forward declaration
@@ -111,7 +111,7 @@ typedef struct method_binding
 typedef struct method_binding_env
 {
   unsigned int count;
-  method_binding_t *bindings;
+  method_binding_t **bindings;
 } method_binding_env_t;
 
 typedef struct

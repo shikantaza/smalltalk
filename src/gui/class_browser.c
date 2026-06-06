@@ -300,12 +300,12 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 
     for(i=0; i<n; i++)
     {
-      if(g_top_level->bindings[i].key == SELF ||
-	 g_top_level->bindings[i].key == SUPER ||
-	 g_top_level->bindings[i].key == THIS_CONTEXT)
+      if(g_top_level->bindings[i]->key == SELF ||
+	 g_top_level->bindings[i]->key == SUPER ||
+	 g_top_level->bindings[i]->key == THIS_CONTEXT)
 	continue;
 
-      OBJECT_PTR binding_val = g_top_level->bindings[i].val;
+      OBJECT_PTR binding_val = g_top_level->bindings[i]->val;
 
       if(IS_CLASS_OBJECT(car(binding_val)))
       {
@@ -426,7 +426,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
       for(i=0; i<n; i++)
       {
-	len += sprintf(str+len, "#%s", get_symbol_name(shared_vars->bindings[i].key));
+	len += sprintf(str+len, "#%s", get_symbol_name(shared_vars->bindings[i]->key));
 	if(i != (n-1))
 	  len += sprintf(str+len, " ");
       }
@@ -450,8 +450,8 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
       for(i=0; i<n; i++)
       {
-	OBJECT_PTR key = cls_obj->class_methods->bindings[i].key;
-	method_t *val = cls_obj->class_methods->bindings[i].val;
+	OBJECT_PTR key = cls_obj->class_methods->bindings[i]->key;
+	method_t *val = cls_obj->class_methods->bindings[i]->val;
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);
@@ -464,8 +464,8 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
       for(i=0; i<n; i++)
       {
-	OBJECT_PTR key = cls_obj->instance_methods->bindings[i].key;
-	method_t *val = cls_obj->instance_methods->bindings[i].val;
+	OBJECT_PTR key = cls_obj->instance_methods->bindings[i]->key;
+	method_t *val = cls_obj->instance_methods->bindings[i]->val;
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);

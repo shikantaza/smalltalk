@@ -90,7 +90,7 @@ void print_binding_env(binding_env_t *env, FILE *fp)
   fprintf(fp, "count = %d\n", env->count);
   for(i=0; i<env->count; i++)
   {
-    print_binding(env->bindings+i, fp);
+    print_binding(env->bindings[i], fp);
     fprintf(fp, "\n");
   }
 }
@@ -123,7 +123,7 @@ void print_method_binding_env(method_binding_env_t *env, FILE *fp)
   fprintf(fp, "count = %d\n", env->count);
   for(i=0; i<env->count; i++)
   {
-    print_method_binding(env->bindings+i, fp);
+    print_method_binding(env->bindings[i], fp);
     fprintf(fp, "\n");
   }
 }

@@ -82,8 +82,8 @@ OBJECT_PTR get_binding_val(binding_env_t *env, OBJECT_PTR key)
 {
   int i;
   for(i=0; i<env->count; i++)
-    if(env->bindings[i].key == key)
-      return env->bindings[i].val;
+    if(env->bindings[i]->key == key)
+      return env->bindings[i]->val;
 
   return key; //TODO: is this correct?
 }
@@ -96,9 +96,9 @@ void put_binding_val(binding_env_t *env, OBJECT_PTR key, OBJECT_PTR val)
 
   for(i=0;i<env->count;i++)
   {
-    if(env->bindings[i].key == key)
+    if(env->bindings[i]->key == key)
     {
-      env->bindings[i].val = val;
+      env->bindings[i]->val = val;
       found = true;
       break;
     }
@@ -108,14 +108,15 @@ void put_binding_val(binding_env_t *env, OBJECT_PTR key, OBJECT_PTR val)
   {
     env->count++;
 
-    binding_t *temp = (binding_t *)GC_REALLOC(env->bindings, env->count * sizeof(binding_t));
+    binding_t **temp = (binding_t **)GC_REALLOC(env->bindings, env->count * sizeof(binding_t *));
 
     assert(temp);
 
     env->bindings = temp;
 
-    env->bindings[env->count-1].key = key;
-    env->bindings[env->count-1].val = val;
+    env->bindings[env->count-1] = (binding_t *)GC_MALLOC(sizeof(binding_t));
+    env->bindings[env->count-1]->key = key;
+    env->bindings[env->count-1]->val = val;
   }
 }
 

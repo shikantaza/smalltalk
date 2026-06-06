@@ -472,8 +472,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
 
       for(i=0; i<nof_shared_vars; i++)
       {
-	if(!is_valid_object(shared_vars->bindings[i].val))
-	len += sprintf(str+len, "ERROR: shared variable %s is an invalid object", get_symbol_name(shared_vars->bindings[i].key));
+	if(!is_valid_object(shared_vars->bindings[i]->val))
+	len += sprintf(str+len, "ERROR: shared variable %s is an invalid object", get_symbol_name(shared_vars->bindings[i]->key));
       }
     }
   }
@@ -499,8 +499,8 @@ void print_object_to_string(OBJECT_PTR obj_ptr, char *str)
 
       for(i=0; i<nof_inst_vars; i++)
       {
-	if(!is_valid_object(inst_vars->bindings[i].val))
-	  len += sprintf(str+len, "ERROR: instance variable %s is an invalid object", get_symbol_name(inst_vars->bindings[i].key));
+	if(!is_valid_object(inst_vars->bindings[i]->val))
+	  len += sprintf(str+len, "ERROR: instance variable %s is an invalid object", get_symbol_name(inst_vars->bindings[i]->key));
       }
     }
   }
@@ -916,9 +916,9 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 
     for(j=0; j<n; j++)
     {
-      if(cls_obj_int->instance_methods->bindings[j].key == selector)
+      if(cls_obj_int->instance_methods->bindings[j]->key == selector)
       {
-	method_t *m = cls_obj_int->instance_methods->bindings[j].val;
+	method_t *m = cls_obj_int->instance_methods->bindings[j]->val;
 
 	//method_t *m = (method_t *)extract_ptr(method);
 
@@ -1010,9 +1010,9 @@ void update_binding(binding_env_t *env, OBJECT_PTR key, OBJECT_PTR val)
 
   for(i=0; i<n; i++)
   {
-    if(env->bindings[i].key == key)
+    if(env->bindings[i]->key == key)
     {
-      env->bindings[i].val = val;
+      env->bindings[i]->val = val;
       return;
     }
   }
@@ -1024,8 +1024,8 @@ OBJECT_PTR get_binding(binding_env_t *env, OBJECT_PTR key)
 {
   int i;
   for(i=0; i<env->count; i++)
-    if(env->bindings[i].key == key)
-      return env->bindings[i].val;
+    if(env->bindings[i]->key == key)
+      return env->bindings[i]->val;
 
   return 0;
 }
@@ -1081,9 +1081,9 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
 
     for(i=0; i<nof_inst_vars; i++)
     {
-      if(!is_valid_object(inst_vars->bindings[i].val))
+      if(!is_valid_object(inst_vars->bindings[i]->val))
       {
-	printf("ERROR: object contains invalid instance variable %s\n", get_symbol_name(inst_vars->bindings[i].key));
+	printf("ERROR: object contains invalid instance variable %s\n", get_symbol_name(inst_vars->bindings[i]->key));
 	return false;
       }
     }
