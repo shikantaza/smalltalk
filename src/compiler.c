@@ -276,6 +276,9 @@ void initialize()
   g_smalltalk_symbols->name = GC_strdup("SMALLTALK");
   g_smalltalk_symbols->nof_symbols = 0;
 
+  get_package("core");
+  get_package("user");
+
   //IMPORTANT: the order of these
   //additions should match the sequence
   //numbers in the respective symbol
@@ -384,9 +387,6 @@ void initialize_pass2()
 
   assert(get_top_level_val(get_symbol("CompileError"), &ret));
   CompileError = car(ret);
-
-  assert(get_top_level_val(get_symbol("Package"), &ret));
-  Package = car(ret);
 }
 
 void error(const char *fmt, ...)

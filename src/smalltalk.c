@@ -1263,24 +1263,9 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR pkg = message_send(g_msg_snd_closure,
-				Package,
-				NIL,
-				get_symbol("_get:"),
-				convert_int_to_object(1),
-				pkg_str,
-				g_idclo);
-
-  //the above message send results in an exception
-  if(!call_chain_entry_exists(entry))
-  {
-    pop_if_top(entry);
-    return invoke_cont_on_val(cont, receiver);
-  }
-
   class_object_t *cls = (class_object_t *)extract_ptr(class_obj);
 
-  cls->package = pkg;
+  cls->package = get_package(g_string_literals[pkg_str >> OBJECT_SHIFT]);
 
   pop_if_top(entry);
 

@@ -136,7 +136,7 @@ void print_class_object(class_object_t *cls_obj, FILE *fp)
   fflush(fp);
   fprintf(fp, "name: %s\n", cls_obj->name);
 
-  fprintf(fp, "package: "); print_object_to_file(cls_obj->package, fp); fprintf(fp, "\n");
+  fprintf(fp, "package: %s\n",cls_obj->package->name);
 
   fprintf(fp, "nof_instances: %d\n", cls_obj->nof_instances);
   fprintf(fp, "instances:\n");

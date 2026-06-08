@@ -314,3 +314,18 @@ char *append_string(char *str1, char *str2)
 
   return str1;
 }
+
+char *reverse_string(char *str)
+{
+  int i, len;
+
+  len = strlen(str);
+
+  char *ret = GC_MALLOC((len+1) * sizeof(char));
+  memset(ret, '\0', len+1);
+
+  for(i=0; i<len; i++)
+    ret[i] = str[len-i-1];
+
+  return ret;
+}

@@ -64,6 +64,9 @@ extern OBJECT_PTR Object;
 
 extern stack_type *g_breakpointed_methods;
 
+extern unsigned int g_nof_smalltalk_packages;
+extern smalltalk_package_t **g_smalltalk_packages;
+
 void remove_all_from_packages_list(GtkTreeView *list)
 {
   GtkTreeStore *store;
@@ -192,33 +195,28 @@ void initialize_methods_list(GtkTreeView *list)
 }
 
 void print_package_details(GtkTreeStore *store,
-			   OBJECT_PTR pkgs_array,
-			   int nof_packages,
-			   OBJECT_PTR parent,
+			   smalltalk_package_t **pkgs_array,
+			   unsigned int nof_packages,
+			   smalltalk_package_t *parent,
 			   GtkTreeIter *parent_iter)
 {
   GtkTreeIter iter;
 
-  OBJECT_PTR pkg;
-  object_t *pkg_obj_int;
-  OBJECT_PTR parent_pkg;
+  smalltalk_package_t *pkg;
+  smalltalk_package_t *parent_pkg;
 
   int i;
 
-  array_object_t *arr_obj = (array_object_t *)extract_ptr(pkgs_array);
-
   for(i=0; i<nof_packages; i++)
   {
-    pkg = arr_obj->elements[i];
-    pkg_obj_int = (object_t *)extract_ptr(pkg);
-    parent_pkg = car(get_binding(pkg_obj_int->instance_vars, get_symbol("parent")));
+    pkg = pkgs_array[i];
+    parent_pkg = pkg->parent;
 
     if(parent_pkg == parent)
     {
       gtk_tree_store_append(store, &iter, parent_iter);
-      OBJECT_PTR pkg_name = car(get_binding(pkg_obj_int->instance_vars, get_symbol("name")));
 
-      gtk_tree_store_set(store, &iter, 0, GC_strdup(g_string_literals[pkg_name >> OBJECT_SHIFT]), -1);
+      gtk_tree_store_set(store, &iter, 0, GC_strdup(pkg->name), -1);
       gtk_tree_store_set(store, &iter, 1, pkg, -1);
 
       print_package_details(store, pkgs_array, nof_packages, pkg, &iter);
@@ -235,16 +233,7 @@ void populate_packages_list()
 
   store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
 
-  class_object_t *pkg_cls_object = (class_object_t *)extract_ptr(Package);
-
-  OBJECT_PTR packages = car(get_binding(pkg_cls_object->shared_vars, get_symbol("packages")));
-
-  object_t *pkgs_obj_int = (object_t *)extract_ptr(packages);
-
-  OBJECT_PTR arr = car(get_binding(pkgs_obj_int->instance_vars, get_symbol("arr")));
-  OBJECT_PTR size = car(get_binding(pkgs_obj_int->instance_vars, get_symbol("size")));
-
-  print_package_details(store, arr, get_int_value(size), NIL, NULL);
+  print_package_details(store, g_smalltalk_packages, g_nof_smalltalk_packages, NULL, NULL);
 }
 
 void set_up_class_browser_source_buffer()
@@ -320,13 +309,6 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
       }
     }
 
-    OBJECT_PTR ret = message_send(g_msg_snd_closure,
-				  id,
-				  NIL,
-				  get_symbol("_getQualifiedName"),
-				  convert_int_to_object(0),
-				  g_idclo);
-        
     char code[200];
     memset(code, '\0', 200);
     unsigned int len = 0;
@@ -334,7 +316,7 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
     len += sprintf(code+len, "  parentClass: SomeParentClass\n");
     len += sprintf(code+len, "  instanceVars: #(#var1 #var2)\n");
     len += sprintf(code+len, "  classVars: #(#var3 #var4)\n");
-    len += sprintf(code+len, "  inPackage: '%s'", g_string_literals[ret >> OBJECT_SHIFT]);
+    len += sprintf(code+len, "  inPackage: '%s'", get_qualified_name((smalltalk_package_t *)id));
 
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), code, -1);
     //gtk_statusbar_remove_all(class_browser_statusbar, 0);
@@ -434,9 +416,10 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
     len += sprintf(str+len, ")\n");
 
-    OBJECT_PTR pkg_obj = cls_obj->package;
-    object_t *pkg_obj_int = (object_t *)extract_ptr(pkg_obj);
-    char *pkg_name = g_string_literals[car(get_binding(pkg_obj_int->instance_vars, get_symbol("name"))) >> OBJECT_SHIFT];
+    /* OBJECT_PTR pkg_obj = cls_obj->package; */
+    /* object_t *pkg_obj_int = (object_t *)extract_ptr(pkg_obj); */
+    /* char *pkg_name = g_string_literals[car(get_binding(pkg_obj_int->instance_vars, get_symbol("name"))) >> OBJECT_SHIFT]; */
+    char *pkg_name = cls_obj->package->name;
 
     len += sprintf(str+len, "  inPackage: \'%s'\n", pkg_name);
 

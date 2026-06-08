@@ -188,7 +188,8 @@ enum PointerType
   BASIC_EXPRESSION_PTR,
   UNARY_MESSAGES_PTR,
   ARRAY_ELEMENTS_PTR,
-  ARRAY_ELEMENT_PTR
+  ARRAY_ELEMENT_PTR,
+  SMALLTALK_PACKAGE_PTR
 };
 
 //this stores both OBJECT_PTRs and native pointers.
@@ -651,7 +652,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     fprintf(fp, "\"%s\"", cls_obj->name);
     fprintf(fp, ", ");
 
-    print_object_ptr_reference(fp, cls_obj->package);
+    print_native_ptr_reference(fp, SMALLTALK_PACKAGE_PTR, cls_obj->package);
     fprintf(fp, ", ");
 
     unsigned int nof_instances = cls_obj->nof_instances;
@@ -3560,12 +3561,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     e1 = hashtable_get(native_ptr_ht, (void *)pkg);
 
     if(e1)
-      cls_obj->package = (OBJECT_PTR)e->value;
+      cls_obj->package = (smalltalk_package_t *)e->value;
     else
-      cls_obj->package = deserialize_object_reference(heap,
-                                                      pkg,
-                                                      obj_ht,
-                                                      native_ptr_ht);
+      cls_obj->package = deserialize_native_ptr_reference(heap,
+                                                          SMALLTALK_PACKAGE_PTR,
+                                                          pkg,
+                                                          obj_ht,
+                                                          native_ptr_ht);
     /* end of parent_class_object */
 
     /* nof_instances */
@@ -4286,7 +4288,7 @@ void create_test_image(char *file_name)
   g_system_initialized = true;
 
   printf("%p ", ((class_object_t *)extract_ptr(Integer))->package);
-  print_object_to_file(((class_object_t *)extract_ptr(Integer))->package, stdout);printf("\n");
+  printf("%s\n", ((class_object_t *)extract_ptr(Integer))->package->name);
 
   FILE *fp1 = fopen("diag_test.txt", "w");
   print_class_object(extract_ptr(Package), fp1);

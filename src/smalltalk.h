@@ -126,12 +126,20 @@ typedef struct
   binding_env_t *instance_vars; //instance var name, value
 } object_t;
 
+typedef struct smalltalk_package
+{
+  char *name;
+  struct smalltalk_package *parent;
+  unsigned int nof_children;
+  struct smalltalk_package **children;
+} smalltalk_package_t;
+
 typedef struct
 {
   OBJECT_PTR parent_class_object;
   char *name;
 
-  OBJECT_PTR package;
+  smalltalk_package_t *package;
   
   unsigned int nof_instances;
   OBJECT_PTR *instances;
