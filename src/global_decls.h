@@ -74,6 +74,7 @@ call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
 					     OBJECT_PTR,
 					     BOOLEAN);
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
+void                 create_idclo();
 void                 create_image(char *);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,
@@ -176,6 +177,7 @@ void                 print_diagnostics();
 void                 print_exception_contexts();
 void                 print_object(OBJECT_PTR);
 void                 print_object_to_string(OBJECT_PTR, char *);
+void                 print_smalltalk_package(FILE *, smalltalk_package_t *);
 void                 put_binding_val(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           ren_transform(OBJECT_PTR, binding_env_t *);
 void                 repl();

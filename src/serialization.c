@@ -255,36 +255,38 @@ unsigned int native_ptr_count = 0;
 //of the pointer that is stored in a stack_type object
 enum PointerType g_sub_type;
 
-extern OBJECT_PTR           g_message_selector;
-extern unsigned int         g_nof_string_literals;
-extern OBJECT_PTR           g_msg_snd_closure;
-extern OBJECT_PTR           g_msg_snd_super_closure;
-extern OBJECT_PTR           g_compile_time_method_selector;
-extern OBJECT_PTR           g_run_till_cont;
-extern enum DebugAction     g_debug_action;
-extern package_t           *g_smalltalk_symbols;
-extern package_t           *g_compiler_package;
-extern char               **g_string_literals;
-extern stack_type          *g_exception_environment;
-extern stack_type          *g_call_chain;
-extern stack_type          *g_exception_contexts;
-extern stack_type          *g_breakpointed_methods;
-extern BOOLEAN              g_loading_core_library;
-extern BOOLEAN              g_running_tests;
-extern OBJECT_PTR           g_method_call_stack;
-extern OBJECT_PTR           g_last_eval_result;
-extern BOOLEAN              g_system_initialized;
-extern enum UIMode          g_ui_mode;
-extern BOOLEAN              g_eval_aborted;
-extern executable_code_t   *g_exp;
-extern binding_env_t       *g_top_level;
-extern BOOLEAN              g_debugger_invoked_for_exception;
-extern exception_handler_t *g_active_handler;
-extern BOOLEAN              g_debug_in_progress;
-extern OBJECT_PTR           g_debug_cont;
-extern stack_type          *g_handler_environment;
-extern stack_type          *g_signalling_environment;
-extern unsigned int         g_nof_compiler_states;
+extern OBJECT_PTR            g_message_selector;
+extern unsigned int          g_nof_string_literals;
+extern OBJECT_PTR            g_msg_snd_closure;
+extern OBJECT_PTR            g_msg_snd_super_closure;
+extern OBJECT_PTR            g_compile_time_method_selector;
+extern OBJECT_PTR            g_run_till_cont;
+extern enum DebugAction      g_debug_action;
+extern package_t            *g_smalltalk_symbols;
+extern package_t            *g_compiler_package;
+extern char                **g_string_literals;
+extern stack_type           *g_exception_environment;
+extern stack_type           *g_call_chain;
+extern stack_type           *g_exception_contexts;
+extern stack_type           *g_breakpointed_methods;
+extern BOOLEAN               g_loading_core_library;
+extern BOOLEAN               g_running_tests;
+extern OBJECT_PTR            g_method_call_stack;
+extern OBJECT_PTR            g_last_eval_result;
+extern BOOLEAN               g_system_initialized;
+extern enum UIMode           g_ui_mode;
+extern BOOLEAN               g_eval_aborted;
+extern executable_code_t    *g_exp;
+extern binding_env_t        *g_top_level;
+extern BOOLEAN               g_debugger_invoked_for_exception;
+extern exception_handler_t  *g_active_handler;
+extern BOOLEAN               g_debug_in_progress;
+extern OBJECT_PTR            g_debug_cont;
+extern stack_type           *g_handler_environment;
+extern stack_type           *g_signalling_environment;
+extern unsigned int          g_nof_compiler_states;
+extern unsigned int          g_nof_smalltalk_packages;
+extern smalltalk_package_t **g_smalltalk_packages;
 
 extern OBJECT_PTR NIL;
 
@@ -490,6 +492,9 @@ void add_obj_to_native_ptr_print_list(void *native_ptr, enum PointerType type)
 {
   assert(native_ptr);
 
+  if(type == NONE)
+    assert(is_valid_object((OBJECT_PTR)native_ptr));
+
   native_ptr_slot_t *s = (native_ptr_slot_t *)GC_MALLOC(sizeof(native_ptr_slot_t));
   s->type     = type;
   s->sub_type = g_sub_type;
@@ -529,9 +534,6 @@ void print_native_ptr_reference(FILE *fp,
     fprintf(fp, "%d", (int)e->value);
   else
   {
-    if(native_ptr_count == 37)
-      printf("PointerType for heap index 37 is %d; pointer is %p\n", type, native_ptr);
-
     fprintf(fp, "%lu", native_ptr_count);
     hashtable_put(native_ptr_hashtable, native_ptr, (void *)native_ptr_count);
     native_ptr_count++;
@@ -717,7 +719,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     for(i=0; i<count; i++)
     {
       //fprintf(fp, "[ ");
-      print_native_ptr_reference(fp, BINDING_PTR, (void *)(env->bindings+i));
+      print_native_ptr_reference(fp, BINDING_PTR, (void *)(env->bindings[i]));
       //fprintf(fp, "]");
       if(i != count - 1)
         fprintf(fp, ", ");
@@ -732,6 +734,9 @@ void print_native_ptr_heap_representation(FILE *fp,
     OBJECT_PTR key;
     OBJECT_PTR val;
     */
+
+    assert(is_valid_object(binding->key));
+    assert(is_valid_object(binding->val));
 
     fprintf(fp, "[ ");
     print_object_ptr_reference(fp, binding->key);
@@ -766,7 +771,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     for(i=0; i<count; i++)
     {
       //fprintf(fp, "[ ");
-      print_native_ptr_reference(fp, METHOD_BINDING_PTR, (void *)(env->bindings+i));
+      print_native_ptr_reference(fp, METHOD_BINDING_PTR, (void *)(env->bindings[i]));
       //fprintf(fp, "]");
       if(i != count - 1)
         fprintf(fp, ", ");
@@ -1562,6 +1567,37 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     fprintf(fp, "] ");
   }
+  else if(type == SMALLTALK_PACKAGE_PTR)
+  {
+    smalltalk_package_t *pkg = (smalltalk_package_t *)native_ptr;
+
+    /*
+    char *name;
+    struct smalltalk_package *parent;
+    unsigned int nof_children;
+    struct smalltalk_package **children;
+    */
+
+    unsigned int count = pkg->nof_children;
+    fprintf(fp, "[ ");
+
+    fprintf(fp, "\"%s\"", pkg->name);
+    fprintf(fp, ", ");
+    print_native_ptr_reference(fp, SMALLTALK_PACKAGE_PTR, (void *)pkg->parent);
+    fprintf(fp, ", ");
+
+    fprintf(fp, "[ ");
+
+    for(i=0; i<count; i++)
+    {
+      print_native_ptr_reference(fp, SMALLTALK_PACKAGE_PTR, (void *)(pkg->children[i]));
+      if(i != count - 1)
+        fprintf(fp, ", ");
+    }
+    fprintf(fp, "] ");
+
+    fprintf(fp, "] ");
+  }
   else
   {
     assert(type == NONE); //it is an OBJECT_PTR
@@ -1579,7 +1615,7 @@ void print_global_variables(FILE *fp)
   /*
     OBJECT_PTR g_message_selector
     unsigned int g_nof_string_literals
-    OBJECT_PTR g_idclo (this can be created afresh)
+    OBJECT_PTR g_idclo (NO NEED TO SERIALIZE THIS, this can be created afresh)
     OBJECT_PTR g_msg_snd_closure
     OBJECT_PTR g_msg_snd_super_closure
     OBJECT_PTR g_compile_time_method_selector
@@ -1609,6 +1645,9 @@ void print_global_variables(FILE *fp)
     stack_type *g_handler_environment
     stack_type *g_signalling_environment
     int g_include_stack_ptr (NO NEED TO SERIALIZE THIS)
+    unsigned int g_nof_compiler_states
+    unsigned int g_nof_smalltalk_packages
+    smalltalk_package_t **g_smalltalk_packages
 
    */
   unsigned int i;
@@ -1708,6 +1747,55 @@ void print_global_variables(FILE *fp)
   g_sub_type = NONE;
   fprintf(fp, " , ");
 
+  fprintf(fp, " \"g_loading_core_library\" : ");
+  if(g_loading_core_library)
+    fprintf(fp, "\"true\"");
+  else
+    fprintf(fp, "\"false\"");
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_running_tests\" : ");
+  if(g_running_tests)
+    fprintf(fp, "\"true\"");
+  else
+    fprintf(fp, "\"false\"");
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_method_call_stack\" : ");
+  print_object_ptr_reference(fp, g_method_call_stack);
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_last_eval_result\" : ");
+  print_object_ptr_reference(fp, g_last_eval_result);
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_system_initialized\" : ");
+  if(g_system_initialized)
+    fprintf(fp, "\"true\"");
+  else
+    fprintf(fp, "\"false\"");
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_ui_mode\" : ");
+  if(g_ui_mode == CLI)
+    fprintf(fp, "\"CLI\"");
+  else if(g_ui_mode == GUI)
+    fprintf(fp, "\"GUI\"");
+  else
+    assert(false);
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_eval_aborted\" : ");
+  if(g_eval_aborted)
+    fprintf(fp, "\"true\"");
+  else
+    fprintf(fp, "\"false\"");
+  fprintf(fp, " , ");
+
+  fprintf(fp, " \"g_exp\" : ");
+  print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp);
+  fprintf(fp, " , ");
+
   fprintf(fp, " \"g_top_level\" : ");
   print_native_ptr_reference(fp, BINDING_ENV_PTR, (void *)g_top_level);
   fprintf(fp, " , ");
@@ -1719,14 +1807,9 @@ void print_global_variables(FILE *fp)
     fprintf(fp, "\"false\"");
   fprintf(fp, " , ");
 
-  //TODO: add this null check for other
-  //variables as required
-  if(g_active_handler)
-  {
-    fprintf(fp, " \"g_active_handler\" : ");
-    print_native_ptr_reference(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
-    fprintf(fp, " , ");
-  }
+  fprintf(fp, " \"g_active_handler\" : ");
+  print_native_ptr_reference(fp, EXCEPTION_HANDLER_PTR, (void *)g_active_handler);
+  fprintf(fp, " , ");
 
   fprintf(fp, " \"g_debug_in_progress\" : ");
   if(g_debug_in_progress)
@@ -1739,26 +1822,35 @@ void print_global_variables(FILE *fp)
   print_object_ptr_reference(fp, g_debug_cont);
   fprintf(fp, "  ");
 
-  if(g_handler_environment)
-  {
-    fprintf(fp, ",  \"g_handler_environment\" : ");
-    g_sub_type = EXCEPTION_HANDLER_PTR;
-    print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
-    g_sub_type = NONE;
-    fprintf(fp, "  ");
-  }
-
-  if(g_signalling_environment)
-  {
-    fprintf(fp, ",  \"g_signalling_environment\" : ");
-    g_sub_type = EXCEPTION_HANDLER_PTR;
-    print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
-    g_sub_type = NONE;
-    fprintf(fp, "  ");
-  }
-
-  fprintf(fp, ",  \"g_nof_compiler_states\" : %d", g_nof_compiler_states);
+  fprintf(fp, ",  \"g_handler_environment\" : ");
+  g_sub_type = EXCEPTION_HANDLER_PTR;
+  print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)g_handler_environment);
+  g_sub_type = NONE;
   fprintf(fp, "  ");
+
+  fprintf(fp, ",  \"g_signalling_environment\" : ");
+  g_sub_type = EXCEPTION_HANDLER_PTR;
+  print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)g_signalling_environment);
+  g_sub_type = NONE;
+  fprintf(fp, "  ");
+
+  fprintf(fp, ", \"g_nof_compiler_states\" : %d", g_nof_compiler_states);
+  fprintf(fp, " ");
+
+  fprintf(fp, ", \"g_nof_smalltalk_packages\" : %d", g_nof_smalltalk_packages);
+  fprintf(fp, " ");
+
+  fprintf(fp, ", \"g_smalltalk_packages\" : ");
+  count = g_nof_smalltalk_packages;
+
+  fprintf(fp, "[ ");
+  for(i=0; i<count; i++)
+  {
+    print_native_ptr_reference(fp, SMALLTALK_PACKAGE_PTR, (void *)g_smalltalk_packages[i]);
+    if(i != count - 1)
+      fprintf(fp, ", ");
+  }
+  fprintf(fp, "] ");
 
   fprintf(fp, " } ");
 }
@@ -1767,6 +1859,8 @@ void print_global_variables(FILE *fp)
 
 void create_image(char *file_name)
 {
+  print_diagnostics();
+
   FILE *fp = fopen(file_name, "w");  
 
   obj_print_queue = queue_create();
@@ -1793,6 +1887,11 @@ void create_image(char *file_name)
 
   while(!queue_is_empty(native_ptr_print_queue))
   {
+    /* printf("queue begin\n"); */
+    /* print_queue(native_ptr_print_queue); */
+    /* printf("queue end\n"); */
+    /* getchar(); */
+
     queue_item_t *queue_item = queue_dequeue(native_ptr_print_queue);
     native_ptr_slot_t *s = (native_ptr_slot_t *)queue_item->data;
     print_native_ptr_heap_representation(fp, s->ref, s->type);
@@ -1826,9 +1925,9 @@ void print_object_ptr_reference(FILE *fp,
   //TODO: is_valid_object() may not be able to provide correct answers
   //for pointers like debug_expression_t * which are wrapped to become
   //OBJECT_PTRS
-  //if(!is_valid_object(obj))
-  //  assert(false);
-
+  if(!is_valid_object(obj))
+    assert(false);
+  fflush(fp);
   assert(obj);
 
   if(is_dynamic_memory_object(obj))
@@ -3568,7 +3667,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                           pkg,
                                                           obj_ht,
                                                           native_ptr_ht);
-    /* end of parent_class_object */
+    /* end of package */
 
     /* nof_instances */
     cls_obj->nof_instances = JSON_get_array_item(cls_obj_json_obj, 3)->ivalue;
@@ -3695,6 +3794,63 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     /* end of instance_vars */
 
     return (void *)obj;
+  }
+  else if(ptr_type = SMALLTALK_PACKAGE_PTR)
+  {
+    hashtable_entry_t *e1;
+
+    smalltalk_package_t *pkg = (smalltalk_package_t *)GC_MALLOC(sizeof(smalltalk_package_t));
+
+    hashtable_put(native_ptr_ht, (void *)ref, (void *)pkg);
+
+    struct JSONObject *pkg_json_obj = JSON_get_array_item(heap, ptr_entry->ivalue);
+
+    /* name */
+    pkg->name = GC_strdup(JSON_get_array_item(pkg_json_obj, 0)->strvalue);
+
+    /* parent */
+    OBJECT_PTR parent = JSON_get_array_item(pkg_json_obj, 1)->ivalue;
+
+    e1 = hashtable_get(native_ptr_ht, (void *)parent);
+
+    if(e1)
+      pkg->parent = (smalltalk_package_t *)e1->value;
+    else
+      pkg->parent = (smalltalk_package_t *)deserialize_native_ptr_reference(heap,
+                                                                            SMALLTALK_PACKAGE_PTR,
+                                                                            parent,
+                                                                            obj_ht,
+                                                                            native_ptr_ht);
+    /* end of parent */
+
+    struct JSONObject *children_json = JSON_get_array_item(pkg_json_obj, 2);
+
+    /* nof_children */
+    pkg->nof_children = JSON_get_array_size(children_json);
+
+    /* children */
+    pkg->children = (smalltalk_package_t **)GC_MALLOC(pkg->nof_children * sizeof(smalltalk_package_t *));
+
+    for(i=0; i<pkg->nof_children; i++)
+    {
+      long long ref1 = JSON_get_array_item(children_json,i)->ivalue;
+      hashtable_entry_t *e1 = hashtable_get(native_ptr_ht, (void *)ref1);
+
+      if(e1)
+        pkg->children[i] = (smalltalk_package_t *)e1->value;
+      else
+      {
+        smalltalk_package_t *child = (smalltalk_package_t *)deserialize_native_ptr_reference(heap,
+                                                                                             SMALLTALK_PACKAGE_PTR,
+                                                                                             ref1,
+                                                                                             obj_ht,
+                                                                                             native_ptr_ht);
+        pkg->children[i] = child;
+      }
+    }
+    /* end of children */
+
+    return (void *)pkg;
   }
   else
     assert(false);
@@ -4118,81 +4274,20 @@ int load_from_image(char *file_name)
   struct JSONObject *native_functions = JSON_get_object_item(root, "native_functions");
   struct JSONObject *heap = JSON_get_object_item(root, "heap");
 
-  /*
-  struct JSONObject *top_level = JSON_get_object_item(global_variables, "g_top_level");
+  hashtable_t *object_hashtable = hashtable_create(1001);
+  hashtable_t *native_ptr_hashtable = hashtable_create(1001);
+  queue_t *queue = queue_create();
 
-  JSON_print_object(top_level);
-  printf("printed top level\n");
-  printf("%d\n", top_level->ivalue);
-  struct JSONObject *top_level_bindings =  JSON_get_array_item(heap, top_level->ivalue);
-
-  JSON_print_object(top_level_bindings);
-
-  int bindings_count = JSON_get_array_size(top_level_bindings);
-  printf("bindings count = %d\n", bindings_count);
-
-  for(i=0; i<bindings_count; i++)
-  {
-    struct JSONObject *binding = JSON_get_array_item(top_level_bindings, i);
-    struct JSONObject *key_val_pair = JSON_get_array_item(heap, binding->ivalue);
-    printf("%s : %d\n", get_json_core_symbol(heap,
-                                             extract_symbol_index(JSON_get_array_item(key_val_pair, 0)->ivalue)),
-           JSON_get_array_item(key_val_pair, 1)->ivalue);
-  }
-  */
-
-  /////
-  struct JSONObject *smalltalk_symbols = JSON_get_array_item(JSON_get_array_item(heap, 0), 1);
-  int nof_smalltalk_symbols = JSON_get_array_size(smalltalk_symbols);
-
-  g_smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
-  g_smalltalk_symbols->nof_symbols = 0;
-  g_smalltalk_symbols->name = GC_strdup("SMALLTALK");
-  g_smalltalk_symbols->symbols = NULL;
-
-  for(i=0; i<nof_smalltalk_symbols; i++)
-    add_smalltalk_symbol(JSON_get_array_item(smalltalk_symbols, i)->strvalue);
-
-  printf("No of Smalltalk symbols = %d\n", g_smalltalk_symbols->nof_symbols);
-  /////
-
-  /////
-  struct JSONObject *core_symbols = JSON_get_array_item(JSON_get_array_item(heap, 1), 1);
-  int nof_core_symbols = JSON_get_array_size(core_symbols);
-
-  g_compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
-  g_compiler_package->nof_symbols = 0;
-  g_compiler_package->name = GC_strdup("CORE");
-  g_compiler_package->symbols = NULL;
-
-  for(i=0; i<nof_core_symbols; i++)
-    add_symbol(JSON_get_array_item(core_symbols, i)->strvalue);
-
-  printf("No of core symbols = %d\n", g_compiler_package->nof_symbols);
-  /////
-
-  /////
+  //1. g_message_selector
   struct JSONObject *msg_selector = JSON_get_object_item(global_variables, "g_message_selector");
   g_message_selector = (extract_symbol_index(msg_selector->ivalue) << OBJECT_SHIFT) + SMALLTALK_SYMBOL_TAG;
-  print_object(g_message_selector); printf("\n");
-  /////
 
-  /////
+  //2. g_nof_string_literals
   g_nof_string_literals = JSON_get_object_item(global_variables, "g_nof_string_literals")->ivalue;
 
-  struct JSONObject *string_literals = JSON_get_object_item(global_variables, "g_string_literals");
+  create_idclo();
 
-  assert(JSON_get_array_size(string_literals) == g_nof_string_literals);
-
-  g_string_literals = (char **)GC_MALLOC(g_nof_string_literals * sizeof(char *));
-
-  for(i=0; i< g_nof_string_literals; i++) {
-    g_string_literals[i] = GC_strdup(JSON_get_array_item(string_literals, i)->strvalue);
-    printf("%s\n", g_string_literals[i]);
-  }
-  /////
-
-  /////
+  //3. g_msg_snd_closure
   //this is not really needed as g_msg_snd_closure can be constructed
   //without any information from the JSON file
   struct JSONObject *msg_snd_closure = JSON_get_object_item(global_variables, "g_msg_snd_closure");
@@ -4211,7 +4306,7 @@ int load_from_image(char *file_name)
                                      (nativefn)message_send);
   /////
 
-  /////
+  //4. g_msg_snd_super_closure
   //this is not really needed as g_msg_snd_super_closure can be constructed
   //without any information from the JSON file
   struct JSONObject *msg_snd_super_closure = JSON_get_object_item(global_variables, "g_msg_snd_super_closure");
@@ -4230,22 +4325,240 @@ int load_from_image(char *file_name)
                                            (nativefn)message_send_super);
   /////
 
-  /////
+  //5. g_compile_time_method_selector
   struct JSONObject *compile_time_method_selector = JSON_get_object_item(global_variables, "g_compile_time_method_selector");
   g_compile_time_method_selector = compile_time_method_selector->ivalue;
 
-  print_object(g_compile_time_method_selector);
-  printf("\n");
+  //6. g_run_till_cont
+  g_run_till_cont = deserialize_object_reference(heap,
+                                                 JSON_get_object_item(global_variables, "g_run_till_cont")->ivalue,
+                                                 object_hashtable,
+                                                 native_ptr_hashtable);
+
+  //7. g_debug_action
+  char *action = JSON_get_object_item(global_variables, "g_compile_time_method_selector")->strvalue;
+  if(!strcmp(action, "CONTINUE"))
+    g_debug_action = CONTINUE;
+  else if(!strcmp(action, "STEP_INTO"))
+    g_debug_action = STEP_INTO;
+  else if(!strcmp(action, "STEP_OVER"))
+    g_debug_action = STEP_OVER;
+  else if(!strcmp(action, "STEP_OUT"))
+    g_debug_action = STEP_OUT;
+  else if(!strcmp(action, "ABORT"))
+    g_debug_action = ABORT;
   /////
 
-  g_nof_compiler_states = JSON_get_object_item(global_variables, "g_compile_time_method_selector")->ivalue;
+  //8. g_smalltalk_symbols
+  g_smalltalk_symbols = deserialize_native_ptr_reference(heap,
+                                                         PACKAGE_PTR,
+                                                         JSON_get_object_item(global_variables, "g_smalltalk_symbols")->ivalue,
+                                                         object_hashtable,
+                                                         native_ptr_hashtable);
+  /////
+
+  //9. g_compiler_package
+  g_compiler_package = deserialize_native_ptr_reference(heap,
+                                                        PACKAGE_PTR,
+                                                        JSON_get_object_item(global_variables, "g_compiler_package")->ivalue,
+                                                        object_hashtable,
+                                                        native_ptr_hashtable);
+  /////
+
+  //10. g_string_literals
+  g_nof_string_literals = JSON_get_object_item(global_variables, "g_nof_string_literals")->ivalue;
+
+  struct JSONObject *string_literals = JSON_get_object_item(global_variables, "g_string_literals");
+
+  assert(JSON_get_array_size(string_literals) == g_nof_string_literals);
+
+  g_string_literals = (char **)GC_MALLOC(g_nof_string_literals * sizeof(char *));
+
+  for(i=0; i< g_nof_string_literals; i++) {
+    g_string_literals[i] = GC_strdup(JSON_get_array_item(string_literals, i)->strvalue);
+  }
+  /////
+
+  //11. g_exception_environment
+  g_exception_environment = deserialize_native_ptr_reference(heap,
+                                                             STACK_TYPE_PTR,
+                                                             JSON_get_object_item(global_variables,
+                                                                                  "g_exception_environment")->ivalue,
+                                                             object_hashtable,
+                                                             native_ptr_hashtable);
+  /////
+
+  //12. g_call_chain
+  g_call_chain = deserialize_native_ptr_reference(heap,
+                                                  STACK_TYPE_PTR,
+                                                  JSON_get_object_item(global_variables,
+                                                                       "g_call_chain")->ivalue,
+                                                  object_hashtable,
+                                                  native_ptr_hashtable);
+  /////
+
+  //13. g_exception_contexts
+  g_exception_contexts = deserialize_native_ptr_reference(heap,
+                                                          STACK_TYPE_PTR,
+                                                          JSON_get_object_item(global_variables,
+                                                                               "g_exception_contexts")->ivalue,
+                                                          object_hashtable,
+                                                          native_ptr_hashtable);
+  /////
+
+  //14. g_breakpointed_methods
+  g_breakpointed_methods = deserialize_native_ptr_reference(heap,
+                                                            STACK_TYPE_PTR,
+                                                            JSON_get_object_item(global_variables,
+                                                                                 "g_breakpointed_methods")->ivalue,
+                                                            object_hashtable,
+                                                            native_ptr_hashtable);
+
+  /////
+
+  //15. g_loading_core_library
+  char *loading_core_library = JSON_get_object_item(global_variables, "g_loading_core_library")->strvalue;
+  if(!strcmp(loading_core_library, "true"))
+    g_loading_core_library = true;
+  else if(!strcmp(loading_core_library, "false"))
+    g_loading_core_library = false;
+  /////
+
+  //16. g_running_tests
+  char *running_tests = JSON_get_object_item(global_variables, "g_running_tests")->strvalue;
+  if(!strcmp(running_tests, "true"))
+    g_running_tests = true;
+  else if(!strcmp(running_tests, "false"))
+    g_running_tests = false;
+  /////
+
+  //17. g_method_call_stack
+  g_method_call_stack = deserialize_object_reference(heap,
+                                                     JSON_get_object_item(global_variables, "g_method_call_stack")->ivalue,
+                                                     object_hashtable,
+                                                     native_ptr_hashtable);
+
+  //18. g_last_eval_result
+  g_last_eval_result = deserialize_object_reference(heap,
+                                                    JSON_get_object_item(global_variables, "g_last_eval_result")->ivalue,
+                                                    object_hashtable,
+                                                    native_ptr_hashtable);
+
+  //19. g_system_initialized
+  char *system_initialized = JSON_get_object_item(global_variables, "g_system_initialized")->strvalue;
+  if(!strcmp(system_initialized, "true"))
+    g_system_initialized = true;
+  else if(!strcmp(system_initialized, "false"))
+    g_system_initialized = false;
+  /////
+
+  //20. g_ui_mode
+  char *ui_mode = JSON_get_object_item(global_variables, "g_ui_mode")->strvalue;
+  if(!strcmp(ui_mode, "CLI"))
+    g_ui_mode = CLI;
+  else if(!strcmp(ui_mode, "GUI"))
+    g_ui_mode = GUI;
+  /////
+
+  //21. g_eval_aborted
+  char *eval_aborted = JSON_get_object_item(global_variables, "g_eval_aborted")->strvalue;
+  if(!strcmp(eval_aborted, "true"))
+    g_eval_aborted = true;
+  else if(!strcmp(eval_aborted, "false"))
+    g_eval_aborted = false;
+  /////
+
+  //22. g_exp
+  g_exp = deserialize_native_ptr_reference(heap,
+                                           EXEC_CODE_PTR,
+                                           JSON_get_object_item(global_variables,
+                                                                "g_exp")->ivalue,
+                                           object_hashtable,
+                                           native_ptr_hashtable);
+  /////
+
+  //23. g_top_level
+  g_top_level = deserialize_native_ptr_reference(heap,
+                                                 BINDING_ENV_PTR,
+                                                 JSON_get_object_item(global_variables,
+                                                                      "g_top_level")->ivalue,
+                                                 object_hashtable,
+                                                 native_ptr_hashtable);
+  /////
+
+  //24. g_debugger_invoked_for_exception
+  char *debugger_invoked_for_excp = JSON_get_object_item(global_variables, "g_debugger_invoked_for_exception")->strvalue;
+  if(!strcmp(debugger_invoked_for_excp, "true"))
+    g_debugger_invoked_for_exception = true;
+  else if(!strcmp(debugger_invoked_for_excp, "false"))
+    g_debugger_invoked_for_exception = false;
+  /////
+
+  //25. g_active_handler
+  g_active_handler = deserialize_native_ptr_reference(heap,
+                                                      EXCEPTION_HANDLER_PTR,
+                                                      JSON_get_object_item(global_variables,
+                                                                           "g_active_handler")->ivalue,
+                                                      object_hashtable,
+                                                      native_ptr_hashtable);
+  /////
+
+  //26. g_debug_in_progress
+  char *debug_in_progress = JSON_get_object_item(global_variables, "g_debug_in_progress")->strvalue;
+  if(!strcmp(debug_in_progress, "true"))
+    g_debug_in_progress = true;
+  else if(!strcmp(debug_in_progress, "false"))
+    g_debug_in_progress = false;
+  /////
+
+  //27. g_debug_cont
+  g_debug_cont = deserialize_object_reference(heap,
+                                              JSON_get_object_item(global_variables, "g_debug_cont")->ivalue,
+                                              object_hashtable,
+                                              native_ptr_hashtable);
+  /////
+
+  //28. g_handler_environment
+  g_handler_environment = deserialize_native_ptr_reference(heap,
+                                                           EXCEPTION_HANDLER_PTR,
+                                                           JSON_get_object_item(global_variables,
+                                                                                "g_handler_environment")->ivalue,
+                                                           object_hashtable,
+                                                           native_ptr_hashtable);
+  /////
+
+  //29. g_signalling_environment
+  g_signalling_environment = deserialize_native_ptr_reference(heap,
+                                                              EXCEPTION_HANDLER_PTR,
+                                                              JSON_get_object_item(global_variables,
+                                                                                   "g_signalling_environment")->ivalue,
+                                                              object_hashtable,
+                                                              native_ptr_hashtable);
+  /////
+
+  //30. g_nof_compiler_states
+  g_nof_compiler_states = JSON_get_object_item(global_variables, "g_nof_compiler_states")->ivalue;
+
+  //31. g_nof_smalltalk_packages
+  g_nof_smalltalk_packages = JSON_get_object_item(global_variables, "g_nof_smalltalk_packages")->ivalue;
+
+  //32. g_smalltalk_packages
+  struct JSONObject *smalltalk_packages = JSON_get_object_item(global_variables, "g_smalltalk_packages");
+
+  assert(JSON_get_array_size(smalltalk_packages) == g_nof_smalltalk_packages);
+
+  g_smalltalk_packages = (smalltalk_package_t **)GC_MALLOC(g_nof_smalltalk_packages * sizeof(smalltalk_package_t *));
+
+  for(i=0; i< g_nof_smalltalk_packages; i++) {
+    g_smalltalk_packages[i] = deserialize_native_ptr_reference(heap,
+                                                               SMALLTALK_PACKAGE_PTR,
+                                                               JSON_get_array_item(smalltalk_packages, i)->ivalue,
+                                                               object_hashtable,
+                                                               native_ptr_hashtable);
+  }
+  /////
 
   load_native_functions(native_functions);
-
-  hashtable_t *object_hashtable = hashtable_create(1001);
-  hashtable_t *native_ptr_hashtable = hashtable_create(1001);
-  queue_t *queue = queue_create();
-
 
   //TODO:
   //1. create global variables (including their components), either directly (as above)
@@ -4287,12 +4600,7 @@ void create_test_image(char *file_name)
   initialize_inbuiltfns();
   g_system_initialized = true;
 
-  printf("%p ", ((class_object_t *)extract_ptr(Integer))->package);
-  printf("%s\n", ((class_object_t *)extract_ptr(Integer))->package->name);
-
-  FILE *fp1 = fopen("diag_test.txt", "w");
-  print_class_object(extract_ptr(Package), fp1);
-  fclose(fp1);
+  print_diagnostics();
 
   FILE *fp = fopen(file_name, "w");
 
@@ -4376,10 +4684,10 @@ void create_test_image(char *file_name)
   call_repl("Smalltalk createGlobal: #val valued: (TestClass hello)");
   executable_code_t *g_exp3 = g_exp;
 
-  fprintf(fp, ", \"test_class\" : ");
-  OBJECT_PTR test_class;
-  assert(get_top_level_val(get_symbol("TestClass"), &test_class));
-  print_object_ptr_reference(fp, car(test_class));
+  /* fprintf(fp, ", \"test_class\" : "); */
+  /* OBJECT_PTR test_class; */
+  /* assert(get_top_level_val(get_symbol("TestClass"), &test_class)); */
+  /* print_object_ptr_reference(fp, car(test_class)); */
 
   fprintf(fp, ", \"g_exp1\" : ");
   print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)g_exp1);
@@ -4403,6 +4711,14 @@ void create_test_image(char *file_name)
   /*   nativefn nnff = get_nativefn_value(nf_obj); */
   /*   printf("native function of the class method is %p (%s)\n", nnff, get_symbol_name(tt->class_methods->bindings[j].key)); */
   /* } */
+
+  fprintf(fp, ", ");
+
+  print_global_variables(fp);
+
+  fprintf(fp, ",");
+
+  print_native_functions(fp);
 
   fprintf(fp, ", \"heap\" : [");
   int ii = 0;
@@ -4471,7 +4787,7 @@ int load_from_test_image(char *file_name)
   struct JSONObject *ec_obj3 = JSON_get_object_item(root, "g_exp3");
   struct JSONObject *arr_obj_json = JSON_get_object_item(root, "an_array");
   /* struct JSONObject *hello_obj_json = JSON_get_object_item(root, "val"); */
-  struct JSONObject *test_class_json = JSON_get_object_item(root, "test_class");
+  /* struct JSONObject *test_class_json = JSON_get_object_item(root, "test_class"); */
   //struct JSONObject *bin_msgs = JSON_get_object_item(root, "bin_msgs");
   struct JSONObject *heap = JSON_get_object_item(root, "heap");
 
@@ -4533,11 +4849,11 @@ int load_from_test_image(char *file_name)
   /*                                                         native_ptr_hashtable); */
   /* print_object(hello_obj_ptr); printf("\n"); */
 
-  OBJECT_PTR test_class_ptr = deserialize_object_reference(heap,
-                                                           test_class_json->ivalue,
-                                                           object_hashtable,
-                                                           native_ptr_hashtable);
-  print_object(test_class_ptr); printf("\n");
+  /* OBJECT_PTR test_class_ptr = deserialize_object_reference(heap, */
+  /*                                                          test_class_json->ivalue, */
+  /*                                                          object_hashtable, */
+  /*                                                          native_ptr_hashtable); */
+  /* print_object(test_class_ptr); printf("\n"); */
 
   while(!stack_is_empty(stack))
   {
@@ -4563,7 +4879,25 @@ void print_queue(queue_t *q)
   while(np)
   {
     native_ptr_slot_t *s = (native_ptr_slot_t *)np->data;
+
     printf("%d. type = %d, native_ptr = %p\n", i, s->type, s->ref);
+
+    if(s->type == NONE)
+      assert(is_valid_object((OBJECT_PTR)s->ref));
+    else if(s->type == BINDING_PTR)
+    {
+      if(!is_valid_object(((binding_t *)s->ref)->key))
+      {
+        printf("binding_t->key (%p) is not a valid OBJECT_PTR\n", ((binding_t *)s->ref)->key);
+        assert(false);
+      }
+      if(!is_valid_object(((binding_t *)s->ref)->val))
+      {
+        printf("binding_t->val (%p) is not a valid OBJECT_PTR\n", ((binding_t *)s->ref)->val);
+        assert(false);
+      }
+    }
+
     i++;
     np = np->next;
   }

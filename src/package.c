@@ -181,27 +181,27 @@ char *get_qualified_name(smalltalk_package_t *pkg)
   return ret;
 }
 
-void print_package(smalltalk_package_t *pkg)
+void print_smalltalk_package(FILE *fp, smalltalk_package_t *pkg)
 {
-  printf("-----------------------------\n");
-  printf("name = %s\n", pkg->name);
-  printf("parent = %s\n", pkg->parent ? pkg->parent->name : "NONE");
-  printf("children:\n");
+  fprintf(fp, "-----------------------------\n");
+  fprintf(fp, "name = %s\n", pkg->name);
+  fprintf(fp, "parent = %s\n", pkg->parent ? pkg->parent->name : "NONE");
+  fprintf(fp, "children:\n");
   if(pkg->nof_children > 0)
   {
     unsigned int i;
     for(i=0; i<pkg->nof_children; i++)
     {
-      printf("%s", pkg->children[i]->name);
+      fprintf(fp, "%s", pkg->children[i]->name);
       if(i != pkg->nof_children - 1)
-        printf(", ");
+        fprintf(fp, ", ");
       else
-        printf("\n");
+        fprintf(fp, "\n");
     }
   }
   else
-    printf("NONE\n");
-  printf("-----------------------------\n");
+    fprintf(fp, "NONE\n");
+  fprintf(fp, "-----------------------------\n");
 }
 
 #ifdef PACKAGE_TEST
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
   printf("No of packages = %d\n", g_nof_smalltalk_packages);
 
   for(i=0; i<g_nof_smalltalk_packages; i++)
-    //print_package(g_smalltalk_packages[i]);
+    //print_smalltalk_package(stdout, g_smalltalk_packages[i]);
     printf("%s\n", get_qualified_name(g_smalltalk_packages[i]));
 
   return 0;

@@ -4,36 +4,38 @@
 
 #include "global_decls.h"
 
-extern OBJECT_PTR           g_message_selector;
-extern unsigned int         g_nof_string_literals;
-extern OBJECT_PTR           g_msg_snd_closure;
-extern OBJECT_PTR           g_msg_snd_super_closure;
-extern OBJECT_PTR           g_compile_time_method_selector;
-extern OBJECT_PTR           g_run_till_cont;
-extern enum DebugAction     g_debug_action;
-extern package_t           *g_smalltalk_symbols;
-extern package_t           *g_compiler_package;
-extern char               **g_string_literals;
-extern stack_type          *g_exception_environment;
-extern stack_type          *g_call_chain;
-extern stack_type          *g_exception_contexts;
-extern stack_type          *g_breakpointed_methods;
-extern BOOLEAN              g_loading_core_library;
-extern BOOLEAN              g_running_tests;
-extern OBJECT_PTR           g_method_call_stack;
-extern OBJECT_PTR           g_last_eval_result;
-extern BOOLEAN              g_system_initialized;
-extern enum UIMode          g_ui_mode;
-extern BOOLEAN              g_eval_aborted;
-extern executable_code_t   *g_exp;
-extern binding_env_t       *g_top_level;
-extern BOOLEAN              g_debugger_invoked_for_exception;
-extern exception_handler_t *g_active_handler;
-extern BOOLEAN              g_debug_in_progress;
-extern OBJECT_PTR           g_debug_cont;
-extern stack_type          *g_handler_environment;
-extern stack_type          *g_signalling_environment;
-extern unsigned int         g_nof_compiler_states;
+extern OBJECT_PTR            g_message_selector;
+extern unsigned int          g_nof_string_literals;
+extern OBJECT_PTR            g_msg_snd_closure;
+extern OBJECT_PTR            g_msg_snd_super_closure;
+extern OBJECT_PTR            g_compile_time_method_selector;
+extern OBJECT_PTR            g_run_till_cont;
+extern enum DebugAction      g_debug_action;
+extern package_t            *g_smalltalk_symbols;
+extern package_t            *g_compiler_package;
+extern char                **g_string_literals;
+extern stack_type           *g_exception_environment;
+extern stack_type           *g_call_chain;
+extern stack_type           *g_exception_contexts;
+extern stack_type           *g_breakpointed_methods;
+extern BOOLEAN               g_loading_core_library;
+extern BOOLEAN               g_running_tests;
+extern OBJECT_PTR            g_method_call_stack;
+extern OBJECT_PTR            g_last_eval_result;
+extern BOOLEAN               g_system_initialized;
+extern enum UIMode           g_ui_mode;
+extern BOOLEAN               g_eval_aborted;
+extern executable_code_t    *g_exp;
+extern binding_env_t        *g_top_level;
+extern BOOLEAN               g_debugger_invoked_for_exception;
+extern exception_handler_t  *g_active_handler;
+extern BOOLEAN               g_debug_in_progress;
+extern OBJECT_PTR            g_debug_cont;
+extern stack_type           *g_handler_environment;
+extern stack_type           *g_signalling_environment;
+extern unsigned int          g_nof_compiler_states;
+extern unsigned int          g_nof_smalltalk_packages;
+extern smalltalk_package_t **g_smalltalk_packages;
 
 //forward declaration
 void print_class_object(class_object_t *, FILE *);
@@ -55,6 +57,7 @@ void print_object_to_file(OBJECT_PTR obj, FILE *fp)
 
 void print_binding(binding_t *binding, FILE*fp)
 {
+  fprintf(fp, "binding pointer = %p\n", binding);
   fprintf(fp, "key: "); print_object_to_file(binding->key, fp);fprintf(fp, "\n");
   fprintf(fp, "val: ");
 
@@ -81,7 +84,7 @@ void print_binding(binding_t *binding, FILE*fp)
 
 void print_binding_env(binding_env_t *env, FILE *fp)
 {
-  fprintf(fp, "binding_env:\n");
+  fprintf(fp, "binding_env: %p\n", env);
 
   if(!env)
     return;
@@ -369,6 +372,11 @@ void print_diagnostics()
     fprintf(fp, "\n");
 
   fprintf(fp, "g_nof_compiler_states: %d\n", g_nof_compiler_states);
+
+  fprintf(fp, "g_nof_smalltalk_packages: %d\n", g_nof_smalltalk_packages);
+
+  for(i=0; i< g_nof_smalltalk_packages; i++)
+    print_smalltalk_package(fp, g_smalltalk_packages[i]);
 
   fclose(fp);
 }
