@@ -101,7 +101,7 @@ void print_binding_env(binding_env_t *env, FILE *fp)
 void print_method(method_t *m, FILE *fp)
 {
   fprintf(fp, "method: \n");
-  fprintf(fp, "class : %s\n", m->cls_obj->name);
+  fprintf(fp, "class : %s\n", ((class_object_t *)extract_ptr(m->cls_obj))->name);
   fprintf(fp, "class_method: %s\n", m->class_method ? "true" : "false");
   fprintf(fp, "nativefn_obj: "); print_object_to_file(m->nativefn_obj, fp); fprintf(fp, "\n");
   fprintf(fp, "closed_syms: ");  print_object_to_file(m->closed_syms, fp); fprintf(fp, "\n");
@@ -216,11 +216,11 @@ void print_exception_handler(exception_handler_t *h, FILE *fp)
   fprintf(fp, "cont: "); print_object_to_file(h->cont, fp); fprintf(fp, "\n");
 }
 
-void print_diagnostics()
+void print_diagnostics(char *fname)
 {
   int i;
 
-  FILE *fp = fopen("diagnostics.txt", "w");
+  FILE *fp = fopen(fname, "w");
 
   assert(fp);
 

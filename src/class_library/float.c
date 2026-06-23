@@ -228,49 +228,49 @@ void create_Float()
 
   cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[0]->key = get_symbol("_+");
-  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_plus),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[1]->key = get_symbol("_-");
-  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_minus),
 						    NIL, NIL,
 						    1, NIL, NULL);
 					
   cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[2]->key = get_symbol("_*");
-  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_times),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[3]->key = get_symbol("_/");
-  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_divided_by),
 						    NIL, NIL,
 						    1, NIL, NULL);
   
   cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[4]->key = get_symbol("_=");
-  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_eq),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[5] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[5]->key = get_symbol("_<");
-  cls_obj->instance_methods->bindings[5]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[5]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_lt),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[6] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[6]->key = get_symbol("_>");
-  cls_obj->instance_methods->bindings[6]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[6]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)float_gt),
 						    NIL, NIL,
 						    1, NIL, NULL);

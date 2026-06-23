@@ -459,7 +459,7 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 	      "Smalltalk %s #%s toClass: %s withBody:\n",
 	      m->class_method ? "addClassMethod:" : "addInstanceMethod:",
 	      substring(sym, 1, strlen(sym) - 1),
-	      m->cls_obj->name);
+	      ((class_object_t *)extract_ptr(m->cls_obj))->name);
       gtk_text_buffer_insert_at_cursor(debugger_source_buffer, header, -1);
 
       int indents = 0;

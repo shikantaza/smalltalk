@@ -38,6 +38,7 @@ char                *append_char(char *, char);
 char                *append_string(char *, char *);
 OBJECT_PTR           apply_lisp_transforms(OBJECT_PTR);
 OBJECT_PTR           assignment_conversion(OBJECT_PTR, OBJECT_PTR);
+void                 build_autocomplete_words();
 unsigned int         build_c_string(OBJECT_PTR, char *, BOOLEAN);
 unsigned int         build_fn_prototypes(char *, unsigned int);
 OBJECT_PTR           build_selectors_list(OBJECT_PTR);
@@ -81,7 +82,7 @@ exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,
 					      stack_type *,
 					      OBJECT_PTR);
-method_t            *create_method(class_object_t *,
+method_t            *create_method(OBJECT_PTR,
 				   BOOLEAN,
 				   OBJECT_PTR,
 				   OBJECT_PTR,
@@ -122,6 +123,7 @@ char                *get_symbol_name(OBJECT_PTR);
 OBJECT_PTR           get_top_level_symbols();
 BOOLEAN              get_top_level_val(OBJECT_PTR, OBJECT_PTR *);
 OBJECT_PTR           identity_function(OBJECT_PTR, ...);
+void                 initialize_inbuiltfns();
 OBJECT_PTR           initialize_object(OBJECT_PTR);
 OBJECT_PTR           invoke_cont_on_val(OBJECT_PTR, OBJECT_PTR);
 void                 invoke_curtailed_blocks(OBJECT_PTR);
@@ -173,7 +175,7 @@ BOOLEAN              pop_if_top(call_chain_entry_t *);
 char                *prepend_char(char *, char);
 BOOLEAN              primop(OBJECT_PTR);
 void                 print_call_chain();
-void                 print_diagnostics();
+void                 print_diagnostics(char *);
 void                 print_exception_contexts();
 void                 print_object(OBJECT_PTR);
 void                 print_object_to_string(OBJECT_PTR, char *);
@@ -185,6 +187,7 @@ OBJECT_PTR           repl_common();
 OBJECT_PTR           replace_method_selector(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           reverse(OBJECT_PTR);
 OBJECT_PTR           setcdr(OBJECT_PTR, OBJECT_PTR);
+void                 set_up_autocomplete_words();
 void                 set_heap(uintptr_t, unsigned int, OBJECT_PTR);
 OBJECT_PTR           seventh(OBJECT_PTR);
 void                 show_debug_window(BOOLEAN, OBJECT_PTR);

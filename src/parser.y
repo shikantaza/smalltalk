@@ -22,6 +22,7 @@ int yy_scan_string(char *);
 void initialize();
 void initialize_pass2();
 void initialize_inbuiltfns();
+void initialize_pre_image();
 
 BOOLEAN is_create_class_exp(OBJECT_PTR);
 BOOLEAN is_add_var_exp(OBJECT_PTR, char *);
@@ -45,6 +46,8 @@ void show_error_dialog(char *);
 
 void build_autocomplete_words();
 void set_up_autocomplete_words();
+void initialize_frequently_used_selectors();
+void initialize_pass2();
 
 executable_code_t *g_exp;
 int g_open_square_brackets;
@@ -1160,24 +1163,40 @@ int main(int argc, char **argv)
   //create_test_image("./test.json"); load_from_test_image("./test.json"); exit(0);
   //load_from_image("./smalltalk.json"); exit(0);
 
-  g_ui_mode = CLI;
+  if(argc == 1) //no image
+  {
+    g_ui_mode = CLI;
 
-  g_system_initialized = false;
+    g_system_initialized = false;
 
-  initialize();  
+    initialize();
 
-  build_autocomplete_words();
-  set_up_autocomplete_words();
+    build_autocomplete_words();
+    set_up_autocomplete_words();
 
-  load_core_library();
+    load_core_library();
 
-  initialize_pass2();
+    initialize_pass2();
 
-  load_core_library2();
+    load_core_library2();
 
-  initialize_inbuiltfns();
+    initialize_inbuiltfns();
 
-  g_system_initialized = true;
+    g_system_initialized = true;
+  }
+  else
+  {
+    initialize_pre_image();
+
+    //TODO: validation of image file
+    load_from_image(argv[1]);
+
+    initialize_frequently_used_selectors();
+    initialize_pass2();
+
+    print_diagnostics("diagnostics_post.txt");
+    exit(0);
+  }
 
   gtk_init(&argc, &argv);
   create_transcript_window(DEFAULT_TRANSCRIPT_POSX,

@@ -158,7 +158,7 @@ typedef struct
 
 typedef struct method
 {
-  class_object_t *cls_obj;
+  OBJECT_PTR cls_obj;
   BOOLEAN class_method;
   OBJECT_PTR nativefn_obj;
   OBJECT_PTR closed_syms;

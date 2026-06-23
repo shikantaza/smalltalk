@@ -516,7 +516,7 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 	      m->class_method ? "addClassMethod:" : "addInstanceMethod:",
 	      //substring(sym, 1, strlen(sym) - 1),
 	      name,
-	      m->cls_obj->name);
+	      ((class_object_t *)extract_ptr(m->cls_obj))->name);
 
       gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(class_browser_source_buffer), header, -1);
 

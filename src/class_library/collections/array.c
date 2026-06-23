@@ -282,35 +282,35 @@ void create_Array()
 
   cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[0]->key = get_symbol("_at:put:");
-  cls_obj->instance_methods->bindings[0]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[0]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)array_at_put),
 						    NIL, NIL,
 						    2, NIL, NULL);
 
   cls_obj->instance_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[1]->key = get_symbol("_at:");
-  cls_obj->instance_methods->bindings[1]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[1]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)array_at),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[2]->key = get_symbol("_size");
-  cls_obj->instance_methods->bindings[2]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[2]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)array_size),
 						    NIL, NIL,
 						    0, NIL, NULL);
 
   cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[3]->key = get_symbol("_do:");
-  cls_obj->instance_methods->bindings[3]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[3]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)array_do),
 						    NIL, NIL,
 						    1, NIL, NULL);
 
   cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->instance_methods->bindings[4]->key = get_symbol("_do:separatedBy:");
-  cls_obj->instance_methods->bindings[4]->val = create_method(cls_obj, false,
+  cls_obj->instance_methods->bindings[4]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)array_do_separated_by),
 						    NIL, NIL,
 						    2, NIL, NULL);
@@ -321,7 +321,7 @@ void create_Array()
 
   cls_obj->class_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
   cls_obj->class_methods->bindings[0]->key = get_symbol("_new:");
-  cls_obj->class_methods->bindings[0]->val = create_method(cls_obj, true,
+  cls_obj->class_methods->bindings[0]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
 						 convert_native_fn_to_object((nativefn)array_new),
 						 NIL, NIL,
 						 1, NIL, NULL);

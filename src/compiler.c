@@ -389,6 +389,18 @@ void initialize_pass2()
   CompileError = car(ret);
 }
 
+void initialize_pre_image()
+{
+  create_idclo();
+  create_message_send_closure();
+  create_message_send_super_closure();
+
+  build_autocomplete_words();
+  set_up_autocomplete_words();
+
+  initialize_inbuiltfns();
+}
+
 void error(const char *fmt, ...)
 {
   //TODO: bring in alignment with
