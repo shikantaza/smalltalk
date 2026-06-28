@@ -1160,9 +1160,6 @@ int load_from_test_image(char *);
 #ifndef LEX
 int main(int argc, char **argv)
 {
-  //create_test_image("./test.json"); load_from_test_image("./test.json"); exit(0);
-  //load_from_image("./smalltalk.json"); exit(0);
-
   if(argc == 1) //no image
   {
     g_ui_mode = CLI;
@@ -1188,14 +1185,14 @@ int main(int argc, char **argv)
   {
     initialize_pre_image();
 
-    //TODO: validation of image file
+    //TODO: validation of image file name
     load_from_image(argv[1]);
 
     initialize_frequently_used_selectors();
     initialize_pass2();
 
     print_diagnostics("diagnostics_post.txt");
-    exit(0);
+    //exit(0);
   }
 
   gtk_init(&argc, &argv);

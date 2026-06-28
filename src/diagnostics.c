@@ -101,7 +101,7 @@ void print_binding_env(binding_env_t *env, FILE *fp)
 void print_method(method_t *m, FILE *fp)
 {
   fprintf(fp, "method: \n");
-  fprintf(fp, "class : %s\n", ((class_object_t *)extract_ptr(m->cls_obj))->name);
+  fprintf(fp, "class : "); print_object_to_file(m->cls_obj, fp); fprintf(fp, "\n");
   fprintf(fp, "class_method: %s\n", m->class_method ? "true" : "false");
   fprintf(fp, "nativefn_obj: "); print_object_to_file(m->nativefn_obj, fp); fprintf(fp, "\n");
   fprintf(fp, "closed_syms: ");  print_object_to_file(m->closed_syms, fp); fprintf(fp, "\n");
