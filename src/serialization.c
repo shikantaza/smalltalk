@@ -2436,7 +2436,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "STRING_LITERAL"))
     {
       lit->type = STRING_LITERAL;
-      lit->val = GC_strdup(JSON_get_array_item(ptr_entry, 1)->strvalue);
+      lit->val = replace_newlines(JSON_get_array_item(ptr_entry, 1)->strvalue);
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "CHAR_LITERAL"))
     {
@@ -4000,7 +4000,7 @@ int load_from_image(char *file_name)
   g_string_literals = (char **)GC_MALLOC(g_nof_string_literals * sizeof(char *));
 
   for(i=0; i< g_nof_string_literals; i++) {
-    g_string_literals[i] = GC_strdup(JSON_get_array_item(string_literals, i)->strvalue);
+    g_string_literals[i] = replace_newlines(JSON_get_array_item(string_literals, i)->strvalue);
   }
   /////
 

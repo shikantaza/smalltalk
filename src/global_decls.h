@@ -185,6 +185,7 @@ OBJECT_PTR           ren_transform(OBJECT_PTR, binding_env_t *);
 void                 repl();
 OBJECT_PTR           repl_common();
 OBJECT_PTR           replace_method_selector(OBJECT_PTR, OBJECT_PTR);
+char                *replace_newlines(char *);
 OBJECT_PTR           reverse(OBJECT_PTR);
 OBJECT_PTR           setcdr(OBJECT_PTR, OBJECT_PTR);
 void                 set_up_autocomplete_words();

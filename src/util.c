@@ -329,3 +329,53 @@ char *reverse_string(char *str)
 
   return ret;
 }
+
+//replaces occurrences of "\n" in str
+//with actual newlines. used to process
+//JSON strings from serialization
+char *replace_newlines(char *str)
+{
+  int i=0, len;
+  int nof_newlines = 0;
+  char *ret = NULL;
+
+  len = strlen(str);
+
+  //note the '<=', as we want to scan
+  //only till the penultimate character
+  for(i=0; i<=len; i++)
+  {
+    if(str[i] == '\\' && str[i+1] == 'n')
+      nof_newlines++;
+  }
+
+  int len_new_string = len - nof_newlines;
+
+  ret = (char *)GC_MALLOC((len_new_string + 1) * sizeof(char));
+
+  int j=0;
+
+  i=0;
+
+  while(i<=(len-1))
+  {
+    if(str[i] == '\\' && str[i+1] == 'n')
+    {
+      ret[j] = '\n';
+      i += 2;
+    }
+    else
+    {
+      ret[j] = str[i];
+      i++;
+    }
+
+    j++;
+  }
+
+  assert(j==len_new_string);
+
+  ret[j+1] = '\0';
+
+  return ret;
+}
