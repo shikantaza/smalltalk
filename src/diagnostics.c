@@ -36,6 +36,8 @@ extern stack_type           *g_signalling_environment;
 extern unsigned int          g_nof_compiler_states;
 extern unsigned int          g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
+extern int                   g_gensym_count;
+extern int                   g_smalltalk_gensym_count;
 
 //forward declaration
 void print_class_object(class_object_t *, FILE *);
@@ -377,6 +379,10 @@ void print_diagnostics(char *fname)
 
   for(i=0; i< g_nof_smalltalk_packages; i++)
     print_smalltalk_package(fp, g_smalltalk_packages[i]);
+
+  fprintf(fp, "g_gensym_count: %d\n", g_gensym_count);
+
+  fprintf(fp, "g_smalltalk_gensym_count: %d\n", g_smalltalk_gensym_count);
 
   fclose(fp);
 }

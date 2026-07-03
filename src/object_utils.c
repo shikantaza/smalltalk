@@ -8,7 +8,7 @@
 
 #include "global_decls.h"
 
-int gen_sym_count = 0;
+int g_gensym_count = 0;
 OBJECT_PTR Symbol;
 
 unsigned int g_nof_native_fns = 0;
@@ -56,6 +56,11 @@ extern OBJECT_PTR Character;
 
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
+  if(!is_valid_object_shallow(obj))
+  {
+    print_object(obj);
+    assert(false);
+  }
   return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
 }
 
@@ -632,9 +637,9 @@ OBJECT_PTR gensym()
 {
   char sym[20];
 
-  gen_sym_count++;
+  g_gensym_count++;
 
-  sprintf(sym, "#:G%d", gen_sym_count);
+  sprintf(sym, "#:G%d", g_gensym_count);
 
   return build_symbol_object(add_symbol(sym));
 }
@@ -1030,23 +1035,28 @@ OBJECT_PTR get_binding(binding_env_t *env, OBJECT_PTR key)
   return 0;
 }
 
+BOOLEAN is_valid_object_shallow(OBJECT_PTR x)
+{
+  return IS_SYMBOL_OBJECT(x)      ||
+    IS_CONS_OBJECT(x)             ||
+    IS_INTEGER_OBJECT(x)          ||
+    IS_FLOAT_OBJECT(x)            ||
+    IS_NATIVE_FN_OBJECT(x)        ||
+    IS_CLOSURE_OBJECT(x)          ||
+    IS_TRUE_OBJECT(x)             ||
+    IS_FALSE_OBJECT(x)            ||
+    IS_CLASS_OBJECT(x)            ||
+    IS_OBJECT_OBJECT(x)           ||
+    IS_STRING_OBJECT(x)           ||
+    IS_SMALLTALK_SYMBOL_OBJECT(x) ||
+    IS_CHARACTER_OBJECT(x)        ||
+    IS_STRING_LITERAL_OBJECT(x)   ||
+    IS_ARRAY_OBJECT(x);
+}
+
 BOOLEAN is_valid_object(OBJECT_PTR x)
 {
-  if(!(IS_SYMBOL_OBJECT(x)           ||
-       IS_CONS_OBJECT(x)             ||
-       IS_INTEGER_OBJECT(x)          ||
-       IS_FLOAT_OBJECT(x)            ||
-       IS_NATIVE_FN_OBJECT(x)        ||
-       IS_CLOSURE_OBJECT(x)          ||
-       IS_TRUE_OBJECT(x)             ||
-       IS_FALSE_OBJECT(x)            ||
-       IS_CLASS_OBJECT(x)            ||
-       IS_OBJECT_OBJECT(x)           ||
-       IS_STRING_OBJECT(x)           ||
-       IS_SMALLTALK_SYMBOL_OBJECT(x) ||
-       IS_CHARACTER_OBJECT(x)        ||
-       IS_STRING_LITERAL_OBJECT(x)   ||
-       IS_ARRAY_OBJECT(x)))
+  if(!is_valid_object_shallow(x))
     return false;
 
   if(IS_CONS_OBJECT(x))
@@ -1086,6 +1096,31 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
 	printf("ERROR: object contains invalid instance variable %s\n", get_symbol_name(inst_vars->bindings[i]->key));
 	return false;
       }
+    }
+
+    return true;
+  }
+
+  if(IS_CLOSURE_OBJECT(x))
+  {
+    OBJECT_PTR lst_form = extract_ptr(x) + CONS_TAG;
+
+    if(!IS_NATIVE_FN_OBJECT(first(lst_form)))
+    {
+      printf("ERROR: closure object contains invalid native function object (%p)\n", first(lst_form));
+      return false;
+    }
+
+    if(!is_valid_object(second(lst_form)))
+    {
+      printf("ERROR: closure object contains invalid closed vals list (%p)\n", second(lst_form));
+      return false;
+    }
+
+    if(!IS_INTEGER_OBJECT(third(lst_form)))
+    {
+      printf("ERROR: closure object contains invalid closed vals list (%p)\n", third(lst_form));
+      return false;
     }
 
     return true;

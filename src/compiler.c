@@ -137,6 +137,23 @@ extern stack_type *g_breakpointed_methods;
 
 extern OBJECT_PTR g_debug_cont;
 
+extern OBJECT_PTR Object;
+extern OBJECT_PTR Smalltalk;
+extern OBJECT_PTR Nil;
+extern OBJECT_PTR Transcript;
+extern OBJECT_PTR Integer;
+extern OBJECT_PTR Float;
+extern OBJECT_PTR NiladicBlock;
+extern OBJECT_PTR MonadicBlock;
+extern OBJECT_PTR DyadicValuable;
+extern OBJECT_PTR Boolean;
+extern OBJECT_PTR Exception;
+extern OBJECT_PTR Array;
+extern OBJECT_PTR OrderedCollection;
+extern OBJECT_PTR Compiler;
+extern OBJECT_PTR ReadableString;
+extern OBJECT_PTR Character;
+
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
 BOOLEAN IS_INTEGER_OBJECT(OBJECT_PTR x)                  { return (x & BIT_MASK) == INTEGER_TAG;                  }
@@ -1015,4 +1032,46 @@ BOOLEAN call_chain_entry_exists(call_chain_entry_t *e)
   }
 
   return entry_found;
+}
+
+//we need to create bindings between the top level symbols
+//for the core classes (Object, Smalltalk, etc.) and
+//the respective class_object_t * objects
+//TODO: check if there is a better way of doing this
+void create_core_class_binding(class_object_t *cls_obj)
+{
+  char *class_name = cls_obj->name;
+
+  if(!strcmp(class_name, "Object"))
+    Object = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Smalltalk"))
+    Smalltalk = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Nil"))
+    Nil = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Transcript"))
+    Transcript = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Integer"))
+    Integer = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Float"))
+    Float = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "NiladicBlock"))
+    NiladicBlock = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "MonadicBlock"))
+    MonadicBlock = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "DyadicValuable"))
+    DyadicValuable = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Boolean"))
+    Boolean = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Exception"))
+    Exception = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Array"))
+    Array = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "OrderedCollection"))
+    OrderedCollection = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Compiler"))
+    Compiler = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "ReadableString"))
+    ReadableString = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Character"))
+    Character = convert_class_object_to_object_ptr(cls_obj);
 }

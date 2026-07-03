@@ -26,7 +26,7 @@ OBJECT_PTR CompileError;
 
 OBJECT_PTR g_compile_time_method_selector;
 
-int smalltalk_gensym_count = 0;
+int g_smalltalk_gensym_count = 0;
 
 OBJECT_PTR CompileError;
 
@@ -1056,9 +1056,9 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
 
   char sym[20];
 
-  smalltalk_gensym_count++;
+  g_smalltalk_gensym_count++;
 
-  sprintf(sym, "#:G%d", smalltalk_gensym_count);
+  sprintf(sym, "#:G%d", g_smalltalk_gensym_count);
 
   pop_if_top(entry);
 

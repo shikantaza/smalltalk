@@ -75,6 +75,7 @@ call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
 					     OBJECT_PTR,
 					     BOOLEAN);
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
+void                 create_core_class_binding(class_object_t *);
 void                 create_idclo();
 void                 create_image(char *);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
@@ -143,6 +144,7 @@ BOOLEAN              IS_TRUE_OBJECT(OBJECT_PTR);
 call_chain_entry_t  *is_termination_block_not_invoked(OBJECT_PTR);
 BOOLEAN              is_valid_array_obj(OBJECT_PTR);
 BOOLEAN              is_valid_object(OBJECT_PTR);
+BOOLEAN              is_valid_object_shallow(OBJECT_PTR);
 OBJECT_PTR           last_cell(OBJECT_PTR);
 OBJECT_PTR           lift_transform(OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR           mcps_transform(OBJECT_PTR);

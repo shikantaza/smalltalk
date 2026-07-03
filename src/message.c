@@ -96,6 +96,7 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   {
     is_class_object = false;
     cls_obj = get_class_object(obj);
+    assert(IS_CLASS_OBJECT(cls_obj));
   }
   else
   {
