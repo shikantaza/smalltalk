@@ -497,9 +497,7 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), "", -1);
     
-    OBJECT_PTR method = val;
-
-    method_t *m = (method_t *)extract_ptr(method);
+    method_t *m = (method_t *)val;
 
     if(m->breakpointed)
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(breakpoint_check), TRUE);
