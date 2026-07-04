@@ -229,7 +229,6 @@ void populate_packages_list()
   remove_all_from_packages_list(packages_list);
 
   GtkTreeStore *store;
-  GtkTreeIter  iter;
 
   store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
 
@@ -246,7 +245,6 @@ void set_up_class_browser_source_buffer()
 
 void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 {
-  GtkTreeStore *store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (packages_list));
   GtkTreeIter  iter;
 
@@ -300,7 +298,7 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
       {
 	class_object_t *cls_obj_int = (class_object_t *)extract_ptr(car(binding_val));
 
-	if(cls_obj_int->package == id)
+	if(cls_obj_int->package == (void*)id)
 	{
 	  gtk_list_store_append(store2, &iter2);
 	  gtk_list_store_set(store2, &iter2, 0, cls_obj_int->name, -1);  
@@ -329,7 +327,6 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 
 void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 {
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(classes_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (classes_list));
   GtkTreeIter  iter;
 
@@ -377,7 +374,6 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
     len += sprintf(str+len, "Smalltalk createClass: #%s\n", cls_obj->name);
 
-    OBJECT_PTR parent_cls_obj = get_class_object(cls_obj->parent_class_object);
     if(id != Object)
     {
       class_object_t *parent_cls_obj_int = (class_object_t *)extract_ptr(cls_obj->parent_class_object);
@@ -466,7 +462,6 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
 void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 {
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(methods_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
   GtkTreeIter  iter;
 
@@ -543,7 +538,6 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 
 void toggle_breakpoint(GtkWidget *list, gpointer selection1)
 {
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(methods_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
   GtkTreeIter  iter;
 
@@ -572,9 +566,7 @@ void toggle_breakpoint(GtkWidget *list, gpointer selection1)
     //TODO: check if this is relevant
     //print_context_pkg_index = val;
 
-    OBJECT_PTR method = val;
-
-    method_t *m = (method_t *)extract_ptr(method);
+    method_t *m = (method_t *)val;
 
     if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(breakpoint_check)))
     {
@@ -690,8 +682,6 @@ void create_class_browser_window(int posx, int posy, int width, int height)
   GtkWidget *scrolled_win, *radio3, *radio4, *radio_box2, *code_box, *code_header;
 
   set_up_class_browser_source_buffer();
-
-  GtkWidget *textview = (GtkWidget *)class_browser_source_view;
 
   gtk_widget_override_font(GTK_WIDGET(class_browser_source_view), pango_font_description_from_string(FONT));
 

@@ -1107,19 +1107,19 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
 
     if(!IS_NATIVE_FN_OBJECT(first(lst_form)))
     {
-      printf("ERROR: closure object contains invalid native function object (%p)\n", first(lst_form));
+      printf("ERROR: closure object contains invalid native function object (%p)\n", (void *)first(lst_form));
       return false;
     }
 
     if(!is_valid_object(second(lst_form)))
     {
-      printf("ERROR: closure object contains invalid closed vals list (%p)\n", second(lst_form));
+      printf("ERROR: closure object contains invalid closed vals list (%p)\n", (void* )second(lst_form));
       return false;
     }
 
     if(!IS_INTEGER_OBJECT(third(lst_form)))
     {
-      printf("ERROR: closure object contains invalid closed vals list (%p)\n", third(lst_form));
+      printf("ERROR: closure object contains invalid closed vals list (%p)\n", (void *)third(lst_form));
       return false;
     }
 

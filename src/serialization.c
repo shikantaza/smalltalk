@@ -1982,7 +1982,7 @@ void print_heap_representation(FILE *fp,
   {
     print_native_ptr_heap_representation(fp, (void *)extract_ptr(obj), CLASS_OBJ_PTR);
   }
-  else if(IS_CLOSURE_OBJECT(obj)) //TODO: confirm we need to serialize closure objects
+  else if(IS_CLOSURE_OBJECT(obj))
   {
     OBJECT_PTR cons_form = extract_ptr(obj) + CONS_TAG;
 
@@ -3382,12 +3382,13 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
     OBJECT_PTR car_ref = JSON_get_array_item(heap_obj, 0)->ivalue;
     OBJECT_PTR cdr_ref = JSON_get_array_item(heap_obj, 1)->ivalue;
 
-    retval = cons(deserialize_object_reference(heap, car_ref, obj_ht, native_ptr_ht),
-                  deserialize_object_reference(heap, cdr_ref, obj_ht, native_ptr_ht));
+    uintptr_t ptr = object_alloc(2, CONS_TAG);
+    hashtable_put(obj_ht, (void *)ref, (void *)(ptr+object_type));
 
-    //TODO: we are doing this at the end instead of at the
-    //beginning, check if this would matter
-    hashtable_put(obj_ht, (void *)ref, (void *)retval);
+    set_heap(ptr, 0, deserialize_object_reference(heap, car_ref, obj_ht, native_ptr_ht));
+    set_heap(ptr, 1, deserialize_object_reference(heap, cdr_ref, obj_ht, native_ptr_ht));
+
+    retval = ptr + object_type;
 
     assert(is_valid_object(retval));
   }
@@ -3435,25 +3436,28 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
   }
   else if(object_type == CLOSURE_TAG)
   {
-    int native_fn_index = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
-                                              0)->ivalue;
-
-    OBJECT_PTR nativefn_obj = deserialize_object_reference(heap, native_fn_index, obj_ht, native_ptr_ht);
-
+    OBJECT_PTR native_fn_index = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
+                                                     0)->ivalue;
     OBJECT_PTR closed_vals_json = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                       1)->ivalue;
-    OBJECT_PTR closed_vals = deserialize_object_reference(heap, closed_vals_json, obj_ht, native_ptr_ht);
-
     OBJECT_PTR arity = convert_int_to_object(JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                                  2)->ivalue);
 
-    OBJECT_PTR lst_form = list(3, nativefn_obj, closed_vals, arity);
+    uintptr_t ptr1 = object_alloc(2, CONS_TAG);
+    uintptr_t ptr2 = object_alloc(2, CONS_TAG);
+    uintptr_t ptr3 = object_alloc(2, CONS_TAG);
 
-    retval = extract_ptr(lst_form) + object_type;
+    hashtable_put(obj_ht, (void *)ref, (void *)(ptr1 + object_type));
 
-    //TODO: we are doing this at the end instead of at the
-    //beginning, check if this would matter
-    hashtable_put(obj_ht, (void *)ref, (void *)retval);
+    set_heap(ptr1, 0, deserialize_object_reference(heap, native_fn_index, obj_ht, native_ptr_ht));
+    set_heap(ptr2, 0, deserialize_object_reference(heap, closed_vals_json, obj_ht, native_ptr_ht));
+    set_heap(ptr3, 0, arity);
+
+    set_heap(ptr1, 1, ptr2 + CONS_TAG);
+    set_heap(ptr2, 1, ptr3 + CONS_TAG);
+    set_heap(ptr3, 1, NIL);
+
+    retval = (uintptr_t)ptr1 + object_type;
 
     assert(is_valid_object(retval));
   }

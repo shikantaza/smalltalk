@@ -221,7 +221,8 @@ void create_Float()
 
   cls_obj->shared_vars = (binding_env_t *)GC_MALLOC(sizeof(binding_env_t));
   cls_obj->shared_vars->count = 0;
-  
+  cls_obj->shared_vars->bindings = NULL;
+
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->instance_methods->count = 7;
   cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
