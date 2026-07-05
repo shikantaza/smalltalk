@@ -3589,8 +3589,10 @@ int load_from_image(char *file_name)
   load_native_functions(native_functions);
 
   //1. g_message_selector
-  struct JSONObject *msg_selector = JSON_get_object_item(global_variables, "g_message_selector");
-  g_message_selector = (extract_symbol_index(msg_selector->ivalue) << OBJECT_SHIFT) + SMALLTALK_SYMBOL_TAG;
+  g_message_selector = deserialize_object_reference(heap,
+                                                    JSON_get_object_item(global_variables, "g_message_selector")->ivalue,
+                                                    object_hashtable,
+                                                    native_ptr_hashtable);
 
   //2. g_nof_string_literals
   g_nof_string_literals = JSON_get_object_item(global_variables, "g_nof_string_literals")->ivalue;
