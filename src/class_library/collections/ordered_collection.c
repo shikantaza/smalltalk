@@ -5,6 +5,7 @@
 
 #include "gc.h"
 
+#include "../../queue.h"
 #include "../../global_decls.h"
 #include "../../util.h"
 
@@ -34,11 +35,16 @@ extern BOOLEAN g_eval_aborted;
 //workaround to fix memory corruption
 //issue involving array_object_t's
 //'elements' variable
-OBJECT_PTR *g_watch_value;
+queue_t *pinned_items = NULL;
 
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   return new_object_internal(OrderedCollection, convert_fn_to_closure((nativefn)new_object_internal), cont);
+}
+
+//to capture corruption of the array_object_t->elements member
+void object_finalizer(void *obj, void *client_data) {
+    printf("[GC Warning] Object at address %p is being FREED prematurely!\n", obj);
 }
 
 OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -65,7 +71,12 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
   obj->nof_elements = DEFAULT_COLLECTION_SIZE;
   obj->elements = (OBJECT_PTR *)GC_MALLOC(obj->nof_elements * sizeof(OBJECT_PTR));
 
-  g_watch_value = obj->elements;
+  if(!pinned_items)
+    pinned_items = queue_create();
+
+  queue_enqueue(pinned_items, (void *)obj->elements);
+
+  GC_register_finalizer((void *)obj->elements, object_finalizer, NULL, NULL, NULL);
 
   int i;
 
@@ -120,8 +131,6 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
 
   array_object_t *obj = (array_object_t *)extract_ptr(arr);
 
-  g_watch_value = obj->elements;
-
   OBJECT_PTR size = car(get_binding(coll_obj->instance_vars, get_symbol("size")));
   assert(size);
   assert(IS_INTEGER_OBJECT(size));
@@ -132,6 +141,7 @@ OBJECT_PTR ordered_collection_add(OBJECT_PTR closure, OBJECT_PTR elem, OBJECT_PT
   {
     obj->nof_elements += DEFAULT_COLLECTION_SIZE;
     obj->elements = (OBJECT_PTR *)GC_REALLOC(obj->elements, obj->nof_elements * sizeof(OBJECT_PTR));
+    //TODO: should obj->elements be added to pinned_items again, because of the GC_REALLOC()?
   }
 
   obj->elements[size_val] = elem;

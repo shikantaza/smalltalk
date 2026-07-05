@@ -1093,7 +1093,9 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
     {
       if(!is_valid_object(inst_vars->bindings[i]->val))
       {
-	printf("ERROR: object contains invalid instance variable %s\n", get_symbol_name(inst_vars->bindings[i]->key));
+	printf("ERROR: object contains invalid instance variable %s (%p)\n",
+	       get_symbol_name(inst_vars->bindings[i]->key),
+	       (void *)inst_vars->bindings[i]->val);
 	return false;
       }
     }
