@@ -103,6 +103,9 @@ extern GtkTreeView *call_chain_list;
 
 extern stack_type *g_breakpointed_methods;
 
+extern char *loaded_image_file_name;
+extern void print_to_transcript(char *);
+
 void evaluate()
 {
   char *expression = NULL;
@@ -290,13 +293,91 @@ void load_image_file(GtkWidget *widget,
   show_info_dialog("To be implemented");
 }
 
-void create_test_image(char *);
+void update_transcript_title()
+{
+  if(transcript_window)
+  {
+    if(loaded_image_file_name == NULL)
+      gtk_window_set_title(transcript_window, "Transcript");
+    else
+    {
+      char buf[MAX_STRING_LENGTH];
+      memset(buf, '\0', MAX_STRING_LENGTH);
+      sprintf(buf,"Transcript - %s", loaded_image_file_name);
+      gtk_window_set_title(transcript_window, buf);
+    }
+  }
+}
+
+void save_image()
+{
+  char exp[MAX_STRING_LENGTH];
+  memset(exp, '\0', MAX_STRING_LENGTH);
+
+  if(loaded_image_file_name == NULL)
+  {
+    GtkWidget *dialog;
+
+    dialog = gtk_file_chooser_dialog_new ("Save Smalltalk Image",
+                                          (GtkWindow *)transcript_window,
+                                          GTK_FILE_CHOOSER_ACTION_SAVE,
+                                          "Cancel", GTK_RESPONSE_CANCEL,
+                                          "Open", GTK_RESPONSE_ACCEPT,
+                                          NULL);
+
+    if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+      loaded_image_file_name = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    }
+    else
+      return;
+
+    gtk_widget_destroy (dialog);
+
+    if(file_exists(loaded_image_file_name))
+    {
+      GtkWidget *dialog1 = gtk_message_dialog_new ((GtkWindow *)transcript_window,
+                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                   GTK_MESSAGE_QUESTION,
+                                                   GTK_BUTTONS_YES_NO,
+                                                   "File exists, do you want to overwite it?");
+
+      gtk_widget_grab_focus(gtk_dialog_get_widget_for_response(GTK_DIALOG(dialog1), GTK_RESPONSE_NO));
+
+      if(gtk_dialog_run(GTK_DIALOG (dialog1)) == GTK_RESPONSE_NO)
+      {
+        gtk_widget_destroy((GtkWidget *)dialog1);
+        g_free(loaded_image_file_name);
+        loaded_image_file_name = NULL;
+        return;
+      }
+      else
+        gtk_widget_destroy((GtkWidget *)dialog1);
+    }
+  }
+
+  GdkWindow *win = gtk_widget_get_window((GtkWidget *)transcript_window);
+
+  GdkCursor *cursor = gdk_cursor_new(GDK_WATCH);
+
+  gdk_window_set_cursor(win, cursor);
+
+  g_object_unref(cursor);
+  while( gtk_events_pending() )
+    gtk_main_iteration();
+
+  create_image(loaded_image_file_name);
+
+  print_to_transcript("Image saved successfully\n");
+  update_transcript_title();
+
+  gdk_window_set_cursor(win, NULL);
+}
 
 void save_image_file(GtkWidget *widget,
                      gpointer data)
 {
-  create_image("smalltalk.json");
-  //create_test_image("./test.json");
+  save_image();
 }
 
 void show_system_browser_window()

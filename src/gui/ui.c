@@ -83,6 +83,7 @@ BOOLEAN g_debugger_invoked_for_exception;
 GtkTreeView *call_chain_list;
 
 extern stack_type *g_call_chain;
+extern void update_transcript_title();
 
 GtkToolbar *create_transcript_toolbar()
 {
@@ -141,7 +142,7 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
 
   gtk_window_set_icon_from_file(transcript_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
 
-  gtk_window_set_title((GtkWindow *)transcript_window, "Transcript");
+  update_transcript_title();
 
   gtk_window_set_default_size(transcript_window, width, height);
 

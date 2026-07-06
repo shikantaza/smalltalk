@@ -85,6 +85,8 @@ extern GtkTextTag *error_tag;
 extern unsigned int g_nof_compiler_states;
 
 extern int load_from_image(char *);
+
+char *loaded_image_file_name = NULL;
 %}
 
 %union{
@@ -1187,6 +1189,8 @@ int main(int argc, char **argv)
 
     //TODO: validation of image file name
     load_from_image(argv[1]);
+
+    loaded_image_file_name = GC_strdup(argv[1]);
 
     initialize_frequently_used_selectors();
     initialize_pass2();
