@@ -285,6 +285,8 @@ void initialize_frequently_used_selectors()
 
 void initialize()
 {
+  char err_msg[100];
+
   g_compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
   g_compiler_package->name = GC_strdup("CORE");
   g_compiler_package->nof_symbols = 0;
@@ -292,9 +294,6 @@ void initialize()
   g_smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
   g_smalltalk_symbols->name = GC_strdup("SMALLTALK");
   g_smalltalk_symbols->nof_symbols = 0;
-
-  get_package("core");
-  get_package("user");
 
   //IMPORTANT: the order of these
   //additions should match the sequence
@@ -373,6 +372,26 @@ void initialize()
   g_breakpointed_methods = stack_create();
 
   g_debug_cont = NIL;
+
+  if(initialize_package_infrastructure())
+  {
+    printf("Error initializing package infrastructure\n");
+    exit(1);
+  }
+
+  memset(err_msg, 100, '\0');
+  if(!get_package("core", err_msg))
+  {
+    printf("Error getting 'core' package: %s\n", err_msg);
+    exit(1);
+  }
+
+  memset(err_msg, 100, '\0');
+  if(!get_package("user", err_msg))
+  {
+    printf("Error getting 'user' package: %s\n", err_msg);
+    exit(1);
+  }
 }
 
 //this is used to initialize globals
@@ -416,6 +435,12 @@ void initialize_pre_image()
   set_up_autocomplete_words();
 
   initialize_inbuiltfns();
+
+  if(initialize_package_infrastructure())
+  {
+    printf("Error initializing package infrastructure\n");
+    exit(1);
+  }
 }
 
 void error(const char *fmt, ...)

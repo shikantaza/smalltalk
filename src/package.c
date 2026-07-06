@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <regex.h>
 
 #include "gc.h"
 
@@ -28,6 +29,9 @@ typedef struct smalltalk_package
 
 unsigned int g_nof_smalltalk_packages;
 smalltalk_package_t **g_smalltalk_packages = NULL;
+
+regex_t regex;
+BOOLEAN is_regex_valid = false;
 
 #ifdef PACKAGE_TEST
 char *substring(const char* str, size_t begin, size_t len)
@@ -102,7 +106,7 @@ smalltalk_package_t *get_root_package(char *name)
   return get_package_with_parent(name, NULL);
 }
 
-smalltalk_package_t *get_package(char *name)
+smalltalk_package_t *get_package_internal(char *name)
 {
   unsigned int last_occ, i, j, len;
   char *s1, *s2;
@@ -134,10 +138,34 @@ smalltalk_package_t *get_package(char *name)
     s1 = substring(name, 0, last_occ-1);
     s2 = substring(name, last_occ, len - last_occ);
 
-    parent = get_package(s1);
+    parent = get_package_internal(s1);
 
     return get_package_with_parent(s2, parent);
   }
+}
+
+smalltalk_package_t *get_package(char *name, char *err_msg)
+{
+  unsigned int retval, len;
+
+  len = strlen(name);
+
+  if(!len)
+  {
+    sprintf(err_msg, "Package name is empty");
+    return NULL;
+  }
+
+  assert(is_regex_valid);
+  retval = regexec(&regex, name, 0, NULL, 0);
+
+  if(retval)
+  {
+    sprintf(err_msg, "Invalid package name");
+    return NULL;
+  }
+
+  return get_package_internal(name);
 }
 
 char *get_qualified_name(smalltalk_package_t *pkg)
@@ -204,6 +232,23 @@ void print_smalltalk_package(FILE *fp, smalltalk_package_t *pkg)
   fprintf(fp, "-----------------------------\n");
 }
 
+int initialize_package_infrastructure()
+{
+  int retval;
+
+  retval = regcomp(&regex, "^([a-z]+\\.)*[a-z]+$", REG_EXTENDED);
+
+  if(retval)
+  {
+    printf("Error compiling regex for package infrastructure\n");
+    return 1;
+  }
+
+  is_regex_valid = true;
+
+  return 0;
+}
+
 #ifdef PACKAGE_TEST
 int main(int argc, char **argv)
 {
@@ -213,7 +258,7 @@ int main(int argc, char **argv)
   unsigned int i;
 
   for(i=1; i<argc; i++)
-    get_package(argv[i]);
+    get_package_internal(argv[i]);
 
   printf("No of packages = %d\n", g_nof_smalltalk_packages);
 

@@ -1249,6 +1249,8 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
 					     OBJECT_PTR pkg_str,
 					     OBJECT_PTR cont)
 {
+  char err_msg[100];
+
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(closure));
@@ -1265,7 +1267,16 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
 
   class_object_t *cls = (class_object_t *)extract_ptr(class_obj);
 
-  cls->package = get_package(g_string_literals[pkg_str >> OBJECT_SHIFT]);
+  memset(err_msg, 100, '\0');
+
+  cls->package = get_package(g_string_literals[pkg_str >> OBJECT_SHIFT], err_msg);
+
+  if(!cls->package)
+  {
+    char buf[300];
+    sprintf(buf, "Error assigning '%s' package: %s", g_string_literals[pkg_str >> OBJECT_SHIFT], err_msg);
+    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+  }
 
   pop_if_top(entry);
 
