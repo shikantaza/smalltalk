@@ -45,6 +45,9 @@ void debug_step_out(GtkWidget *, gpointer);
 void debug_delete_breakpoint(GtkWidget *, gpointer);
 void debug_delete_all_breakpoints(GtkWidget *, gpointer);
 
+void print_to_workspace(char *, GtkTextTag *);
+void print_to_transcript(char *);
+
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
 
@@ -184,6 +187,8 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
   gtk_container_add (GTK_CONTAINER (transcript_window), vbox);
   
   gtk_widget_show_all((GtkWidget *)transcript_window);
+
+  print_to_transcript(text);
 }
 
 void set_up_workspace_source_buffer()
@@ -287,12 +292,15 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   error_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "red_bg",
 					 "background", "red", "foreground", "white", NULL);
 
+  GtkTextTag *normal_workspace_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "white_bg",
+                                                               "background", "white", NULL);
+
   //g_signal_connect(G_OBJECT(workspace_buffer), 
   //                 "notify::cursor-position", 
   //                 G_CALLBACK (handle_cursor_move), 
   //                 NULL);
 
-  //print_to_workspace(text);
+  print_to_workspace(text, normal_workspace_tag);
 
   g_signal_connect(G_OBJECT(win), 
                    "key_press_event", 
@@ -580,7 +588,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
-  gtk_window_set_modal((GtkWindow *)win, TRUE);
+  //gtk_window_set_modal((GtkWindow *)win, TRUE);
 
   GtkWidget *scrolled_win1, *scrolled_win2, *scrolled_win3;
   GtkWidget *vbox, *hbox, *hbox2;

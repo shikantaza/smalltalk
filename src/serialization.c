@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <gtk/gtk.h>
+#include <gtksourceview/gtksource.h>
+
 #include "gc.h"
 
 #include "queue.h"
@@ -251,6 +254,18 @@ queue_t *native_ptr_print_queue;
 hashtable_t *native_ptr_hashtable, *printed_native_objects;
 unsigned int native_ptr_count = 0;
 
+void create_workspace_window(int, int, int, int, char *);
+void create_transcript_window(int, int, int, int, char *);
+void create_class_browser_window(int, int, int, int);
+
+void close_application_window(GtkWidget **);
+void update_transcript_title();
+void print_to_transcript(char *);
+
+void fetch_classes_for_package(GtkWidget *, gpointer);
+
+void add_to_autocomplete_list(char *);
+
 //global variable that indicates what is the type
 //of the pointer that is stored in a stack_type object
 enum PointerType g_sub_type;
@@ -295,6 +310,20 @@ extern OBJECT_PTR NIL;
 extern unsigned int g_nof_native_fns;
 extern native_fn_src_mapping_t *g_native_fn_objects;
 
+extern GtkWindow *workspace_window;
+extern GtkWindow *transcript_window;
+extern GtkWindow *class_browser_window;
+extern GtkWindow *debugger_window;
+
+extern GtkTextBuffer *workspace_buffer;
+extern GtkTextBuffer *transcript_buffer;
+
+extern GtkTreeView *packages_list;
+extern GtkTreeView *classes_list;
+extern GtkTreeView *methods_list;
+
+extern GtkWidget *class_radio_button, *instance_radio_button;
+
 //forward declarations
 OBJECT_PTR deserialize_object_reference(struct JSONObject *,
                                         OBJECT_PTR,
@@ -307,6 +336,21 @@ void *deserialize_native_ptr_reference(struct JSONObject *,
                                        hashtable_t *);
 
 void print_queue(queue_t *);
+
+void serialize_workspace(FILE *);
+void serialize_transcript(FILE *);
+void serialize_class_browser(FILE *);
+void serialize_file_browser(FILE *);
+void serialize_debugger(FILE *);
+
+void deserialize_workspace(struct JSONObject *);
+void deserialize_transcript(struct JSONObject *);
+void deserialize_class_browser(struct JSONObject *,
+                               struct JSONObject *,
+                               hashtable_t *,
+                               hashtable_t *);
+void deserialize_file_browser(struct JSONObject *);
+void deserialize_debugger(struct JSONObject *);
 //end forward declarations
 
 void initialize_inbuiltfns()
@@ -1901,7 +1945,13 @@ void create_image(char *file_name)
   fprintf(fp, "] ");
   //end of heap
 
- fprintf(fp, "} "); 
+  serialize_workspace(fp);
+  serialize_transcript(fp);
+  serialize_class_browser(fp);
+  serialize_file_browser(fp);
+  serialize_debugger(fp);
+
+  fprintf(fp, "} ");
 }
 
 BOOLEAN is_dynamic_memory_object(OBJECT_PTR obj)
@@ -2162,6 +2212,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                             native_ptr_ht);
     //end val
 
+    char *key_sym = get_symbol_name(binding->key);
+    unsigned int len = strlen(key_sym);
+
+    add_to_autocomplete_list(substring(key_sym, 1, len-1));
+
     return (void *)binding;
   }
   else if(ptr_type == METHOD_BINDING_ENV_PTR)
@@ -2209,6 +2264,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                 obj_ht,
                                                                 native_ptr_ht);
     //end val
+
+    char *key_sym = get_symbol_name(binding->key);
+    unsigned int len = strlen(key_sym);
+
+    add_to_autocomplete_list(substring(key_sym, 1, len-1));
 
     return (void *)binding;
   }
@@ -3183,6 +3243,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     /* name */
     cls_obj->name = GC_strdup(JSON_get_array_item(cls_obj_json_obj, 1)->strvalue);
+    add_to_autocomplete_list(cls_obj->name);
 
     /* package */
     OBJECT_PTR pkg = JSON_get_array_item(cls_obj_json_obj, 2)->ivalue;
@@ -3880,6 +3941,19 @@ int load_from_image(char *file_name)
   //34. g_smalltalk_gensym_count
   g_smalltalk_gensym_count = JSON_get_object_item(global_variables, "g_smalltalk_gensym_count")->ivalue;
 
+  deserialize_workspace(JSON_get_object_item(root, "workspace"));
+
+  deserialize_transcript(JSON_get_object_item(root, "transcript"));
+
+  deserialize_class_browser(JSON_get_object_item(root, "class_browser"),
+                             heap,
+                             object_hashtable,
+                             native_ptr_hashtable);
+
+  deserialize_file_browser(JSON_get_object_item(root, "file_browser"));
+
+  deserialize_debugger(JSON_get_object_item(root, "debugger"));
+
   return 0;
 }
 
@@ -3914,4 +3988,338 @@ void print_queue(queue_t *q)
     i++;
     np = np->next;
   }
+}
+
+void serialize_workspace(FILE *fp)
+{
+  if(workspace_window)
+  {
+    int posx, posy, width, height;
+    GtkTextIter start, end;
+
+    char text[32384];
+
+    char *workspace_text;
+
+    gtk_text_buffer_get_start_iter(workspace_buffer, &start);
+    gtk_text_buffer_get_end_iter(workspace_buffer, &end);
+
+    int len;
+
+    int i=0, j=0;
+
+    workspace_text = GC_strdup(gtk_text_buffer_get_text(workspace_buffer, &start, &end, FALSE));
+
+    len = strlen(workspace_text);
+
+    memset(text, '\0', 32384);
+
+    while(i<len)
+    {
+      if(workspace_text[i] == '\"')
+      {
+        text[j] = '\\';
+        text[j+1] = '\"';
+        j += 2;
+      }
+      else
+      {
+        text[j] = workspace_text[i];
+        j++;
+      }
+      i++;
+    }
+
+    gtk_window_get_position(workspace_window, &posx, &posy);
+    gtk_window_get_size(workspace_window, &width, &height);
+
+    fprintf(fp,
+            ", \"workspace\" : [ %d, %d, %d, %d, \"%s\" ]",
+            posx, posy, width, height, text);
+
+    //free(workspace_text);
+  }
+}
+
+void deserialize_workspace(struct JSONObject *workspace)
+{
+  if(workspace_window)
+    close_application_window((GtkWidget **)&workspace_window);
+
+  if(workspace)
+  {
+    char text[32384];
+    memset(text, '\0', 32384);
+    int i=0, j=0, len;
+    char *json_text = JSON_get_array_item(workspace, 4)->strvalue;
+
+    len = strlen(json_text);
+
+    while(i<len)
+    {
+      if(json_text[i] != '\\' || ((i < len-1) && json_text[i] == '\\' && json_text[i+1] != '"'))
+      {
+        text[j] = json_text[i];
+        j++;
+      }
+      i++;
+    }
+
+    create_workspace_window(JSON_get_array_item(workspace, 0)->ivalue,
+                            JSON_get_array_item(workspace, 1)->ivalue,
+                            JSON_get_array_item(workspace, 2)->ivalue,
+                            JSON_get_array_item(workspace, 3)->ivalue,
+                            text);
+
+  }
+}
+
+void serialize_transcript(FILE *fp)
+{
+  if(transcript_window)
+  {
+    int posx, posy, width, height;
+    GtkTextIter start, end;
+
+    char text[MAX_STRING_LENGTH];
+
+    char *transcript_text;
+
+    gtk_text_buffer_get_start_iter(transcript_buffer, &start);
+    gtk_text_buffer_get_end_iter(transcript_buffer, &end);
+
+    int len;
+
+    int ii=0, jj=0;
+
+    transcript_text = GC_strdup(gtk_text_buffer_get_text(transcript_buffer, &start, &end, FALSE));
+
+    len = strlen(transcript_text);
+
+    memset(text, '\0', MAX_STRING_LENGTH);
+
+    while(ii<len)
+    {
+      if(transcript_text[ii] == '\"')
+      {
+	text[jj] = '\\';
+	text[jj+1] = '\"';
+	jj += 2;
+      }
+      else
+      {
+	text[jj] = transcript_text[ii];
+	jj++;
+      }
+      ii++;
+    }
+
+    gtk_window_get_position(transcript_window, &posx, &posy);
+    gtk_window_get_size(transcript_window, &width, &height);
+
+    fprintf(fp,
+	    ", \"transcript\" : [ %d, %d, %d, %d, \"%s\" ]",
+	    posx, posy, width, height, text);
+  }
+}
+
+void deserialize_transcript(struct JSONObject *transcript)
+{
+  if(transcript)
+  {
+    char text[MAX_STRING_LENGTH];
+    memset(text, '\0', MAX_STRING_LENGTH);
+    int ii=0, jj=0, len;
+    char *json_text = JSON_get_array_item(transcript, 4)->strvalue;
+
+    len = strlen(json_text);
+
+    while(ii<len)
+    {
+      if(json_text[ii] != '\\')
+      {
+        text[jj] = json_text[ii];
+        jj++;
+      }
+      ii++;
+    }
+
+    if(transcript_window)
+    {
+      gtk_window_set_default_size(transcript_window,
+                                  JSON_get_array_item(transcript, 2)->ivalue,
+                                  JSON_get_array_item(transcript, 3)->ivalue);
+
+      gtk_window_move(transcript_window,
+                      JSON_get_array_item(transcript, 0)->ivalue,
+                      JSON_get_array_item(transcript, 1)->ivalue);
+
+      gtk_text_buffer_set_text(transcript_buffer, "", 0);
+      print_to_transcript(text);
+      update_transcript_title();
+    }
+    else
+    {
+      create_transcript_window(JSON_get_array_item(transcript, 0)->ivalue,
+                               JSON_get_array_item(transcript, 1)->ivalue,
+                               JSON_get_array_item(transcript, 2)->ivalue,
+                               JSON_get_array_item(transcript, 3)->ivalue,
+                               text);
+    }
+  }
+}
+
+void serialize_class_browser(FILE *fp)
+{
+  //we are storing the GtkTreePath info only.
+  //if the user saves the image when the
+  //class browser contents are stale (i.e.,
+  //there are system changes but the class
+  //browser has not been refreshed), this
+  //may lead to restoring the class browser
+  //to another state (displaying the wrong
+  //package/class/method/etc.)
+
+  if(class_browser_window)
+  {
+    int posx, posy, width, height;
+
+    gtk_window_get_position(class_browser_window, &posx, &posy);
+    gtk_window_get_size(class_browser_window, &width, &height);
+
+    fprintf(fp,
+            ", \"class_browser\" : [ %d, %d, %d, %d, ",
+            posx, posy, width, height);
+
+    GtkListStore *store1 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
+    GtkTreeModel *model1 = gtk_tree_view_get_model (GTK_TREE_VIEW (packages_list));
+    GtkTreeIter  iter1;
+
+    if(gtk_tree_selection_get_selected(gtk_tree_view_get_selection(GTK_TREE_VIEW(packages_list)), &model1, &iter1))
+    {
+      GtkTreePath *path = gtk_tree_model_get_path(model1, &iter1);
+      gchar *path_string = gtk_tree_path_to_string(path);
+
+      fprintf(fp, "\"%s\", ", path_string);
+
+      g_free(path_string);
+      gtk_tree_path_free(path);
+    }
+
+    GtkListStore *store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(classes_list)));
+    GtkTreeModel *model2 = gtk_tree_view_get_model (GTK_TREE_VIEW (classes_list));
+    GtkTreeIter  iter2;
+
+    if(gtk_tree_selection_get_selected(gtk_tree_view_get_selection(GTK_TREE_VIEW(classes_list)), &model2, &iter2))
+    {
+      GtkTreePath *path = gtk_tree_model_get_path(model2, &iter2);
+      gchar *path_string = gtk_tree_path_to_string(path);
+
+      fprintf(fp, "\"%s\", ", path_string);
+
+      g_free(path_string);
+      gtk_tree_path_free(path);
+    }
+
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)))
+      fprintf(fp, "\"class_methods\", ");
+    else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button)))
+      fprintf(fp, "\"instance_methods\", ");
+    else
+      assert(false);
+
+    GtkListStore *store3 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(methods_list)));
+    GtkTreeModel *model3 = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
+    GtkTreeIter  iter3;
+
+    if(gtk_tree_selection_get_selected(gtk_tree_view_get_selection(GTK_TREE_VIEW(methods_list)), &model3, &iter3))
+    {
+      GtkTreePath *path = gtk_tree_model_get_path(model3, &iter3);
+      gchar *path_string = gtk_tree_path_to_string(path);
+
+      fprintf(fp, "\"%s\"", path_string);
+
+      g_free(path_string);
+      gtk_tree_path_free(path);
+    }
+
+    fprintf(fp, "] ");
+  }
+}
+
+void deserialize_class_browser(struct JSONObject *class_browser,
+                               struct JSONObject *heap,
+                               hashtable_t *object_hashtable,
+                               hashtable_t *native_ptr_hashtable)
+{
+  OBJECT_PTR pkg_id, class_id, method_id;
+  smalltalk_package_t *pkg;
+  class_object_t *cls_obj;
+  method_t *method;
+
+  if(class_browser)
+  {
+    create_class_browser_window(JSON_get_array_item(class_browser, 0)->ivalue,
+                                JSON_get_array_item(class_browser, 1)->ivalue,
+                                JSON_get_array_item(class_browser, 2)->ivalue,
+                                JSON_get_array_item(class_browser, 3)->ivalue);
+
+    char *path_str;
+    GtkTreePath *path;
+
+    path_str = JSON_get_array_item(class_browser, 4)->strvalue;
+    path = gtk_tree_path_new_from_string(path_str);
+    gtk_tree_view_expand_to_path(packages_list, path);
+    gtk_tree_view_set_cursor(packages_list, path, NULL, FALSE);
+    gtk_tree_path_free(path);
+
+    path_str = JSON_get_array_item(class_browser, 5)->strvalue;
+    path = gtk_tree_path_new_from_string(path_str);
+    gtk_tree_view_expand_to_path(classes_list, path);
+    gtk_tree_view_set_cursor(classes_list, path, NULL, FALSE);
+    gtk_tree_path_free(path);
+
+    char *method_type = JSON_get_array_item(class_browser, 6)->strvalue;
+
+    if(!strcmp(method_type, "class_methods"))
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(class_radio_button), TRUE);
+    else if(!strcmp(method_type, "instance_methods"))
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(instance_radio_button), TRUE);
+    else
+      assert(false);
+
+    path_str = JSON_get_array_item(class_browser, 7)->strvalue;
+    path = gtk_tree_path_new_from_string(path_str);
+    gtk_tree_view_expand_to_path(methods_list, path);
+    gtk_tree_view_set_cursor(methods_list, path, NULL, FALSE);
+    gtk_tree_path_free(path);
+  }
+}
+
+void serialize_debugger(FILE *fp)
+{
+  int posx, posy, width, height;
+
+  gtk_window_get_position(debugger_window, &posx, &posy);
+  gtk_window_get_size(debugger_window, &width, &height);
+
+  fprintf(fp,
+          ", \"debugger\" : [ %d, %d, %d, %d, \"%s\" ]",
+          posx, posy, width, height, gtk_widget_get_visible(GTK_WIDGET(debugger_window)) ? "true" : "false");
+
+}
+
+void deserialize_debugger(struct JSONObject *debugger)
+{
+  gtk_window_move(debugger_window,
+                  JSON_get_array_item(debugger, 0)->ivalue,
+                  JSON_get_array_item(debugger, 1)->ivalue);
+  gtk_window_set_default_size(debugger_window,
+                              JSON_get_array_item(debugger, 2)->ivalue,
+                              JSON_get_array_item(debugger, 3)->ivalue);
+
+  char *visible = JSON_get_array_item(debugger, 4)->strvalue;
+
+  if(!strcmp(visible, "true"))
+    show_debug_window(g_debugger_invoked_for_exception, g_debug_cont);
 }

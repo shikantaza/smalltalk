@@ -11,8 +11,6 @@
 
 //void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 
-void print_debug_expression(debug_expression_t *);
-
 //NIL; since NIL is declared later, using its value
 //TODO: ensure this is reset after a debug cycle is completed
 OBJECT_PTR g_run_till_cont = 1;

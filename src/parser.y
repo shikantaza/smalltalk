@@ -1162,6 +1162,8 @@ int load_from_test_image(char *);
 #ifndef LEX
 int main(int argc, char **argv)
 {
+  gtk_init(&argc, &argv);
+
   if(argc == 1) //no image
   {
     g_ui_mode = CLI;
@@ -1182,6 +1184,17 @@ int main(int argc, char **argv)
     initialize_inbuiltfns();
 
     g_system_initialized = true;
+
+    create_workspace_window(DEFAULT_WORKSPACE_POSX,
+			    DEFAULT_WORKSPACE_POSY,
+			    DEFAULT_WORKSPACE_WIDTH,
+			    DEFAULT_WORKSPACE_HEIGHT,
+			    "");
+    create_transcript_window(DEFAULT_TRANSCRIPT_POSX,
+			     DEFAULT_TRANSCRIPT_POSY,
+			     DEFAULT_TRANSCRIPT_WIDTH,
+			     DEFAULT_TRANSCRIPT_HEIGHT,
+			     "");
   }
   else
   {
@@ -1196,30 +1209,18 @@ int main(int argc, char **argv)
     initialize_pass2();
 
     print_diagnostics("diagnostics_post.txt");
-    //exit(0);
   }
 
-  gtk_init(&argc, &argv);
-  create_transcript_window(DEFAULT_TRANSCRIPT_POSX,
-			   DEFAULT_TRANSCRIPT_POSY,
-			   DEFAULT_TRANSCRIPT_WIDTH,
-			   DEFAULT_TRANSCRIPT_HEIGHT,
-			   "Smalltalk");
-  create_workspace_window(DEFAULT_WORKSPACE_POSX,
-			  DEFAULT_WORKSPACE_POSY,
-			  DEFAULT_WORKSPACE_WIDTH,
-			  DEFAULT_WORKSPACE_HEIGHT,
-			  "Smalltalk");
+  //gtk_init(&argc, &argv);
   create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
 		      DEFAULT_DEBUG_WINDOW_POSY,
 		      DEFAULT_DEBUG_WINDOW_WIDTH,
 		      DEFAULT_DEBUG_WINDOW_HEIGHT,
-		      "Smalltalk");
+		      "Debugger");
 
   g_ui_mode = GUI;
 
   gtk_main();
-
 
   /*
   //load_tests();

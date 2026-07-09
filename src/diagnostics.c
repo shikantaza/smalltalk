@@ -4,6 +4,8 @@
 
 #include "global_decls.h"
 
+void print_debug_expression(FILE *, debug_expression_t *);
+
 extern OBJECT_PTR            g_message_selector;
 extern unsigned int          g_nof_string_literals;
 extern OBJECT_PTR            g_msg_snd_closure;
@@ -38,6 +40,8 @@ extern unsigned int          g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 extern int                   g_gensym_count;
 extern int                   g_smalltalk_gensym_count;
+
+extern OBJECT_PTR NIL;
 
 //forward declaration
 void print_class_object(class_object_t *, FILE *);
@@ -170,7 +174,10 @@ void print_class_object(class_object_t *cls_obj, FILE *fp)
 
 void print_call_chain_entry(call_chain_entry_t *e, FILE *fp)
 {
-  fprintf(fp, "exp_ptr: ");                 print_object_to_file(e->exp_ptr, fp);                 fprintf(fp, "\n");
+  fprintf(fp, "exp_ptr: ");
+  if(e->exp_ptr != NIL)
+    print_debug_expression(fp, (debug_expression_t *)extract_ptr(e->exp_ptr));
+  fprintf(fp, "\n");
 
   fprintf(fp, "super: %s\n", e->super ? "true" : "false");
 

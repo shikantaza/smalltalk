@@ -30,7 +30,7 @@
 #include "../global_decls.h"
 #include "../util.h"
 
-//#include "../json.h"
+#include "../json.h"
 
 #define FONT "DejaVu Sans Mono Bold 11"
 
@@ -816,7 +816,7 @@ void create_file_browser_window(int posx, int posy, int width, int height)
   gtk_widget_show_all(win);
 }
 
-void serialize_file_browser_window(FILE *fp)
+void serialize_file_browser(FILE *fp)
 {
   if(!file_browser_window)
     return;
@@ -827,7 +827,7 @@ void serialize_file_browser_window(FILE *fp)
   gtk_window_get_size(file_browser_window, &width, &height);
 
   fprintf(fp, 
-          ", \"file-browser\" : [ %d, %d, %d, %d, [", 
+          ", \"file_browser\" : [ %d, %d, %d, %d, [",
           posx, posy, width, height);
   
   gint nof_pages = gtk_notebook_get_n_pages((GtkNotebook *)fb_notebook);
@@ -914,11 +914,8 @@ void add_file_to_file_browser(char *file_name)
   gtk_text_buffer_set_modified(curr_file_browser_buffer, FALSE);  
 }
 
-/*
-void deserialize_file_browser_window(struct JSONObject *root)
+void deserialize_file_browser(struct JSONObject *file_browser)
 {
-  struct JSONObject *file_browser = JSON_get_object_item(root, "file-browser");
-
   if(file_browser_window)
     close_application_window((GtkWidget **)&file_browser_window);
 
@@ -942,7 +939,6 @@ void deserialize_file_browser_window(struct JSONObject *root)
     gtk_widget_show_all((GtkWidget *)file_browser_window);
   }
 }
-*/
 
 BOOLEAN any_buffers_modified()
 {
