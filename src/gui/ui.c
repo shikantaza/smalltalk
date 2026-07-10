@@ -620,6 +620,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   g_signal_connect(G_OBJECT(call_chain_list), "cursor-changed",
                    G_CALLBACK(fetch_details_for_call_chain_entry), NULL);
 
+  g_signal_connect(G_OBJECT(call_chain_list), "focus",
+                   G_CALLBACK(fetch_details_for_call_chain_entry), NULL);
+
   initialize_call_chain_list(call_chain_list);
 
   //sorting the call chain is not allowed

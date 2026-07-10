@@ -10,6 +10,7 @@
 #include "parser_header.h"
 #include "util.h"
 #include "stack.h"
+#include "queue.h"
 
 //forward declarations
 OBJECT_PTR convert_temporaries_to_lisp(temporaries_t *);
@@ -153,6 +154,8 @@ extern OBJECT_PTR OrderedCollection;
 extern OBJECT_PTR Compiler;
 extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR Character;
+
+extern queue_t *pinned_items;
 
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
@@ -379,14 +382,14 @@ void initialize()
     exit(1);
   }
 
-  memset(err_msg, 100, '\0');
+  memset(err_msg, '\0', 100);
   if(!get_package("core", err_msg))
   {
     printf("Error getting 'core' package: %s\n", err_msg);
     exit(1);
   }
 
-  memset(err_msg, 100, '\0');
+  memset(err_msg, '\0', 100);
   if(!get_package("user", err_msg))
   {
     printf("Error getting 'user' package: %s\n", err_msg);
@@ -589,6 +592,11 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
 
     debug_exp->type = DEBUG_BASIC_EXPRESSION;
     debug_exp->be = be;
+
+    if(!pinned_items)
+      pinned_items = queue_create();
+
+    queue_enqueue(pinned_items, (void *)debug_exp);
 
     if(be->msg)
     {
@@ -832,6 +840,11 @@ OBJECT_PTR convert_keyword_argument_to_lisp(keyword_argument_t *k)
   debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
   debug_exp->kw_arg = k;
 
+  if(!pinned_items)
+    pinned_items = queue_create();
+
+  queue_enqueue(pinned_items, (void *)debug_exp);
+
   return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
                      k->prim,
                      k->unary_messages,
@@ -958,6 +971,11 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
 
   debug_exp->type = DEBUG_BINARY_ARGUMENT;
   debug_exp->bin_arg = arg;
+
+  if(!pinned_items)
+    pinned_items = queue_create();
+
+  queue_enqueue(pinned_items, (void *)debug_exp);
 
   return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
                      arg->prim,
