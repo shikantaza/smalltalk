@@ -1195,6 +1195,11 @@ int main(int argc, char **argv)
 			     DEFAULT_TRANSCRIPT_WIDTH,
 			     DEFAULT_TRANSCRIPT_HEIGHT,
 			     "");
+    create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			DEFAULT_DEBUG_WINDOW_POSY,
+			DEFAULT_DEBUG_WINDOW_WIDTH,
+			DEFAULT_DEBUG_WINDOW_HEIGHT,
+			"Debugger");
   }
   else
   {
@@ -1212,11 +1217,6 @@ int main(int argc, char **argv)
   }
 
   //gtk_init(&argc, &argv);
-  create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-		      DEFAULT_DEBUG_WINDOW_POSY,
-		      DEFAULT_DEBUG_WINDOW_WIDTH,
-		      DEFAULT_DEBUG_WINDOW_HEIGHT,
-		      "Debugger");
 
   g_ui_mode = GUI;
 

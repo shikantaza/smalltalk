@@ -257,6 +257,7 @@ unsigned int native_ptr_count = 0;
 void create_workspace_window(int, int, int, int, char *);
 void create_transcript_window(int, int, int, int, char *);
 void create_class_browser_window(int, int, int, int);
+void create_debug_window(int, int, int, int, char *);
 
 void close_application_window(GtkWidget **);
 void update_transcript_title();
@@ -2843,10 +2844,16 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     long long ref1;
 
     ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
-    entry->exp_ptr = (OBJECT_PTR)deserialize_object_reference(heap,
-                                                              ref1,
-                                                              obj_ht,
-                                                              native_ptr_ht);
+    debug_expression_t *debug_exp = deserialize_native_ptr_reference(heap,
+                                                                     DEBUG_EXPRESSION_PTR,
+                                                                     ref1,
+                                                                     obj_ht,
+                                                                     native_ptr_ht);
+
+    if(!debug_exp)
+      entry->exp_ptr = NIL;
+    else
+      entry->exp_ptr = (uintptr_t)debug_exp + OBJECT_TAG;
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
       entry->super = true;
@@ -4281,6 +4288,15 @@ void serialize_debugger(FILE *fp)
 
 void deserialize_debugger(struct JSONObject *debugger)
 {
+  int posx, posy, width, height;
+
+  posx = JSON_get_array_item(debugger, 0)->ivalue;
+  posy = JSON_get_array_item(debugger, 1)->ivalue;
+  width = JSON_get_array_item(debugger, 2)->ivalue;
+  height =JSON_get_array_item(debugger, 3)->ivalue;
+
+  create_debug_window(posx, posy, width, height, "Debugger");
+
   gtk_window_move(debugger_window,
                   JSON_get_array_item(debugger, 0)->ivalue,
                   JSON_get_array_item(debugger, 1)->ivalue);

@@ -1086,6 +1086,9 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
 
     binding_env_t *inst_vars = obj->instance_vars;
 
+    if(!inst_vars)
+      return true;
+
     unsigned int nof_inst_vars = inst_vars->count;
     unsigned int i;
 
