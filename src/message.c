@@ -20,6 +20,8 @@ OBJECT_PTR g_run_till_cont = 1;
 //debugger
 BOOLEAN g_eval_aborted;
 
+debug_serialization_t *g_debug_data = NULL;
+
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR THIS_CONTEXT;
 extern OBJECT_PTR g_method_call_stack;
@@ -331,6 +333,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
@@ -370,6 +382,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
@@ -410,6 +432,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
@@ -451,6 +483,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
@@ -493,6 +535,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
@@ -560,6 +612,16 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
     {
       g_debug_in_progress = true;
+
+      if(!g_debug_data)
+	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+      g_debug_data->arg_count     = count;
+      g_debug_data->args          = args;
+      g_debug_data->closure_form  = closure_form;
+      g_debug_data->nf_obj        = m->nativefn_obj;
+      g_debug_data->step_out_cont = step_out_cont;
+
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)

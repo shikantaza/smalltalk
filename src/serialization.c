@@ -151,6 +151,8 @@ OBJECT_PTR readable_string_concat(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 //nativefn inbuiltfns[NOF_INBUILT_FNS];
 nativefn *inbuiltfns;
 
+BOOLEAN g_debugger_serialized;
+
 enum PointerType
 {
   OBJECT_PTR1,
@@ -266,6 +268,7 @@ void print_to_transcript(char *);
 void fetch_classes_for_package(GtkWidget *, gpointer);
 
 void add_to_autocomplete_list(char *);
+void initialize_frequently_used_selectors();
 
 //global variable that indicates what is the type
 //of the pointer that is stored in a stack_type object
@@ -325,6 +328,12 @@ extern GtkTreeView *methods_list;
 
 extern GtkWidget *class_radio_button, *instance_radio_button;
 
+extern debug_serialization_t *g_debug_data;
+
+extern OBJECT_PTR THIS_CONTEXT;
+
+extern queue_t *pinned_items;
+
 //forward declarations
 OBJECT_PTR deserialize_object_reference(struct JSONObject *,
                                         OBJECT_PTR,
@@ -351,7 +360,10 @@ void deserialize_class_browser(struct JSONObject *,
                                hashtable_t *,
                                hashtable_t *);
 void deserialize_file_browser(struct JSONObject *);
-void deserialize_debugger(struct JSONObject *);
+void deserialize_debugger(struct JSONObject *,
+                          struct JSONObject *,
+                          hashtable_t *,
+                          hashtable_t *);
 //end forward declarations
 
 void initialize_inbuiltfns()
@@ -1381,8 +1393,14 @@ void print_native_ptr_heap_representation(FILE *fp,
     */
 
     fprintf(fp, "[ ");
-    debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
-    print_native_ptr_reference(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
+
+    if(entry->exp_ptr == NIL)
+      fprintf(fp, "-1");
+    else
+    {
+      debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      print_native_ptr_reference(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
+    }
     fprintf(fp, ", ");
 
     if(entry->super)
@@ -1458,7 +1476,7 @@ void print_native_ptr_heap_representation(FILE *fp,
       print_native_ptr_reference(fp, KEYWORD_ARGUMENT_PTR, (void *)debug_exp->kw_arg);
     }
     else
-      assert((false));
+      assert(false);
 
     fprintf(fp, "] ");
   }
@@ -2853,7 +2871,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     if(!debug_exp)
       entry->exp_ptr = NIL;
     else
+    {
+      if(!pinned_items)
+        pinned_items = queue_create();
+
+      queue_enqueue(pinned_items, (void *)debug_exp);
+
       entry->exp_ptr = (uintptr_t)debug_exp + OBJECT_TAG;
+    }
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
       entry->super = true;
@@ -2931,7 +2956,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
   }
   else if(ptr_type == DEBUG_EXPRESSION_PTR)
   {
-    debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
+    debug_expression_t *debug_exp;
+    //debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
+    allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
 
     hashtable_put(native_ptr_ht, (void *)ref, (void *)debug_exp);
 
@@ -2970,6 +2997,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     }
     else
       assert(false);
+
+    if(!pinned_items)
+      pinned_items = queue_create();
+
+    queue_enqueue(pinned_items, (void *)debug_exp);
 
     return (void *)debug_exp;
   }
@@ -3918,6 +3950,8 @@ int load_from_image(char *file_name)
   //34. g_smalltalk_gensym_count
   g_smalltalk_gensym_count = JSON_get_object_item(global_variables, "g_smalltalk_gensym_count")->ivalue;
 
+  initialize_frequently_used_selectors();
+
   deserialize_workspace(JSON_get_object_item(root, "workspace"));
 
   deserialize_transcript(JSON_get_object_item(root, "transcript"));
@@ -3929,7 +3963,10 @@ int load_from_image(char *file_name)
 
   deserialize_file_browser(JSON_get_object_item(root, "file_browser"));
 
-  deserialize_debugger(JSON_get_object_item(root, "debugger"));
+  deserialize_debugger(JSON_get_object_item(root, "debugger"),
+                       heap,
+                       object_hashtable,
+                       native_ptr_hashtable);
 
   return 0;
 }
@@ -4275,19 +4312,50 @@ void deserialize_class_browser(struct JSONObject *class_browser,
 
 void serialize_debugger(FILE *fp)
 {
+  int i;
   int posx, posy, width, height;
+
+  g_debugger_serialized = gtk_widget_get_visible(GTK_WIDGET(debugger_window));
 
   gtk_window_get_position(debugger_window, &posx, &posy);
   gtk_window_get_size(debugger_window, &width, &height);
 
   fprintf(fp,
-          ", \"debugger\" : [ %d, %d, %d, %d, \"%s\" ]",
-          posx, posy, width, height, gtk_widget_get_visible(GTK_WIDGET(debugger_window)) ? "true" : "false");
+          ", \"debugger\" : [ %d, %d, %d, %d, \"%s\"",
+          posx, posy, width, height, g_debugger_serialized ? "true" : "false");
 
+  if(g_debugger_serialized)
+  {
+    fprintf(fp, ", %d", g_debug_data->arg_count);
+    fprintf(fp, ", ");
+
+    fprintf(fp, "[ ");
+    for(i=0; i< g_debug_data->arg_count; i++)
+    {
+      print_object_ptr_reference(fp, g_debug_data->args[i]);
+      if(i != g_debug_data->arg_count - 1)
+        fprintf(fp, ", ");
+    }
+    fprintf(fp, "], ");
+
+    print_object_ptr_reference(fp, g_debug_data->step_out_cont);
+    fprintf(fp, ", ");
+
+    print_object_ptr_reference(fp, g_debug_data->closure_form);
+    fprintf(fp, ", ");
+
+    print_object_ptr_reference(fp, g_debug_data->nf_obj);
+  }
+
+  fprintf(fp, "] ");
 }
 
-void deserialize_debugger(struct JSONObject *debugger)
+void deserialize_debugger(struct JSONObject *debugger,
+                          struct JSONObject *heap,
+                          hashtable_t *object_hashtable,
+                          hashtable_t *native_ptr_hashtable)
 {
+  int i;
   int posx, posy, width, height;
 
   posx = JSON_get_array_item(debugger, 0)->ivalue;
@@ -4307,5 +4375,119 @@ void deserialize_debugger(struct JSONObject *debugger)
   char *visible = JSON_get_array_item(debugger, 4)->strvalue;
 
   if(!strcmp(visible, "true"))
+  {
+    g_debugger_serialized = true;
+
+    g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+
+    g_debug_data->arg_count = JSON_get_array_item(debugger, 5)->ivalue;
+
+    g_debug_data->args = (OBJECT_PTR *)GC_MALLOC(g_debug_data->arg_count * sizeof(OBJECT_PTR));
+
+    struct JSONObject *args_json = JSON_get_array_item(debugger, 6);
+
+    for(i=0; i<g_debug_data->arg_count; i++)
+      g_debug_data->args[i] = deserialize_object_reference(heap,
+                                                           JSON_get_array_item(args_json, i)->ivalue,
+                                                           object_hashtable,
+                                                           native_ptr_hashtable);
+
+    g_debug_data->step_out_cont = deserialize_object_reference(heap,
+                                                               JSON_get_array_item(debugger, 7)->ivalue,
+                                                               object_hashtable,
+                                                               native_ptr_hashtable);
+
+    g_debug_data->closure_form = deserialize_object_reference(heap,
+                                                              JSON_get_array_item(debugger, 8)->ivalue,
+                                                              object_hashtable,
+                                                              native_ptr_hashtable);
+
+    g_debug_data->nf_obj = deserialize_object_reference(heap,
+                                                        JSON_get_array_item(debugger, 9)->ivalue,
+                                                        object_hashtable,
+                                                        native_ptr_hashtable);
+
     show_debug_window(g_debugger_invoked_for_exception, g_debug_cont);
+
+    /* while(g_debug_in_progress) */
+    /*   ; //loop till the debug window returns control */
+  }
+}
+
+//this function is for carrying out the remainder processing
+//that is done in message_send_internal() after
+//control returns from show_debug_window(), for the case
+//where the debugger window is deserialized and the user
+//presses one of the debug toolbar buttons.
+//it is called in the event handlers for these toolbar
+//buttons if g_debugger_serialized is true. if not,
+//the event handlers return control (indirectly) to
+//message_send_internal()
+void process_event_for_debug_serialization()
+{
+  if(g_debug_action == ABORT)
+  {
+    g_eval_aborted = true;
+    return;
+  }
+
+  if(g_debug_action == STEP_OUT)
+    g_run_till_cont = g_debug_data->step_out_cont;
+
+  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[0], NIL));
+
+  nativefn nf = ((native_fn_obj_t *)extract_ptr(g_debug_data->nf_obj))->nf;
+
+  if(g_debug_data->arg_count == 0)
+  {
+    if(g_debug_action == STEP_OVER)
+      g_run_till_cont = g_debug_data->args[0];
+
+    nf(g_debug_data->closure_form,
+       g_debug_data->args[0]);
+  }
+  else if(g_debug_data->arg_count == 1)
+  {
+    if(g_debug_action == STEP_OVER)
+      g_run_till_cont = g_debug_data->args[1];
+
+    nf(g_debug_data->closure_form,
+       g_debug_data->args[0],
+       g_debug_data->args[1]);
+  }
+  else if(g_debug_data->arg_count == 2)
+  {
+    if(g_debug_action == STEP_OVER)
+      g_run_till_cont = g_debug_data->args[2];
+
+    nf(g_debug_data->closure_form,
+       g_debug_data->args[0],
+       g_debug_data->args[1],
+       g_debug_data->args[2]);
+  }
+  else if(g_debug_data->arg_count == 3)
+  {
+    if(g_debug_action == STEP_OVER)
+      g_run_till_cont = g_debug_data->args[3];
+
+    nf(g_debug_data->closure_form,
+       g_debug_data->args[0],
+       g_debug_data->args[1],
+       g_debug_data->args[2],
+       g_debug_data->args[3]);
+  }
+  else if(g_debug_data->arg_count == 4)
+  {
+    if(g_debug_action == STEP_OVER)
+      g_run_till_cont = g_debug_data->args[4];
+
+    nf(g_debug_data->closure_form,
+       g_debug_data->args[0],
+       g_debug_data->args[1],
+       g_debug_data->args[2],
+       g_debug_data->args[3],
+       g_debug_data->args[4]);
+  }
+  else
+    assert(false); //TODO
 }

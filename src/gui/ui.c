@@ -88,6 +88,8 @@ GtkTreeView *call_chain_list;
 extern stack_type *g_call_chain;
 extern void update_transcript_title();
 
+extern debug_serialization_t *g_debug_data;
+
 GtkToolbar *create_transcript_toolbar()
 {
   GtkWidget *toolbar;
@@ -533,42 +535,42 @@ GtkToolbar *create_debug_toolbar()
 
   GtkToolItem *abort_button = gtk_tool_button_new(abort_icon, NULL);
   gtk_tool_item_set_tooltip_text(abort_button, "Abort");
-  g_signal_connect (abort_button, "clicked", G_CALLBACK (debug_abort), debugger_window);
+  g_signal_connect (abort_button, "clicked", G_CALLBACK (debug_abort), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, abort_button, 0);
 
   GtkToolItem *retry_button = gtk_tool_button_new(retry_icon, NULL);
   gtk_tool_item_set_tooltip_text(retry_button, "Retry");
-  g_signal_connect (retry_button, "clicked", G_CALLBACK (debug_retry), debugger_window);
+  g_signal_connect (retry_button, "clicked", G_CALLBACK (debug_retry), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, retry_button, 1);
 
   GtkToolItem *resume_button = gtk_tool_button_new(resume_icon, NULL);
   gtk_tool_item_set_tooltip_text(resume_button, "Resume with nil");
-  g_signal_connect (resume_button, "clicked", G_CALLBACK (debug_resume), debugger_window);
+  g_signal_connect (resume_button, "clicked", G_CALLBACK (debug_resume), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, resume_button, 2);
 
   GtkToolItem *resume_with_val_button = gtk_tool_button_new(resume_with_val_icon, NULL);
   gtk_tool_item_set_tooltip_text(resume_with_val_button, "Resume with value");
-  g_signal_connect (resume_with_val_button, "clicked", G_CALLBACK (debug_resume_with_val), debugger_window);
+  g_signal_connect (resume_with_val_button, "clicked", G_CALLBACK (debug_resume_with_val), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, resume_with_val_button, 3);
 
   GtkToolItem *continue_button = gtk_tool_button_new(continue_icon, NULL);
   gtk_tool_item_set_tooltip_text(continue_button, "Continue");
-  g_signal_connect (continue_button, "clicked", G_CALLBACK (debug_continue), debugger_window);
+  g_signal_connect (continue_button, "clicked", G_CALLBACK (debug_continue), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, continue_button, 4);
 
   GtkToolItem *step_into_button = gtk_tool_button_new(step_into_icon, NULL);
   gtk_tool_item_set_tooltip_text(step_into_button, "Step into");
-  g_signal_connect (step_into_button, "clicked", G_CALLBACK (debug_step_into), debugger_window);
+  g_signal_connect (step_into_button, "clicked", G_CALLBACK (debug_step_into), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, step_into_button, 5);
 
   GtkToolItem *step_over_button = gtk_tool_button_new(step_over_icon, NULL);
   gtk_tool_item_set_tooltip_text(step_over_button, "Step over");
-  g_signal_connect (step_over_button, "clicked", G_CALLBACK (debug_step_over), debugger_window);
+  g_signal_connect (step_over_button, "clicked", G_CALLBACK (debug_step_over), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, step_over_button, 6);
 
   GtkToolItem *step_out_button = gtk_tool_button_new(step_out_icon, NULL);
   gtk_tool_item_set_tooltip_text(step_out_button, "Step out");
-  g_signal_connect (step_out_button, "clicked", G_CALLBACK (debug_step_out), debugger_window);
+  g_signal_connect (step_out_button, "clicked", G_CALLBACK (debug_step_out), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, step_out_button, 7);
 
   GtkToolItem *delete_breakpoint_button = gtk_tool_button_new(delete_breakpoint_icon, NULL);

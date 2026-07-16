@@ -210,6 +210,15 @@ typedef struct exception_handler
   OBJECT_PTR cont;
 } exception_handler_t;
 
+typedef struct
+{
+  unsigned int arg_count;
+  OBJECT_PTR *args;
+  OBJECT_PTR step_out_cont;
+  OBJECT_PTR closure_form;
+  OBJECT_PTR nf_obj;
+} debug_serialization_t;
+
 OBJECT_PTR list(int, ...);
 OBJECT_PTR reverse(OBJECT_PTR);
 OBJECT_PTR concat(unsigned int, ...);

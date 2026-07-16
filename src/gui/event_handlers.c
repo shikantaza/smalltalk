@@ -53,6 +53,8 @@ void new_source_file();
 BOOLEAN quit_file_browser();
 void find_text();
 
+void process_event_for_debug_serialization();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -105,6 +107,8 @@ extern stack_type *g_breakpointed_methods;
 
 extern char *loaded_image_file_name;
 extern void print_to_transcript(char *);
+
+extern BOOLEAN g_debugger_serialized;
 
 void evaluate()
 {
@@ -624,6 +628,12 @@ void debug_retry(GtkWidget *widget, gpointer data)
 					     args);
 
   g_debug_in_progress = false;
+
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
 }
 
 void debug_resume(GtkWidget *widget, gpointer data)
@@ -661,6 +671,12 @@ void debug_resume(GtkWidget *widget, gpointer data)
   g_last_eval_result = invoke_cont_on_val(exception_context, NIL);
 
   g_debug_in_progress = false;
+
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
 }
 
 void debug_continue(GtkWidget *widget, gpointer data)
@@ -674,6 +690,12 @@ void debug_continue(GtkWidget *widget, gpointer data)
     g_last_eval_result = invoke_cont_on_val(g_debug_cont, NIL);
 
   g_debug_in_progress = false;
+
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
 }
 
 int get_expression(char *buf)
@@ -777,6 +799,12 @@ void debug_resume_with_val(GtkWidget *widget, gpointer data)
     g_last_eval_result = invoke_cont_on_val(exception_context, ret);
 
     g_debug_in_progress = false;
+
+    if(g_debugger_serialized)
+    {
+      g_debugger_serialized = false;
+      process_event_for_debug_serialization();
+    }
   }
 }
 
@@ -804,6 +832,12 @@ void debug_step_into(GtkWidget *widget, gpointer data)
 
   g_debug_in_progress = false;
 
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
+
   //control passed pack to message_send_internal()
 }
 
@@ -819,6 +853,12 @@ void debug_step_over(GtkWidget *widget, gpointer data)
 
   g_debug_in_progress = false;
 
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
+
   //control passed pack to message_send_internal()
 }
 
@@ -833,6 +873,12 @@ void debug_step_out(GtkWidget *widget, gpointer data)
   hide_debug_window();
 
   g_debug_in_progress = false;
+
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
 
   //control passed pack to message_send_internal()
 }

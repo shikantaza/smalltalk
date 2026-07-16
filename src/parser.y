@@ -1210,10 +1210,9 @@ int main(int argc, char **argv)
 
     loaded_image_file_name = GC_strdup(argv[1]);
 
-    initialize_frequently_used_selectors();
     initialize_pass2();
 
-    print_diagnostics("diagnostics_post.txt");
+    //print_diagnostics("diagnostics_post.txt");
   }
 
   //gtk_init(&argc, &argv);
