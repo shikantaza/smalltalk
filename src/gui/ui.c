@@ -527,6 +527,7 @@ GtkToolbar *create_debug_toolbar()
 
   GtkWidget *delete_breakpoint_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoint.png");
   GtkWidget *delete_all_breakpoints_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoints.png");
+  GtkWidget *save_image_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/save_file.png");
 
   toolbar = gtk_toolbar_new ();
   gtk_orientable_set_orientation (GTK_ORIENTABLE (toolbar), GTK_ORIENTATION_HORIZONTAL);
@@ -583,6 +584,11 @@ GtkToolbar *create_debug_toolbar()
   g_signal_connect (delete_all_breakpoints_button, "clicked", G_CALLBACK (debug_delete_all_breakpoints), debugger_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, delete_all_breakpoints_button, -2);
 
+  GtkToolItem *save_image_button = gtk_tool_button_new(save_image_icon, NULL);
+  gtk_tool_item_set_tooltip_text(save_image_button, "Save image");
+  g_signal_connect (save_image_button, "clicked", G_CALLBACK (save_image_file), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, save_image_button, -3);
+
   return (GtkToolbar *)toolbar;
 }
 
@@ -590,7 +596,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
-  //gtk_window_set_modal((GtkWindow *)win, TRUE);
+  gtk_window_set_modal((GtkWindow *)win, TRUE);
 
   GtkWidget *scrolled_win1, *scrolled_win2, *scrolled_win3;
   GtkWidget *vbox, *hbox, *hbox2;

@@ -4120,11 +4120,18 @@ void serialize_transcript(FILE *fp)
 	text[jj+1] = '\"';
 	jj += 2;
       }
+      else if(transcript_text[ii] == '\n')
+      {
+        text[jj] = '\\';
+        text[jj+1] = 'n';
+        jj += 2;
+      }
       else
       {
-	text[jj] = transcript_text[ii];
-	jj++;
+        text[jj] = transcript_text[ii];
+        jj++;
       }
+
       ii++;
     }
 
@@ -4144,7 +4151,7 @@ void deserialize_transcript(struct JSONObject *transcript)
     char text[MAX_STRING_LENGTH];
     memset(text, '\0', MAX_STRING_LENGTH);
     int ii=0, jj=0, len;
-    char *json_text = JSON_get_array_item(transcript, 4)->strvalue;
+    char *json_text = replace_newlines(JSON_get_array_item(transcript, 4)->strvalue);
 
     len = strlen(json_text);
 
@@ -4321,10 +4328,12 @@ void serialize_debugger(FILE *fp)
   gtk_window_get_size(debugger_window, &width, &height);
 
   fprintf(fp,
-          ", \"debugger\" : [ %d, %d, %d, %d, \"%s\"",
-          posx, posy, width, height, g_debugger_serialized ? "true" : "false");
+          ", \"debugger\" : [ %d, %d, %d, %d, \"%s\", \"%s\"",
+          posx, posy, width, height,
+          g_debugger_serialized ? "true" : "false",
+          g_debug_data ? "true" : "false");
 
-  if(g_debugger_serialized)
+  if(g_debugger_serialized && g_debug_data)
   {
     fprintf(fp, ", %d", g_debug_data->arg_count);
     fprintf(fp, ", ");
@@ -4374,38 +4383,43 @@ void deserialize_debugger(struct JSONObject *debugger,
 
   char *visible = JSON_get_array_item(debugger, 4)->strvalue;
 
+  char *debug_data_available = JSON_get_array_item(debugger, 5)->strvalue;
+
   if(!strcmp(visible, "true"))
   {
     g_debugger_serialized = true;
 
-    g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+    if(!strcmp(debug_data_available, "true"))
+    {
+      g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
-    g_debug_data->arg_count = JSON_get_array_item(debugger, 5)->ivalue;
+      g_debug_data->arg_count = JSON_get_array_item(debugger, 6)->ivalue;
 
-    g_debug_data->args = (OBJECT_PTR *)GC_MALLOC(g_debug_data->arg_count * sizeof(OBJECT_PTR));
+      g_debug_data->args = (OBJECT_PTR *)GC_MALLOC(g_debug_data->arg_count * sizeof(OBJECT_PTR));
 
-    struct JSONObject *args_json = JSON_get_array_item(debugger, 6);
+      struct JSONObject *args_json = JSON_get_array_item(debugger, 7);
 
-    for(i=0; i<g_debug_data->arg_count; i++)
-      g_debug_data->args[i] = deserialize_object_reference(heap,
-                                                           JSON_get_array_item(args_json, i)->ivalue,
-                                                           object_hashtable,
-                                                           native_ptr_hashtable);
+      for(i=0; i<g_debug_data->arg_count; i++)
+        g_debug_data->args[i] = deserialize_object_reference(heap,
+                                                             JSON_get_array_item(args_json, i)->ivalue,
+                                                             object_hashtable,
+                                                             native_ptr_hashtable);
 
-    g_debug_data->step_out_cont = deserialize_object_reference(heap,
-                                                               JSON_get_array_item(debugger, 7)->ivalue,
-                                                               object_hashtable,
-                                                               native_ptr_hashtable);
+      g_debug_data->step_out_cont = deserialize_object_reference(heap,
+                                                                 JSON_get_array_item(debugger, 8)->ivalue,
+                                                                 object_hashtable,
+                                                                 native_ptr_hashtable);
 
-    g_debug_data->closure_form = deserialize_object_reference(heap,
-                                                              JSON_get_array_item(debugger, 8)->ivalue,
-                                                              object_hashtable,
-                                                              native_ptr_hashtable);
+      g_debug_data->closure_form = deserialize_object_reference(heap,
+                                                                JSON_get_array_item(debugger, 9)->ivalue,
+                                                                object_hashtable,
+                                                                native_ptr_hashtable);
 
-    g_debug_data->nf_obj = deserialize_object_reference(heap,
-                                                        JSON_get_array_item(debugger, 9)->ivalue,
-                                                        object_hashtable,
-                                                        native_ptr_hashtable);
+      g_debug_data->nf_obj = deserialize_object_reference(heap,
+                                                          JSON_get_array_item(debugger, 10)->ivalue,
+                                                          object_hashtable,
+                                                          native_ptr_hashtable);
+    }
 
     show_debug_window(g_debugger_invoked_for_exception, g_debug_cont);
 
