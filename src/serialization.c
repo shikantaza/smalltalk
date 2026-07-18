@@ -4439,6 +4439,11 @@ void deserialize_debugger(struct JSONObject *debugger,
 //message_send_internal()
 void process_event_for_debug_serialization()
 {
+  //when the debugger is invoked
+  //because of an exception
+  if(!g_debug_data)
+    return;
+
   if(g_debug_action == ABORT)
   {
     g_eval_aborted = true;

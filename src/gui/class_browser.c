@@ -27,6 +27,8 @@ void render_executable_code(GtkTextBuffer *, int *, BOOLEAN, gint64, executable_
 
 void populate_packages_list();
 
+void evaluate();
+
 GtkWindow *class_browser_window;
 
 GtkTreeView *packages_list;
@@ -81,6 +83,13 @@ void remove_all_from_packages_list(GtkTreeView *list)
     return;
 
   gtk_tree_store_clear(store);
+}
+
+void accept(GtkWidget *widget,
+            gpointer data)
+{
+  action_triggering_window = class_browser_window;
+  evaluate();
 }
 
 void refresh_system_browser()

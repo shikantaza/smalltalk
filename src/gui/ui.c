@@ -596,7 +596,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
+  gtk_window_set_transient_for((GtkWindow *)win, GTK_WINDOW(transcript_window));
   gtk_window_set_modal((GtkWindow *)win, TRUE);
+  gtk_window_set_keep_above((GtkWindow *)win, TRUE);
 
   GtkWidget *scrolled_win1, *scrolled_win2, *scrolled_win3;
   GtkWidget *vbox, *hbox, *hbox2;

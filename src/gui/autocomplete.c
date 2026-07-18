@@ -59,11 +59,11 @@ void add_to_autocomplete_list_single(char *word)
   autocomplete_words[nof_autocomplete_words-1] = word;
 
   //also add the word to keywords_buffer
-  GtkTextMark *mark = gtk_text_buffer_get_insert((GtkTextBuffer *)keywords_buffer);
-  GtkTextIter iter;
+  //GtkTextMark *mark = gtk_text_buffer_get_insert((GtkTextBuffer *)keywords_buffer);
+  //GtkTextIter iter;
 
-  gtk_text_buffer_get_end_iter((GtkTextBuffer *)keywords_buffer, &iter );
-  gtk_text_buffer_move_mark((GtkTextBuffer *)keywords_buffer, mark, &iter );
+  //gtk_text_buffer_get_end_iter((GtkTextBuffer *)keywords_buffer, &iter );
+  //gtk_text_buffer_move_mark((GtkTextBuffer *)keywords_buffer, mark, &iter );
 
   gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)keywords_buffer, word, -1);
   gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)keywords_buffer, "\n", -1);
@@ -381,7 +381,7 @@ void build_autocomplete_words()
   assert(autocomplete_words);
 
   for(i=0; i<nof_autocomplete_words; i++)
-    autocomplete_words[i] = inbuilt_words[i];
+    autocomplete_words[i] = GC_strdup(inbuilt_words[i]);
 }
 
 void set_up_autocomplete_words()
@@ -396,25 +396,25 @@ void set_up_autocomplete_words()
   //clear the buffer first (to replace symbols from previous package)
   gtk_text_buffer_set_text((GtkTextBuffer *)keywords_buffer, "", -1);
   
-  char *inbuilt_words = "Integer\nFloat\nObject\nSmalltalk\nNil\nnil\nTranscript\nNiladicBlock\nMonadicBlock\n \
-    Boolean\nException\nCompiler\nDyadicValuable\nCharacter\n \
-    ifTrue:\nifFalse:\nto:\nby:\ndo:\nand:\nor:\n==\ntimesRepeat:\nbasicAt:\n \
-    put:\nbasicSize\nbasicNew:\n \
-    new\nnew:\ninitialize\n \
-    addInstanceVariable:\ntoClass:\naddClassVariable:\ncreateGlobal:\nvalued:\ngensym\naddInstanceMethod:\n \
-    withBody:\naddClassMethod:\neval:\nloadFile:\naddBreakpointTo:\nremoveBreakpointFrom:\nofClass:\n \
-    assignClass:\ntoPackage:\n \
-    show:\n \
-    agrumentCount\nvalue\non:\ndo:\nensure:\nifCurtailed:\nwhileTrue:\nwhileFalse:\n \
-    value:\n \
-    and:\neqv:\nnot\nor:\nxor:\nprintString\n \
-    return\nreturn:\nretry\nretryUsing:\nresume\nresume:\npass\nouter\nsignal\nresignalAs:\nsignal:\n \
-    compile:\npass:\n \
-    at:\nsize\ndo:\nseparatedBy:\n \
-    add:\naddLast:\nremoveLast\n \
-    isEmpty\nnotEmpty\nselect\nreject\noccurrencesOf:\nincludes:\ndetect:\nifNone:\ncollect:\nsubstringFrom:\nto:\n";
+  char *inbuilt_words = "Integer\nFloat\nObject\nSmalltalk\nNil\nnil\nTranscript\nNiladicBlock\nMonadicBlock\n"
+    "Boolean\nException\nCompiler\nDyadicValuable\nCharacter\n"
+    "ifTrue:\nifFalse:\nto:\nby:\ndo:\nand:\nor:\n==\ntimesRepeat:\nbasicAt:\n"
+    "put:\nbasicSize\nbasicNew:\n"
+    "new\nnew:\ninitialize\n"
+    "addInstanceVariable:\ntoClass:\naddClassVariable:\ncreateGlobal:\nvalued:\ngensym\naddInstanceMethod:\n"
+    "withBody:\naddClassMethod:\neval:\nloadFile:\naddBreakpointTo:\nremoveBreakpointFrom:\nofClass:\n"
+    "assignClass:\ntoPackage:\n"
+    "show:\n"
+    "agrumentCount\nvalue\non:\ndo:\nensure:\nifCurtailed:\nwhileTrue:\nwhileFalse:\n"
+    "value:\n"
+    "and:\neqv:\nnot\nor:\nxor:\nprintString\n"
+    "return\nreturn:\nretry\nretryUsing:\nresume\nresume:\npass\nouter\nsignal\nresignalAs:\nsignal:\n"
+    "compile:\npass:\n"
+    "at:\nsize\ndo:\nseparatedBy:\n"
+    "add:\naddLast:\nremoveLast\n"
+    "isEmpty\nnotEmpty\nselect\nreject\noccurrencesOf:\nincludes:\ndetect:\nifNone:\ncollect:\nsubstringFrom:\nto:\n";
 
-  gtk_text_buffer_set_text((GtkTextBuffer *)keywords_buffer, inbuilt_words, -1);
+  gtk_text_buffer_set_text((GtkTextBuffer *)keywords_buffer, inbuilt_words, strlen(inbuilt_words));
 
   if(!provider)
     provider = (GtkSourceCompletionProvider *)gtk_source_completion_words_new("Symbols", NULL);

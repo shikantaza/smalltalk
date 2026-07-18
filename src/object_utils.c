@@ -725,7 +725,7 @@ OBJECT_PTR identity_function(OBJECT_PTR closure, ...)
   va_start(ap, closure);
   OBJECT_PTR ret = (OBJECT_PTR)va_arg(ap, OBJECT_PTR);
   va_end(ap);
-  
+
   return ret;
 }
 
