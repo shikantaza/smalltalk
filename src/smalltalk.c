@@ -16,6 +16,8 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 
 void add_to_autocomplete_list(char *word);
 
+void print_to_workspace_default_tag(char *);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -1283,6 +1285,25 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
   return invoke_cont_on_val(cont, receiver);
 }
 
+OBJECT_PTR smalltalk_print_to_workspace(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  char buf[500];
+  memset(buf, '\0', 500);
+  print_object_to_string(arg, buf);
+
+  print_to_workspace_default_tag(buf);
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, NIL);
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1311,7 +1332,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 14;
+  cls_obj->class_methods->count = 15;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1414,6 +1435,13 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)smalltalk_assign_class_to_package),
 						 NIL, NIL,
 						 2, NIL, NULL);
+
+  cls_obj->class_methods->bindings[14] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[14]->key = get_symbol("_printToWorkspace:");
+  cls_obj->class_methods->bindings[14]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)smalltalk_print_to_workspace),
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }

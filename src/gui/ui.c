@@ -350,6 +350,11 @@ void print_to_workspace(char *str, GtkTextTag *tag)
   gtk_text_view_scroll_to_mark((GtkTextView *)workspace_source_view, mark, 0.0, TRUE, 0.5, 1 );
 }
 
+void print_to_workspace_default_tag(char *str)
+{
+  print_to_workspace(str, workspace_tag);
+}
+
 void show_info_dialog(char *msg)
 {
   GtkWidget *dialog = gtk_message_dialog_new (action_triggering_window,

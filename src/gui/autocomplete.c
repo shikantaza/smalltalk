@@ -363,7 +363,7 @@ void build_autocomplete_words()
     //system-created messages
     "addInstanceVariable:", "toClass:", "addClassVariable:", "createGlobal:", "valued:", "gensym", "addInstanceMethod:",
     "withBody:", "addClassMethod:", "eval:", "loadFile:", "addBreakpointTo:", "removeBreakpointFrom:", "ofClass:",
-    "assignClass:", "toPackage:",
+    "assignClass:", "toPackage:", "printToWorkspace:",
     "show:",
     "agrumentCount", "value", "on:", "do:", "ensure:", "ifCurtailed:", "whileTrue:", "whileFalse:",
     "value:",
@@ -403,7 +403,7 @@ void set_up_autocomplete_words()
     "new\nnew:\ninitialize\n"
     "addInstanceVariable:\ntoClass:\naddClassVariable:\ncreateGlobal:\nvalued:\ngensym\naddInstanceMethod:\n"
     "withBody:\naddClassMethod:\neval:\nloadFile:\naddBreakpointTo:\nremoveBreakpointFrom:\nofClass:\n"
-    "assignClass:\ntoPackage:\n"
+    "assignClass:\ntoPackage:\nprintToWorkspace:\n"
     "show:\n"
     "agrumentCount\nvalue\non:\ndo:\nensure:\nifCurtailed:\nwhileTrue:\nwhileFalse:\n"
     "value:\n"

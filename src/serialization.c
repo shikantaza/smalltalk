@@ -16,7 +16,7 @@
 
 #define NULL_NATIVE_PTR -1
 
-#define NOF_INBUILT_FNS 100
+#define NOF_INBUILT_FNS 101
 
 //Object
 OBJECT_PTR object_eq(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
@@ -37,6 +37,7 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR smalltalk_add_breakpoint(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR smalltalk_remove_breakpoint(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR smalltalk_print_to_workspace(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 
 //Nil
 OBJECT_PTR nil_print_string(OBJECT_PTR, OBJECT_PTR);
@@ -389,117 +390,118 @@ void initialize_inbuiltfns()
   inbuiltfns[13] = (nativefn)smalltalk_add_breakpoint;
   inbuiltfns[14] = (nativefn)smalltalk_remove_breakpoint;
   inbuiltfns[15] = (nativefn)smalltalk_assign_class_to_package;
+  inbuiltfns[16] = (nativefn)smalltalk_print_to_workspace;
 
   //Nil
-  inbuiltfns[16] = (nativefn)nil_print_string;
+  inbuiltfns[17] = (nativefn)nil_print_string;
 
   //Transcript
-  inbuiltfns[17] = (nativefn)transcript_show;
-  inbuiltfns[18] = (nativefn)transcript_cr;
+  inbuiltfns[18] = (nativefn)transcript_show;
+  inbuiltfns[19] = (nativefn)transcript_cr;
 
   //Integer
-  inbuiltfns[19] = (nativefn)plus;
-  inbuiltfns[20] = (nativefn)minus;
-  inbuiltfns[21] = (nativefn)times;
-  inbuiltfns[22] = (nativefn)divided_by;
-  inbuiltfns[23] = (nativefn)eq;
-  inbuiltfns[24] = (nativefn)lt;
-  inbuiltfns[25] = (nativefn)gt;
-  inbuiltfns[26] = (nativefn)to;
+  inbuiltfns[20] = (nativefn)plus;
+  inbuiltfns[21] = (nativefn)minus;
+  inbuiltfns[22] = (nativefn)times;
+  inbuiltfns[23] = (nativefn)divided_by;
+  inbuiltfns[24] = (nativefn)eq;
+  inbuiltfns[25] = (nativefn)lt;
+  inbuiltfns[26] = (nativefn)gt;
+  inbuiltfns[27] = (nativefn)to;
 
   //Float
-  inbuiltfns[27] = (nativefn)float_plus;
-  inbuiltfns[28] = (nativefn)float_minus;
-  inbuiltfns[29] = (nativefn)float_times;
-  inbuiltfns[30] = (nativefn)float_divided_by;
-  inbuiltfns[31] = (nativefn)float_eq;
-  inbuiltfns[32] = (nativefn)float_lt;
-  inbuiltfns[33] = (nativefn)float_gt;
+  inbuiltfns[28] = (nativefn)float_plus;
+  inbuiltfns[29] = (nativefn)float_minus;
+  inbuiltfns[30] = (nativefn)float_times;
+  inbuiltfns[31] = (nativefn)float_divided_by;
+  inbuiltfns[32] = (nativefn)float_eq;
+  inbuiltfns[33] = (nativefn)float_lt;
+  inbuiltfns[34] = (nativefn)float_gt;
 
   //NiladicBlock
-  inbuiltfns[34] = (nativefn)niladic_block_arg_count;
-  inbuiltfns[35] = (nativefn)niladic_block_value;
-  inbuiltfns[36] = (nativefn)niladic_block_on_do;
-  inbuiltfns[37] = (nativefn)niladic_block_ensure;
-  inbuiltfns[38] = (nativefn)niladic_block_ifcurtailed;
-  inbuiltfns[39] = (nativefn)niladic_block_while_true_iter;
-  inbuiltfns[40] = (nativefn)niladic_block_while_false_iter;
+  inbuiltfns[35] = (nativefn)niladic_block_arg_count;
+  inbuiltfns[36] = (nativefn)niladic_block_value;
+  inbuiltfns[37] = (nativefn)niladic_block_on_do;
+  inbuiltfns[38] = (nativefn)niladic_block_ensure;
+  inbuiltfns[39] = (nativefn)niladic_block_ifcurtailed;
+  inbuiltfns[40] = (nativefn)niladic_block_while_true_iter;
+  inbuiltfns[41] = (nativefn)niladic_block_while_false_iter;
 
   //MonadicBlock
-  inbuiltfns[41] = (nativefn)monadic_block_value;
+  inbuiltfns[42] = (nativefn)monadic_block_value;
 
   //DyadicValuable
-  inbuiltfns[42] = (nativefn)dyadic_valuable_value;
+  inbuiltfns[43] = (nativefn)dyadic_valuable_value;
 
   //Boolean
-  inbuiltfns[43] = (nativefn)boolean_and;
-  inbuiltfns[44] = (nativefn)boolean_or;
-  inbuiltfns[45] = (nativefn)boolean_short_circuit_and;
-  inbuiltfns[46] = (nativefn)boolean_equiv;
-  inbuiltfns[47] = (nativefn)boolean_if_false;
-  inbuiltfns[48] = (nativefn)boolean_if_false_if_true;
-  inbuiltfns[49] = (nativefn)boolean_if_true;
-  inbuiltfns[50] = (nativefn)boolean_if_true_if_false;
-  inbuiltfns[51] = (nativefn)boolean_not;
-  inbuiltfns[52] = (nativefn)boolean_short_circuit_or;
-  inbuiltfns[53] = (nativefn)boolean_xor;
-  inbuiltfns[54] = (nativefn)boolean_print_string;
+  inbuiltfns[44] = (nativefn)boolean_and;
+  inbuiltfns[45] = (nativefn)boolean_or;
+  inbuiltfns[46] = (nativefn)boolean_short_circuit_and;
+  inbuiltfns[47] = (nativefn)boolean_equiv;
+  inbuiltfns[48] = (nativefn)boolean_if_false;
+  inbuiltfns[49] = (nativefn)boolean_if_false_if_true;
+  inbuiltfns[50] = (nativefn)boolean_if_true;
+  inbuiltfns[51] = (nativefn)boolean_if_true_if_false;
+  inbuiltfns[52] = (nativefn)boolean_not;
+  inbuiltfns[53] = (nativefn)boolean_short_circuit_or;
+  inbuiltfns[54] = (nativefn)boolean_xor;
+  inbuiltfns[55] = (nativefn)boolean_print_string;
 
   //Exception
-  inbuiltfns[55] = (nativefn)exception_return;
-  inbuiltfns[56] = (nativefn)exception_return_val;
-  inbuiltfns[57] = (nativefn)exception_retry;
-  inbuiltfns[58] = (nativefn)exception_retry_using;
-  inbuiltfns[59] = (nativefn)exception_resume;
-  inbuiltfns[60] = (nativefn)exception_resume_with_val;
-  inbuiltfns[61] = (nativefn)exception_pass;
-  inbuiltfns[62] = (nativefn)exception_outer;
-  inbuiltfns[63] = (nativefn)exception_signal;
-  inbuiltfns[64] = (nativefn)exception_resignal_as;
-  inbuiltfns[65] = (nativefn)exception_signal_with_text;
-  inbuiltfns[66] = (nativefn)new_object;
+  inbuiltfns[56] = (nativefn)exception_return;
+  inbuiltfns[57] = (nativefn)exception_return_val;
+  inbuiltfns[58] = (nativefn)exception_retry;
+  inbuiltfns[59] = (nativefn)exception_retry_using;
+  inbuiltfns[60] = (nativefn)exception_resume;
+  inbuiltfns[61] = (nativefn)exception_resume_with_val;
+  inbuiltfns[62] = (nativefn)exception_pass;
+  inbuiltfns[63] = (nativefn)exception_outer;
+  inbuiltfns[64] = (nativefn)exception_signal;
+  inbuiltfns[65] = (nativefn)exception_resignal_as;
+  inbuiltfns[66] = (nativefn)exception_signal_with_text;
+  inbuiltfns[67] = (nativefn)new_object;
 
   //Array
-  inbuiltfns[67] = (nativefn)array_at_put;
-  inbuiltfns[68] = (nativefn)array_at;
-  inbuiltfns[69] = (nativefn)array_size;
-  inbuiltfns[70] = (nativefn)array_do;
-  inbuiltfns[71] = (nativefn)array_do_separated_by;
-  inbuiltfns[72] = (nativefn)array_new;
+  inbuiltfns[68] = (nativefn)array_at_put;
+  inbuiltfns[69] = (nativefn)array_at;
+  inbuiltfns[70] = (nativefn)array_size;
+  inbuiltfns[71] = (nativefn)array_do;
+  inbuiltfns[72] = (nativefn)array_do_separated_by;
+  inbuiltfns[73] = (nativefn)array_new;
 
   //OrderedCollection
-  inbuiltfns[73] = (nativefn)ordered_collection_initialize;
-  inbuiltfns[74] = (nativefn)ordered_collection_size;
-  inbuiltfns[75] = (nativefn)ordered_collection_add;
-  inbuiltfns[76] = (nativefn)ordered_collection_at;
-  inbuiltfns[77] = (nativefn)ordered_collection_add_last;
-  inbuiltfns[78] = (nativefn)ordered_collection_remove_last;
-  inbuiltfns[79] = (nativefn)ordered_collection_do;
-  inbuiltfns[80] = (nativefn)ordered_collection_new;
+  inbuiltfns[74] = (nativefn)ordered_collection_initialize;
+  inbuiltfns[75] = (nativefn)ordered_collection_size;
+  inbuiltfns[76] = (nativefn)ordered_collection_add;
+  inbuiltfns[77] = (nativefn)ordered_collection_at;
+  inbuiltfns[78] = (nativefn)ordered_collection_add_last;
+  inbuiltfns[79] = (nativefn)ordered_collection_remove_last;
+  inbuiltfns[80] = (nativefn)ordered_collection_do;
+  inbuiltfns[81] = (nativefn)ordered_collection_new;
 
   //Compiler
-  inbuiltfns[81] = (nativefn)compiler_compile;
-  inbuiltfns[82] = (nativefn)compiler_compile_pass;
+  inbuiltfns[82] = (nativefn)compiler_compile;
+  inbuiltfns[83] = (nativefn)compiler_compile_pass;
 
   //ReadableString
-  inbuiltfns[83] = (nativefn)readable_string_size;
-  inbuiltfns[84] = (nativefn)readable_string_is_empty;
-  inbuiltfns[85] = (nativefn)readable_string_not_empty;
-  inbuiltfns[86] = (nativefn)readable_string_do;
-  inbuiltfns[87] = (nativefn)readable_string_do_separated_by;
-  inbuiltfns[88] = (nativefn)readable_string_select;
-  inbuiltfns[89] = (nativefn)readable_string_reject;
-  inbuiltfns[90] = (nativefn)readable_string_occurrences_of;
-  inbuiltfns[91] = (nativefn)readable_string_includes;
-  inbuiltfns[92] = (nativefn)readable_string_detect_if_none;
-  inbuiltfns[93] = (nativefn)readable_string_detect;
-  inbuiltfns[94] = (nativefn)readable_string_collect;
-  inbuiltfns[95] = (nativefn)readable_string_substring;
-  inbuiltfns[96] = (nativefn)readable_string_concat ;
+  inbuiltfns[84] = (nativefn)readable_string_size;
+  inbuiltfns[85] = (nativefn)readable_string_is_empty;
+  inbuiltfns[86] = (nativefn)readable_string_not_empty;
+  inbuiltfns[87] = (nativefn)readable_string_do;
+  inbuiltfns[88] = (nativefn)readable_string_do_separated_by;
+  inbuiltfns[89] = (nativefn)readable_string_select;
+  inbuiltfns[90] = (nativefn)readable_string_reject;
+  inbuiltfns[91] = (nativefn)readable_string_occurrences_of;
+  inbuiltfns[92] = (nativefn)readable_string_includes;
+  inbuiltfns[93] = (nativefn)readable_string_detect_if_none;
+  inbuiltfns[94] = (nativefn)readable_string_detect;
+  inbuiltfns[95] = (nativefn)readable_string_collect;
+  inbuiltfns[96] = (nativefn)readable_string_substring;
+  inbuiltfns[97] = (nativefn)readable_string_concat ;
 
-  inbuiltfns[97] = (nativefn)message_send;
-  inbuiltfns[98] = (nativefn)message_send_super;
-  inbuiltfns[99] = (nativefn)identity_function;
+  inbuiltfns[98] = (nativefn)message_send;
+  inbuiltfns[99] = (nativefn)message_send_super;
+  inbuiltfns[100] = (nativefn)identity_function;
 }
 
 int get_inbuiltfn_index(nativefn fn)

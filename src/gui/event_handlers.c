@@ -110,7 +110,7 @@ extern void print_to_transcript(char *);
 
 extern BOOLEAN g_debugger_serialized;
 
-void evaluate()
+char *get_selected_text()
 {
   char *expression = NULL;
 
@@ -138,8 +138,28 @@ void evaluate()
   else
     assert(0); //TODO
 
+  return expression;
+}
+
+void evaluate()
+{
+  char *expression = get_selected_text();
+
   if(expression)
     call_repl(expression);
+}
+
+void evaluate_for_print()
+{
+  char *expression = get_selected_text();
+
+  //100 characters for the additional wrapper text, one character for null terminator
+  char *decorated_expression = (char *)GC_MALLOC((strlen(expression) + 101) * sizeof(char));
+  memset(decorated_expression, '\0', strlen(expression) + 101);
+
+  sprintf(decorated_expression, "Smalltalk printToWorkspace: (%s)", expression);
+
+  call_repl(decorated_expression);
 }
 
 gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -162,13 +182,7 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
   else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_p)
   {
     action_triggering_window = workspace_window;
-    evaluate();
-
-    char buf[500];
-    memset(buf, '\0', 500);
-    print_object_to_string(g_last_eval_result, buf);
-    print_to_workspace(buf, workspace_tag);
-
+    evaluate_for_print();
     return TRUE;
   }
   else if(event->keyval == GDK_KEY_F9)
@@ -323,7 +337,7 @@ void save_image()
     GtkWidget *dialog;
 
     dialog = gtk_file_chooser_dialog_new ("Save Smalltalk Image",
-                                          (GtkWindow *)transcript_window,
+                                          (GtkWindow *)action_triggering_window,
                                           GTK_FILE_CHOOSER_ACTION_SAVE,
                                           "Cancel", GTK_RESPONSE_CANCEL,
                                           "Open", GTK_RESPONSE_ACCEPT,
@@ -340,7 +354,7 @@ void save_image()
 
     if(file_exists(loaded_image_file_name))
     {
-      GtkWidget *dialog1 = gtk_message_dialog_new ((GtkWindow *)transcript_window,
+      GtkWidget *dialog1 = gtk_message_dialog_new ((GtkWindow *)action_triggering_window,
                                                    GTK_DIALOG_DESTROY_WITH_PARENT,
                                                    GTK_MESSAGE_QUESTION,
                                                    GTK_BUTTONS_YES_NO,
@@ -381,6 +395,7 @@ void save_image()
 void save_image_file(GtkWidget *widget,
                      gpointer data)
 {
+  action_triggering_window = (GtkWindow *)data;
   save_image();
 }
 
