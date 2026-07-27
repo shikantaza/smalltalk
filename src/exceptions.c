@@ -942,7 +942,7 @@ void create_Exception()
   Exception =  convert_class_object_to_object_ptr(cls_obj);
 }
 
-//call this function to signal exceptions with a sginalled text string
+//call this function to signal exceptions with a signalled text string
 //from Smalltalk methods implemented as primitives.
 OBJECT_PTR create_and_signal_exception_with_text(OBJECT_PTR excp_class_obj,
 						 OBJECT_PTR signaller_text,

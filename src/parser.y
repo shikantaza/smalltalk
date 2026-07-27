@@ -1206,9 +1206,9 @@ int main(int argc, char **argv)
     initialize_pre_image();
 
     //TODO: validation of image file name
-    load_from_image(argv[1]);
-
     loaded_image_file_name = GC_strdup(argv[1]);
+
+    load_from_image(loaded_image_file_name);
 
     initialize_pass2();
 

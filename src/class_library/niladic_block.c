@@ -63,6 +63,32 @@ OBJECT_PTR niladic_block_arg_count(OBJECT_PTR closure, OBJECT_PTR cont)
   return invoke_cont_on_val(cont, convert_int_to_object(0));
 }
 
+//when the user has opted for Ctrl-P (instead of Ctrl-D)
+//while evaluating an expression, we wrap the expression
+//in a dummy block and invoke 'value' on this block, this
+//is in turn passed to Smalltalk>>printToWorkspace.
+//(see evaluate_for_print() in event_handlers.c)
+//when an exception is signalled inside the invocation of
+//this 'value' message (the function niladic_block_value()),
+//the exception handling message is passed g_idclo, which
+//in turn is passed to the show_debug_window(), which saved this
+//in g_debug_cont. when we serialize at this point, the wrong
+//continuation (g_idclo) thus gets serialized in g_debug_cont,
+//thereby screwing up the resume from the debugger after
+//deserialization. this is a workaround to fix this so that
+//the rest of the code is isolated from and immune to this.
+OBJECT_PTR niladic_block_value_internal(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  assert(IS_CLOSURE_OBJECT(receiver));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  return invoke_cont_on_val(receiver, cont);
+}
+
 OBJECT_PTR niladic_block_value(OBJECT_PTR closure, OBJECT_PTR cont)
 {
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
@@ -325,7 +351,7 @@ void create_NiladicBlock()
   cls_obj->shared_vars->bindings = NULL;
   
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->instance_methods->count = 7;
+  cls_obj->instance_methods->count = 8;
   cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
   cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
@@ -376,6 +402,13 @@ void create_NiladicBlock()
 						    convert_native_fn_to_object((nativefn)niladic_block_while_false_iter),
 						    NIL, NIL,
 						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[7] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[7]->key = get_symbol("_value1");
+  cls_obj->instance_methods->bindings[7]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
+						    convert_native_fn_to_object((nativefn)niladic_block_value_internal),
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;

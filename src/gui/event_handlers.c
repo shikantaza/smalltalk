@@ -157,7 +157,7 @@ void evaluate_for_print()
   char *decorated_expression = (char *)GC_MALLOC((strlen(expression) + 101) * sizeof(char));
   memset(decorated_expression, '\0', strlen(expression) + 101);
 
-  sprintf(decorated_expression, "Smalltalk printToWorkspace: (%s)", expression);
+  sprintf(decorated_expression, "Smalltalk printToWorkspace: ([ %s ] value1)", expression);
 
   call_repl(decorated_expression);
 }
@@ -343,12 +343,24 @@ void save_image()
                                           "Open", GTK_RESPONSE_ACCEPT,
                                           NULL);
 
+
+    //these don't work; all other file types are still displayed
+    GtkFileFilter *filter_text = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter_text, "Smalltalk Image Files (*.json)");
+    gtk_file_filter_add_mime_type(filter_text, "text/plain");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter_text);
+    gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter_text);
+    gtk_file_chooser_set_show_hidden(GTK_FILE_CHOOSER(dialog), FALSE);
+
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
       loaded_image_file_name = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
     }
     else
+    {
+      gtk_widget_destroy (dialog);
       return;
+    }
 
     gtk_widget_destroy (dialog);
 
