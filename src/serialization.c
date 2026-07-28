@@ -2866,11 +2866,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     long long ref1;
 
     ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
-    debug_expression_t *debug_exp = deserialize_native_ptr_reference(heap,
-                                                                     DEBUG_EXPRESSION_PTR,
-                                                                     ref1,
-                                                                     obj_ht,
-                                                                     native_ptr_ht);
+    debug_expression_t *debug_exp = (debug_expression_t *)deserialize_native_ptr_reference(heap,
+                                                                                           DEBUG_EXPRESSION_PTR,
+                                                                                           ref1,
+                                                                                           obj_ht,
+                                                                                           native_ptr_ht);
 
     if(!debug_exp)
       entry->exp_ptr = NIL;
@@ -3098,11 +3098,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     for(i=0; i<elems->nof_elements; i++)
     {
       long long ref1 = JSON_get_array_item(ptr_entry, i)->ivalue;
-      struct array_element *elem = deserialize_native_ptr_reference(heap,
-                                                                    ARRAY_ELEMENT_PTR,
-                                                                    ref1,
-                                                                    obj_ht,
-                                                                    native_ptr_ht);
+      struct array_element *elem = (struct array_element *)deserialize_native_ptr_reference(heap,
+                                                                                            ARRAY_ELEMENT_PTR,
+                                                                                            ref1,
+                                                                                            obj_ht,
+                                                                                            native_ptr_ht);
       elems->elements[i] = *elem;
     }
 
@@ -3261,11 +3261,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     /* package */
     OBJECT_PTR pkg = JSON_get_array_item(cls_obj_json_obj, 2)->ivalue;
 
-    cls_obj->package = deserialize_native_ptr_reference(heap,
-                                                        SMALLTALK_PACKAGE_PTR,
-                                                        pkg,
-                                                        obj_ht,
-                                                        native_ptr_ht);
+    cls_obj->package = (smalltalk_package_t *)deserialize_native_ptr_reference(heap,
+                                                                               SMALLTALK_PACKAGE_PTR,
+                                                                               pkg,
+                                                                               obj_ht,
+                                                                               native_ptr_ht);
     /* end of package */
 
     /* nof_instances */
@@ -3740,19 +3740,21 @@ int load_from_image(char *file_name)
   /////
 
   //8. g_smalltalk_symbols
-  g_smalltalk_symbols = deserialize_native_ptr_reference(heap,
-                                                         PACKAGE_PTR,
-                                                         JSON_get_object_item(global_variables, "g_smalltalk_symbols")->ivalue,
-                                                         object_hashtable,
-                                                         native_ptr_hashtable);
+  g_smalltalk_symbols = (package_t *)deserialize_native_ptr_reference(heap,
+                                                                      PACKAGE_PTR,
+                                                                      JSON_get_object_item(global_variables,
+                                                                                           "g_smalltalk_symbols")->ivalue,
+                                                                      object_hashtable,
+                                                                      native_ptr_hashtable);
   /////
 
   //9. g_compiler_package
-  g_compiler_package = deserialize_native_ptr_reference(heap,
-                                                        PACKAGE_PTR,
-                                                        JSON_get_object_item(global_variables, "g_compiler_package")->ivalue,
-                                                        object_hashtable,
-                                                        native_ptr_hashtable);
+  g_compiler_package = (package_t *)deserialize_native_ptr_reference(heap,
+                                                                     PACKAGE_PTR,
+                                                                     JSON_get_object_item(global_variables,
+                                                                                          "g_compiler_package")->ivalue,
+                                                                     object_hashtable,
+                                                                     native_ptr_hashtable);
   /////
 
   //10. g_string_literals
@@ -3770,39 +3772,39 @@ int load_from_image(char *file_name)
   /////
 
   //11. g_exception_environment
-  g_exception_environment = deserialize_native_ptr_reference(heap,
-                                                             STACK_TYPE_PTR,
-                                                             JSON_get_object_item(global_variables,
-                                                                                  "g_exception_environment")->ivalue,
-                                                             object_hashtable,
-                                                             native_ptr_hashtable);
+  g_exception_environment = (stack_type *)deserialize_native_ptr_reference(heap,
+                                                                           STACK_TYPE_PTR,
+                                                                           JSON_get_object_item(global_variables,
+                                                                                                "g_exception_environment")->ivalue,
+                                                                           object_hashtable,
+                                                                           native_ptr_hashtable);
   /////
 
   //12. g_call_chain
-  g_call_chain = deserialize_native_ptr_reference(heap,
-                                                  STACK_TYPE_PTR,
-                                                  JSON_get_object_item(global_variables,
-                                                                       "g_call_chain")->ivalue,
-                                                  object_hashtable,
-                                                  native_ptr_hashtable);
+  g_call_chain = (stack_type *)deserialize_native_ptr_reference(heap,
+                                                                STACK_TYPE_PTR,
+                                                                JSON_get_object_item(global_variables,
+                                                                                     "g_call_chain")->ivalue,
+                                                                object_hashtable,
+                                                                native_ptr_hashtable);
   /////
 
   //13. g_exception_contexts
-  g_exception_contexts = deserialize_native_ptr_reference(heap,
-                                                          STACK_TYPE_PTR,
-                                                          JSON_get_object_item(global_variables,
-                                                                               "g_exception_contexts")->ivalue,
-                                                          object_hashtable,
-                                                          native_ptr_hashtable);
+  g_exception_contexts = (stack_type *)deserialize_native_ptr_reference(heap,
+                                                                        STACK_TYPE_PTR,
+                                                                        JSON_get_object_item(global_variables,
+                                                                                             "g_exception_contexts")->ivalue,
+                                                                        object_hashtable,
+                                                                        native_ptr_hashtable);
   /////
 
   //14. g_breakpointed_methods
-  g_breakpointed_methods = deserialize_native_ptr_reference(heap,
-                                                            STACK_TYPE_PTR,
-                                                            JSON_get_object_item(global_variables,
-                                                                                 "g_breakpointed_methods")->ivalue,
-                                                            object_hashtable,
-                                                            native_ptr_hashtable);
+  g_breakpointed_methods = (stack_type *)deserialize_native_ptr_reference(heap,
+                                                                          STACK_TYPE_PTR,
+                                                                          JSON_get_object_item(global_variables,
+                                                                                               "g_breakpointed_methods")->ivalue,
+                                                                          object_hashtable,
+                                                                          native_ptr_hashtable);
 
   /////
 
@@ -3859,21 +3861,21 @@ int load_from_image(char *file_name)
   /////
 
   //22. g_exp
-  g_exp = deserialize_native_ptr_reference(heap,
-                                           EXEC_CODE_PTR,
-                                           JSON_get_object_item(global_variables,
-                                                                "g_exp")->ivalue,
-                                           object_hashtable,
-                                           native_ptr_hashtable);
+  g_exp = (executable_code_t *)deserialize_native_ptr_reference(heap,
+                                                                EXEC_CODE_PTR,
+                                                                JSON_get_object_item(global_variables,
+                                                                                     "g_exp")->ivalue,
+                                                                object_hashtable,
+                                                                native_ptr_hashtable);
   /////
 
   //23. g_top_level
-  g_top_level = deserialize_native_ptr_reference(heap,
-                                                 BINDING_ENV_PTR,
-                                                 JSON_get_object_item(global_variables,
-                                                                      "g_top_level")->ivalue,
-                                                 object_hashtable,
-                                                 native_ptr_hashtable);
+  g_top_level = (binding_env_t *)deserialize_native_ptr_reference(heap,
+                                                                  BINDING_ENV_PTR,
+                                                                  JSON_get_object_item(global_variables,
+                                                                                       "g_top_level")->ivalue,
+                                                                  object_hashtable,
+                                                                  native_ptr_hashtable);
   /////
 
   //24. g_debugger_invoked_for_exception
@@ -3885,12 +3887,12 @@ int load_from_image(char *file_name)
   /////
 
   //25. g_active_handler
-  g_active_handler = deserialize_native_ptr_reference(heap,
-                                                      EXCEPTION_HANDLER_PTR,
-                                                      JSON_get_object_item(global_variables,
-                                                                           "g_active_handler")->ivalue,
-                                                      object_hashtable,
-                                                      native_ptr_hashtable);
+  g_active_handler = (exception_handler_t *)deserialize_native_ptr_reference(heap,
+                                                                             EXCEPTION_HANDLER_PTR,
+                                                                             JSON_get_object_item(global_variables,
+                                                                                                  "g_active_handler")->ivalue,
+                                                                             object_hashtable,
+                                                                             native_ptr_hashtable);
   /////
 
   //26. g_debug_in_progress
@@ -3909,21 +3911,23 @@ int load_from_image(char *file_name)
   /////
 
   //28. g_handler_environment
-  g_handler_environment = deserialize_native_ptr_reference(heap,
-                                                           EXCEPTION_HANDLER_PTR,
-                                                           JSON_get_object_item(global_variables,
-                                                                                "g_handler_environment")->ivalue,
-                                                           object_hashtable,
-                                                           native_ptr_hashtable);
+  g_handler_environment = (stack_type *)deserialize_native_ptr_reference(
+                                          heap,
+                                          STACK_TYPE_PTR,
+                                          JSON_get_object_item(global_variables,
+                                                               "g_handler_environment")->ivalue,
+                                          object_hashtable,
+                                          native_ptr_hashtable);
   /////
 
   //29. g_signalling_environment
-  g_signalling_environment = deserialize_native_ptr_reference(heap,
-                                                              EXCEPTION_HANDLER_PTR,
-                                                              JSON_get_object_item(global_variables,
-                                                                                   "g_signalling_environment")->ivalue,
-                                                              object_hashtable,
-                                                              native_ptr_hashtable);
+  g_signalling_environment = (stack_type *)deserialize_native_ptr_reference(
+                                             heap,
+                                             STACK_TYPE_PTR,
+                                             JSON_get_object_item(global_variables,
+                                                                  "g_signalling_environment")->ivalue,
+                                             object_hashtable,
+                                             native_ptr_hashtable);
   /////
 
   //30. g_nof_compiler_states
@@ -3940,11 +3944,12 @@ int load_from_image(char *file_name)
   g_smalltalk_packages = (smalltalk_package_t **)GC_MALLOC(g_nof_smalltalk_packages * sizeof(smalltalk_package_t *));
 
   for(i=0; i< g_nof_smalltalk_packages; i++) {
-    g_smalltalk_packages[i] = deserialize_native_ptr_reference(heap,
-                                                               SMALLTALK_PACKAGE_PTR,
-                                                               JSON_get_array_item(smalltalk_packages, i)->ivalue,
-                                                               object_hashtable,
-                                                               native_ptr_hashtable);
+    g_smalltalk_packages[i] = (smalltalk_package_t *)deserialize_native_ptr_reference(
+                                                       heap,
+                                                       SMALLTALK_PACKAGE_PTR,
+                                                       JSON_get_array_item(smalltalk_packages, i)->ivalue,
+                                                       object_hashtable,
+                                                       native_ptr_hashtable);
   }
   /////
 
@@ -4217,7 +4222,6 @@ void serialize_class_browser(FILE *fp)
             ", \"class_browser\" : [ %d, %d, %d, %d, ",
             posx, posy, width, height);
 
-    GtkListStore *store1 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packages_list)));
     GtkTreeModel *model1 = gtk_tree_view_get_model (GTK_TREE_VIEW (packages_list));
     GtkTreeIter  iter1;
 
@@ -4232,7 +4236,6 @@ void serialize_class_browser(FILE *fp)
       gtk_tree_path_free(path);
     }
 
-    GtkListStore *store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(classes_list)));
     GtkTreeModel *model2 = gtk_tree_view_get_model (GTK_TREE_VIEW (classes_list));
     GtkTreeIter  iter2;
 
@@ -4254,7 +4257,6 @@ void serialize_class_browser(FILE *fp)
     else
       assert(false);
 
-    GtkListStore *store3 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(methods_list)));
     GtkTreeModel *model3 = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
     GtkTreeIter  iter3;
 
@@ -4278,11 +4280,6 @@ void deserialize_class_browser(struct JSONObject *class_browser,
                                hashtable_t *object_hashtable,
                                hashtable_t *native_ptr_hashtable)
 {
-  OBJECT_PTR pkg_id, class_id, method_id;
-  smalltalk_package_t *pkg;
-  class_object_t *cls_obj;
-  method_t *method;
-
   if(class_browser)
   {
     create_class_browser_window(JSON_get_array_item(class_browser, 0)->ivalue,
