@@ -272,6 +272,8 @@ void fetch_classes_for_package(GtkWidget *, gpointer);
 void add_to_autocomplete_list(char *);
 void initialize_frequently_used_selectors();
 
+int add_debug_expression(debug_expression_t *);
+
 //global variable that indicates what is the type
 //of the pointer that is stored in a stack_type object
 enum PointerType g_sub_type;
@@ -310,6 +312,8 @@ extern unsigned int          g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 extern int                   g_gensym_count;
 extern int                   g_smalltalk_gensym_count;
+extern unsigned int          g_nof_debug_expressions;
+extern debug_expression_t  **g_debug_expressions;
 
 extern OBJECT_PTR NIL;
 
@@ -334,7 +338,7 @@ extern debug_serialization_t *g_debug_data;
 
 extern OBJECT_PTR THIS_CONTEXT;
 
-extern queue_t *pinned_items;
+//extern queue_t *pinned_items;
 
 //forward declarations
 OBJECT_PTR deserialize_object_reference(struct JSONObject *,
@@ -1402,7 +1406,8 @@ void print_native_ptr_heap_representation(FILE *fp,
       fprintf(fp, "-1");
     else
     {
-      debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      //debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
+      debug_expression_t *exp = g_debug_expressions[get_int_value(entry->exp_ptr)];
       print_native_ptr_reference(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
     }
     fprintf(fp, ", ");
@@ -1685,8 +1690,10 @@ void print_global_variables(FILE *fp)
     unsigned int g_nof_compiler_states
     unsigned int g_nof_smalltalk_packages
     smalltalk_package_t **g_smalltalk_packages
+    unsigned int g_nof_debug_expressions;
+    debug_expression_t **g_debug_expressions;
+  */
 
-   */
   unsigned int i;
 
   fprintf(fp, "{ ");
@@ -1895,6 +1902,21 @@ void print_global_variables(FILE *fp)
   fprintf(fp, " ");
 
   fprintf(fp, ", \"g_smalltalk_gensym_count\" : %d", g_smalltalk_gensym_count);
+
+  fprintf(fp, ", \"g_nof_debug_expressions\" : %d", g_nof_debug_expressions);
+  fprintf(fp, " ");
+
+  fprintf(fp, ", \"g_debug_expressions\" : ");
+  count = g_nof_debug_expressions;
+
+  fprintf(fp, "[ ");
+  for(i=0; i<count; i++)
+  {
+    print_native_ptr_reference(fp, DEBUG_EXPRESSION_PTR, (void *)g_debug_expressions[i]);
+    if(i != count - 1)
+      fprintf(fp, ", ");
+  }
+  fprintf(fp, "] ");
 
   fprintf(fp, " } ");
 }
@@ -2876,12 +2898,13 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
       entry->exp_ptr = NIL;
     else
     {
-      if(!pinned_items)
-        pinned_items = queue_create();
+      /* if(!pinned_items) */
+      /*   pinned_items = queue_create(); */
 
-      queue_enqueue(pinned_items, (void *)debug_exp);
+      /* queue_enqueue(pinned_items, (void *)debug_exp); */
 
-      entry->exp_ptr = (uintptr_t)debug_exp + OBJECT_TAG;
+      //entry->exp_ptr = (uintptr_t)debug_exp + OBJECT_TAG;
+      entry->exp_ptr = convert_int_to_object(add_debug_expression(debug_exp));
     }
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
@@ -3002,10 +3025,10 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     else
       assert(false);
 
-    if(!pinned_items)
-      pinned_items = queue_create();
+    /* if(!pinned_items) */
+    /*   pinned_items = queue_create(); */
 
-    queue_enqueue(pinned_items, (void *)debug_exp);
+    /* queue_enqueue(pinned_items, (void *)debug_exp); */
 
     return (void *)debug_exp;
   }
@@ -3958,6 +3981,26 @@ int load_from_image(char *file_name)
 
   //34. g_smalltalk_gensym_count
   g_smalltalk_gensym_count = JSON_get_object_item(global_variables, "g_smalltalk_gensym_count")->ivalue;
+
+  //35. g_nof_debug_expressions
+  g_nof_debug_expressions = JSON_get_object_item(global_variables, "g_nof_debug_expressions")->ivalue;
+
+  //36. g_debug_expressions
+  struct JSONObject *debug_expressions = JSON_get_object_item(global_variables, "g_debug_expressions");
+
+  assert(JSON_get_array_size(debug_expressions) == g_nof_debug_expressions);
+
+  g_debug_expressions = (debug_expression_t **)GC_MALLOC(g_nof_debug_expressions * sizeof(debug_expression_t *));
+
+  for(i=0; i< g_nof_debug_expressions; i++) {
+    g_debug_expressions[i] = (debug_expression_t *)deserialize_native_ptr_reference(
+                                                     heap,
+                                                     DEBUG_EXPRESSION_PTR,
+                                                     JSON_get_array_item(debug_expressions, i)->ivalue,
+                                                     object_hashtable,
+                                                     native_ptr_hashtable);
+  }
+  /////
 
   initialize_frequently_used_selectors();
 

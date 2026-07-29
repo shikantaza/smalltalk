@@ -116,6 +116,9 @@ OBJECT_PTR ON_DO_SELECTOR;
 OBJECT_PTR INITIALIZE_SELECTOR;
 OBJECT_PTR MNU_SYMBOL;
 
+debug_expression_t **g_debug_expressions = NULL;
+unsigned int g_nof_debug_expressions = 0;
+
 extern stack_type *g_exception_contexts;
 extern OBJECT_PTR g_compile_time_method_selector;
 extern stack_type *g_exception_environment;
@@ -155,7 +158,7 @@ extern OBJECT_PTR Compiler;
 extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR Character;
 
-extern queue_t *pinned_items;
+//extern queue_t *pinned_items;
 
 BOOLEAN IS_SYMBOL_OBJECT(OBJECT_PTR x)                   { return (x & BIT_MASK) == SYMBOL_TAG;                   }
 BOOLEAN IS_CONS_OBJECT(OBJECT_PTR x)                     { return (x & BIT_MASK) == CONS_TAG;                     }
@@ -185,6 +188,20 @@ OBJECT_PTR CADR(OBJECT_PTR x)    { return car(cdr(x)); }
 OBJECT_PTR CDDR(OBJECT_PTR x)    { return cdr(cdr(x)); }
 OBJECT_PTR CAAR(OBJECT_PTR x)    { return car(car(x)); }
 OBJECT_PTR CDDDR(OBJECT_PTR x)   { return cdr(cdr(cdr(x))); }
+
+int add_debug_expression(debug_expression_t *exp)
+{
+  g_nof_debug_expressions++;
+
+  debug_expression_t **temp = (debug_expression_t **)GC_REALLOC(g_debug_expressions,
+								g_nof_debug_expressions * sizeof(debug_expression_t *));
+  assert(temp);
+  g_debug_expressions = temp;
+
+  g_debug_expressions[g_nof_debug_expressions - 1] = exp;
+
+  return g_nof_debug_expressions - 1;
+}
 
 int add_smalltalk_symbol(char *sym)
 {
@@ -593,10 +610,10 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
     debug_exp->type = DEBUG_BASIC_EXPRESSION;
     debug_exp->be = be;
 
-    if(!pinned_items)
-      pinned_items = queue_create();
+    /* if(!pinned_items) */
+    /*   pinned_items = queue_create(); */
 
-    queue_enqueue(pinned_items, (void *)debug_exp);
+    /* queue_enqueue(pinned_items, (void *)debug_exp); */
 
     if(be->msg)
     {
@@ -604,7 +621,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
       {
         assert(be->msg->unary_messages);
 
-        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+        res = convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
 			  be->prim,
                           be->msg->unary_messages,
                           be->msg->binary_messages,
@@ -615,7 +632,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
       {
         assert(be->msg->binary_messages);
 
-        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+        res = convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
 			  be->prim,
                           NULL,
                           be->msg->binary_messages,
@@ -623,7 +640,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
       }
       else if(be->msg->type == KEYWORD_MESSAGE)
       {
-        res = convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+        res = convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
 			  be->prim,
                           NULL,
                           NULL,
@@ -646,7 +663,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
         unsigned int i;
         unsigned int nof_msgs = cm->nof_cascaded_msgs;
         for(i=0; i< nof_msgs; i++)
-          res1 = cons(convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+          res1 = cons(convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
 				  be->prim,
                                   cm->cascaded_msgs[i].unary_messages,
                                   cm->cascaded_msgs[i].binary_messages,
@@ -840,12 +857,12 @@ OBJECT_PTR convert_keyword_argument_to_lisp(keyword_argument_t *k)
   debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
   debug_exp->kw_arg = k;
 
-  if(!pinned_items)
-    pinned_items = queue_create();
+  /* if(!pinned_items) */
+  /*   pinned_items = queue_create(); */
 
-  queue_enqueue(pinned_items, (void *)debug_exp);
+  /* queue_enqueue(pinned_items, (void *)debug_exp); */
 
-  return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+  return convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
                      k->prim,
                      k->unary_messages,
                      k->binary_messages,
@@ -972,12 +989,12 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
   debug_exp->type = DEBUG_BINARY_ARGUMENT;
   debug_exp->bin_arg = arg;
 
-  if(!pinned_items)
-    pinned_items = queue_create();
+  /* if(!pinned_items) */
+  /*   pinned_items = queue_create(); */
 
-  queue_enqueue(pinned_items, (void *)debug_exp);
+  /* queue_enqueue(pinned_items, (void *)debug_exp); */
 
-  return convert_msg((uintptr_t)debug_exp + OBJECT_TAG,
+  return convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
                      arg->prim,
                      arg->unary_messages,
                      NULL,
