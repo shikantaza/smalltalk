@@ -56,7 +56,7 @@ void add_to_autocomplete_list_single(char *word)
   assert(temp);
   autocomplete_words = temp;
 
-  autocomplete_words[nof_autocomplete_words-1] = word;
+  autocomplete_words[nof_autocomplete_words-1] = GC_strdup(word);
 
   //also add the word to keywords_buffer
   //GtkTextMark *mark = gtk_text_buffer_get_insert((GtkTextBuffer *)keywords_buffer);
@@ -65,8 +65,8 @@ void add_to_autocomplete_list_single(char *word)
   //gtk_text_buffer_get_end_iter((GtkTextBuffer *)keywords_buffer, &iter );
   //gtk_text_buffer_move_mark((GtkTextBuffer *)keywords_buffer, mark, &iter );
 
-  gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)keywords_buffer, word, -1);
-  gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)keywords_buffer, "\n", -1);
+  gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), word, -1);
+  gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), "\n", -1);
   //
 }
 
