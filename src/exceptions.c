@@ -581,8 +581,6 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  stack_type *env = g_handler_environment;
-
   exception_handler_t **entries = (exception_handler_t **)stack_data(g_handler_environment);
   int count = stack_count(g_handler_environment);
   int i = count - 1;
@@ -609,8 +607,6 @@ OBJECT_PTR exception_is_nested(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -632,8 +628,6 @@ OBJECT_PTR exception_return(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -651,8 +645,6 @@ OBJECT_PTR exception_return_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR c
 
 OBJECT_PTR exception_retry(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -677,8 +669,6 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 				 OBJECT_PTR another_protected_blk,
 				 OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(another_protected_blk));
   assert(IS_CLOSURE_OBJECT(cont));
@@ -700,8 +690,6 @@ OBJECT_PTR exception_retry_using(OBJECT_PTR closure,
 
 OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -720,8 +708,6 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
@@ -814,8 +800,6 @@ OBJECT_PTR exception_outer(OBJECT_PTR closure, OBJECT_PTR cont)
 
 OBJECT_PTR exception_resignal_as(OBJECT_PTR closure, OBJECT_PTR new_exception, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 

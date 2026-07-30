@@ -22,8 +22,6 @@ extern enum UIMode g_ui_mode;
 
 OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-  
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
 #ifdef DEBUG  
@@ -50,8 +48,6 @@ OBJECT_PTR transcript_show(OBJECT_PTR closure, OBJECT_PTR arg, OBJECT_PTR cont)
 
 OBJECT_PTR transcript_cr(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
-  
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(cont));

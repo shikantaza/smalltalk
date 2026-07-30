@@ -152,7 +152,7 @@ OBJECT_PTR array_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
 
   int i;
 
-  OBJECT_PTR ret;
+  OBJECT_PTR ret=NIL;
 
   for(i=0; i<size; i++)
   {
@@ -199,7 +199,7 @@ OBJECT_PTR array_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   int i;
 
-  OBJECT_PTR ret1, ret2;
+  OBJECT_PTR ret1=NIL, ret2=NIL;
 
   BOOLEAN ret_from_do, ret_from_separated_by;
 

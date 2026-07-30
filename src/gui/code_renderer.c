@@ -74,8 +74,6 @@ void render_string_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index
   gtk_text_buffer_get_end_iter(buf, &iter );
   gtk_text_buffer_move_mark(buf, mark, &iter );
 
-  int i;
-
   if(highlight)
     gtk_text_buffer_insert_with_tags(buf, &iter, str, -1, debugger_tag, NULL);
   else
@@ -94,8 +92,6 @@ void render_space_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
 
   gtk_text_buffer_get_end_iter(buf, &iter );
   gtk_text_buffer_move_mark(buf, mark, &iter );
-
-  int i;
 
   if(highlight)
     gtk_text_buffer_insert_with_tags(buf, &iter, " ", -1, debugger_tag, NULL);

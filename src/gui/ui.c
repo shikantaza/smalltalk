@@ -337,6 +337,8 @@ void print_to_transcript(char *str)
   gtk_text_buffer_move_mark(transcript_buffer, mark, &iter );
   gtk_text_buffer_insert_at_cursor(transcript_buffer, str, -1 );
   gtk_text_view_scroll_to_mark(transcript_textview, mark, 0.0, TRUE, 0.5, 1 );
+
+  while (g_main_context_iteration(NULL, FALSE));
 }
 
 void print_to_workspace(char *str, GtkTextTag *tag)
@@ -605,7 +607,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   gtk_window_set_modal((GtkWindow *)win, TRUE);
   gtk_window_set_keep_above((GtkWindow *)win, TRUE);
 
-  GtkWidget *scrolled_win1, *scrolled_win2, *scrolled_win3;
+  GtkWidget *scrolled_win1, *scrolled_win3;
   GtkWidget *vbox, *hbox, *hbox2;
 
   gtk_window_set_icon_from_file((GtkWindow *)win, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
@@ -625,7 +627,6 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   gtk_container_set_border_width (GTK_CONTAINER (win), 10);
 
   scrolled_win1 = gtk_scrolled_window_new(NULL, NULL);
-  scrolled_win2 = gtk_scrolled_window_new(NULL, NULL);
   scrolled_win3 = gtk_scrolled_window_new(NULL, NULL);
 
   call_chain_list = (GtkTreeView *)gtk_tree_view_new();

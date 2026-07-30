@@ -79,7 +79,7 @@ void replace_block_constructor(executable_code_t *e)
   keyword_argument_t *kw_arg = kw_msg->kw_arg_pairs[2].kw_arg;
   primary_t *prim1 = kw_arg->prim;
 
-  if(prim1->type = BLOCK_CONSTRUCTOR)
+  if(prim1->type == BLOCK_CONSTRUCTOR)
   {
     char str[2000];
     memset(str, '\0', 2000);
@@ -316,13 +316,11 @@ unsigned int convert_block_constructor(char *buf, block_constructor_t *b)
   if(b->type == BLOCK_ARGS)
   {
     len += convert_block_arguments(buf+len, b->block_args);
-    int temp = 0;
     len += sprintf(buf+len, "\n");
     len += convert_executable_code(buf+len, b->exec_code);
   }
   else if(b->type == NO_BLOCK_ARGS)
   {
-    int temp = 0;
     len += sprintf(buf+len, "\n");
     len += convert_executable_code(buf+len, b->exec_code);
   }

@@ -262,7 +262,7 @@ OBJECT_PTR ordered_collection_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   int i;
 
-  OBJECT_PTR ret;
+  OBJECT_PTR ret = NIL;
 
   for(i=0; i<size_val; i++)
   {

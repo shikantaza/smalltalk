@@ -622,7 +622,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       g_debug_data->nf_obj        = m->nativefn_obj;
       g_debug_data->step_out_cont = step_out_cont;
 
-      show_debug_window(false, cont);
+      show_debug_window(false, stack_args[n-1]);
 
       while(g_debug_in_progress)
 	; //loop till the debug window returns control
@@ -699,6 +699,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     return retval;
   }
+  else
+    assert(false); //control should not reach here
 }
 
 OBJECT_PTR message_send_internal_va_list(BOOLEAN super,

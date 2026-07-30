@@ -512,7 +512,6 @@ void eval_expression(GtkWidget *widget, gpointer data)
 
 void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 {
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(lst)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (lst));
   GtkTreeIter  iter;
 
@@ -915,7 +914,6 @@ void debug_delete_breakpoint(GtkWidget *widget, gpointer data)
   if(g_debugger_invoked_for_exception)
     return;
 
-  GtkListStore *store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(call_chain_list)));
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (call_chain_list));
   GtkTreeIter  iter;
 

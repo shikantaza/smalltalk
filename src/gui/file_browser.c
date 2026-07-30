@@ -96,7 +96,7 @@ BOOLEAN any_buffers_modified();
 
 void cleanup_file_name_widgets()
 {
-  int i;
+  /* int i; */
   /* for(i=0; i<nof_fnws; i++) */
   /*   free(fnws[i]); */
   nof_fnws = 0;

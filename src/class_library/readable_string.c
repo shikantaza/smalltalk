@@ -81,7 +81,7 @@ OBJECT_PTR readable_string_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_P
 
   int i;
 
-  OBJECT_PTR ret;
+  OBJECT_PTR ret=NIL;
 
   for(i=0; i<size; i++)
   {
@@ -120,7 +120,7 @@ OBJECT_PTR readable_string_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operat
 
   int i;
 
-  OBJECT_PTR ret1, ret2;
+  OBJECT_PTR ret1=NIL, ret2=NIL;
 
   BOOLEAN ret_from_do, ret_from_separated_by;
 
@@ -472,8 +472,6 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   char *str = g_string_literals[receiver >> OBJECT_SHIFT];
-
-  unsigned int size = strlen(str);
 
   if(!IS_INTEGER_OBJECT(start) || !IS_INTEGER_OBJECT(end))
     create_and_signal_exception(InvalidArgument, cont);

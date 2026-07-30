@@ -50,7 +50,7 @@ void print_object_to_file(OBJECT_PTR obj, FILE *fp)
 {
   if(!is_valid_object(obj))
   {
-    printf("print_object_to_file(): invalid object passed: %p\n", obj);
+    printf("print_object_to_file(): invalid object passed: %p\n", (void *)obj);
     fflush(fp);
     assert(false);
   }
