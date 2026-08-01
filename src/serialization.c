@@ -3560,15 +3560,9 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
   }
   else if(object_type == FLOAT_TAG)
   {
-    ptr = object_alloc(1, FLOAT_TAG);
-
-    hashtable_put(obj_ht, (void *)ref, (void *)((uintptr_t)ptr + object_type));
-
-    (*(double *)ptr) = heap_obj->fvalue;
-
-    retval = (uintptr_t)ptr + object_type;
-
+    retval = convert_float_to_object(heap_obj->fvalue);
     assert(is_valid_object(retval));
+    hashtable_put(obj_ht, (void *)ref, (void *)retval);
   }
   else if(object_type == NATIVE_FN_TAG)
   {

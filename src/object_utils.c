@@ -147,11 +147,17 @@ char get_char_value(OBJECT_PTR char_object)
 
 OBJECT_PTR convert_float_to_object(double v)
 {
-  uintptr_t ptr = object_alloc(1, FLOAT_TAG);
+  double *ptr;
 
-  *((double *)ptr) = v;
+  if(allocate_memory((void **)&ptr, sizeof(double)))
+  {
+    printf("convert_float_to_object(): Unable to allocate memory\n");
+    exit(1);
+  }
 
-  return ptr + FLOAT_TAG;
+  *ptr = v;
+
+  return (uintptr_t)ptr + FLOAT_TAG;
 }
 
 double get_float_value(OBJECT_PTR obj)
@@ -646,13 +652,17 @@ OBJECT_PTR gensym()
 
 OBJECT_PTR convert_native_fn_to_object(nativefn nf)
 {
-  uintptr_t ptr = object_alloc(1, NATIVE_FN_TAG);
+  native_fn_obj_t *nfobj;
 
-  native_fn_obj_t *nfobj = (native_fn_obj_t *)GC_MALLOC(sizeof(native_fn_obj_t));
+  if(allocate_memory((void **)&nfobj, sizeof(native_fn_obj_t)))
+  {
+    printf("convert_native_fn_to_object(): Unable to allocate memory\n");
+    exit(1);
+  }
+
   nfobj->nf = nf;
-  *((native_fn_obj_t *)ptr) = *nfobj;
 
-  return ptr + NATIVE_FN_TAG;
+  return (uintptr_t)nfobj + NATIVE_FN_TAG;
 }
 
 nativefn get_nativefn_value(OBJECT_PTR obj)
@@ -707,11 +717,7 @@ OBJECT_PTR convert_class_object_to_object_ptr(class_object_t *cls_obj)
 
 OBJECT_PTR convert_array_object_to_object_ptr(array_object_t *arr_obj)
 {
-  uintptr_t ptr = object_alloc(1, ARRAY_TAG);
-
-  *((array_object_t *)ptr) = *arr_obj;
-
-  return ptr + ARRAY_TAG;  
+  return (uintptr_t)arr_obj + ARRAY_TAG;
 }
 
 OBJECT_PTR selector(char *s)
