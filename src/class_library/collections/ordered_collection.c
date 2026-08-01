@@ -35,7 +35,7 @@ extern BOOLEAN g_eval_aborted;
 //workaround to fix memory corruption
 //issue involving array_object_t's
 //'elements' variable
-queue_t *pinned_items = NULL;
+//queue_t *pinned_items = NULL;
 
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
@@ -71,10 +71,10 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
   obj->nof_elements = DEFAULT_COLLECTION_SIZE;
   obj->elements = (OBJECT_PTR *)GC_MALLOC(obj->nof_elements * sizeof(OBJECT_PTR));
 
-  if(!pinned_items)
-    pinned_items = queue_create();
+  /* if(!pinned_items) */
+  /*   pinned_items = queue_create(); */
 
-  queue_enqueue(pinned_items, (void *)obj->elements);
+  /* queue_enqueue(pinned_items, (void *)obj->elements); */
 
   GC_register_finalizer((void *)obj->elements, object_finalizer, NULL, NULL, NULL);
 
