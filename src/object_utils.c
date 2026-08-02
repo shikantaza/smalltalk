@@ -61,7 +61,8 @@ uintptr_t extract_ptr(OBJECT_PTR obj)
     print_object(obj);
     assert(false);
   }
-  return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
+  //return (obj >> OBJECT_SHIFT) << OBJECT_SHIFT;
+  return obj & ~((1UL << OBJECT_SHIFT) - 1);
 }
 
 void set_heap(uintptr_t ptr, unsigned int index, OBJECT_PTR val)
@@ -536,7 +537,7 @@ void print_object(OBJECT_PTR obj_ptr)
   char buf[200];
   memset(buf,'\0',200);
   print_object_to_string(obj_ptr, buf);
-  fprintf(stdout, buf);
+  fprintf(stdout, "%s", buf);
   fflush(stdout);
 }
 
@@ -1133,6 +1134,15 @@ BOOLEAN is_valid_object(OBJECT_PTR x)
       printf("ERROR: closure object contains invalid closed vals list (%p)\n", (void *)third(lst_form));
       return false;
     }
+
+    return true;
+  }
+
+  if(IS_STRING_LITERAL_OBJECT(x))
+  {
+    int index = (x >> OBJECT_SHIFT);
+    if((index < 0) || (index >= g_nof_string_literals))
+      return false;
 
     return true;
   }

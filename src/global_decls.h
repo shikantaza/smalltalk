@@ -25,6 +25,9 @@
 
 #define MAX_SOURCE_LENGTH 64000
 
+struct yy_buffer_state;
+typedef struct yy_buffer_state *YY_BUFFER_STATE;
+
 //workaround for variadic function arguments
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
@@ -204,7 +207,8 @@ OBJECT_PTR           third(OBJECT_PTR);
 OBJECT_PTR           translate_to_il(OBJECT_PTR);
 void                 update_binding(binding_env_t *, OBJECT_PTR, OBJECT_PTR);
 int                  yyparse();
-int                  yy_scan_string(char *);
+void                 yy_delete_buffer(YY_BUFFER_STATE);
+YY_BUFFER_STATE      yy_scan_string(char *);
 
 #endif
 

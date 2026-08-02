@@ -143,6 +143,9 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
 {
   GtkWidget *scrolled_win, *vbox;
 
+  PangoFontDescription *font =
+    pango_font_description_from_string(FONT);
+
   transcript_window = (GtkWindow *)gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
   gtk_window_set_icon_from_file(transcript_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
@@ -174,7 +177,9 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
   gtk_text_view_set_cursor_visible((GtkTextView *)textview, FALSE);
   //gtk_widget_set_sensitive(textview, FALSE);
 
-  gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(textview), font);
+
+  pango_font_description_free(font);
 
   transcript_buffer = gtk_text_view_get_buffer((GtkTextView *)textview);
 
@@ -258,6 +263,9 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
 {
   GtkWidget *win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
+  PangoFontDescription *font =
+    pango_font_description_from_string(FONT);
+
   workspace_window = (GtkWindow *)win;
 
   gtk_window_set_icon_from_file(workspace_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
@@ -283,7 +291,9 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   //workspace_textview = gtk_text_view_new ();
   GtkWidget *textview = (GtkWidget *)workspace_source_view;
 
-  gtk_widget_override_font(GTK_WIDGET(textview), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(textview), font);
+
+  pango_font_description_free(font);
 
   workspace_buffer = gtk_text_view_get_buffer((GtkTextView *)workspace_source_view);
   //workspace_buffer = (GtkTextBuffer *)workspace_source_buffer;
@@ -371,27 +381,23 @@ void show_info_dialog(char *msg)
 
 void setup_language_manager_path(GtkSourceLanguageManager *lm)
 {
-  gchar **lang_files;
-  int i, lang_files_count;
-  char **new_langs;
+  gchar **lang_files =
+    g_strdupv((gchar **)gtk_source_language_manager_get_search_path(lm));
 
-  lang_files = g_strdupv ((gchar **)gtk_source_language_manager_get_search_path (lm));
+  int count = g_strv_length(lang_files);
 
-  lang_files_count = g_strv_length (lang_files);
-  new_langs = g_new (char*, lang_files_count + 2);
+  gchar **new_langs = g_new(gchar *, count + 2);
 
-  for (i = 0; lang_files[i]; i++)
-    new_langs[i] = lang_files[i];
+  for (int i = 0; i < count; i++)
+    new_langs[i] = g_strdup(lang_files[i]);
 
-  new_langs[lang_files_count] = g_strdup (SMALLTALKDATADIR);
+  new_langs[count] = g_strdup(SMALLTALKDATADIR);
+  new_langs[count + 1] = NULL;
 
-  new_langs[lang_files_count+1] = NULL;
+  gtk_source_language_manager_set_search_path(lm, new_langs);
 
-  g_free (lang_files);
-
-  gtk_source_language_manager_set_search_path (lm, new_langs);
-
-  g_free(new_langs);
+  g_strfreev(lang_files);
+  g_strfreev(new_langs);
 }
 
 void initialize_call_chain_list(GtkTreeView *list)
@@ -610,6 +616,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   GtkWidget *scrolled_win1, *scrolled_win3;
   GtkWidget *vbox, *hbox, *hbox2;
 
+  PangoFontDescription *font =
+    pango_font_description_from_string(FONT);
+
   gtk_window_set_icon_from_file((GtkWindow *)win, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
 
   gtk_window_set_title((GtkWindow *)win, "Debugger");
@@ -631,7 +640,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   call_chain_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(call_chain_list, TRUE);
-  gtk_widget_override_font(GTK_WIDGET(call_chain_list), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(call_chain_list), font);
 
   g_signal_connect(G_OBJECT(call_chain_list), "cursor-changed",
                    G_CALLBACK(fetch_details_for_call_chain_entry), NULL);
@@ -675,7 +684,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   gtk_text_buffer_create_tag((GtkTextBuffer *)debugger_source_buffer, "gray_bg",
                              "background", "lightgray", NULL);
 
-  gtk_widget_override_font(GTK_WIDGET(debugger_source_view), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(debugger_source_view), font);
   gtk_text_view_set_editable((GtkTextView *)debugger_source_view, FALSE); //TODO: make it editable later
 
   //TODO: uncomment later
@@ -691,7 +700,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   temp_vars_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(temp_vars_list, FALSE);
 
-  gtk_widget_override_font(GTK_WIDGET(temp_vars_list), pango_font_description_from_string(FONT));
+  gtk_widget_override_font(GTK_WIDGET(temp_vars_list), font);
+
+  pango_font_description_free(font);
 
   initialize_temp_vars_list(temp_vars_list);
 

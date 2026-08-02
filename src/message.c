@@ -199,6 +199,10 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #ifdef DEBUG  
   printf("count = %d\n", count);
 #endif
+
+  int ii;
+  for(ii=0; ii<count+1; ii++)
+    assert(is_valid_object(args[ii]));
   
   //if the selector has only a colon at the end strip it off
   //OBJECT_PTR stripped_selector = get_symbol(strip_last_colon(get_symbol_name(selector)));
@@ -719,7 +723,14 @@ OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
   int i=0;
 
   for(i=0; i<count; i++)
+  {
     args[i] = (uintptr_t)va_arg(ap, uintptr_t);
+    if(!is_valid_object(args[i]))
+    {
+      printf("(%d) %p\n", i, (void *)args[i]);
+      assert(false);
+    }
+  }
 
   return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
 }

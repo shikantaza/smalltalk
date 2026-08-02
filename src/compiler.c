@@ -1003,6 +1003,7 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
 
 OBJECT_PTR invoke_cont_on_val(OBJECT_PTR cont, OBJECT_PTR val)
 {
+  assert(is_valid_object(cont));
   assert(IS_CLOSURE_OBJECT(cont));
 
   if(g_run_till_cont == cont)

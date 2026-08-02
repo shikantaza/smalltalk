@@ -424,9 +424,10 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
 
   executable_code_t *prev_exp = g_exp;
 
+  assert(is_valid_object(code_str));
   char *buf = GC_strdup(g_string_literals[code_str >> OBJECT_SHIFT]);
 
-  yy_scan_string(buf);
+  YY_BUFFER_STATE bs = yy_scan_string(buf);
 
   if(!yyparse())
   {
@@ -445,11 +446,15 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
 
     pop_if_top(entry);
 
+    yy_delete_buffer(bs);
+
     return invoke_cont_on_val(cont, ret);
   }
   else
   {
     g_exp = prev_exp;
+
+    yy_delete_buffer(bs);
 
     return create_and_signal_exception(CompileError, cont);
   }

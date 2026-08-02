@@ -55,6 +55,8 @@ void find_text();
 
 void process_event_for_debug_serialization();
 
+void cleanupJIT(void *);
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -291,7 +293,7 @@ void quit_application()
 
     cleanup();
     */
-    
+    cleanupJIT(NULL);
     gtk_main_quit();
     exit(0);
   }
@@ -1003,6 +1005,8 @@ void load_source()
     //proper synchronization.
     //g_thread_new("Load file", invoke_load_file_message, loaded_source_file_name);
     invoke_load_file_message(loaded_source_file_name);
+
+    g_free(loaded_source_file_name);
   }
   else
     gtk_widget_destroy (dialog);

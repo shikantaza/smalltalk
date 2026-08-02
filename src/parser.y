@@ -17,7 +17,6 @@ void yyerror(const char *);
 int yylex(void);
 int set_up_new_yyin(FILE *);
 void pop_yyin();
-int yy_scan_string(char *);
 
 void initialize();
 void initialize_pass2();
@@ -1108,12 +1107,14 @@ void parse_from_fp(FILE *fp)
     if(strlen(buf) == 0)
       break;
 
-    yy_scan_string(buf);
+    YY_BUFFER_STATE bs = yy_scan_string(buf);
 
     if(!yyparse())
     {
       repl2();
     }
+
+    yy_delete_buffer(bs);
 
     if(eof == -1)
       break;
@@ -1317,9 +1318,9 @@ OBJECT_PTR repl_common()
   char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
-
-  assert(nf);
   
+  assert(nf);
+
   OBJECT_PTR nfo = convert_native_fn_to_object(nf);
 
   OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
@@ -1363,6 +1364,8 @@ void repl()
   OBJECT_PTR repl_ret_val = repl_common();
 
   OBJECT_PTR ret;
+
+  assert(is_valid_object(repl_ret_val));
 
   if(IS_CLOSURE_OBJECT(repl_ret_val))
   {
