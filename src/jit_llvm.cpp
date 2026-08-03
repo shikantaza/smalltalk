@@ -139,6 +139,9 @@ std::vector<llvm::orc::VModuleKey> moduleKeys;
 
 extern "C" void initializeJIT()
 {
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+
   theJITObject = new llvm::orc::SimpleJIT();
 }
 
@@ -240,9 +243,6 @@ std::unique_ptr<llvm::Module> convert_file_to_module(const char * c_file_name) {
   std::unique_ptr<CodeGenAction> Act(new EmitLLVMOnlyAction(&theContext));
   if (!Clang.ExecuteAction(*Act))
     return NULL;
-
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmPrinter();
 
   return Act->takeModule();
 }
