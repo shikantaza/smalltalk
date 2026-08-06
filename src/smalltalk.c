@@ -1296,8 +1296,8 @@ OBJECT_PTR smalltalk_print_to_workspace(OBJECT_PTR closure, OBJECT_PTR arg, OBJE
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  char buf[500];
-  memset(buf, '\0', 500);
+  char buf[1000];
+  memset(buf, '\0', 1000);
   print_object_to_string(arg, buf);
 
   print_to_workspace_default_tag(buf);

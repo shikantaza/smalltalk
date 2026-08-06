@@ -306,6 +306,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   OBJECT_PTR cons_form = list(3, m->nativefn_obj, reverse(ret), count1);
   OBJECT_PTR closure_form = extract_ptr(cons_form) + CLOSURE_TAG;
 
+  assert(is_valid_object(closure_form));
+
 #ifdef DEBUG  
   print_object(cons_form); printf(" is the CONS form of the closure invoked by message_send\n");
   print_object(closure_form); printf(" is the closure form of the closure invoked by message_send\n");
@@ -648,20 +650,24 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       OBJECT_PTR retval = NIL;
 
       //invoke nf via assembly on the args and cont directly
-      asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-      asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-      //not populating rdx here, see below
+      //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+      //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
       //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-      asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-      asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-      asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
+      //asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+      //asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+      //asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
       for(i=n-1; i>=0; i--)
 	asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
 
-      //using a for loop screws up the rdx register.
-      //so we populate rdx after the stack push operations
+      //using a for loop screws up the registers.
+      //so we populate them after the stack push operations
+      asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+      asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
       asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+      asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+      asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+      asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
       asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
 
@@ -679,20 +685,26 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     OBJECT_PTR retval = NIL;
 
-    asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    //not populating rdx here, see below
+    assert(is_valid_object(closure_form));
+
+    //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     //asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-    asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
+    //asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+    //asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+    //asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
     for(i=n-1; i>=0; i--)
      asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
 
-    //using a for loop screws up the rdx register.
-    //so we populate rdx after the stack push operations
+    //using a for loop screws up the registers.
+    //so we populate them after the stack push operations
+    asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
+    asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
+    asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
+    asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
+    asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
     asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
 

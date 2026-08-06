@@ -82,6 +82,9 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   len += sprintf(buf+len, "#include <stdint.h>\n");
 #endif
 
+  //uncomment for debugging
+  //len += sprintf(buf+len, "#include <assert.h>\n");
+
 //#if __aarch64__
 //  len += sprintf(buf+len, "typedef uintptr_t (*nativefn)();\n");
 //#else  
@@ -111,6 +114,10 @@ unsigned int build_fn_prototypes(char *buf, unsigned int offset)
   //we can pass them directly, there is no need for convert_int_to_object().
   //uncomment this once the compiler has been tested thoroughly.
   len += sprintf(buf+len, "uintptr_t convert_int_to_object(int);\n");
+
+  //uncomment for debugging
+  //len += sprintf(buf+len, "int is_valid_object(uintptr_t);\n");
+  //len += sprintf(buf+len, "int IS_CLOSURE_OBJECT(uintptr_t);\n");
 
   return len;
 }
@@ -164,6 +171,13 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
   //end debugging code
 
   char *closure_name = extract_variable_string(first(params), serialize_flag);
+
+  //uncomment for debugging
+  //len += sprintf(buf+len, "printf(\"%%p\\n\", %s);\n", closure_name);
+  //len += sprintf(buf+len, "assert(is_valid_object(%s));\n", closure_name);
+  //len += sprintf(buf+len, "printf(\"is_valid_object() returns true\\n\");\n");
+  //len += sprintf(buf+len, "assert(IS_CLOSURE_OBJECT(%s));\n", closure_name);
+  //len += sprintf(buf+len, "printf(\"IS_CLOSURE_OBJECT() returns true\\n\");\n");
 
   len += sprintf(buf+len, "set_most_recent_closure(%s);\n", closure_name);
 
