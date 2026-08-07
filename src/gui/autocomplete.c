@@ -59,15 +59,8 @@ void add_to_autocomplete_list_single(char *word)
   autocomplete_words[nof_autocomplete_words-1] = GC_strdup(word);
 
   //also add the word to keywords_buffer
-  //GtkTextMark *mark = gtk_text_buffer_get_insert((GtkTextBuffer *)keywords_buffer);
-  //GtkTextIter iter;
-
-  //gtk_text_buffer_get_end_iter((GtkTextBuffer *)keywords_buffer, &iter );
-  //gtk_text_buffer_move_mark((GtkTextBuffer *)keywords_buffer, mark, &iter );
-
   gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), word, -1);
   gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), "\n", -1);
-  //
 }
 
 void add_to_autocomplete_list(char *word)
@@ -342,7 +335,7 @@ void do_auto_complete(GtkTextBuffer *buffer)
   //free(s);
 }
 
-void build_autocomplete_words()
+void build_initial_autocomplete_words_list()
 {
   int i;
 
@@ -375,7 +368,7 @@ void build_autocomplete_words()
     "isEmpty", "notEmpty", "select", "reject", "occurrencesOf:", "includes:", "detect:", "ifNone:", "collect:", "substringFrom:", "to:"
   };
 
-  nof_autocomplete_words = 93; //TODO: remember to update this when new inbuilt classes and primitive methods are added
+  nof_autocomplete_words = 94; //TODO: remember to update this when new inbuilt classes and primitive methods are added
   autocomplete_words = (char **)GC_MALLOC(nof_autocomplete_words * sizeof(char *));
   
   assert(autocomplete_words);
@@ -394,30 +387,20 @@ void set_up_autocomplete_words()
     keywords_buffer = gtk_source_buffer_new_with_language(source_language);
 
   //clear the buffer first (to replace symbols from previous package)
-  gtk_text_buffer_set_text((GtkTextBuffer *)keywords_buffer, "", -1);
-  
-  char *inbuilt_words = "Integer\nFloat\nObject\nSmalltalk\nNil\nnil\nTranscript\nNiladicBlock\nMonadicBlock\n"
-    "Boolean\nException\nCompiler\nDyadicValuable\nCharacter\n"
-    "ifTrue:\nifFalse:\nto:\nby:\ndo:\nand:\nor:\n==\ntimesRepeat:\nbasicAt:\n"
-    "put:\nbasicSize\nbasicNew:\n"
-    "new\nnew:\ninitialize\n"
-    "addInstanceVariable:\ntoClass:\naddClassVariable:\ncreateGlobal:\nvalued:\ngensym\naddInstanceMethod:\n"
-    "withBody:\naddClassMethod:\neval:\nloadFile:\naddBreakpointTo:\nremoveBreakpointFrom:\nofClass:\n"
-    "assignClass:\ntoPackage:\nprintToWorkspace:\n"
-    "show:\n"
-    "agrumentCount\nvalue\non:\ndo:\nensure:\nifCurtailed:\nwhileTrue:\nwhileFalse:\n"
-    "value:\n"
-    "and:\neqv:\nnot\nor:\nxor:\nprintString\n"
-    "return\nreturn:\nretry\nretryUsing:\nresume\nresume:\npass\nouter\nsignal\nresignalAs:\nsignal:\n"
-    "compile:\npass:\n"
-    "at:\nsize\ndo:\nseparatedBy:\n"
-    "add:\naddLast:\nremoveLast\n"
-    "isEmpty\nnotEmpty\nselect\nreject\noccurrencesOf:\nincludes:\ndetect:\nifNone:\ncollect:\nsubstringFrom:\nto:\n";
-
-  gtk_text_buffer_set_text((GtkTextBuffer *)keywords_buffer, inbuilt_words, strlen(inbuilt_words));
+  gtk_text_buffer_set_text(GTK_TEXT_BUFFER(keywords_buffer), "", -1);
 
   if(!provider)
+  {
     provider = (GtkSourceCompletionProvider *)gtk_source_completion_words_new("Symbols", NULL);
-  
-  gtk_source_completion_words_register((GtkSourceCompletionWords *)provider, (GtkTextBuffer *)keywords_buffer);
+    gtk_source_completion_words_register((GtkSourceCompletionWords *)provider, GTK_TEXT_BUFFER(keywords_buffer));
+  }
+
+  build_initial_autocomplete_words_list();
+
+  int i;
+  for(i=0; i<nof_autocomplete_words; i++)
+  {
+    gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), autocomplete_words[i], -1);
+    gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), "\n", -1);
+  }
 }

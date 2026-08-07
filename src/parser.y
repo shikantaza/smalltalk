@@ -1173,7 +1173,6 @@ int main(int argc, char **argv)
 
     initialize();
 
-    build_autocomplete_words();
     set_up_autocomplete_words();
 
     load_core_library();
