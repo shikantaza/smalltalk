@@ -10,7 +10,6 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([1.11 -Wall subdir-objects])
 AC_CONFIG_FILES([Makefile])
-${CFLAGS="-O0 -g"}
 AC_PROG_CC
 AC_PROG_LEX
 AC_PROG_YACC
@@ -24,7 +23,7 @@ AC_PROG_CXX
 
 PKG_CHECK_MODULES([gtk], [gtk+-3.0 >= 3.4.2])
 PKG_CHECK_MODULES([gtksourceview], [gtksourceview-3.0 >= 3.4.2])
-#PKG_CHECK_MODULES([libffi], [libffi >= 3.0.11])
+PKG_CHECK_MODULES([libffi], [libffi >= 3.0.11])
 
 LT_INIT
 
