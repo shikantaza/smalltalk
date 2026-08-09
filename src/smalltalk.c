@@ -10,6 +10,8 @@
 #include "util.h"
 #include "stack.h"
 
+#define NOT_FOUND -1
+
 //workaround for variadic function arguments
 //getting clobbered in ARM64
 typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
@@ -17,6 +19,8 @@ typedef OBJECT_PTR (*nativefn1)(OBJECT_PTR, OBJECT_PTR);
 void add_to_autocomplete_list(char *word);
 
 void print_to_workspace_default_tag(char *);
+
+int exists_in_top_level(OBJECT_PTR);
 
 binding_env_t *g_top_level;
 
@@ -88,6 +92,14 @@ extern OBJECT_PTR Character;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
+  int idx = exists_in_top_level(sym);
+
+  if(idx != NOT_FOUND)
+  {
+    g_top_level->bindings[idx]->val = val;
+    return;
+  }
+
   g_top_level->count++;
 
   if(!g_top_level->bindings)
@@ -168,7 +180,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("Character"), cons(Character, NIL));
 }
 
-BOOLEAN exists_in_top_level(OBJECT_PTR sym)
+int exists_in_top_level(OBJECT_PTR sym)
 {
   assert(IS_SYMBOL_OBJECT(sym));
 
@@ -176,9 +188,9 @@ BOOLEAN exists_in_top_level(OBJECT_PTR sym)
 
   for(i=0; i<n; i++)
     if(g_top_level->bindings[i]->key == sym)
-      return true;
+      return i;
 
-  return false;
+  return -1;
 }
 
 class_object_t *g_package = NULL;

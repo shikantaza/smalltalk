@@ -69,6 +69,8 @@ extern stack_type *g_breakpointed_methods;
 extern unsigned int g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 
+extern GtkSourceCompletionProvider *provider;
+
 void remove_all_from_packages_list(GtkTreeView *list)
 {
   GtkTreeStore *store;
@@ -249,7 +251,16 @@ void set_up_class_browser_source_buffer()
   class_browser_source_buffer = gtk_source_buffer_new_with_language(source_language);
   class_browser_source_view = (GtkSourceView *)gtk_source_view_new_with_buffer(class_browser_source_buffer);
 
-  //TODO: is the code in set_up_workspace_source_buffer() to be replicated here?
+  GtkSourceCompletion *sc1 = gtk_source_view_get_completion(class_browser_source_view);
+  GValue gv = G_VALUE_INIT;
+  g_value_init(&gv, G_TYPE_BOOLEAN);
+  g_value_set_boolean(&gv, FALSE);
+  g_object_set_property((GObject *)sc1, "show-headers", &gv);
+
+  if(!provider)
+    provider = (GtkSourceCompletionProvider *)gtk_source_completion_words_new("Symbols", NULL);
+
+  gtk_source_completion_add_provider(sc1, provider, NULL);
 }
 
 void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
@@ -462,9 +473,20 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     }
     else
       assert(false);
-  }
 
- //gtk_statusbar_remove_all(class_browser_statusbar, 0);
+    char code[200];
+    memset(code, '\0', 200);
+    len = 0;
+    len += sprintf(code+len, "Smalltalk ");
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)))
+      len += sprintf(code+len, "addClassMethod: #someMethod ");
+    else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button)))
+      len += sprintf(code+len, "addInstanceMethod: #someMethod ");
+    len += sprintf(len+code, "toClass: %s ", cls_obj->name);
+    len += sprintf(code+len, "withBody: [\n\n]");
+
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), code, -1);
+  }
 
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
 }
