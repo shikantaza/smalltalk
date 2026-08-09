@@ -172,15 +172,15 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     evaluate();
     return TRUE;
   }
-  /* else if(widget == (GtkWidget *)class_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_s) */
-  /* { */
-  /*   if(event->state & GDK_CONTROL_MASK) */
-  /*   { */
-  /*     action_triggering_window = class_browser_window; */
-  /*     evaluate(); */
-  /*     return TRUE; */
-  /*   } */
-  /* } */
+  else if(widget == (GtkWidget *)class_browser_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_s)
+  {
+    if(event->state & GDK_CONTROL_MASK)
+    {
+      action_triggering_window = class_browser_window;
+      evaluate();
+      return TRUE;
+    }
+  }
   else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_p)
   {
     action_triggering_window = workspace_window;

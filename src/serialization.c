@@ -274,6 +274,16 @@ void initialize_frequently_used_selectors();
 
 int add_debug_expression(debug_expression_t *);
 
+OBJECT_PTR call_nf(nativefn,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   unsigned int,
+		   OBJECT_PTR *);
+
 //global variable that indicates what is the type
 //of the pointer that is stored in a stack_type object
 enum PointerType g_sub_type;
@@ -4548,29 +4558,29 @@ void process_event_for_debug_serialization()
   }
   else
   {
-    int i, count;
-    uintptr_t arg1, arg2, arg3, arg4, arg5;
+    int i;
 
-    int n = count - 4; // no of arguments that should be pushed onto the stack
+    int n = g_debug_data->arg_count - 4; // no of arguments that should be pushed onto the stack
     uintptr_t *stack_args = (uintptr_t *)GC_MALLOC(n * sizeof(uintptr_t));
 
     for(i=0; i<n; i++)
-      stack_args[i] = g_debug_data->args[count-n+i+1];
+      stack_args[i] = g_debug_data->args[g_debug_data->arg_count-n+i+1];
 
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = stack_args[n-1];
 
+    /*
     for(i=n-1; i>=0; i--)
       asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
 
     //using a for loop screws up the registers.
     //so we populate them after the stack push operations
     asm volatile("mov %0, %%rdi\n\t" : : "r"(g_debug_data->closure_form) : "%rdi");
-    asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-    asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
+    asm volatile("mov %0, %%rsi\n\t" : : "r"(g_debug_data->args[0]) : "%rsi");
+    asm volatile("mov %0, %%rdx\n\t" : : "r"(g_debug_data->args[1]) : "%rdx");
+    asm volatile("mov %0, %%rcx\n\t" : : "r"(g_debug_data->args[2]) : "%rcx");
+    asm volatile("mov %0, %%r8\n\t"  : : "r"(g_debug_data->args[3]) : "%r8");
+    asm volatile("mov %0, %%r9\n\t"  : : "r"(g_debug_data->args[4]) : "%r9");
 
     asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
 
@@ -4578,5 +4588,16 @@ void process_event_for_debug_serialization()
 
     for(i=0; i<n; i++)
       asm volatile("addq $8, %%rsp\n\t" : : : );
+    */
+
+    call_nf(nf,
+            g_debug_data->closure_form,
+            g_debug_data->args[0],
+            g_debug_data->args[1],
+            g_debug_data->args[2],
+            g_debug_data->args[3],
+            g_debug_data->args[4],
+            n,
+            stack_args);
   }
 }

@@ -125,7 +125,7 @@ GtkToolbar *create_class_browser_toolbar()
 
   GtkToolItem *accept_button = gtk_tool_button_new(accept_icon, NULL);
   gtk_tool_item_set_tooltip_text(accept_button, "Accept (Ctrl-S)");
-  //g_signal_connect (accept_button, "clicked", G_CALLBACK (accept), class_browser_window);
+  g_signal_connect (accept_button, "clicked", G_CALLBACK (accept), class_browser_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, accept_button, 0);
 
   GtkToolItem *refresh_button = gtk_tool_button_new(refresh_icon, NULL);

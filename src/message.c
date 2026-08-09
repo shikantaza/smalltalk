@@ -3,6 +3,10 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <ffi.h>
+
 #include "gc.h"
 
 #include "global_decls.h"
@@ -10,6 +14,16 @@
 #include "stack.h"
 
 //void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
+
+OBJECT_PTR call_nf(nativefn,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   OBJECT_PTR,
+		   unsigned int,
+		   OBJECT_PTR *);
 
 //NIL; since NIL is declared later, using its value
 //TODO: ensure this is reset after a debug cycle is completed
@@ -649,6 +663,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       OBJECT_PTR retval = NIL;
 
+      /*
       //invoke nf via assembly on the args and cont directly
       //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
       //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
@@ -675,6 +690,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       for(i=0; i<n; i++)
 	asm volatile("addq $8, %%rsp\n\t" : : : );
+      */
+
+      retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
 
       return retval;
     }
@@ -687,6 +705,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     assert(is_valid_object(closure_form));
 
+    /*
     //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
     //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
     //asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
@@ -712,6 +731,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     for(i=0; i<n; i++)
       asm volatile("addq $8, %%rsp\n\t" : : : );
+    */
+
+    retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
 
     return retval;
   }
@@ -781,3 +803,64 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
   return ret;
 }
 
+#define FIXED_ARGS 6  /* closure_form, arg1..arg5 */
+
+OBJECT_PTR call_nf(nativefn nf,
+		   OBJECT_PTR closure_form,
+		   OBJECT_PTR arg1,
+		   OBJECT_PTR arg2,
+		   OBJECT_PTR arg3,
+		   OBJECT_PTR arg4,
+		   OBJECT_PTR arg5,
+		   unsigned int n,
+		   OBJECT_PTR *dynamic_args)
+{
+    unsigned int total_args = FIXED_ARGS + n;
+
+    ffi_cif cif;
+    ffi_type **arg_types = (ffi_type **)malloc(total_args * sizeof(ffi_type *));
+    void **arg_values   = (void **)malloc(total_args * sizeof(void *));
+
+    /* Storage for the fixed args so we can take their addresses */
+    OBJECT_PTR fixed_vals[FIXED_ARGS];
+    fixed_vals[0] = closure_form;
+    fixed_vals[1] = arg1;
+    fixed_vals[2] = arg2;
+    fixed_vals[3] = arg3;
+    fixed_vals[4] = arg4;
+    fixed_vals[5] = arg5;
+
+    unsigned int i;
+
+    for (i = 0; i < FIXED_ARGS; i++)
+    {
+        arg_types[i]  = &ffi_type_uint64; /* uintptr_t/OBJECT_PTR type */
+        arg_values[i] = &fixed_vals[i];
+    }
+
+    for (i = 0; i < n; i++)
+    {
+        arg_types[FIXED_ARGS + i]  = &ffi_type_uint64;
+        arg_values[FIXED_ARGS + i] = &dynamic_args[i];
+    }
+
+    OBJECT_PTR result;
+
+    /* Since nf is variadic, use ffi_prep_cif_var so the ABI matches
+       (nfixedargs = FIXED_ARGS, i.e. the args before the "..." in
+       the nativefn prototype). */
+    if (ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, FIXED_ARGS, total_args,
+                          &ffi_type_uint64, arg_types) == FFI_OK)
+    {
+        ffi_call(&cif, FFI_FN(nf), &result, arg_values);
+    }
+    else
+    {
+        result = 0; /* or handle error as appropriate */
+    }
+
+    free(arg_types);
+    free(arg_values);
+
+    return result;
+}
