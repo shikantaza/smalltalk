@@ -63,7 +63,8 @@ enum DebugAction
   STEP_INTO,
   STEP_OVER,
   STEP_OUT,
-  ABORT
+  ABORT,
+  CODE_CHANGE
 };
 
 enum UIMode

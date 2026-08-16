@@ -60,6 +60,8 @@ extern enum DebugAction g_debug_action;
 
 extern OBJECT_PTR TRUE, FALSE;
 
+extern BOOLEAN g_eval_from_debugger;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
 					    BOOLEAN super,
 					    OBJECT_PTR receiver,
@@ -350,7 +352,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 0, NULL, cont, NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -372,6 +374,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
@@ -399,7 +407,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 1, args, cont, NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -421,6 +429,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
@@ -449,7 +463,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 2, args, cont, NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -471,6 +485,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
@@ -500,7 +520,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 3, args, cont, NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -522,6 +542,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
@@ -552,7 +578,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 						     closure_form, 4, args, cont, NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -574,6 +600,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
@@ -629,7 +661,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	       create_call_chain_entry(exp_ptr, super, receiver, selector, m,
 				       closure_form, count, args, stack_args[n-1], NIL, false));
 
-    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized)
+    if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
@@ -651,6 +683,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       {
 	g_eval_aborted = true;
 	return NIL;
+      }
+
+      if(g_debug_action == CODE_CHANGE)
+      {
+	g_debug_action = CONTINUE;
+	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)

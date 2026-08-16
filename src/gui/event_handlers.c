@@ -137,6 +137,15 @@ char *get_selected_text()
 
     expression = (char *)gtk_text_buffer_get_text(class_browser_source_buffer, &start_buffer, &end_buffer, FALSE);
   }
+  else if(action_triggering_window == debugger_window)
+  {
+    GtkTextIter start_buffer, end_buffer;
+
+    gtk_text_buffer_get_start_iter(debugger_source_buffer, &start_buffer);
+    gtk_text_buffer_get_end_iter(debugger_source_buffer, &end_buffer);
+
+    expression = (char *)gtk_text_buffer_get_text(debugger_source_buffer, &start_buffer, &end_buffer, FALSE);
+  }
   else
     assert(0); //TODO
 
@@ -957,6 +966,48 @@ void debug_delete_all_breakpoints(GtkWidget *widget, gpointer data)
     method_t *m = (method_t *)stack_pop(g_breakpointed_methods);
     m->breakpointed = false;
   }
+}
+
+BOOLEAN g_eval_from_debugger;
+
+int is_valid_expression(char *expression);
+
+void debug_accept(GtkWidget *widget, gpointer data)
+{
+  //code changes are permitted in both debug mode
+  //and exception mode, so the
+  //g_debugger_invoked_for_exception() check is
+  //not used here
+
+  g_eval_from_debugger = true;
+  action_triggering_window = debugger_window;
+  int ret = call_repl(get_selected_text());
+  g_eval_from_debugger = false;
+
+  if(ret)
+    return; //parsing failed
+
+  //to remove the call chain entry at the top
+  //as it will be re-pushed by the repeating
+  //message_send_internal() call
+  stack_pop(g_call_chain);
+
+  show_info_dialog("Method updated, the updated definition will be used for the rest of the evaluation");
+
+  gtk_main_quit();
+  hide_debug_window();
+
+  g_debug_action = CODE_CHANGE;
+
+  g_debug_in_progress = false;
+
+  if(g_debugger_serialized)
+  {
+    g_debugger_serialized = false;
+    process_event_for_debug_serialization();
+  }
+
+  //control passed pack to message_send_internal()
 }
 
 static gpointer invoke_load_file_message(gpointer data)

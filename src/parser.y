@@ -48,6 +48,9 @@ void set_up_autocomplete_words();
 void initialize_frequently_used_selectors();
 void initialize_pass2();
 
+void print_to_class_browser_code_panel(char *str, GtkTextTag *tag);
+void print_to_debugger_code_panel(char *str, GtkTextTag *tag);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -79,11 +82,20 @@ extern enum DebugAction g_debug_action;
 
 extern BOOLEAN g_eval_aborted;
 
-extern GtkTextTag *error_tag;
+extern GtkTextTag *workspace_error_tag;
+extern GtkTextTag *class_browser_error_tag;
+extern GtkTextTag *debugger_error_tag;
 
 extern unsigned int g_nof_compiler_states;
 
+extern BOOLEAN g_eval_from_debugger;
+
 extern int load_from_image(char *);
+
+extern GtkWindow *action_triggering_window;
+extern GtkWindow *workspace_window;
+extern GtkWindow *class_browser_window;
+extern GtkWindow *debugger_window;
 
 char *loaded_image_file_name = NULL;
 %}
@@ -907,7 +919,15 @@ void yyerror(const char *s)
     memset(buf, '\0', 200);
 
     sprintf(buf, "Parse error: %s", s);
-    print_to_workspace(buf, error_tag);
+
+    if(action_triggering_window == workspace_window)
+      print_to_workspace(buf, workspace_error_tag);
+    else if(action_triggering_window == class_browser_window)
+      print_to_class_browser_code_panel(buf, class_browser_error_tag);
+    else if(action_triggering_window == debugger_window)
+      print_to_debugger_code_panel(buf, debugger_error_tag);
+    else
+      assert(false);
   }
   else
     assert(false);
@@ -915,9 +935,15 @@ void yyerror(const char *s)
 
 int repl2()
 {
+  //TODO: if repl2() gets called
+  //by an evaluation triggered by
+  //the debugger, some of these
+  //actions may need to be avoided
+
   g_method_call_stack = NIL;
 
-  stack_empty(g_call_chain);
+  if(!g_eval_from_debugger)
+    stack_empty(g_call_chain);
 
   stack_empty(g_exception_environment);
 
@@ -932,7 +958,7 @@ int repl2()
   //OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
 
   //exp = decorate_message_selectors(exp);
-    
+
 #ifdef DEBUG
   print_object(exp); printf("\n");
 #endif

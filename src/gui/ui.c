@@ -44,6 +44,7 @@ void debug_step_over(GtkWidget *, gpointer);
 void debug_step_out(GtkWidget *, gpointer);
 void debug_delete_breakpoint(GtkWidget *, gpointer);
 void debug_delete_all_breakpoints(GtkWidget *, gpointer);
+void debug_accept(GtkWidget *, gpointer);
 
 void print_to_workspace(char *, GtkTextTag *);
 void print_to_transcript(char *);
@@ -70,7 +71,8 @@ GtkTextView *transcript_textview;
 
 GtkTextTag *workspace_tag;
 GtkTextTag *debugger_tag;
-GtkTextTag *error_tag;
+GtkTextTag *workspace_error_tag;
+GtkTextTag *debugger_error_tag;
 
 GtkSourceView *debugger_source_view;
 GtkSourceBuffer *debugger_source_buffer;
@@ -84,6 +86,8 @@ OBJECT_PTR g_debug_cont;
 BOOLEAN g_debugger_invoked_for_exception;
 
 GtkTreeView *call_chain_list;
+
+GtkToolItem *retry_button, *resume_button, *resume_with_val_button;
 
 extern stack_type *g_call_chain;
 extern void update_transcript_title();
@@ -301,7 +305,7 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
   workspace_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "gray_bg",
 					     "background", "lightgray", NULL);
 
-  error_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "red_bg",
+  workspace_error_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "red_bg",
 					 "background", "red", "foreground", "white", NULL);
 
   GtkTextTag *normal_workspace_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)workspace_source_buffer, "white_bg",
@@ -537,6 +541,7 @@ GtkToolbar *create_debug_toolbar()
   GtkWidget *step_into_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_into.png");
   GtkWidget *step_over_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_over_new.png");
   GtkWidget *step_out_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_out.png");
+  GtkWidget *accept_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/accept.png");
 
   GtkWidget *delete_breakpoint_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoint.png");
   GtkWidget *delete_all_breakpoints_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/remove_breakpoints.png");
@@ -552,17 +557,21 @@ GtkToolbar *create_debug_toolbar()
   g_signal_connect (abort_button, "clicked", G_CALLBACK (debug_abort), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, abort_button, 0);
 
-  GtkToolItem *retry_button = gtk_tool_button_new(retry_icon, NULL);
+  //retry, resume, and resume_with_val buttons
+  //are globals as we need to enable/disable them
+  //from show_debug_window()
+
+  retry_button = gtk_tool_button_new(retry_icon, NULL);
   gtk_tool_item_set_tooltip_text(retry_button, "Retry");
   g_signal_connect (retry_button, "clicked", G_CALLBACK (debug_retry), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, retry_button, 1);
 
-  GtkToolItem *resume_button = gtk_tool_button_new(resume_icon, NULL);
+  resume_button = gtk_tool_button_new(resume_icon, NULL);
   gtk_tool_item_set_tooltip_text(resume_button, "Resume with nil");
   g_signal_connect (resume_button, "clicked", G_CALLBACK (debug_resume), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, resume_button, 2);
 
-  GtkToolItem *resume_with_val_button = gtk_tool_button_new(resume_with_val_icon, NULL);
+  resume_with_val_button = gtk_tool_button_new(resume_with_val_icon, NULL);
   gtk_tool_item_set_tooltip_text(resume_with_val_button, "Resume with value");
   g_signal_connect (resume_with_val_button, "clicked", G_CALLBACK (debug_resume_with_val), g_debug_data);
   gtk_toolbar_insert((GtkToolbar *)toolbar, resume_with_val_button, 3);
@@ -601,6 +610,11 @@ GtkToolbar *create_debug_toolbar()
   gtk_tool_item_set_tooltip_text(save_image_button, "Save image");
   g_signal_connect (save_image_button, "clicked", G_CALLBACK (save_image_file), debugger_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, save_image_button, -3);
+
+  GtkToolItem *accept_button = gtk_tool_button_new(accept_icon, NULL);
+  gtk_tool_item_set_tooltip_text(accept_button, "Accept");
+  g_signal_connect (accept_button, "clicked", G_CALLBACK (debug_accept), debugger_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, accept_button, -4);
 
   return (GtkToolbar *)toolbar;
 }
@@ -674,6 +688,9 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   debugger_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)debugger_source_buffer, "cyan_bg",
 					    "background", "cyan", NULL);
 
+  debugger_error_tag = gtk_text_buffer_create_tag((GtkTextBuffer *)debugger_source_buffer, "red_bg",
+                                                  "background", "red", "foreground", "white", NULL);
+
   GtkSourceCompletion *sc1 = gtk_source_view_get_completion(debugger_source_view);
   GValue gv = G_VALUE_INIT;
   g_value_init(&gv, G_TYPE_BOOLEAN);
@@ -685,7 +702,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
                              "background", "lightgray", NULL);
 
   gtk_widget_override_font(GTK_WIDGET(debugger_source_view), font);
-  gtk_text_view_set_editable((GtkTextView *)debugger_source_view, FALSE); //TODO: make it editable later
+  gtk_text_view_set_editable((GtkTextView *)debugger_source_view, TRUE);
 
   //TODO: uncomment later
   //g_signal_connect(G_OBJECT(debugger_source_buffer),
@@ -758,6 +775,10 @@ void show_debug_window(BOOLEAN invoked_for_exception, OBJECT_PTR cont)
   //select the top entry of the call chain stack
   gtk_tree_view_set_cursor(call_chain_list, gtk_tree_path_new_from_indices(0, -1), NULL, false);
 
+  gtk_widget_set_sensitive(GTK_WIDGET(retry_button), invoked_for_exception ? TRUE : FALSE);
+  gtk_widget_set_sensitive(GTK_WIDGET(resume_button), invoked_for_exception ? TRUE : FALSE);
+  gtk_widget_set_sensitive(GTK_WIDGET(resume_with_val_button), invoked_for_exception ? TRUE : FALSE);
+
   g_debugger_invoked_for_exception = invoked_for_exception;
   g_debug_cont = cont;
 
@@ -802,4 +823,15 @@ gchar* get_last_char_from_text_buffer(GtkTextBuffer* buffer)
   last_char = gtk_text_buffer_get_text(buffer, &end_iter, &end_iter1, FALSE);
 
   return last_char;
+}
+
+void print_to_debugger_code_panel(char *str, GtkTextTag *tag)
+{
+  GtkTextMark *mark = gtk_text_buffer_get_insert(GTK_TEXT_BUFFER(debugger_source_buffer));
+  GtkTextIter iter;
+
+  gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(debugger_source_buffer), &iter );
+  gtk_text_buffer_move_mark(GTK_TEXT_BUFFER(debugger_source_buffer), mark, &iter );
+  gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(debugger_source_buffer), &iter, str, -1, tag, NULL);
+  gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(debugger_source_view), mark, 0.0, TRUE, 0.5, 1 );
 }

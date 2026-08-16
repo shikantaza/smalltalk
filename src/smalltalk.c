@@ -629,14 +629,25 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
     if(cls_obj->instance_methods->bindings[i]->key == selector_sym)
     {
       existing_method = true;
-      cls_obj->instance_methods->bindings[i]->val = create_method(class_obj, //convert_class_object_to_object_ptr(cls_obj),
-								  false,
-								  nfo,
-								  closed_vals,
-								  capture_local_var_names(code1),
-								  cons_length(second(third(code1))),
-								  code_str,
-								  exec_code);
+
+      //to preserve the 'breakpointed' flag of the existing
+      //method. this is needed if we are updating a method
+      //from the debugger
+
+      method_t *existing_method = cls_obj->instance_methods->bindings[i]->val;
+      method_t *new_method = create_method(class_obj,
+					   false,
+					   nfo,
+					   closed_vals,
+					   capture_local_var_names(code),
+					   cons_length(second(third(code))),
+					   code_str,
+					   exec_code);
+
+      new_method->breakpointed = existing_method->breakpointed;
+
+      *(cls_obj->instance_methods->bindings[i]->val) = *new_method;
+
       break;
     }
 
@@ -782,14 +793,25 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
     if(cls_obj->class_methods->bindings[i]->key == selector_sym)
     {
       existing_method = true;
-      cls_obj->class_methods->bindings[i]->val = create_method(class_obj, //convert_class_object_to_object_ptr(cls_obj),
-							       true,
-							       nfo,
-							       closed_vals,
-							       capture_local_var_names(code),
-							       cons_length(second(third(code))),
-							       code_str,
-							       exec_code);
+
+      //to preserve the 'breakpointed' flag of the existing
+      //method. this is needed if we are updating a method
+      //from the debugger
+
+      method_t *existing_method = cls_obj->class_methods->bindings[i]->val;
+      method_t *new_method = create_method(class_obj,
+					   true,
+					   nfo,
+					   closed_vals,
+					   capture_local_var_names(code),
+					   cons_length(second(third(code))),
+					   code_str,
+					   exec_code);
+
+      new_method->breakpointed = existing_method->breakpointed;
+
+      *(cls_obj->class_methods->bindings[i]->val) = *new_method;
+
       break;
     }
 

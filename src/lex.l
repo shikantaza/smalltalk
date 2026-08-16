@@ -61,10 +61,16 @@ int call_repl(char *expression)
 
   YY_BUFFER_STATE buf = yy_scan_string(expression);
   if(!yyparse())
+  {
     repl2();
-  yy_delete_buffer(buf);
-
-  return 0;
+    yy_delete_buffer(buf);
+    return 0;
+  }
+  else
+  {
+    yy_delete_buffer(buf);
+    return 1;
+  }
 }
 
 int call_repl_orig(char *expression)
@@ -205,7 +211,6 @@ $. {
 [\n\t ]+   /* ignore whitespace */
 
 %%
-
 
 /*
 TODO: '|' has been temporarily removed from the rule for binary selectors
