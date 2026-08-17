@@ -776,11 +776,7 @@ void create_class_browser_window(int posx, int posy, int width, int height)
 
 void print_to_class_browser_code_panel(char *str, GtkTextTag *tag)
 {
-  GtkTextMark *mark = gtk_text_buffer_get_insert(GTK_TEXT_BUFFER(class_browser_source_buffer));
   GtkTextIter iter;
-
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(class_browser_source_buffer), &iter );
-  gtk_text_buffer_move_mark(GTK_TEXT_BUFFER(class_browser_source_buffer), mark, &iter );
   gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(class_browser_source_buffer), &iter, str, -1, tag, NULL);
-  gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(class_browser_source_view), mark, 0.0, TRUE, 0.5, 1 );
 }

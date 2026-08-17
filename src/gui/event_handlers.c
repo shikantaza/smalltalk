@@ -158,6 +158,8 @@ void evaluate()
 
   if(expression)
     call_repl(expression);
+
+  g_free(expression);
 }
 
 void evaluate_for_print()
@@ -171,6 +173,8 @@ void evaluate_for_print()
   sprintf(decorated_expression, "Smalltalk printToWorkspace: ([ %s ] value1)", expression);
 
   call_repl(decorated_expression);
+
+  g_free(expression);
 }
 
 gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -981,7 +985,9 @@ void debug_accept(GtkWidget *widget, gpointer data)
 
   g_eval_from_debugger = true;
   action_triggering_window = debugger_window;
-  int ret = call_repl(get_selected_text());
+  char *expression = get_selected_text();
+  int ret = call_repl(expression);
+  g_free(expression);
   g_eval_from_debugger = false;
 
   if(ret)

@@ -22,6 +22,8 @@ int repl2();
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR g_last_eval_result;
 
+extern int g_open_square_brackets;
+
 int set_up_new_yyin(FILE *fp)
 {
   if (g_include_stack_ptr >= MAX_INCLUDE_DEPTH)
@@ -58,8 +60,9 @@ void pop_yyin()
 int call_repl(char *expression)
 {
   g_last_eval_result = NIL;
-
+  g_open_square_brackets = 0;
   YY_BUFFER_STATE buf = yy_scan_string(expression);
+
   if(!yyparse())
   {
     repl2();

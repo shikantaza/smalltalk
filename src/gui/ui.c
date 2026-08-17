@@ -357,13 +357,9 @@ void print_to_transcript(char *str)
 
 void print_to_workspace(char *str, GtkTextTag *tag)
 {
-  GtkTextMark *mark = gtk_text_buffer_get_insert(workspace_buffer);
   GtkTextIter iter;
-
   gtk_text_buffer_get_end_iter(workspace_buffer, &iter );
-  gtk_text_buffer_move_mark(workspace_buffer, mark, &iter );
   gtk_text_buffer_insert_with_tags(workspace_buffer, &iter, str, -1, tag, NULL);
-  gtk_text_view_scroll_to_mark((GtkTextView *)workspace_source_view, mark, 0.0, TRUE, 0.5, 1 );
 }
 
 void print_to_workspace_default_tag(char *str)
@@ -827,11 +823,7 @@ gchar* get_last_char_from_text_buffer(GtkTextBuffer* buffer)
 
 void print_to_debugger_code_panel(char *str, GtkTextTag *tag)
 {
-  GtkTextMark *mark = gtk_text_buffer_get_insert(GTK_TEXT_BUFFER(debugger_source_buffer));
   GtkTextIter iter;
-
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(debugger_source_buffer), &iter );
-  gtk_text_buffer_move_mark(GTK_TEXT_BUFFER(debugger_source_buffer), mark, &iter );
   gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(debugger_source_buffer), &iter, str, -1, tag, NULL);
-  gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(debugger_source_view), mark, 0.0, TRUE, 0.5, 1 );
 }
