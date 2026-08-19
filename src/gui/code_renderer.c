@@ -97,12 +97,11 @@ void render_string_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index
     gtk_text_buffer_insert_at_cursor(buf, str, -1);
 }
 
-void render_space_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
+void render_character_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index, char c)
 {
-  char *c = get_last_char_from_text_buffer(buf);
-
-  if(*c == ' ')
-    return;
+  char s[2];
+  s[0] = c;
+  s[1] = '\0';
 
   GtkTextMark *mark = gtk_text_buffer_get_insert(buf);
   GtkTextIter iter;
@@ -111,9 +110,45 @@ void render_space_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
   gtk_text_buffer_move_mark(buf, mark, &iter );
 
   if(highlight)
-    gtk_text_buffer_insert_with_tags(buf, &iter, " ", -1, debugger_tag, NULL);
+    gtk_text_buffer_insert_with_tags(buf, &iter, s, -1, debugger_tag, NULL);
   else
-    gtk_text_buffer_insert_at_cursor(buf, " ", -1);
+    gtk_text_buffer_insert_at_cursor(buf, s, -1);
+}
+
+void render_space_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
+{
+  char *c = get_last_char_from_text_buffer(buf);
+
+  if(*c == ' ')
+    return;
+
+  render_character_to_buffer(buf, highlight, index, ' ');
+}
+
+void render_left_paren_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
+{
+  render_character_to_buffer(buf, highlight, index, '(');
+}
+
+void render_right_paren_to_buffer(GtkTextBuffer *buf, BOOLEAN highlight, gint64 index)
+{
+  GtkTextIter end_iter, start_iter;
+
+  //if last character is a space, replace it with the right paren
+
+  gtk_text_buffer_get_end_iter(buf, &end_iter);
+
+  start_iter = end_iter;
+
+  if(gtk_text_iter_backward_char(&end_iter))
+  {
+    char *last_char = get_last_char_from_text_buffer(buf);
+
+    if (*last_char == ' ')
+        gtk_text_buffer_delete(buf, &end_iter, &start_iter);
+
+    render_character_to_buffer(buf, highlight, index, ')');
+  }
 }
 
 void render_executable_code(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, executable_code_t *ec)
@@ -237,6 +272,30 @@ void render_assignment(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight,
   render_expression(code_buf, indents, highlight, index, as->rvalue);
 }
 
+stack_type *g_message_type_hierarchy = NULL;
+
+BOOLEAN print_paren(enum MessageType child_message_type)
+{
+  if(!g_message_type_hierarchy)
+    g_message_type_hierarchy = stack_create();
+
+  if(stack_is_empty(g_message_type_hierarchy))
+    return false;
+
+  enum MessageType parent_message_type = (enum MessageType)stack_top(g_message_type_hierarchy);
+
+  //note that the comparsions are in the opposite direction
+  //because the enum values are numbered from low (UNARY_MESSAGE=0) to
+  //high (KEYWORD_MESSAGE=2)
+
+  //parent message type has higher precedence.
+  if(parent_message_type < child_message_type)
+    return true;
+
+  //no paren for other cases
+  return false;
+}
+
 void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, basic_expression_t *b)
 {
   if(!b)
@@ -269,10 +328,24 @@ void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
   }
   else if(b->type == PRIMARY_PLUS_MESSAGES)
   {
+    BOOLEAN paren_printed = false;
+    if(print_paren(b->msg->type))
+    {
+      render_left_paren_to_buffer(code_buf, highlight, index);
+      paren_printed = true;
+    }
+
+    stack_push(g_message_type_hierarchy, (void *)b->msg->type);
+
     render_primary(code_buf, indents, my_highlight, index, b->prim);
     render_space_to_buffer(code_buf, my_highlight, index);
     render_message(code_buf, indents, my_highlight, index, b->msg);
     render_cascaded_messages(code_buf, indents, my_highlight, index, b->cascaded_msgs);
+
+    if(paren_printed)
+      render_right_paren_to_buffer(code_buf, highlight, index);
+
+    stack_pop(g_message_type_hierarchy);
   }
   else
   {
