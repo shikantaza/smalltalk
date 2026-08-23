@@ -953,24 +953,11 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     fprintf(fp, "[ ");
 
-    if(msg->type == UNARY_MESSAGE)
-    {
-      fprintf(fp, "\"UNARY_MESSAGE\", ");
-      print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)msg->unary_messages);
-    }
-    else if(msg->type == BINARY_MESSAGE)
-    {
-      fprintf(fp, "\"BINARY_MESSAGE\", ");
-      print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)msg->binary_messages);
-    }
-    else if(msg->type == KEYWORD_MESSAGE)
-    {
-      fprintf(fp, "\"KEYWORD_MESSAGE\", ");
-      print_native_ptr_reference(fp, KEYWORD_MESSAGE_PTR, (void *)msg->kw_msg);
-    }
-    else
-      assert(false);
-
+    print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)msg->unary_messages);
+    fprintf(fp, ", ");
+    print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)msg->binary_messages);
+    fprintf(fp, ", ");
+    print_native_ptr_reference(fp, KEYWORD_MESSAGE_PTR, (void *)msg->kw_msg);
     fprintf(fp, "] ");
   }
   else if(type == CASCADED_MESSAGES_PTR)
@@ -2408,8 +2395,8 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                         obj_ht,
                                                                         native_ptr_ht);
     }
-    else { printf("%s\n", JSON_get_array_item(ptr_entry, 0)->strvalue);
-      assert(false); }
+    else
+      assert(false);
 
     return (void *)prim;
   }
@@ -2419,42 +2406,24 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     hashtable_put(native_ptr_ht, (void *)ref, (void *)msg);
 
-    if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "UNARY_MESSAGE"))
-    {
-      msg->type = UNARY_MESSAGE;
-
-      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
-      msg->unary_messages = (struct unary_messages *)deserialize_native_ptr_reference(heap,
-                                                                                      UNARY_MESSAGES_PTR,
-                                                                                      ref1,
+    long long ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
+    msg->unary_messages = (struct unary_messages *)deserialize_native_ptr_reference(heap,
+                                                                                    UNARY_MESSAGES_PTR,
+                                                                                    ref1,
+                                                                                    obj_ht,
+                                                                                    native_ptr_ht);
+    long long ref2 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+    msg->binary_messages = (struct binary_messages *)deserialize_native_ptr_reference(heap,
+                                                                                      BINARY_MESSAGES_PTR,
+                                                                                      ref2,
                                                                                       obj_ht,
                                                                                       native_ptr_ht);
-    }
-    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "BINARY_MESSAGE"))
-    {
-      msg->type = BINARY_MESSAGE;
-
-      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
-      msg->binary_messages = (struct binary_messages *)deserialize_native_ptr_reference(heap,
-                                                                                        BINARY_MESSAGES_PTR,
-                                                                                        ref1,
-                                                                                        obj_ht,
-                                                                                        native_ptr_ht);
-    }
-    else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "KEYWORD_MESSAGE"))
-    {
-      msg->type = KEYWORD_MESSAGE;
-
-      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
-      msg->kw_msg = (struct keyword_message *)deserialize_native_ptr_reference(heap,
-                                                                               KEYWORD_MESSAGE_PTR,
-                                                                               ref1,
-                                                                               obj_ht,
-                                                                               native_ptr_ht);
-    }
-    else
-      assert(false);
-
+    long long ref3 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+    msg->kw_msg = (struct keyword_message *)deserialize_native_ptr_reference(heap,
+                                                                             KEYWORD_MESSAGE_PTR,
+                                                                             ref3,
+                                                                             obj_ht,
+                                                                             native_ptr_ht);
     return (void *)msg;
   }
   else if(ptr_type == CASCADED_MESSAGES_PTR)
@@ -3255,7 +3224,6 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                          ref1,
                                                                          obj_ht,
                                                                          native_ptr_ht);
-
     if(!strcmp(JSON_get_array_item(ptr_entry, 8)->strvalue, "true"))
       m->breakpointed = true;
     else if(!strcmp(JSON_get_array_item(ptr_entry, 8)->strvalue, "false"))
