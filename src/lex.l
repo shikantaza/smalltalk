@@ -41,6 +41,8 @@ extern OBJECT_PTR g_last_eval_result;
 
 extern int g_open_square_brackets;
 
+extern char *g_method_code;
+
 int set_up_new_yyin(FILE *fp)
 {
   if (g_include_stack_ptr >= MAX_INCLUDE_DEPTH)
@@ -82,6 +84,7 @@ int call_repl(char *expression)
 
   if(!yyparse())
   {
+    g_method_code = GC_strdup(expression);
     repl2();
     yy_delete_buffer(buf);
     return 0;

@@ -114,6 +114,8 @@ extern GtkWindow *workspace_window;
 extern GtkWindow *class_browser_window;
 extern GtkWindow *debugger_window;
 
+extern char *g_method_code;
+
 char *loaded_image_file_name = NULL;
 %}
 
@@ -1154,6 +1156,7 @@ void parse_from_fp(FILE *fp)
 
     if(!yyparse())
     {
+      g_method_code = GC_strdup(buf);
       repl2();
     }
 

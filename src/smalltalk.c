@@ -59,6 +59,8 @@ stack_type *g_breakpointed_methods = NULL;
 
 unsigned int g_nof_compiler_states = 0;
 
+char *g_method_code;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
@@ -658,7 +660,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 					   closed_vals,
 					   capture_local_var_names(code),
 					   cons_length(second(third(code))),
-					   code_str,
+					   get_string_obj(g_method_code), //code_str,
 					   exec_code);
 
       new_method->breakpointed = existing_method->breakpointed;
@@ -693,7 +695,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 		    closed_vals,
 		    capture_local_var_names(code1),
 		    cons_length(second(third(code1))),
-		    code_str,
+		    get_string_obj(g_method_code), //code_str,
 		    exec_code);
   }
 
@@ -822,7 +824,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 					   closed_vals,
 					   capture_local_var_names(code),
 					   cons_length(second(third(code))),
-					   code_str,
+					   get_string_obj(g_method_code), //code_str,
 					   exec_code);
 
       new_method->breakpointed = existing_method->breakpointed;
@@ -857,7 +859,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 		    closed_vals,
 		    capture_local_var_names(code),
 		    cons_length(second(third(code))),
-		    code_str,
+		    get_string_obj(g_method_code), //code_str,
 		    exec_code);
   }
 

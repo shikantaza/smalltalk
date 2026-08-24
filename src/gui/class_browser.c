@@ -551,20 +551,20 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 
     if(m->code_str != NIL)
     {
-      char header[200];
-      memset(header, '\0', 200);
-
-      sprintf(header,
-	      "Smalltalk %s #%s toClass: %s withBody:\n",
-	      m->class_method ? "addClassMethod:" : "addInstanceMethod:",
-	      //substring(sym, 1, strlen(sym) - 1),
-	      name,
-	      ((class_object_t *)extract_ptr(m->cls_obj))->name);
-
-      gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(class_browser_source_buffer), header, -1);
-
       if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pretty_printed_radio_button)))
       {
+        char header[200];
+        memset(header, '\0', 200);
+
+        sprintf(header,
+                "Smalltalk %s #%s toClass: %s withBody:\n",
+                m->class_method ? "addClassMethod:" : "addInstanceMethod:",
+                //substring(sym, 1, strlen(sym) - 1),
+                name,
+                ((class_object_t *)extract_ptr(m->cls_obj))->name);
+
+        gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(class_browser_source_buffer), header, -1);
+
 	int indents = 0;
 	//the fourth argument (index) is relevant only when render_executable_code()
 	//is called for the debugger, so it is set to a dummy value here.
