@@ -2867,7 +2867,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                     obj_ht,
                                                                                     native_ptr_ht);
 
-    long long ref5 = JSON_get_array_item(ptr_entry, 5)->ivalue;
+    long long ref5 = JSON_get_array_item(ptr_entry, 4)->ivalue;
     handler->cont = (OBJECT_PTR)deserialize_object_reference(heap,
                                                              ref5,
                                                              obj_ht,
