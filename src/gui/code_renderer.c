@@ -289,7 +289,8 @@ BOOLEAN print_paren(enum MessageType child_message_type)
   //high (KEYWORD_MESSAGE=2)
 
   //parent message type has higher precedence.
-  if(parent_message_type < child_message_type)
+  if(parent_message_type < child_message_type ||
+     parent_message_type == child_message_type)
     return true;
 
   //no paren for other cases
