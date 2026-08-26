@@ -288,7 +288,10 @@ BOOLEAN print_paren(enum MessageType child_message_type)
   //because the enum values are numbered from low (UNARY_MESSAGE=0) to
   //high (KEYWORD_MESSAGE=2)
 
-  //parent message type has higher precedence.
+  //TODO: this logic is still not robust (statements within
+  //a block still get individual parens)
+
+  //parent message type has higher or equal precedence.
   if(parent_message_type < child_message_type ||
      parent_message_type == child_message_type)
     return true;

@@ -33,14 +33,14 @@
 //void show_debug_window(BOOLEAN, OBJECT_PTR, char *);
 
 OBJECT_PTR call_nf(nativefn,
-		   OBJECT_PTR,
-		   OBJECT_PTR,
-		   OBJECT_PTR,
-		   OBJECT_PTR,
-		   OBJECT_PTR,
-		   OBJECT_PTR,
-		   unsigned int,
-		   OBJECT_PTR *);
+                   OBJECT_PTR,
+                   OBJECT_PTR,
+                   OBJECT_PTR,
+                   OBJECT_PTR,
+                   OBJECT_PTR,
+                   OBJECT_PTR,
+                   unsigned int,
+                   OBJECT_PTR *);
 
 //NIL; since NIL is declared later, using its value
 //TODO: ensure this is reset after a debug cycle is completed
@@ -80,16 +80,16 @@ extern OBJECT_PTR TRUE, FALSE;
 extern BOOLEAN g_eval_from_debugger;
 
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
-					    BOOLEAN super,
-					    OBJECT_PTR receiver,
-					    OBJECT_PTR selector,
-					    method_t *method,
-					    OBJECT_PTR closure,
-					    unsigned int nof_args,
-					    OBJECT_PTR *args,
-					    OBJECT_PTR cont,
-					    OBJECT_PTR termination_blk_closure,
-					    BOOLEAN termination_blk_invoked)
+                                            BOOLEAN super,
+                                            OBJECT_PTR receiver,
+                                            OBJECT_PTR selector,
+                                            method_t *method,
+                                            OBJECT_PTR closure,
+                                            unsigned int nof_args,
+                                            OBJECT_PTR *args,
+                                            OBJECT_PTR cont,
+                                            OBJECT_PTR termination_blk_closure,
+                                            BOOLEAN termination_blk_invoked)
 {
   call_chain_entry_t *entry = (call_chain_entry_t *)GC_MALLOC(sizeof(call_chain_entry_t));
 
@@ -164,12 +164,12 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   
       for(i=0; i<n; i++)
       {
-	if(cls_obj_int->class_methods->bindings[i]->key == selector)
-	{
-	  method_found = true;
-	  method = cls_obj_int->class_methods->bindings[i]->val;
-	  break;
-	}
+        if(cls_obj_int->class_methods->bindings[i]->key == selector)
+        {
+          method_found = true;
+          method = cls_obj_int->class_methods->bindings[i]->val;
+          break;
+        }
       }    
     }
     else
@@ -178,12 +178,12 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
   
       for(i=0; i<n; i++)
       {
-	if(cls_obj_int->instance_methods->bindings[i]->key == selector)
-	{
-	  method_found = true;
-	  method = cls_obj_int->instance_methods->bindings[i]->val;
-	  break;
-	}
+        if(cls_obj_int->instance_methods->bindings[i]->key == selector)
+        {
+          method_found = true;
+          method = cls_obj_int->instance_methods->bindings[i]->val;
+          break;
+        }
       }
     }
     
@@ -203,11 +203,11 @@ method_t *method_lookup(BOOLEAN super, OBJECT_PTR obj, OBJECT_PTR selector)
 }
 
 OBJECT_PTR message_send_internal(BOOLEAN super,
-				 OBJECT_PTR receiver,
-				 OBJECT_PTR exp_ptr,
-				 OBJECT_PTR selector,
-				 OBJECT_PTR count1,
-				 OBJECT_PTR *args)
+                                 OBJECT_PTR receiver,
+                                 OBJECT_PTR exp_ptr,
+                                 OBJECT_PTR selector,
+                                 OBJECT_PTR count1,
+                                 OBJECT_PTR *args)
 {
   if(g_eval_aborted)
     return NIL;
@@ -254,12 +254,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     OBJECT_PTR trimmed_selector = get_symbol(substring(selector_name, 1, strlen(selector_name)-1));
 
     return message_send(g_msg_snd_closure,
-			receiver,
-			NIL,
-			get_symbol("_messageNotUnderstood:"),
-			convert_int_to_object(1),
-			trimmed_selector,
-			args[count]); //cont
+                        receiver,
+                        NIL,
+                        get_symbol("_messageNotUnderstood:"),
+                        convert_int_to_object(1),
+                        trimmed_selector,
+                        args[count]); //cont
   }
 
   //method_t *m = (method_t *)extract_ptr(method);
@@ -303,9 +303,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     {
       if(get_binding_val_regular(inst_vars, car(rest), &closed_val_cons))
       {
-	ret = cons(closed_val_cons, ret);
-	rest = cdr(rest);
-	continue;
+        ret = cons(closed_val_cons, ret);
+        rest = cdr(rest);
+        continue;
       }
     }
 
@@ -313,9 +313,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     {
       if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
       {
-	ret = cons(closed_val_cons, ret);
-	rest = cdr(rest);
-	continue;
+        ret = cons(closed_val_cons, ret);
+        rest = cdr(rest);
+        continue;
       }
     }
 
@@ -323,9 +323,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     {
       if(get_binding_val_regular(shared_vars, car(rest), &closed_val_cons))
       {
-	ret = cons(closed_val_cons, ret);
-	rest = cdr(rest);
-	continue;
+        ret = cons(closed_val_cons, ret);
+        rest = cdr(rest);
+        continue;
       }
     }
 
@@ -367,14 +367,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-						     closure_form, 0, NULL, cont, NIL, false));
+                                                     closure_form, 0, NULL, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -385,25 +385,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = cont;
+        g_run_till_cont = cont;
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, cont);
@@ -422,14 +422,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-						     closure_form, 1, args, cont, NIL, false));
+                                                     closure_form, 1, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -440,25 +440,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = cont;
+        g_run_till_cont = cont;
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, cont);
@@ -478,14 +478,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-						     closure_form, 2, args, cont, NIL, false));
+                                                     closure_form, 2, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -496,25 +496,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = cont;
+        g_run_till_cont = cont;
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, cont);
@@ -535,14 +535,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-						     closure_form, 3, args, cont, NIL, false));
+                                                     closure_form, 3, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -553,25 +553,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = cont;
+        g_run_till_cont = cont;
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, arg3, cont);
@@ -593,14 +593,14 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-						     closure_form, 4, args, cont, NIL, false));
+                                                     closure_form, 4, args, cont, NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -611,25 +611,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, cont);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = cont;
+        g_run_till_cont = cont;
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(cont, NIL));
       return nf(closure_form, arg1, arg2, arg3, arg4, cont);
@@ -675,15 +675,15 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     stack_push(g_call_chain,
-	       create_call_chain_entry(exp_ptr, super, receiver, selector, m,
-				       closure_form, count, args, stack_args[n-1], NIL, false));
+               create_call_chain_entry(exp_ptr, super, receiver, selector, m,
+                                       closure_form, count, args, stack_args[n-1], NIL, false));
 
     if((m->breakpointed || g_debug_action == STEP_INTO) && g_system_initialized && !g_eval_from_debugger)
     {
       g_debug_in_progress = true;
 
       if(!g_debug_data)
-	g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
+        g_debug_data = (debug_serialization_t *)GC_MALLOC(sizeof(debug_serialization_t));
 
       g_debug_data->arg_count     = count;
       g_debug_data->args          = args;
@@ -694,25 +694,25 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       show_debug_window(false, stack_args[n-1]);
 
       while(g_debug_in_progress)
-	; //loop till the debug window returns control
+        ; //loop till the debug window returns control
 
       if(g_debug_action == ABORT)
       {
-	g_eval_aborted = true;
-	return NIL;
+        g_eval_aborted = true;
+        return NIL;
       }
 
       if(g_debug_action == CODE_CHANGE)
       {
-	g_debug_action = CONTINUE;
-	return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+        g_debug_action = CONTINUE;
+        return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
       }
 
       if(g_debug_action == STEP_OVER)
-	g_run_till_cont = stack_args[n-1];
+        g_run_till_cont = stack_args[n-1];
 
       if(g_debug_action == STEP_OUT)
-	g_run_till_cont = step_out_cont;
+        g_run_till_cont = step_out_cont;
 
       put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
@@ -728,7 +728,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       //asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
 
       for(i=n-1; i>=0; i--)
-	asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
+        asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
 
       //using a for loop screws up the registers.
       //so we populate them after the stack push operations
@@ -744,7 +744,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       asm volatile("mov %%rax, %0\n\t" : "=r"(retval) : : "%rax" );
 
       for(i=0; i<n; i++)
-	asm volatile("addq $8, %%rsp\n\t" : : : );
+        asm volatile("addq $8, %%rsp\n\t" : : : );
       */
 
       retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
@@ -797,11 +797,11 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 }
 
 OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
-					 OBJECT_PTR receiver,
-					 OBJECT_PTR exp_ptr,
-					 OBJECT_PTR selector,
-					 OBJECT_PTR count1,
-					 va_list ap)
+                                         OBJECT_PTR receiver,
+                                         OBJECT_PTR exp_ptr,
+                                         OBJECT_PTR selector,
+                                         OBJECT_PTR count1,
+                                         va_list ap)
 {
   assert(IS_INTEGER_OBJECT(count1));
 
@@ -825,11 +825,11 @@ OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
 }
 
 OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
-			OBJECT_PTR receiver,
-			OBJECT_PTR exp_ptr,
-			OBJECT_PTR selector,
-			OBJECT_PTR count1,
-			...)
+                        OBJECT_PTR receiver,
+                        OBJECT_PTR exp_ptr,
+                        OBJECT_PTR selector,
+                        OBJECT_PTR count1,
+                        ...)
 {
   va_list ap;
   va_start(ap, count1);
@@ -842,11 +842,11 @@ OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,
 }
 
 OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
-			      OBJECT_PTR receiver,
-			      OBJECT_PTR exp_ptr,
-			      OBJECT_PTR selector,
-			      OBJECT_PTR count1,
-			      ...)
+                              OBJECT_PTR receiver,
+                              OBJECT_PTR exp_ptr,
+                              OBJECT_PTR selector,
+                              OBJECT_PTR count1,
+                              ...)
 {
   va_list ap;
   va_start(ap, count1);
@@ -861,14 +861,14 @@ OBJECT_PTR message_send_super(OBJECT_PTR msg_send_closure,
 #define FIXED_ARGS 6  /* closure_form, arg1..arg5 */
 
 OBJECT_PTR call_nf(nativefn nf,
-		   OBJECT_PTR closure_form,
-		   OBJECT_PTR arg1,
-		   OBJECT_PTR arg2,
-		   OBJECT_PTR arg3,
-		   OBJECT_PTR arg4,
-		   OBJECT_PTR arg5,
-		   unsigned int n,
-		   OBJECT_PTR *dynamic_args)
+                   OBJECT_PTR closure_form,
+                   OBJECT_PTR arg1,
+                   OBJECT_PTR arg2,
+                   OBJECT_PTR arg3,
+                   OBJECT_PTR arg4,
+                   OBJECT_PTR arg5,
+                   unsigned int n,
+                   OBJECT_PTR *dynamic_args)
 {
     unsigned int total_args = FIXED_ARGS + n;
 
