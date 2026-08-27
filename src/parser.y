@@ -1203,9 +1203,6 @@ void load_tests()
   g_running_tests = false;
 }
 
-void create_test_image(char *);
-int load_from_test_image(char *);
-
 #ifndef LEX
 int main(int argc, char **argv)
 {

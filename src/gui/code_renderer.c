@@ -21,10 +21,20 @@
 #include <gtksourceview/gtksource.h>
 #include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 
+#include "gc.h"
+
 #include "../global_decls.h"
 #include "../util.h"
 
 #include "../parser_header.h"
+
+typedef struct
+{
+  enum MessageType message_type;
+  unsigned int block_num;
+} basic_exp_hierarchy_data_t;
+
+unsigned int nof_square_brackets = 0;
 
 //forward declarations
 void render_temporaries(GtkTextBuffer *, int *, BOOLEAN, gint64, temporaries_t *);
@@ -282,14 +292,22 @@ BOOLEAN print_paren(enum MessageType child_message_type)
   if(stack_is_empty(g_message_type_hierarchy))
     return false;
 
-  enum MessageType parent_message_type = (enum MessageType)stack_top(g_message_type_hierarchy);
+  basic_exp_hierarchy_data_t *hier_data = (basic_exp_hierarchy_data_t *)stack_top(g_message_type_hierarchy);
+
+  //enum MessageType parent_message_type = (enum MessageType)stack_top(g_message_type_hierarchy);
+
+  enum MessageType parent_message_type = hier_data->message_type;
+  unsigned int block_num = hier_data->block_num;
+
+  //TODO: this logic may still not be robust
+
+  //the parent and child messages are in different blocks
+  if(block_num != nof_square_brackets)
+    return false;
 
   //note that the comparsions are in the opposite direction
   //because the enum values are numbered from low (UNARY_MESSAGE=0) to
   //high (KEYWORD_MESSAGE=2)
-
-  //TODO: this logic is still not robust (statements within
-  //a block still get individual parens)
 
   //parent message type has higher or equal precedence.
   if(parent_message_type < child_message_type ||
@@ -339,7 +357,14 @@ void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
       paren_printed = true;
     }
 
-    stack_push(g_message_type_hierarchy, (void *)b->msg->type);
+    //stack_push(g_message_type_hierarchy, (void *)b->msg->type);
+
+    basic_exp_hierarchy_data_t *data = (basic_exp_hierarchy_data_t *)GC_MALLOC(sizeof(basic_exp_hierarchy_data_t));
+
+    data->message_type = b->msg->type;
+    data->block_num = nof_square_brackets;
+
+    stack_push(g_message_type_hierarchy, (void *)data);
 
     render_primary(code_buf, indents, my_highlight, index, b->prim);
     render_space_to_buffer(code_buf, my_highlight, index);
@@ -421,7 +446,9 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
 {
   if(!b)
     return;
-  
+
+  nof_square_brackets++;
+
   render_string_to_buffer(code_buf, highlight, index, "[ ");
 
   if(b->type == BLOCK_ARGS)
@@ -449,6 +476,8 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
   *indents -= 2;
   render_indents_to_buffer(code_buf, indents, highlight);
   render_string_to_buffer(code_buf, highlight, index, "]");
+
+  nof_square_brackets--;
 }
 
 void render_block_arguments(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, block_arguments_t *args)
