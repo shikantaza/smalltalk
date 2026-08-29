@@ -1210,39 +1210,49 @@ int main(int argc, char **argv)
 
   if(argc == 1) //no image
   {
-    g_ui_mode = CLI;
+    if(access("smalltalk.image", F_OK) != -1)
+    {
+      loaded_image_file_name = GC_strdup("smalltalk.image");
+      initialize_pre_image();
+      load_from_image(loaded_image_file_name);
+      initialize_pass2();
+    }
+    else
+    {
+      g_ui_mode = CLI;
 
-    g_system_initialized = false;
+      g_system_initialized = false;
 
-    initialize();
+      initialize();
 
-    set_up_autocomplete_words();
+      set_up_autocomplete_words();
 
-    load_core_library();
+      load_core_library();
 
-    initialize_pass2();
+      initialize_pass2();
 
-    load_core_library2();
+      load_core_library2();
 
-    initialize_inbuiltfns();
+      initialize_inbuiltfns();
 
-    g_system_initialized = true;
+      g_system_initialized = true;
 
-    create_workspace_window(DEFAULT_WORKSPACE_POSX,
-			    DEFAULT_WORKSPACE_POSY,
-			    DEFAULT_WORKSPACE_WIDTH,
-			    DEFAULT_WORKSPACE_HEIGHT,
-			    "");
-    create_transcript_window(DEFAULT_TRANSCRIPT_POSX,
-			     DEFAULT_TRANSCRIPT_POSY,
-			     DEFAULT_TRANSCRIPT_WIDTH,
-			     DEFAULT_TRANSCRIPT_HEIGHT,
-			     "");
-    create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
-			DEFAULT_DEBUG_WINDOW_POSY,
-			DEFAULT_DEBUG_WINDOW_WIDTH,
-			DEFAULT_DEBUG_WINDOW_HEIGHT,
-			"Debugger");
+      create_workspace_window(DEFAULT_WORKSPACE_POSX,
+			      DEFAULT_WORKSPACE_POSY,
+			      DEFAULT_WORKSPACE_WIDTH,
+			      DEFAULT_WORKSPACE_HEIGHT,
+			      "");
+      create_transcript_window(DEFAULT_TRANSCRIPT_POSX,
+			       DEFAULT_TRANSCRIPT_POSY,
+			       DEFAULT_TRANSCRIPT_WIDTH,
+			       DEFAULT_TRANSCRIPT_HEIGHT,
+			       "");
+      create_debug_window(DEFAULT_DEBUG_WINDOW_POSX,
+			  DEFAULT_DEBUG_WINDOW_POSY,
+			  DEFAULT_DEBUG_WINDOW_WIDTH,
+			  DEFAULT_DEBUG_WINDOW_HEIGHT,
+			  "Debugger");
+    }
   }
   else
   {
@@ -1258,56 +1268,9 @@ int main(int argc, char **argv)
     //print_diagnostics("diagnostics_post.txt");
   }
 
-  //gtk_init(&argc, &argv);
-
   g_ui_mode = GUI;
 
   gtk_main();
-
-  /*
-  //load_tests();
-  //TODO: get this parsing too done
-  //by parser_from_fp()
-  
-  char buf[1024];
-  char *line = NULL;
-
-  unsigned int len;
-  int nbytes = 100;
-
-  memset(buf, '\0', 1024);
-
-  fprintf(stdout, "Type the Smalltalk expression at the prompt. Press Enter on an empty line\n");
-  fprintf(stdout, "(after completing the expression) to evaluate the expression, Control-C to quit.\n");
-  
-  while(1)
-  {
-    memset(buf, '\0', 1024);
-    len = 0;
-    
-    fprintf(stdout, "> ");
-
-    while(1)
-    {
-      line = (char *)GC_MALLOC((nbytes + 1) * sizeof(char));
-      getline(&line, (size_t *)&nbytes, stdin);
-    
-      if(!strcmp(line, "\n"))
-	 break;
-
-      len += sprintf(buf+len, "%s", line);
-    }
-
-    if(!strcmp(buf, "quit\n"))
-      break;
-
-    yy_scan_string(buf);
-    if(!yyparse())
-    {
-      repl2();
-    }
-  }
-  */
 
   exit(0);    
 }
