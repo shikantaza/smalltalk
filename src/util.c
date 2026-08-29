@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <zip.h>
 
 #include "gc.h"
 
@@ -395,4 +396,104 @@ char *replace_newlines(char *str)
   ret[j+1] = '\0';
 
   return ret;
+}
+
+int create_image_zip_file(const char *archive_name, const char *json_file_name, char *err_msg)
+{
+    int errorp = 0;
+
+    zip_t *archive = zip_open(archive_name, ZIP_CREATE | ZIP_TRUNCATE, &errorp);
+    if (!archive)
+    {
+        zip_error_t error;
+        zip_error_init_with_code(&error, errorp);
+        sprintf(err_msg, "Failed to open archive: %s\n", zip_error_strerror(&error));
+        zip_error_fini(&error);
+        return EXIT_FAILURE;
+    }
+
+    zip_source_t *source_file = zip_source_file(archive, json_file_name, 0, -1);
+    if (!source_file)
+    {
+        sprintf(err_msg, "Failed to create file source: %s\n", zip_strerror(archive));
+    }
+    else
+    {
+        if (zip_file_add(archive, json_file_name, source_file, ZIP_FL_ENC_UTF_8) < 0)
+	{
+            sprintf(err_msg, "Failed to add disk file: %s\n", zip_strerror(archive));
+            zip_source_free(source_file);
+        }
+    }
+
+    if (zip_close(archive) < 0)
+    {
+      sprintf(err_msg, "Failed to write and close archive: %s\n", zip_strerror(archive));
+      return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+#define BUFFER_SIZE 8192 // 8KB chunks for efficient copying
+
+int extract_json_from_image_zip_file(const char *archive_name, char *json_file_name, char *err_msg)
+{
+    int errorp = 0;
+
+    zip_t *archive = zip_open(archive_name, 0, &errorp);
+    if (!archive) {
+        sprintf(err_msg, "Error opening archive (code %d)\n", errorp);
+        return EXIT_FAILURE;
+    }
+
+    zip_int64_t num_entries = zip_get_num_entries(archive, 0);
+
+    assert(num_entries == 1);
+
+    struct zip_stat st;
+    zip_stat_init(&st);
+
+    assert(zip_stat_index(archive, 0, 0, &st) == 0);
+
+    zip_file_t *zip_file = zip_fopen_index(archive, 0, 0);
+    if(!zip_file)
+    {
+      sprintf(err_msg, "Could not open %s inside ZIP\n", st.name);
+      return EXIT_FAILURE;
+    }
+
+    sprintf(json_file_name, "%s", st.name);
+
+    FILE *dest_file = fopen(st.name, "wb");
+    if(!dest_file)
+    {
+      sprintf(err_msg, "Could not create destination file %s\n", st.name);
+      zip_fclose(zip_file);
+      return EXIT_FAILURE;
+    }
+
+    char buffer[BUFFER_SIZE];
+    zip_int64_t bytes_read;
+    int write_error = 0;
+
+    while ((bytes_read = zip_fread(zip_file, buffer, sizeof(buffer))) > 0)
+    {
+      size_t bytes_written = fwrite(buffer, 1, bytes_read, dest_file);
+      if (bytes_written < (size_t)bytes_read) {
+	sprintf(err_msg, "Write error occurred while writing %s\n", st.name);
+	write_error = 1;
+	break;
+      }
+    }
+
+    if (bytes_read < 0) {
+      sprintf(err_msg, "Read error occurred while extracting %s\n", st.name);
+    }
+
+    fclose(dest_file);
+    zip_fclose(zip_file);
+
+    zip_close(archive);
+    return EXIT_SUCCESS;
 }

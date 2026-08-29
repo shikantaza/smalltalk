@@ -301,6 +301,9 @@ OBJECT_PTR call_nf(nativefn,
 		   unsigned int,
 		   OBJECT_PTR *);
 
+int create_image_zip_file(const char *, const char *, char *);
+int extract_json_from_image_zip_file(const char *, char *, char *);
+
 //global variable that indicates what is the type
 //of the pointer that is stored in a stack_type object
 enum PointerType g_sub_type;
@@ -1939,7 +1942,22 @@ void create_image(char *file_name)
 {
   //print_diagnostics("diagnostics_pre.txt");
 
-  FILE *fp = fopen(file_name, "w");  
+  char json_file_name[] = "smalltalkXXXXXX";
+
+  int fd = mkstemp(json_file_name);
+  if (fd == -1)
+  {
+    fprintf(stderr, "Failed to create temporary file");
+    return;
+  }
+
+  FILE *fp = fdopen(fd, "w");
+  if(fp == NULL)
+  {
+    fprintf(stderr, "Failed to convert fd to FILE pointer");
+    close(fd);
+    return;
+  }
 
   obj_print_queue = queue_create();
   obj_hashtable = hashtable_create(1000001);
@@ -1981,6 +1999,20 @@ void create_image(char *file_name)
   serialize_debugger(fp);
 
   fprintf(fp, "} ");
+
+  fclose(fp);
+
+  char err_msg[200];
+  memset(err_msg, '\0', 200);
+
+  if(create_image_zip_file(file_name, json_file_name, err_msg) != EXIT_SUCCESS)
+    fprintf(stderr, "Image creation failed: %s\n", err_msg);
+
+  if (unlink(json_file_name) == -1)
+  {
+    fprintf(stderr, "Failed to delete temporary file");
+    return;
+  }
 }
 
 BOOLEAN is_dynamic_memory_object(OBJECT_PTR obj)
@@ -3656,11 +3688,20 @@ void load_native_functions(struct JSONObject *native_functions)
     g_native_fn_objects[j].nf = get_function(state, g_native_fn_objects[j].fname);
 }
 
-int load_from_image(char *file_name)
+int load_from_image(char *image_file_name)
 {
   int i;
 
-  struct JSONObject *root = JSON_parse(file_name);
+  char json_file_name[100];
+  memset(json_file_name, '\0', 100);
+
+  char err_msg[200];
+  memset(err_msg, '\0', 200);
+
+  if(extract_json_from_image_zip_file(image_file_name, json_file_name, err_msg))
+     return 1;
+
+  struct JSONObject *root = JSON_parse(json_file_name);
 
   if(!root)
     return 1;
@@ -4008,6 +4049,12 @@ int load_from_image(char *file_name)
                        heap,
                        object_hashtable,
                        native_ptr_hashtable);
+
+  char *cmd;
+  cmd = (char *)GC_MALLOC(sizeof(json_file_name) + 4); //prepend "rm ", add null terminator
+
+  sprintf(cmd, "rm %s", json_file_name);
+  system(cmd);
 
   return 0;
 }

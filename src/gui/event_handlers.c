@@ -378,7 +378,7 @@ void save_image()
 
     //these don't work; all other file types are still displayed
     GtkFileFilter *filter_text = gtk_file_filter_new();
-    gtk_file_filter_set_name(filter_text, "Smalltalk Image Files (*.json)");
+    gtk_file_filter_set_name(filter_text, "Smalltalk Image Files (*.image)");
     gtk_file_filter_add_mime_type(filter_text, "text/plain");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter_text);
     gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(dialog), filter_text);
