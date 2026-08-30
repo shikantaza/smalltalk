@@ -119,6 +119,36 @@ int call_repl_orig(char *expression)
   return 0;
 }
 
+char *remove_backslash(char *s)
+{
+  unsigned int i, j, n;
+
+  n = strlen(s);
+
+  char *ret = (char *)GC_MALLOC((n+1) * sizeof(char));
+
+  i=0, j=0;
+
+  while(i<n-1)
+  {
+    if(s[i] == '\\' && s[i+1] == '\'')
+    {
+      ret[j] = s[i+1];
+      i += 2;
+    }
+    else
+    {
+      ret[j] = s[i];
+      i++;
+    }
+    j++;
+  }
+
+  ret[j] = s[i];
+  ret[j+1] = '\0';
+
+  return ret;
+}
 %}
 
 /* to avoid warning related to 'yyunput' being defined but not used */
@@ -176,13 +206,13 @@ $. {
   return T_QUOTED_CHARACTER; 
 }
 
-'[^']*\' { 
-  yylval.default_value = GC_strdup(yytext); 
-  return T_QUOTED_STRING; 
+\'([^\'\\]|\\.)*\' {
+  yylval.default_value = remove_backslash(yytext);
+  return T_QUOTED_STRING;
 }
 
-\#'[^']*\' { 
-  yylval.default_value = GC_strdup(yytext); 
+\#\'([^\'\\]|\\.)*\' { 
+  yylval.default_value = remove_backslash(yytext);
   return T_HASHED_STRING; 
 }
 
