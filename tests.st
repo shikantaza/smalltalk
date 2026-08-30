@@ -746,4 +746,12 @@ UnitTestFramework runNegativeTestCase: [ (1 > 2.0) ] withID: 155
 
 UnitTestFramework runExceptionTestCase: [ 1 > Transcript ] exception: InvalidArgument withID: 156
 
+UnitTestFramework runTestCase: [ (true | true) = true ] withID: 157
+
+UnitTestFramework runTestCase: [ (true | false) = true ] withID: 158
+
+UnitTestFramework runTestCase: [ (false | true) = true ] withID: 159
+
+UnitTestFramework runTestCase: [ (false | false) = false ] withID: 160
+
 UnitTestFramework reportStatus

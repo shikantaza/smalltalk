@@ -171,7 +171,7 @@ char *remove_backslash(char *s)
   return T_KEYWORD;
 }
 
-(!|%|&|\*|\+|,|\/|<|=|>|\?|@|\\|~|-)+ { 
+("-"|"!"|"%"|"&"|"*"|"+"|","|"/"|"<"|"="|">"|"?"|"@"|"\\"|"~")+ {
   yylval.default_value = GC_strdup(yytext); 
   return T_BINARY_SELECTOR; 
 }
@@ -262,6 +262,10 @@ $. {
 }
 
 [\n\t ]+   /* ignore whitespace */
+
+. {
+    return YYUNDEF; /* report an error for anything else */
+}
 
 %%
 

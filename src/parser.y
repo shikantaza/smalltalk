@@ -666,6 +666,14 @@ binary_message:
       bin_msg->bin_arg = $2;
       $$ = bin_msg;
     }
+    |
+    T_VERTICAL_BAR binary_argument
+    {
+      binary_message_t *bin_msg = (binary_message_t *)GC_MALLOC(sizeof(binary_message_t));
+      bin_msg->binary_selector = GC_strdup("|");
+      bin_msg->bin_arg = $2;
+      $$ = bin_msg;
+    }
     ;
 
 binary_argument:
