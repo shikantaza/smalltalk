@@ -74,6 +74,12 @@ void process_event_for_debug_serialization();
 
 void cleanupJIT(void *);
 
+void load_image();
+
+void initialize_pre_image();
+void load_from_image(char *);
+void initialize_pass2();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -227,6 +233,8 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     close_application_window((GtkWidget **)&class_browser_window);
   else if(widget == (GtkWidget *)transcript_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_Q)
     quit_application();
+  else if(widget == (GtkWidget *)transcript_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_l)
+    load_image();
   else if(widget == (GtkWidget *)class_browser_window && event->keyval == GDK_KEY_F5)
   {
     action_triggering_window = class_browser_window;
@@ -340,7 +348,7 @@ void quit(GtkWidget *widget,
 void load_image_file(GtkWidget *widget,
                      gpointer data)
 {
-  show_info_dialog("To be implemented");
+  load_image();
 }
 
 void update_transcript_title()
@@ -1109,4 +1117,34 @@ void show_file_browser_win(GtkWidget *widget,
                            gpointer  data)
 {
   show_file_browser_window();
+}
+
+void load_image()
+{
+  GtkWidget *dialog;
+
+  dialog = gtk_file_chooser_dialog_new ("Load pLisp Image",
+                                        (GtkWindow *)transcript_window,
+                                        GTK_FILE_CHOOSER_ACTION_OPEN,
+                                        "Cancel", GTK_RESPONSE_CANCEL,
+                                        "Open", GTK_RESPONSE_ACCEPT,
+                                        NULL);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+  {
+
+    loaded_image_file_name = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+    initialize_pre_image();
+    load_from_image(loaded_image_file_name);
+    initialize_pass2();
+
+    print_to_transcript("Image ");
+    print_to_transcript(loaded_image_file_name);
+    print_to_transcript(" loaded successfully\n");
+
+    update_transcript_title();
+  }
+
+  gtk_widget_destroy (dialog);
 }

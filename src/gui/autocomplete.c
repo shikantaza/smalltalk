@@ -37,6 +37,12 @@ unsigned int nof_autocomplete_words = 0;
 
 GtkSourceBuffer *keywords_buffer = NULL;
 
+//this is needed to ensure that the setup
+//is done only once (needed for the case
+//when we load an image from the UI after
+//launching the system in non-image mode)
+static BOOLEAN autocomplete_setup_done = false;
+
 extern GtkSourceLanguageManager *lm;
 extern GtkSourceLanguage *source_language;
 extern GtkSourceCompletionProvider *provider;
@@ -396,6 +402,9 @@ void build_initial_autocomplete_words_list()
 
 void set_up_autocomplete_words()
 {
+  if(autocomplete_setup_done)
+    return;
+
   lm = gtk_source_language_manager_get_default();
   setup_language_manager_path(lm);
   source_language = gtk_source_language_manager_get_language(lm, "smalltalk");
@@ -420,4 +429,6 @@ void set_up_autocomplete_words()
     gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), autocomplete_words[i], -1);
     gtk_text_buffer_insert_at_cursor(GTK_TEXT_BUFFER(keywords_buffer), "\n", -1);
   }
+
+  autocomplete_setup_done = true;
 }
