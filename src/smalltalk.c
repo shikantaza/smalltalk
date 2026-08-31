@@ -61,6 +61,14 @@ unsigned int g_nof_compiler_states = 0;
 
 char *g_method_code;
 
+//these are used to correctly align the
+//class browser lists after a new class
+//or method is created. only one of them
+//will be non-null once the system is up
+//and running
+class_object_t *g_last_created_class = NULL;
+method_t *g_last_created_method = NULL;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
@@ -280,6 +288,9 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   add_to_autocomplete_list(cls_obj->name);
 
   pop_if_top(entry);
+
+  g_last_created_class = cls_obj;
+  g_last_created_method = NULL;
 
   return invoke_cont_on_val(cont, class_object);
 }
@@ -553,6 +564,9 @@ method_t *create_method(OBJECT_PTR cls_obj,
   m->code_str     = code_str;
   m->exec_code    = exec_code;
   m->breakpointed = false;
+
+  g_last_created_method = m;
+  g_last_created_class = NULL;
 
   //return (uintptr_t)m + OBJECT_TAG;
   return m;

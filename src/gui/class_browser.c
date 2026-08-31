@@ -797,3 +797,57 @@ void print_to_class_browser_code_panel(char *str, GtkTextTag *tag)
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(class_browser_source_buffer), &iter );
   gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(class_browser_source_buffer), &iter, str, -1, tag, NULL);
 }
+
+gboolean navigate_to_row(GtkTreeView *tree_view, gint column_index, gint64 target_value)
+{
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  gboolean valid;
+
+  model = gtk_tree_view_get_model(tree_view);
+  if (!model) return FALSE;
+
+  valid = gtk_tree_model_get_iter_first(model, &iter);
+
+  while (valid)
+  {
+    gint64 cell_value = -1;
+
+    gtk_tree_model_get(model, &iter, column_index, &cell_value, -1);
+
+    if (cell_value == target_value)
+    {
+      GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+
+      gtk_tree_view_expand_to_path(tree_view, path);
+
+      GtkTreeSelection *selection = gtk_tree_view_get_selection(tree_view);
+      gtk_tree_selection_select_path(selection, path);
+
+      gtk_tree_view_scroll_to_cell(tree_view, path, NULL, TRUE, 0.5, 0.0);
+      gtk_tree_view_set_cursor(tree_view, path, NULL, FALSE);
+
+      gtk_tree_path_free(path);
+      return TRUE;
+    }
+
+    valid = gtk_tree_model_iter_next(model, &iter);
+  }
+
+  return FALSE;
+}
+
+gboolean navigate_to_package(smalltalk_package_t *pkg)
+{
+  return navigate_to_row(GTK_TREE_VIEW(packages_list), 1, (gint64)pkg);
+}
+
+gboolean navigate_to_class(class_object_t *cls_obj)
+{
+  return navigate_to_row(GTK_TREE_VIEW(classes_list), 1, (gint64)convert_class_object_to_object_ptr(cls_obj));
+}
+
+gboolean navigate_to_method(method_t *m)
+{
+  return navigate_to_row(GTK_TREE_VIEW(methods_list), 1, (gint64)m);
+}

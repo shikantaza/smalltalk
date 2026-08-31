@@ -80,6 +80,10 @@ void initialize_pre_image();
 void load_from_image(char *);
 void initialize_pass2();
 
+gboolean navigate_to_package(smalltalk_package_t *);
+gboolean navigate_to_class(class_object_t *);
+gboolean navigate_to_method(method_t *);
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -134,6 +138,9 @@ extern char *loaded_image_file_name;
 extern void print_to_transcript(char *);
 
 extern BOOLEAN g_debugger_serialized;
+
+extern class_object_t *g_last_created_class;
+extern method_t *g_last_created_method;
 
 char *get_selected_text()
 {
@@ -214,6 +221,21 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     {
       action_triggering_window = class_browser_window;
       evaluate();
+      refresh_system_browser();
+
+      if(g_last_created_class)
+      {
+        navigate_to_package(g_last_created_class->package);
+        navigate_to_class(g_last_created_class);
+      }
+      else if(g_last_created_method)
+      {
+        class_object_t *cls_obj = (class_object_t *)extract_ptr(g_last_created_method->cls_obj);
+        navigate_to_package(cls_obj->package);
+        navigate_to_class(cls_obj);
+        navigate_to_method(g_last_created_method);
+      }
+
       return TRUE;
     }
   }
