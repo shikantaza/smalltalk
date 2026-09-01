@@ -91,3 +91,43 @@ Smalltalk addClassMethod: #createClass:instanceVars:classVars:inPackage: toClass
 [ :className :instVars :classVars :package |
   ^(self createClass: className parentClass: Object instanceVars: instVars classVars: classVars inPackage: package)
 ]
+
+Smalltalk createClass: #ExceptionSet
+  parentClass: Object
+  instanceVars: #(#exceptions)
+  classVars: #()
+  inPackage: 'core'
+
+Smalltalk addInstanceMethod: #initialize toClass: ExceptionSet withBody:
+[
+  exceptions := OrderedCollection new
+]
+
+Smalltalk addInstanceMethod: #handles: toClass: ExceptionSet withBody:
+[
+  :excp |
+  exceptions do: [ :ex |
+    (excp isKindOf: ex) ifTrue: [ ^ true]
+  ].
+  ^ false
+]
+
+Smalltalk addInstanceMethod: #, toClass: ExceptionSet withBody:
+[
+  :excp |
+  exceptions add: excp
+]
+
+Smalltalk addClassMethod: #handles: toClass: Exception withBody:
+[
+  :excp |
+  ^ excp isKindOf: self
+]
+
+Smalltalk addClassMethod: #, toClass: Exception withBody:
+[
+  :excp |
+  | excpSet |
+  excpSet := ExceptionSet new.
+  excpSet , excp
+]

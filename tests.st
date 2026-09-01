@@ -754,4 +754,38 @@ UnitTestFramework runTestCase: [ (false | true) = true ] withID: 159
 
 UnitTestFramework runTestCase: [ (false | false) = false ] withID: 160
 
+UnitTestFramework runTestCase: [ (1 isMemberOf: Integer) = true ] withID: 161
+
+UnitTestFramework runTestCase: [ (1 isMemberOf: 1) = false ] withID: 162
+
+UnitTestFramework runTestCase: [ (1 isKindOf: Object) = true ] withID: 163
+
+UnitTestFramework runTestCase: [ ((InvalidArgument new) isMemberOf: InvalidArgument) = true ] withID: 164
+
+UnitTestFramework runTestCase: [ ((InvalidArgument new) isKindOf: InvalidArgument) = true ] withID: 165
+
+UnitTestFramework runTestCase: [ ((InvalidArgument new) isKindOf: Exception) = true ] withID: 166
+
+UnitTestFramework runTestCase: [ ((InvalidArgument new) isKindOf: Object) = true ] withID: 167
+
+UnitTestFramework runTestCase: [ (Exception handles: (Exception new)) = true ] withID: 168
+
+UnitTestFramework runTestCase: [ (Exception handles: (ZeroDivide new)) = true ] withID: 169
+
+UnitTestFramework runTestCase: [ (ZeroDivide handles: (ZeroDivide new)) = true ] withID: 170
+
+UnitTestFramework runTestCase: [ (ZeroDivide handles: (Exception new)) = false ] withID: 171
+
+|excpset|
+excpset := Exception,ZeroDivide.
+UnitTestFramework runTestCase: [(excpset handles: (Exception new)) & (excpset handles: (ZeroDivide new)) = true] withID: 172
+
+|excpset|
+excpset := Exception,ZeroDivide.
+UnitTestFramework runTestCase: [(excpset handles: (InvalidArgument new)) = true] withID: 173
+
+|excpset|
+excpset := InvalidArgument,ZeroDivide.
+UnitTestFramework runTestCase: [(excpset handles: (Exception new)) = false] withID: 174
+
 UnitTestFramework reportStatus

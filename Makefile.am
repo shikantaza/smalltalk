@@ -62,7 +62,8 @@ icons_DATA  = icons/load_image.png icons/save_image.png icons/workspace.png icon
               icons/exit32x32.png icons/resume_with_val32x32.png icons/resume32x32.png icons/retry32x32.png \
               icons/continue.png icons/abort.png icons/step_into.png icons/step_over.png icons/step_out.png \
               icons/accept.png icons/refresh.png icons/remove_breakpoint.png icons/remove_breakpoints.png \
-              icons/new_file.png icons/open_file.png icons/save_file.png icons/close_file.png icons/find.png
+              icons/new_file.png icons/open_file.png icons/save_file.png icons/close_file.png icons/find.png \
+              icons/smalltalk.png
 
 src/json.c:	src/json.l
 	$(LEX) --prefix=json -o src/json.c src/json.l

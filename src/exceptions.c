@@ -510,7 +510,16 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
 
     OBJECT_PTR ret;
 
-    if(cls_obj == handler->selector || is_super_class(handler->selector, cls_obj))
+    OBJECT_PTR ret1 = message_send(g_msg_snd_closure,
+                                   handler->selector,
+                                   NIL,
+                                   get_symbol("_handles:"),
+                                   convert_int_to_object(1),
+                                   exception,
+                                   g_idclo);
+
+    //if(cls_obj == handler->selector || is_super_class(handler->selector, cls_obj))
+    if(ret1 == TRUE)
     {
       g_active_handler = handler;
 
@@ -758,7 +767,16 @@ OBJECT_PTR exception_pass(OBJECT_PTR closure, OBJECT_PTR cont)
 
     OBJECT_PTR ret;
 
-    if((cls_obj == handler->selector || is_super_class(handler->selector, cls_obj)) && handler != g_active_handler)
+    OBJECT_PTR ret1 = message_send(g_msg_snd_closure,
+                                   handler->selector,
+                                   NIL,
+                                   get_symbol("_handles:"),
+                                   convert_int_to_object(1),
+                                   receiver,
+                                   g_idclo);
+
+    //if((cls_obj == handler->selector || is_super_class(handler->selector, cls_obj)) && handler != g_active_handler)
+    if(ret1 == TRUE && handler != g_active_handler)
     {
       g_active_handler = handler;
 

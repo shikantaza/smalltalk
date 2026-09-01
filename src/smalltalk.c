@@ -39,6 +39,8 @@ void print_to_workspace_default_tag(char *);
 
 int exists_in_top_level(OBJECT_PTR);
 
+stack_type *get_class_hierarchy(OBJECT_PTR);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -1034,6 +1036,56 @@ OBJECT_PTR object_message_not_understood(OBJECT_PTR closure, OBJECT_PTR selector
   return signal_exception_with_text(exception_obj, get_string_obj(buf), cont);
 }
 
+OBJECT_PTR object_is_member_of(OBJECT_PTR closure, OBJECT_PTR candidate_class, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_CLASS_OBJECT(candidate_class))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, FALSE);
+  }
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, get_class_object(receiver) == candidate_class ? TRUE : FALSE);
+}
+
+OBJECT_PTR object_is_kind_of(OBJECT_PTR closure, OBJECT_PTR candidate_class, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_CLASS_OBJECT(candidate_class))
+  {
+    pop_if_top(entry);
+    return invoke_cont_on_val(cont, FALSE);
+  }
+
+  pop_if_top(entry);
+
+  stack_type *hier = get_class_hierarchy(get_class_object(receiver));
+
+  while(!stack_is_empty(hier))
+  {
+    OBJECT_PTR curr_parent = (OBJECT_PTR)stack_pop(hier);
+
+    if(curr_parent == candidate_class)
+      return invoke_cont_on_val(cont, TRUE);
+  }
+
+  return invoke_cont_on_val(cont, FALSE);
+}
+
 void create_Object()
 {
   //class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
@@ -1057,7 +1109,7 @@ void create_Object()
   cls_obj->shared_vars = NULL;
 
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->instance_methods->count = 2;
+  cls_obj->instance_methods->count = 4;
   cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
   cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
@@ -1071,6 +1123,20 @@ void create_Object()
   cls_obj->instance_methods->bindings[1]->key = get_symbol("_messageNotUnderstood:");
   cls_obj->instance_methods->bindings[1]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
 						    convert_native_fn_to_object((nativefn)object_message_not_understood),
+						    NIL, NIL,
+						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[2] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[2]->key = get_symbol("_isMemberOf:");
+  cls_obj->instance_methods->bindings[2]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
+						    convert_native_fn_to_object((nativefn)object_is_member_of),
+						    NIL, NIL,
+						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[3] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[3]->key = get_symbol("_isKindOf:");
+  cls_obj->instance_methods->bindings[3]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
+						    convert_native_fn_to_object((nativefn)object_is_kind_of),
 						    NIL, NIL,
 						    1, NIL, NULL);
 

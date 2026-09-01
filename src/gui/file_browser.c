@@ -771,7 +771,7 @@ void create_file_browser_window(int posx, int posy, int width, int height)
 
   file_browser_window = (GtkWindow *)win;
 
-  gtk_window_set_icon_from_file(file_browser_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
+  gtk_window_set_icon_from_file(file_browser_window, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
 
   gtk_window_set_title(file_browser_window, "File Browser");
 

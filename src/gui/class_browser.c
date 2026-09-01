@@ -493,18 +493,18 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     else
       assert(false);
 
-    char code[200];
-    memset(code, '\0', 200);
-    len = 0;
-    len += sprintf(code+len, "Smalltalk ");
-    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)))
-      len += sprintf(code+len, "addClassMethod: #someMethod ");
-    else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button)))
-      len += sprintf(code+len, "addInstanceMethod: #someMethod ");
-    len += sprintf(len+code, "toClass: %s ", cls_obj->name);
-    len += sprintf(code+len, "withBody: [\n\n]");
+    /* char code[200]; */
+    /* memset(code, '\0', 200); */
+    /* len = 0; */
+    /* len += sprintf(code+len, "Smalltalk "); */
+    /* if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button))) */
+    /*   len += sprintf(code+len, "addClassMethod: #someMethod "); */
+    /* else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button))) */
+    /*   len += sprintf(code+len, "addInstanceMethod: #someMethod "); */
+    /* len += sprintf(len+code, "toClass: %s ", cls_obj->name); */
+    /* len += sprintf(code+len, "withBody: [\n\n]"); */
 
-    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), code, -1);
+    /* gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), code, -1); */
   }
 
   gtk_text_buffer_set_modified(GTK_TEXT_BUFFER(class_browser_source_buffer), FALSE);
@@ -634,7 +634,7 @@ void create_class_browser_window(int posx, int posy, int width, int height)
 
   class_browser_window = (GtkWindow *)win;
 
-  gtk_window_set_icon_from_file(class_browser_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
+  gtk_window_set_icon_from_file(class_browser_window, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
 
   GtkWidget *scrolled_win1, *scrolled_win2, *scrolled_win3;
   GtkWidget *vbox, *hbox;

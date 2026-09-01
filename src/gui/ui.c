@@ -152,7 +152,7 @@ void create_transcript_window(int posx, int posy, int width, int height, char *t
 
   transcript_window = (GtkWindow *)gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
-  gtk_window_set_icon_from_file(transcript_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
+  gtk_window_set_icon_from_file(transcript_window, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
 
   update_transcript_title();
 
@@ -272,7 +272,7 @@ void create_workspace_window(int posx, int posy, int width, int height, char *te
 
   workspace_window = (GtkWindow *)win;
 
-  gtk_window_set_icon_from_file(workspace_window, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
+  gtk_window_set_icon_from_file(workspace_window, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
 
   gtk_window_set_title((GtkWindow *)workspace_window, "Workspace");
 
@@ -629,7 +629,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   PangoFontDescription *font =
     pango_font_description_from_string(FONT);
 
-  gtk_window_set_icon_from_file((GtkWindow *)win, SMALLTALKDATADIR "/icons/evaluate.png", NULL);
+  gtk_window_set_icon_from_file((GtkWindow *)win, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
 
   gtk_window_set_title((GtkWindow *)win, "Debugger");
 
