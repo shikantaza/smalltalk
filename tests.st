@@ -788,4 +788,15 @@ UnitTestFramework runTestCase: [(excpset handles: (InvalidArgument new)) = true]
 excpset := InvalidArgument,ZeroDivide.
 UnitTestFramework runTestCase: [(excpset handles: (Exception new)) = false] withID: 174
 
+UnitTestFramework runTestCase: [(ZeroDivide,InvalidArgument isKindOf: ExceptionSet) = true] withID: 175
+
+|ret|
+[ret := (1 / 0) + (1 / Transcript)]
+  on: ZeroDivide,InvalidArgument
+  do: [ :ex |
+    (ex isMemberOf: ZeroDivide) ifTrue: [ ex resume: 20 ].
+    (ex isMemberOf: InvalidArgument) ifTrue: [ ex resume: 22]
+  ].
+UnitTestFramework runTestCase: [ret = 42] withID: 176
+
 UnitTestFramework reportStatus

@@ -231,8 +231,12 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
   OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
 
   assert(IS_CLOSURE_OBJECT(receiver));
-  assert(IS_CLASS_OBJECT(exception_selector));
+
+  //since exception selecto could also be
+  //an ExceptioSet object
+  //assert(IS_CLASS_OBJECT(exception_selector));
   assert(IS_CLOSURE_OBJECT(exception_action));
+
   assert(IS_CLOSURE_OBJECT(cont));
 
   exception_handler_t *eh = create_exception_handler(receiver,

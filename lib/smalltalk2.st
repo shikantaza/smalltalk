@@ -107,7 +107,7 @@ Smalltalk addInstanceMethod: #handles: toClass: ExceptionSet withBody:
 [
   :excp |
   exceptions do: [ :ex |
-    (excp isKindOf: ex) ifTrue: [ ^ true]
+    (ex handles: excp) ifTrue: [ ^ true]
   ].
   ^ false
 ]
@@ -129,5 +129,6 @@ Smalltalk addClassMethod: #, toClass: Exception withBody:
   :excp |
   | excpSet |
   excpSet := ExceptionSet new.
-  excpSet , excp
+  excpSet , self; , excp.
+  ^ excpSet
 ]
