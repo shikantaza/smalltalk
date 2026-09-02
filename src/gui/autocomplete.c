@@ -388,10 +388,12 @@ void build_initial_autocomplete_words_list()
     "compile:", "pass:",
     "at:", "size", "do:", "separatedBy:",
     "add:", "addLast:", "removeLast",
-    "isEmpty", "notEmpty", "select", "reject", "occurrencesOf:", "includes:", "detect:", "ifNone:", "collect:", "substringFrom:", "to:"
+    "isEmpty", "notEmpty", "select", "reject", "occurrencesOf:", "includes:", "detect:", "ifNone:", "collect:", "substringFrom:", "to:",
+
+    "isMemberOf:", "isKindOf:"
   };
 
-  nof_autocomplete_words = 94; //TODO: remember to update this when new inbuilt classes and primitive methods are added
+  nof_autocomplete_words = 96; //TODO: remember to update this when new inbuilt classes and primitive methods are added
   autocomplete_words = (char **)GC_MALLOC(nof_autocomplete_words * sizeof(char *));
   
   assert(autocomplete_words);
