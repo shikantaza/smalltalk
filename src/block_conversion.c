@@ -330,6 +330,9 @@ unsigned int convert_block_constructor(char *buf, block_constructor_t *b)
 
   len += sprintf(buf+len, "[ ");
 
+  if(b->docstring)
+    len += sprintf(buf+len, "%s ", b->docstring);
+
   if(b->type == BLOCK_ARGS)
   {
     len += convert_block_arguments(buf+len, b->block_args);

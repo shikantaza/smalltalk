@@ -192,6 +192,9 @@ void print_block_constructor(FILE *fp, block_constructor_t *b)
 {
   if(!b)
     return;
+
+  if(b->docstring)
+    fprintf(fp, "%s\n", b->docstring);
   
   if(b->type == BLOCK_ARGS)
   {

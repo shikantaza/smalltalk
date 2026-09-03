@@ -172,6 +172,7 @@ char *loaded_image_file_name = NULL;
 %token                           T_SEMI_COLON
 %token                           T_HASH
 %token                           T_MINUS
+%token <default_value>           T_DOCSTRING
 
 %token                           END_OF_FILE
 
@@ -208,7 +209,8 @@ char *loaded_image_file_name = NULL;
 %type <array_elements_value>     array_literal
 %type <array_elements_value>     array_elements
 %type <array_element_value>      array_element
-
+%type <default_value>            doc_string
+%type <block_arg_value>          opt_block_args
 %%
 
 executable_code:
@@ -224,35 +226,14 @@ executable_code:
 	YYACCEPT;
       }
     }
-    |
-    temporaries
-    {
-      executable_code_t *exec_code = (executable_code_t *)GC_MALLOC(sizeof(executable_code_t));
-      exec_code->temporaries = $1;
-      exec_code->statements = NULL;
-      $$ = exec_code;
-      if(g_open_square_brackets == 0)
-      {
-	g_exp = $$;
-	YYACCEPT;
-      }
-    }
-    |
-    statements
-    {
-      executable_code_t *exec_code = (executable_code_t *)GC_MALLOC(sizeof(executable_code_t));
-      exec_code->temporaries = NULL;
-      exec_code->statements = $1;
-      $$ = exec_code;
-      if(g_open_square_brackets == 0)
-      {
-	g_exp = $$;
-	YYACCEPT;
-      }
-    }
     ;
 
 temporaries:
+    /* empty */
+    {
+      $$ = NULL;
+    }
+    |
     T_VERTICAL_BAR identifiers T_VERTICAL_BAR
     {
       temporaries_t *temps = (temporaries_t *)GC_MALLOC(sizeof(temporaries_t));
@@ -291,6 +272,11 @@ identifiers:
     ;
 
 statements:
+    /* empty */
+    {
+      $$ = NULL;
+    }
+    |
     return_statement
     {
       statement_t *stmt = (statement_t *)GC_MALLOC(sizeof(statement_t));
@@ -442,34 +428,46 @@ primary:
 block_constructor:
     T_LEFT_SQUARE_BRACKET
     { g_open_square_brackets++; }
-    block_arguments block_argument
-    T_VERTICAL_BAR
+    doc_string
+    opt_block_args
     executable_code
     T_RIGHT_SQUARE_BRACKET
     { g_open_square_brackets--; }
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
-      blk_cons->type = BLOCK_ARGS;
-
-      $3->nof_args++;
-      char **temp = (char **)GC_REALLOC($3->identifiers, $3->nof_args * sizeof(char *));
-      assert(temp);
-      $3->identifiers = temp;
-      $3->identifiers[$3->nof_args - 1] = GC_strdup($4);
-
-      blk_cons->block_args = $3;
-
-      blk_cons->exec_code = $6;
+      blk_cons->type = $4 ? BLOCK_ARGS : NO_BLOCK_ARGS;
+      blk_cons->docstring = $3 ? GC_strdup($3) : NULL;
+      blk_cons->block_args = $4;
+      blk_cons->exec_code = $5;
       $$ = blk_cons;
     }
-    |
-    T_LEFT_SQUARE_BRACKET {g_open_square_brackets++; }executable_code T_RIGHT_SQUARE_BRACKET { g_open_square_brackets--; }
+    ;
+
+doc_string:
+    /* empty */
     {
-      block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
-      blk_cons->type = NO_BLOCK_ARGS;
-      blk_cons->block_args = NULL;
-      blk_cons->exec_code = $3;
-      $$ = blk_cons;
+      $$ = NULL;
+    }
+    |
+    T_DOCSTRING
+    {
+      $$ = GC_strdup($1);
+    }
+
+opt_block_args:
+    /* empty */
+    {
+      $$ = NULL;
+    }
+    |
+    block_arguments block_argument T_VERTICAL_BAR
+    {
+      $1->nof_args++;
+      char **temp = (char **)GC_REALLOC($1->identifiers, $1->nof_args * sizeof(char *));
+      assert(temp);
+      $1->identifiers = temp;
+      $1->identifiers[$1->nof_args - 1] = GC_strdup($2);
+      $$ = $1;
     }
     ;
 

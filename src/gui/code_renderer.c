@@ -449,7 +449,16 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
 
   nof_square_brackets++;
 
-  render_string_to_buffer(code_buf, highlight, index, "[ ");
+  render_string_to_buffer(code_buf, highlight, index, "[\n");
+
+  if(b->docstring)
+  {
+    render_string_to_buffer(code_buf, highlight, index, "\n");
+    render_string_to_buffer(code_buf, highlight, index, b->docstring);
+    render_string_to_buffer(code_buf, highlight, index, "\n");
+  }
+  else
+    render_string_to_buffer(code_buf, highlight, index, "  ");
 
   if(b->type == BLOCK_ARGS)
   {

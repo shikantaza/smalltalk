@@ -155,6 +155,7 @@ typedef struct block_constructor
   /* BLOCK_ARGS or
      NO_BLOCK_ARGS */
   unsigned int type;
+  char *docstring;
   struct block_arguments *block_args;
   struct executable_code *exec_code;
 } block_constructor_t;

@@ -34,6 +34,8 @@ YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
 
 int g_include_stack_ptr = 0;
 
+BOOLEAN expecting_docstring = 0;
+
 int repl2();
 
 extern OBJECT_PTR NIL;
@@ -157,124 +159,149 @@ char *remove_backslash(char *s)
 /* to avoid warning related to 'input' being defined but not used */
 %option noinput
 
+
 %%
 
-\"[^\"]*\"   /* ignore comments */
+[\n\t ]+ { }   /* ignore whitespace */
+
+\"[^\"]*\" {
+  if (expecting_docstring)
+  {
+    expecting_docstring = 0; // Reset
+    yylval.default_value = GC_strdup(yytext);
+    return T_DOCSTRING;
+  }
+  /* Default: Ignore normal block comments */
+}
 
 [a-zA-Z][a-zA-Z_0-9]* {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext);
   return T_IDENTIFIER;
 }
 
 [a-zA-Z][a-zA-Z_0-9]*: {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext);
   return T_KEYWORD;
 }
 
 ("-"|"!"|"%"|"&"|"*"|"+"|","|"/"|"<"|"="|">"|"?"|"@"|"\\"|"~")+ {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext); 
   return T_BINARY_SELECTOR; 
 }
 
-\^ { 
+\^ {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext); 
   return T_RETURN_OPERATOR; 
 }
 
-:= { 
+:= {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext); 
   return T_ASSIGNMENT_OPERATOR; 
 }
 
 [-]?[0-9]+|[0-9]+r[0-9A-Z]+ {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext);
   return T_INTEGER;
 }
 
 [-]?[0-9]+\.[0-9]+((e|d|q)[-]?[0-9]+)? {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext);
   return T_FLOAT;
 }
 
-([-]?[0-9]+\.[0-9]+|[-]?[0-9]+)s[0-9]+ { 
+([-]?[0-9]+\.[0-9]+|[-]?[0-9]+)s[0-9]+ {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext); 
   return T_SCALED_DECIMAL; 
 }
 
-$. { 
+$. {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext); 
   return T_QUOTED_CHARACTER; 
 }
 
 \'([^\'\\]|\\.)*\' {
+  expecting_docstring = 0;
   yylval.default_value = remove_backslash(yytext);
   return T_QUOTED_STRING;
 }
 
-\#\'([^\'\\]|\\.)*\' { 
+\#\'([^\'\\]|\\.)*\' {
+  expecting_docstring = 0;
   yylval.default_value = remove_backslash(yytext);
   return T_HASHED_STRING; 
 }
 
 \#([a-zA-Z][a-zA-Z_0-9]*|(!|%|&|\*|\+|,|\/|<|=|>|\?|@|\\|~|\||-)+|([a-zA-Z_][a-zA-Z_0-9]*:)+) {
+  expecting_docstring = 0;
   yylval.default_value = GC_strdup(yytext);
   return T_QUOTED_SELECTOR;
 }
 
 \| {
+  expecting_docstring = 0;
   return T_VERTICAL_BAR;
 }
 
 \. {
+  expecting_docstring = 0;
   return T_PERIOD;
 }
 
 \( {
+  expecting_docstring = 0;
   return T_LEFT_PAREN;
 }
 
 \) {
+  expecting_docstring = 0;
   return T_RIGHT_PAREN;
 }
 
 \[ {
+  expecting_docstring = 1;
   return T_LEFT_SQUARE_BRACKET;
 }
 
 \] {
+  expecting_docstring = 0;
   return T_RIGHT_SQUARE_BRACKET;
 }
 
 \: {
+  expecting_docstring = 0;
   return T_COLON;
 }
 
 \; {
+  expecting_docstring = 0;
   return T_SEMI_COLON;
 }
 
 \# {
+  expecting_docstring = 0;
   return T_HASH;
 }
 
 \- {
+  expecting_docstring = 0;
   return T_MINUS;
 }
 
-[\n\t ]+   /* ignore whitespace */
-
 . {
-    return YYUNDEF; /* report an error for anything else */
+  expecting_docstring = 0;
+  return YYUNDEF; /* report an error for anything else */
 }
 
 %%
-
-/*
-TODO: '|' has been temporarily removed from the rule for binary selectors
-as the rule hides the rule for vertical bar. Need to figure out a way to
-avoid this hiding.
-The minus sign too has a similar problem.
-*/
 
 #ifdef LEX
 int main()
@@ -283,5 +310,3 @@ int main()
   return 0;
 }
 #endif
-
-
