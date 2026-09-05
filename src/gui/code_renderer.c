@@ -60,6 +60,8 @@ void print_debug_expression(debug_expression_t *);
 
 gchar *get_last_char_from_text_buffer(GtkTextBuffer *);
 
+char *insert_spaces_before_newlines(const char *);
+
 extern GtkTextTag *debugger_tag;
 
 extern stack_type *g_call_chain;
@@ -449,19 +451,23 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
 
   nof_square_brackets++;
 
-  render_string_to_buffer(code_buf, highlight, index, "[\n");
+  render_string_to_buffer(code_buf, highlight, index, "[");
 
   if(b->docstring)
   {
-    render_string_to_buffer(code_buf, highlight, index, "\n");
-    render_string_to_buffer(code_buf, highlight, index, b->docstring);
-    render_string_to_buffer(code_buf, highlight, index, "\n");
+    if(strlen(b->docstring) > 0 && strcmp(b->docstring, "\"\""))
+    {
+      render_string_to_buffer(code_buf, highlight, index, "\n\n  ");
+      render_string_to_buffer(code_buf, highlight, index, insert_spaces_before_newlines(b->docstring));
+      render_string_to_buffer(code_buf, highlight, index, "\n\n");
+    }
   }
   else
-    render_string_to_buffer(code_buf, highlight, index, "  ");
+    render_string_to_buffer(code_buf, highlight, index, "\n");
 
   if(b->type == BLOCK_ARGS)
   {
+    render_string_to_buffer(code_buf, highlight, index, "  ");
     render_block_arguments(code_buf, indents, highlight, index, b->block_args);
     render_string_to_buffer(code_buf, highlight, index, "\n");
     *indents += 2;
@@ -470,7 +476,7 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
   }
   else if(b->type == NO_BLOCK_ARGS)
   {
-    render_string_to_buffer(code_buf, highlight, index, "\n");
+    //render_string_to_buffer(code_buf, highlight, index, "\n");
     *indents += 2;
     render_indents_to_buffer(code_buf, indents, highlight);
     render_executable_code(code_buf, indents, highlight, index, b->exec_code);
@@ -714,4 +720,35 @@ void render_literal(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gi
     printf("Unknown literal type: %d\n", lit->type);
     exit(1);
   }     
+}
+
+char *insert_spaces_before_newlines(const char *s) {
+    size_t len = strlen(s);
+    size_t newline_count = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        if (s[i] == '\n') {
+            newline_count++;
+        }
+    }
+
+    /* Each newline gets 2 extra chars before it, plus 1 for the null terminator */
+    size_t new_len = len + newline_count * 2;
+    char *result = (char *)GC_MALLOC((new_len + 1) * sizeof(char));
+    if (result == NULL) {
+        return NULL;
+    }
+
+    size_t j = 0;
+    for (size_t i = 0; i < len; i++)
+    {
+      result[j++] = s[i];
+      if (s[i] == '\n') {
+            result[j++] = ' ';
+            result[j++] = ' ';
+        }
+    }
+    result[j] = '\0';
+
+    return result;
 }

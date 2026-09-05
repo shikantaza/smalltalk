@@ -190,6 +190,7 @@ void                 repl();
 OBJECT_PTR           repl_common();
 OBJECT_PTR           replace_method_selector(OBJECT_PTR, OBJECT_PTR);
 char                *replace_newlines(char *);
+char                *replace_newlines_for_serialization(char *);
 OBJECT_PTR           reverse(OBJECT_PTR);
 OBJECT_PTR           setcdr(OBJECT_PTR, OBJECT_PTR);
 void                 set_up_autocomplete_words();

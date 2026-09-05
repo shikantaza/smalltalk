@@ -354,7 +354,7 @@ char *reverse_string(char *str)
 char *replace_newlines(char *str)
 {
   int i=0, len;
-  int nof_newlines = 0;
+  int nof_newlines = 0, nof_double_quotes = 0;
   char *ret = NULL;
 
   len = strlen(str);
@@ -365,9 +365,11 @@ char *replace_newlines(char *str)
   {
     if(str[i] == '\\' && str[i+1] == 'n')
       nof_newlines++;
+    if(str[i] == '\\' && str[i+1] == '"')
+      nof_double_quotes++;
   }
 
-  int len_new_string = len - nof_newlines;
+  int len_new_string = len - nof_newlines - nof_double_quotes;
 
   ret = (char *)GC_MALLOC((len_new_string + 1) * sizeof(char));
 
@@ -380,6 +382,11 @@ char *replace_newlines(char *str)
     if(str[i] == '\\' && str[i+1] == 'n')
     {
       ret[j] = '\n';
+      i += 2;
+    }
+    else if(str[i] == '\\' && str[i+1] == '"')
+    {
+      ret[j] = '"';
       i += 2;
     }
     else
@@ -496,4 +503,55 @@ int extract_json_from_image_zip_file(const char *archive_name, char *json_file_n
 
     zip_close(archive);
     return EXIT_SUCCESS;
+}
+
+//replaces newlines with a literal \ and n
+//so that the JSON string is valid
+char *replace_newlines_for_serialization(char *str)
+{
+  unsigned int i, j, len;
+  int nof_newlines = 0;
+  len = strlen(str);
+
+  char *ret = NULL;
+
+  for(i=0; i<=len; i++)
+  {
+    if(str[i] == '\n')
+      nof_newlines++;
+  }
+
+  int len_new_string = len + (2 * nof_newlines);
+
+  ret = (char *)GC_MALLOC((len_new_string + 1) * sizeof(char));
+
+  j=0;
+  i=0;
+
+  while(i<len)
+  {
+    if(str[i] == '"')
+    {
+      ret[j] = '\\';
+      ret[j+1] = '"';
+      j += 2;
+    }
+    else if(str[i] == '\n')
+    {
+      ret[j] = '\\';
+      ret[j+1] = 'n';
+      j += 2;
+    }
+    else
+    {
+      ret[j] = str[i];
+      j++;
+    }
+
+    i++;
+  }
+
+  ret[j] = '\0';
+  printf("%s\n", ret);
+  return ret;
 }

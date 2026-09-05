@@ -1019,6 +1019,8 @@ void print_native_ptr_heap_representation(FILE *fp,
       {
         if(lit->val[j] == '\n')
           fprintf(fp, "\\n");
+        else if(lit->val[j] == '"')
+          fprintf(fp, "\\\"");
         else
           fprintf(fp, "%c", lit->val[j]);
       }
@@ -1081,6 +1083,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     /*
     unsigned int type;
+    char *docstring;
     struct block_arguments *block_args;
     struct executable_code *exec_code;
     */
@@ -1090,6 +1093,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     if(constructor->type == BLOCK_ARGS)
     {
       fprintf(fp, "\"BLOCK_ARGS\", ");
+      if(constructor->docstring)
+        fprintf(fp, "\"%s\"", replace_newlines_for_serialization(constructor->docstring));
+      else
+        fprintf(fp, "\"\"");
+      fprintf(fp, ", ");
       print_native_ptr_reference(fp, BLOCK_ARGUMENT_PTR, (void *)constructor->block_args);
       fprintf(fp, ", ");
       print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)constructor->exec_code);
@@ -1097,6 +1105,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     else if(constructor->type == NO_BLOCK_ARGS)
     {
       fprintf(fp, "\"NO_BLOCK_ARGS\", ");
+      if(constructor->docstring)
+        fprintf(fp, "\"%s\"", replace_newlines_for_serialization(constructor->docstring));
+      else
+        fprintf(fp, "\"\"");
+      fprintf(fp, ", ");
       print_native_ptr_reference(fp, EXEC_CODE_PTR, (void *)constructor->exec_code);
     }
     else
@@ -1780,6 +1793,8 @@ void print_global_variables(FILE *fp)
     {
       if(g_string_literals[i][j] == '\n')
         fprintf(fp, "\\n");
+      else if(g_string_literals[i][j] == '"')
+        fprintf(fp, "\\\"");
       else
         fprintf(fp, "%c", g_string_literals[i][j]);
     }
@@ -2548,14 +2563,21 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     {
       cons->type = BLOCK_ARGS;
 
-      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      char *docstring = JSON_get_array_item(ptr_entry, 1)->strvalue;
+
+      if(strlen(docstring) > 0)
+        cons->docstring = replace_newlines(docstring);
+      else
+        cons->docstring = NULL;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 2)->ivalue;
       cons->block_args = (struct block_arguments *)deserialize_native_ptr_reference(heap,
                                                                                     BLOCK_ARGUMENT_PTR,
                                                                                     ref1,
                                                                                     obj_ht,
                                                                                     native_ptr_ht);
 
-      long long ref2 = JSON_get_array_item(ptr_entry, 2)->ivalue;
+      long long ref2 = JSON_get_array_item(ptr_entry, 3)->ivalue;
       cons->exec_code = (struct executable_code *)deserialize_native_ptr_reference(heap,
                                                                                    EXEC_CODE_PTR,
                                                                                    ref2,
@@ -2566,7 +2588,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     {
       cons->type = NO_BLOCK_ARGS;
 
-      long long ref1 = JSON_get_array_item(ptr_entry, 1)->ivalue;
+      char *docstring = JSON_get_array_item(ptr_entry, 1)->strvalue;
+
+      if(strlen(docstring) > 0)
+        cons->docstring = replace_newlines(docstring);
+      else
+        cons->docstring = NULL;
+
+      long long ref1 = JSON_get_array_item(ptr_entry, 2)->ivalue;
       cons->exec_code = (struct executable_code *)deserialize_native_ptr_reference(heap,
                                                                                    EXEC_CODE_PTR,
                                                                                    ref1,
