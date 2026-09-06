@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <time.h>
 
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksource.h>
@@ -1957,8 +1958,28 @@ void print_global_variables(FILE *fp)
   fprintf(fp, " } ");
 }
 
+void backup_image(char *file_name)
+{
+  time_t rawtime;
+  struct tm *timeinfo;
+  char buffer[80];
+
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+
+  strftime(buffer, 80, "%Y%m%d%H%M%S", timeinfo);
+
+  char cmd[200];
+
+  sprintf(cmd, "cp %s %s.%s", file_name, file_name, buffer);
+
+  system(cmd);
+}
+
 void create_image(char *file_name)
 {
+  backup_image(file_name);
+
   //print_diagnostics("diagnostics_pre.txt");
 
   char json_file_name[] = "smalltalkXXXXXX";
