@@ -743,6 +743,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     binding_env_t *shared_vars;
     binding_env_t *instance_methods;
     binding_env_t *class_methods;
+    char *docstring;
     */
 
     fprintf(fp, "[ ");
@@ -792,6 +793,12 @@ void print_native_ptr_heap_representation(FILE *fp,
     fprintf(fp, ", ");
 
     print_native_ptr_reference(fp, METHOD_BINDING_ENV_PTR, (void *)cls_obj->class_methods);
+    fprintf(fp, ", ");
+
+    if(cls_obj->docstring)
+      fprintf(fp, "\"%s\"", replace_newlines_for_serialization(cls_obj->docstring));
+    else
+      fprintf(fp, "\"\"");
 
     fprintf(fp, "] ");
   }
@@ -3435,6 +3442,14 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                       class_methods,
                                                                                       obj_ht,
                                                                                       native_ptr_ht);
+
+    char *docstring = JSON_get_array_item(ptr_entry, 10)->strvalue;
+
+    if(strlen(docstring) > 0)
+      cls_obj->docstring = replace_newlines(docstring);
+    else
+      cls_obj->docstring = NULL;
+
     /* end of class methods */
 
     create_core_class_binding(cls_obj);

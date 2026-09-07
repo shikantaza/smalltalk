@@ -245,6 +245,8 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     evaluate_for_print();
     return TRUE;
   }
+  else if(event->keyval == GDK_KEY_F2)
+    gtk_window_present(transcript_window);
   else if(event->keyval == GDK_KEY_F9)
     show_system_browser_window();
   else if(event->keyval == GDK_KEY_F7)

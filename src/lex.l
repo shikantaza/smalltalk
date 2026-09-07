@@ -159,6 +159,7 @@ char *remove_backslash(char *s)
 /* to avoid warning related to 'input' being defined but not used */
 %option noinput
 
+%x DOCSTRING
 
 %%
 
@@ -172,6 +173,20 @@ char *remove_backslash(char *s)
     return T_DOCSTRING;
   }
   /* Default: Ignore normal block comments */
+}
+
+<DOCSTRING>\"[^\"]*\" {
+  yylval.default_value = GC_strdup(yytext);
+  BEGIN(INITIAL);
+  return T_DOCSTRING;
+}
+
+<DOCSTRING>[ \t\n]+ { /* Skip whitespace looking for docstring */ }
+
+<DOCSTRING>. {
+  /* If no comment is found, fall back safely */
+  BEGIN(INITIAL);
+  yyless(0); /* Push character back for regular rules */
 }
 
 [a-zA-Z][a-zA-Z_0-9]* {
@@ -302,6 +317,12 @@ $. {
 }
 
 %%
+
+void set_lexer_docstring_state(int enable)
+{
+  if (enable) BEGIN(DOCSTRING);
+  else BEGIN(INITIAL);
+}
 
 #ifdef LEX
 int main()

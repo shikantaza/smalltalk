@@ -119,6 +119,8 @@ extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR DyadicValuable;
 extern OBJECT_PTR Character;
 
+extern char *g_class_docstring;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   int idx = exists_in_top_level(sym);
@@ -282,6 +284,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 							  convert_native_fn_to_object((nativefn)new_object),
 							  NIL, NIL,
 							  0, NIL, NULL);
+
+  cls_obj->docstring = g_class_docstring ? GC_strdup(g_class_docstring) : NULL;
 
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
   

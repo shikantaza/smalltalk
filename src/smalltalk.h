@@ -172,6 +172,8 @@ typedef struct
   //note: if we are going to store the method source too,
   //the val component of the dictionary wiil be a CONS cell with the native funtion object
   //and the method source Lisp object
+
+  char *docstring;
 } class_object_t;
 
 typedef struct method

@@ -46,6 +46,8 @@ void populate_packages_list();
 
 void evaluate();
 
+char *insert_spaces_before_newlines(const char *);
+
 GtkWindow *class_browser_window;
 
 GtkTreeView *packages_list;
@@ -89,6 +91,8 @@ extern unsigned int g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 
 extern GtkSourceCompletionProvider *provider;
+
+extern char *g_class_docstring;
 
 void remove_all_from_packages_list(GtkTreeView *list)
 {
@@ -349,6 +353,7 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
     char code[200];
     memset(code, '\0', 200);
     unsigned int len = 0;
+    len += sprintf(code+len, "\"Insert docstring here\"\n");
     len += sprintf(code+len, "Smalltalk createClass: #SomeClass\n");
     len += sprintf(code+len, "  parentClass: SomeParentClass\n");
     len += sprintf(code+len, "  instanceVars: #(#var1 #var2)\n");
@@ -410,6 +415,9 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     char str[500];
     memset(str, '\0', 500);
     unsigned int len = 0;
+
+    if(cls_obj->docstring)
+      len += sprintf(str+len, "%s\n", cls_obj->docstring);
 
     len += sprintf(str+len, "Smalltalk createClass: #%s\n", cls_obj->name);
 

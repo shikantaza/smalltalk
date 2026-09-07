@@ -68,6 +68,8 @@ void initialize_pass2();
 void print_to_class_browser_code_panel(char *str, GtkTextTag *tag);
 void print_to_debugger_code_panel(char *str, GtkTextTag *tag);
 
+void set_lexer_docstring_state(int);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -79,6 +81,8 @@ OBJECT_PTR g_last_eval_result;
 BOOLEAN g_system_initialized;
 
 enum UIMode g_ui_mode;
+
+char *g_class_docstring = NULL;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
@@ -115,6 +119,8 @@ extern GtkWindow *class_browser_window;
 extern GtkWindow *debugger_window;
 
 extern char *g_method_code;
+
+extern BOOLEAN expecting_docstring;
 
 char *loaded_image_file_name = NULL;
 %}
@@ -214,11 +220,15 @@ char *loaded_image_file_name = NULL;
 %%
 
 executable_code:
-    temporaries statements
+    /* class docstring is expected before the class creation
+       expression. this produces a reduce-reduce parser warning,
+       ignoring this warning */
+    { set_lexer_docstring_state(1); } doc_string temporaries statements
     {
+      g_class_docstring = $2 ? GC_strdup($2) : NULL;
       executable_code_t *exec_code = (executable_code_t *)GC_MALLOC(sizeof(executable_code_t));
-      exec_code->temporaries = $1;
-      exec_code->statements = $2;
+      exec_code->temporaries = $3;
+      exec_code->statements = $4;
       $$ = exec_code;
       if(g_open_square_brackets == 0)
       {
