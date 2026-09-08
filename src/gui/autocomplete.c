@@ -379,7 +379,7 @@ void build_initial_autocomplete_words_list()
     //system-created messages
     "addInstanceVariable:", "toClass:", "addClassVariable:", "createGlobal:", "valued:", "gensym", "addInstanceMethod:",
     "withBody:", "addClassMethod:", "eval:", "loadFile:", "addBreakpointTo:", "removeBreakpointFrom:", "ofClass:",
-    "assignClass:", "toPackage:", "printToWorkspace:",
+    "assignClass:", "toPackage:", "printToWorkspace:", "deleteGlobal:",
     "show:",
     "agrumentCount", "value", "on:", "do:", "ensure:", "ifCurtailed:", "whileTrue:", "whileFalse:",
     "value:",
@@ -393,7 +393,7 @@ void build_initial_autocomplete_words_list()
     "isMemberOf:", "isKindOf:"
   };
 
-  nof_autocomplete_words = 96; //TODO: remember to update this when new inbuilt classes and primitive methods are added
+  nof_autocomplete_words = 97; //TODO: remember to update this when new inbuilt classes and primitive methods are added
   autocomplete_words = (char **)GC_MALLOC(nof_autocomplete_words * sizeof(char *));
   
   assert(autocomplete_words);

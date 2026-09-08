@@ -128,6 +128,7 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
   if(idx != NOT_FOUND)
   {
     g_top_level->bindings[idx]->val = val;
+    g_top_level->bindings[idx]->delete_flag = false;
     return;
   }
 
@@ -146,6 +147,7 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
   g_top_level->bindings[g_top_level->count - 1] = (binding_t *)GC_MALLOC(sizeof(binding_t));
   g_top_level->bindings[g_top_level->count - 1]->key = sym;
   g_top_level->bindings[g_top_level->count - 1]->val = val;
+  g_top_level->bindings[g_top_level->count - 1]->delete_flag = false;
 }
 
 //there is a similar function in lisp_compiler.c
@@ -158,6 +160,9 @@ BOOLEAN get_binding_val_regular(binding_env_t *env, OBJECT_PTR sym, OBJECT_PTR *
 
   for(i=0; i<n; i++)
   {
+    if(env->bindings[i]->delete_flag)
+      continue;
+
     if(env->bindings[i]->key == sym)
     {
       *ret = env->bindings[i]->val;
@@ -1233,7 +1238,12 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
   {
     OBJECT_PTR closure_form = repl_common();
 
-    if(closure_form != NIL)
+    //if an exception is thrown during the execution
+    //of repl_common() (at present only CompileError),
+    //the return value will not be a closure object,
+    //but whatever is returned by the exception handler
+    //if(closure_form != NIL)
+    if(IS_CLOSURE_OBJECT(closure_form))
     {
       put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
@@ -1444,6 +1454,43 @@ OBJECT_PTR smalltalk_print_to_workspace(OBJECT_PTR closure, OBJECT_PTR arg, OBJE
   return invoke_cont_on_val(cont, NIL);
 }
 
+OBJECT_PTR delete_global(OBJECT_PTR closure,
+                         OBJECT_PTR global_sym,
+                         OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(global_sym))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  unsigned int i, n = g_top_level->count;
+
+  OBJECT_PTR sym1 = get_symbol(get_smalltalk_symbol_name(global_sym));
+
+  for(i=0; i<n; i++)
+  {
+    if(g_top_level->bindings[i]->key == sym1)
+    {
+      g_top_level->bindings[i]->delete_flag = true;
+      break;
+    }
+  }
+
+  //TODO: remove from autocomplete list
+
+  pop_if_top(entry);
+
+  OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  return ret;
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1472,7 +1519,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 15;
+  cls_obj->class_methods->count = 16;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1580,6 +1627,13 @@ void create_Smalltalk()
   cls_obj->class_methods->bindings[14]->key = get_symbol("_printToWorkspace:");
   cls_obj->class_methods->bindings[14]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
 						 convert_native_fn_to_object((nativefn)smalltalk_print_to_workspace),
+						 NIL, NIL,
+						 1, NIL, NULL);
+
+  cls_obj->class_methods->bindings[15] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[15]->key = get_symbol("_deleteGlobal:");
+  cls_obj->class_methods->bindings[15]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)delete_global),
 						 NIL, NIL,
 						 1, NIL, NULL);
 

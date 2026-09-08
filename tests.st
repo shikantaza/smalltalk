@@ -799,4 +799,11 @@ UnitTestFramework runTestCase: [(ZeroDivide,InvalidArgument isKindOf: ExceptionS
   ].
 UnitTestFramework runTestCase: [ret = 42] withID: 176
 
+Smalltalk createGlobal: #x valued: 42
+
+UnitTestFramework runTestCase: [ x = 42 ] withID: 177
+
+Smalltalk deleteGlobal: #x.
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: x' ] exception: CompileError withID: 178
+
 UnitTestFramework reportStatus

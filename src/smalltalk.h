@@ -107,6 +107,7 @@ typedef struct package
 
 typedef struct binding
 {
+  BOOLEAN delete_flag;
   OBJECT_PTR key;
   OBJECT_PTR val;
 } binding_t;
