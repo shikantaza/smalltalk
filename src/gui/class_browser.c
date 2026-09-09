@@ -479,6 +479,9 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
       for(i=0; i<n; i++)
       {
+        if(cls_obj->class_methods->bindings[i]->delete_flag)
+          continue;
+
 	OBJECT_PTR key = cls_obj->class_methods->bindings[i]->key;
 	method_t *val = cls_obj->class_methods->bindings[i]->val;
 
@@ -493,6 +496,9 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
       for(i=0; i<n; i++)
       {
+        if(cls_obj->instance_methods->bindings[i]->delete_flag)
+          continue;
+
 	OBJECT_PTR key = cls_obj->instance_methods->bindings[i]->key;
 	method_t *val = cls_obj->instance_methods->bindings[i]->val;
 

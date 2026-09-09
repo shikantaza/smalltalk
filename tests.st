@@ -803,8 +803,10 @@ Smalltalk createGlobal: #x valued: 42
 
 UnitTestFramework runTestCase: [ x = 42 ] withID: 177
 
+UnitTestFramework runExceptionTestCase: [ Smalltalk deleteGlobal: 1 ] exception: InvalidArgument withID: 178
+
 Smalltalk deleteGlobal: #x.
-UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: x' ] exception: CompileError withID: 178
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: x' ] exception: CompileError withID: 179
 
 Smalltalk createGlobal: #x valued: 42
 
@@ -812,10 +814,10 @@ classObj1 := Smalltalk createClass: (Smalltalk genSym)
 
 Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [ ^ x ]
 
-UnitTestFramework runTestCase: [ (classObj1 m1) = 42 ] withID: 179
+UnitTestFramework runTestCase: [ (classObj1 m1) = 42 ] withID: 180
 
 Smalltalk deleteGlobal: #x.
-UnitTestFramework runExceptionTestCase: [ classObj1 m1 ] exception: CompileError withID: 180
+UnitTestFramework runExceptionTestCase: [ classObj1 m1 ] exception: CompileError withID: 181
 
 Smalltalk createClass: #TestDeleteClass
 
@@ -823,6 +825,32 @@ Smalltalk addClassMethod: #m1 toClass: TestDeleteClass withBody: [ ^ 10 ]
 
 Smalltalk deleteClass: TestDeleteClass
 
-UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'TestDeleteClass m1' ] exception: CompileError withID: 181
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'TestDeleteClass m1' ] exception: CompileError withID: 182
+
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
+
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [ ^ 42 ]
+
+UnitTestFramework runTestCase: [ (classObj1 m1) = 42 ] withID: 183
+
+Smalltalk addInstanceMethod: #m1 toClass: classObj1 withBody: [ ^ 42 ]
+
+UnitTestFramework runTestCase: [ (classObj1 new m1) = 42 ] withID: 184
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deleteInstanceMethod: 1 ofClass: classObj1 ] exception: InvalidArgument withID: 185
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deleteInstanceMethod: #x ofClass: 1 ] exception: InvalidArgument withID: 186
+
+Smalltalk deleteInstanceMethod: #m1 ofClass: classObj1
+
+UnitTestFramework runExceptionTestCase: [ (classObj1 new m1) = 42 ] exception: MessageNotUnderstood withID: 187
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deleteClassMethod: 1 ofClass: classObj1 ] exception: InvalidArgument withID: 188
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deleteClassMethod: #x ofClass: 1 ] exception: InvalidArgument withID: 189
+
+Smalltalk deleteClassMethod: #m1 ofClass: classObj1
+
+UnitTestFramework runExceptionTestCase: [ (classObj1 m1) = 42 ] exception: MessageNotUnderstood withID: 190
 
 UnitTestFramework reportStatus

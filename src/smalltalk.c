@@ -672,6 +672,10 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
   BOOLEAN existing_method = false;
   
   for(i=0; i<n; i++)
+  {
+    if(cls_obj->instance_methods->bindings[i]->delete_flag)
+      continue;
+
     if(cls_obj->instance_methods->bindings[i]->key == selector_sym)
     {
       existing_method = true;
@@ -696,6 +700,7 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
       break;
     }
+  }
 
   if(existing_method == false)
   {
@@ -713,7 +718,8 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
       cls_obj->instance_methods->bindings = temp;
     }
 
-    cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));    
+    cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+    cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1]->delete_flag = false;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1]->key = selector_sym;
     cls_obj->instance_methods->bindings[cls_obj->instance_methods->count - 1]->val =
       create_method(class_obj, //convert_class_object_to_object_ptr(cls_obj),
@@ -836,6 +842,10 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
   BOOLEAN existing_method = false;
   
   for(i=0; i<n; i++)
+  {
+    if(cls_obj->class_methods->bindings[i]->delete_flag)
+      continue;
+
     if(cls_obj->class_methods->bindings[i]->key == selector_sym)
     {
       existing_method = true;
@@ -860,6 +870,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
       break;
     }
+  }
 
   if(existing_method == false)
   {
@@ -878,6 +889,7 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
     }
 
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));    
+    cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1]->delete_flag = false;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1]->key = selector_sym;
     cls_obj->class_methods->bindings[cls_obj->class_methods->count - 1]->val =
       create_method(class_obj, //convert_class_object_to_object_ptr(cls_obj),
@@ -1529,6 +1541,94 @@ OBJECT_PTR delete_class(OBJECT_PTR closure,
   return ret;
 }
 
+OBJECT_PTR delete_method(OBJECT_PTR closure,
+                         OBJECT_PTR selector,
+                         OBJECT_PTR class_object,
+                         OBJECT_PTR cont,
+                         BOOLEAN instance_method)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(selector))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_CLASS_OBJECT(class_object))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+
+  size_t i, n;
+
+  if(instance_method)
+  {
+    n = cls_obj->instance_methods->count;
+
+    for(i=0; i<n; i++)
+    {
+      if(cls_obj->instance_methods->bindings[i]->delete_flag)
+        continue;
+
+      char *str1 = get_symbol_name(cls_obj->instance_methods->bindings[i]->key);
+      char *str2 = get_smalltalk_symbol_name(selector);
+
+      if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
+      {
+        cls_obj->instance_methods->bindings[i]->delete_flag = true;
+        break;
+      }
+    }
+  }
+  else
+  {
+    n = cls_obj->class_methods->count;
+
+    for(i=0; i<n; i++)
+    {
+      if(cls_obj->class_methods->bindings[i]->delete_flag)
+        continue;
+
+      char *str1 = get_symbol_name(cls_obj->class_methods->bindings[i]->key);
+      char *str2 = get_smalltalk_symbol_name(selector);
+
+      if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
+      {
+        cls_obj->class_methods->bindings[i]->delete_flag = true;
+        break;
+      }
+    }
+  }
+
+  //TODO: remove from autocomplete list
+
+  pop_if_top(entry);
+
+  OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  return ret;
+}
+
+OBJECT_PTR delete_instance_method(OBJECT_PTR closure,
+                                  OBJECT_PTR selector,
+                                  OBJECT_PTR class_object,
+                                  OBJECT_PTR cont)
+{
+  return delete_method(closure, selector, class_object, cont, true);
+}
+
+OBJECT_PTR delete_class_method(OBJECT_PTR closure,
+                                  OBJECT_PTR selector,
+                                  OBJECT_PTR class_object,
+                                  OBJECT_PTR cont)
+{
+  return delete_method(closure, selector, class_object, cont, false);
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1557,7 +1657,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 17;
+  cls_obj->class_methods->count = 19;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1681,6 +1781,20 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)delete_class),
 						 NIL, NIL,
 						 1, NIL, NULL);
+
+  cls_obj->class_methods->bindings[17] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[17]->key = get_symbol("_deleteInstanceMethod:ofClass:");
+  cls_obj->class_methods->bindings[17]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)delete_instance_method),
+						 NIL, NIL,
+						 2, NIL, NULL);
+
+  cls_obj->class_methods->bindings[18] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[18]->key = get_symbol("_deleteClassMethod:ofClass:");
+  cls_obj->class_methods->bindings[18]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)delete_class_method),
+						 NIL, NIL,
+						 2, NIL, NULL);
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }

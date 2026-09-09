@@ -123,6 +123,7 @@ typedef struct method method_t;
 
 typedef struct method_binding
 {
+  BOOLEAN delete_flag;
   OBJECT_PTR key;
   method_t *val;
 } method_binding_t;
