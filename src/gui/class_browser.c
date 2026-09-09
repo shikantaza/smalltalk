@@ -341,6 +341,9 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
       {
 	class_object_t *cls_obj_int = (class_object_t *)extract_ptr(car(binding_val));
 
+        if(cls_obj_int->delete_flag)
+          continue;
+
 	if(cls_obj_int->package == (void*)id)
 	{
 	  gtk_list_store_append(store2, &iter2);

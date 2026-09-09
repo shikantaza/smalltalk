@@ -79,6 +79,8 @@ extern OBJECT_PTR TRUE, FALSE;
 
 extern BOOLEAN g_eval_from_debugger;
 
+extern OBJECT_PTR CompileError;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
                                             BOOLEAN super,
                                             OBJECT_PTR receiver,
@@ -329,11 +331,21 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       }
     }
 
-    //TODO: assert should be replaced to raise an exception
-    assert(get_top_level_val(car(rest), &closed_val_cons));
-    ret = cons(closed_val_cons, ret);
-    
-    rest = cdr(rest);
+    if(get_top_level_val(car(rest), &closed_val_cons))
+    {
+      ret = cons(closed_val_cons, ret);
+      rest = cdr(rest);
+    }
+    else
+    {
+      OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						     convert_fn_to_closure((nativefn)new_object_internal),
+						     g_idclo);
+      char str[100];
+      sprintf(str, "Unbound variable: %s", get_symbol_name(car(rest)));
+
+      return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
+    }
   }
 
   OBJECT_PTR cons_form = list(3, m->nativefn_obj, reverse(ret), count1);

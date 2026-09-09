@@ -806,4 +806,23 @@ UnitTestFramework runTestCase: [ x = 42 ] withID: 177
 Smalltalk deleteGlobal: #x.
 UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: x' ] exception: CompileError withID: 178
 
+Smalltalk createGlobal: #x valued: 42
+
+classObj1 := Smalltalk createClass: (Smalltalk genSym)
+
+Smalltalk addClassMethod: #m1 toClass: classObj1 withBody: [ ^ x ]
+
+UnitTestFramework runTestCase: [ (classObj1 m1) = 42 ] withID: 179
+
+Smalltalk deleteGlobal: #x.
+UnitTestFramework runExceptionTestCase: [ classObj1 m1 ] exception: CompileError withID: 180
+
+Smalltalk createClass: #TestDeleteClass
+
+Smalltalk addClassMethod: #m1 toClass: TestDeleteClass withBody: [ ^ 10 ]
+
+Smalltalk deleteClass: TestDeleteClass
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'TestDeleteClass m1' ] exception: CompileError withID: 181
+
 UnitTestFramework reportStatus

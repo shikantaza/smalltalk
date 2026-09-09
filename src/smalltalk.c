@@ -258,7 +258,9 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
     printf("create_class(): Unable to allocate memory\n");
     exit(1);
   }
-  
+
+  cls_obj->delete_flag = false;
+
   cls_obj->parent_class_object = parent_class_object;
   cls_obj->name = GC_strdup(get_smalltalk_symbol_name(class_sym));
 
@@ -1491,6 +1493,42 @@ OBJECT_PTR delete_global(OBJECT_PTR closure,
   return ret;
 }
 
+OBJECT_PTR delete_class(OBJECT_PTR closure,
+                        OBJECT_PTR class_object,
+                        OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_CLASS_OBJECT(class_object))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
+
+  OBJECT_PTR val = message_send(g_msg_snd_closure,
+				receiver,
+				NIL,
+				get_symbol("_deleteGlobal:"),
+				convert_int_to_object(1),
+                                get_smalltalk_symbol(cls_obj->name),
+				g_idclo);
+
+  cls_obj->delete_flag = true;
+
+  //TODO: remove from autocomplete list
+
+  pop_if_top(entry);
+
+  OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  return ret;
+}
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1519,7 +1557,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 16;
+  cls_obj->class_methods->count = 17;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1634,6 +1672,13 @@ void create_Smalltalk()
   cls_obj->class_methods->bindings[15]->key = get_symbol("_deleteGlobal:");
   cls_obj->class_methods->bindings[15]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
 						 convert_native_fn_to_object((nativefn)delete_global),
+						 NIL, NIL,
+						 1, NIL, NULL);
+
+  cls_obj->class_methods->bindings[16] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[16]->key = get_symbol("_deleteClass:");
+  cls_obj->class_methods->bindings[16]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)delete_class),
 						 NIL, NIL,
 						 1, NIL, NULL);
 

@@ -155,6 +155,7 @@ typedef struct smalltalk_package
 
 typedef struct
 {
+  BOOLEAN delete_flag;
   OBJECT_PTR parent_class_object;
   char *name;
 
