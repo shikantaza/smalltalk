@@ -853,4 +853,20 @@ Smalltalk deleteClassMethod: #m1 ofClass: classObj1
 
 UnitTestFramework runExceptionTestCase: [ (classObj1 m1) = 42 ] exception: MessageNotUnderstood withID: 190
 
+UnitTestFramework runExceptionTestCase: [ Smalltalk deletePackage: '..' ] exception: Error withID: 191
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deletePackage: 'core' ] exception: Error withID: 192
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deletePackage: 'core.util' ] exception: Error withID: 193
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deletePackage: 'core.util.collections' ] exception: Error withID: 194
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk deletePackage: 'user' ] exception: Error withID: 195
+
+Smalltalk createClass: #Test inPackage: 'test'
+
+Smalltalk deletePackage: 'test'
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: Test' ] exception: CompileError withID: 196
+
 UnitTestFramework reportStatus

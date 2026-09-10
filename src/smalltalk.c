@@ -121,6 +121,11 @@ extern OBJECT_PTR Character;
 
 extern char *g_class_docstring;
 
+extern OBJECT_PTR SUPER;
+
+extern unsigned int g_nof_smalltalk_packages;
+extern smalltalk_package_t **g_smalltalk_packages;
+
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
   int idx = exists_in_top_level(sym);
@@ -1622,11 +1627,115 @@ OBJECT_PTR delete_instance_method(OBJECT_PTR closure,
 }
 
 OBJECT_PTR delete_class_method(OBJECT_PTR closure,
-                                  OBJECT_PTR selector,
-                                  OBJECT_PTR class_object,
-                                  OBJECT_PTR cont)
+                               OBJECT_PTR selector,
+                               OBJECT_PTR class_object,
+                               OBJECT_PTR cont)
 {
   return delete_method(closure, selector, class_object, cont, false);
+}
+
+//TODO: due to the way get_package() is defined, if a valid but
+//non-existent package name is passed, this package will
+//get created then deleted
+OBJECT_PTR delete_package(OBJECT_PTR closure,
+                                    OBJECT_PTR pkg_str,
+                                    OBJECT_PTR cont)
+{
+  char err_msg[100];
+
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_STRING_LITERAL_OBJECT(pkg_str))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  memset(err_msg, '\0', 100);
+
+  char* pkg_name = g_string_literals[pkg_str >> OBJECT_SHIFT];
+
+  if(!strcmp(pkg_name, "core"))
+    return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete 'core' package or its children"), cont);
+
+  if(!strcmp(pkg_name, "user"))
+    return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete 'user' package or its children"), cont);
+
+  if(!is_valid_package_name(pkg_name))
+  {
+    char buf[300];
+    sprintf(buf, "Invalid package name: '%s'", pkg_name);
+    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+  }
+
+  smalltalk_package_t *pkg = get_package(pkg_name, err_msg);
+
+  if(is_package_descendent_of(pkg, get_package("core", err_msg)))
+    return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete 'core' package or its children"), cont);
+
+  memset(err_msg, '\0', 100);
+
+  if(is_package_descendent_of(pkg, get_package("user", err_msg)))
+    return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete 'user' package or its children"), cont);
+
+  unsigned int  i, n;
+  n = g_nof_smalltalk_packages;
+
+  for(i=0; i<n; i++)
+  {
+    if(g_smalltalk_packages[i]->delete_flag)
+      continue;
+
+    if(g_smalltalk_packages[i] == pkg)
+    {
+      g_smalltalk_packages[i]->delete_flag = true;
+      break;
+    }
+  }
+
+  //delete all the classes in the top level
+  //which belong to this package
+  n = g_top_level->count;
+
+  for(i=0; i<n; i++)
+  {
+    if(g_top_level->bindings[i]->key == SELF ||
+       g_top_level->bindings[i]->key == SUPER ||
+       g_top_level->bindings[i]->key == THIS_CONTEXT ||
+       g_top_level->bindings[i]->delete_flag)
+      continue;
+
+    OBJECT_PTR binding_val = g_top_level->bindings[i]->val;
+
+    if(IS_CLASS_OBJECT(car(binding_val)))
+    {
+      class_object_t *cls_obj_int = (class_object_t *)extract_ptr(car(binding_val));
+
+      if(cls_obj_int->delete_flag)
+        continue;
+
+      if(cls_obj_int->package == pkg)
+      {
+        //this will in turn trigger the delete of
+        //the corresponding top level entry, but
+        //this should not be an issue
+        OBJECT_PTR val = message_send(g_msg_snd_closure,
+                                      receiver,
+                                      NIL,
+                                      get_symbol("_deleteClass:"),
+                                      convert_int_to_object(1),
+                                      car(binding_val),
+                                      g_idclo);
+      }
+    }
+  }
+
+  pop_if_top(entry);
+
+  return invoke_cont_on_val(cont, receiver);
 }
 
 void create_Smalltalk()
@@ -1657,7 +1766,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 19;
+  cls_obj->class_methods->count = 20;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1795,6 +1904,13 @@ void create_Smalltalk()
 						 convert_native_fn_to_object((nativefn)delete_class_method),
 						 NIL, NIL,
 						 2, NIL, NULL);
+
+  cls_obj->class_methods->bindings[19] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[19]->key = get_symbol("_deletePackage:");
+  cls_obj->class_methods->bindings[19]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)delete_package),
+						 NIL, NIL,
+						 1, NIL, NULL);
 
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }

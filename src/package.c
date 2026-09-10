@@ -89,6 +89,7 @@ smalltalk_package_t *get_package_with_parent(char *name, smalltalk_package_t *pa
   }
 
   smalltalk_package_t *new_pkg = (smalltalk_package_t *)GC_MALLOC(sizeof(smalltalk_package_t));
+  new_pkg->delete_flag = false;
   new_pkg->name = GC_strndup(name, strlen(name));
   new_pkg->nof_children = 0;
   new_pkg->children = NULL;
@@ -159,6 +160,29 @@ smalltalk_package_t *get_package_internal(char *name)
 
     return get_package_with_parent(s2, parent);
   }
+}
+
+//for use in Smalltalk>>deletePackage:
+//calling get_package() to retrieve the package
+//would create the package if it doesn't exist,
+//which doesn't make sense if we are looking to
+//delete an existing package
+BOOLEAN is_valid_package_name(char *name)
+{
+  unsigned int retval, len;
+
+  len = strlen(name);
+
+  if(!len)
+    return false;
+
+  assert(is_regex_valid);
+  retval = regexec(&regex, name, 0, NULL, 0);
+
+  if(retval)
+    return false;
+
+  return true;
 }
 
 smalltalk_package_t *get_package(char *name, char *err_msg)
@@ -264,6 +288,21 @@ int initialize_package_infrastructure()
   is_regex_valid = true;
 
   return 0;
+}
+
+BOOLEAN is_package_descendent_of(smalltalk_package_t *pkg, smalltalk_package_t *ancestor)
+{
+  smalltalk_package_t *parent = pkg->parent;
+
+  while(parent != NULL)
+  {
+    if(parent == ancestor)
+      return true;
+
+    parent = parent->parent;
+  }
+
+  return false;
 }
 
 #ifdef PACKAGE_TEST

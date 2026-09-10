@@ -243,6 +243,9 @@ void print_package_details(GtkTreeStore *store,
 
   for(i=0; i<nof_packages; i++)
   {
+    if(pkgs_array[i]->delete_flag)
+      continue;
+
     pkg = pkgs_array[i];
     parent_pkg = pkg->parent;
 

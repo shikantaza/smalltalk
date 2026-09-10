@@ -148,6 +148,7 @@ typedef struct
 
 typedef struct smalltalk_package
 {
+  BOOLEAN delete_flag;
   char *name;
   struct smalltalk_package *parent;
   unsigned int nof_children;
