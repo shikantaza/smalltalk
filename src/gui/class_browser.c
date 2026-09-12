@@ -30,6 +30,13 @@
 
 #define FONT "DejaVu Sans Mono Bold 11"
 
+enum SelectedObject
+{
+  PACKAGE_SELECTED,
+  CLASS_SELECTED,
+  METHOD_SELECTED
+};
+
 gboolean delete_event(GtkWidget *widget, GdkEvent *, gpointer);
 void set_triggering_window(GtkWidget *, gpointer);
 gboolean handle_key_press_events(GtkWidget *, 
@@ -48,6 +55,10 @@ void evaluate();
 
 char *insert_spaces_before_newlines(const char *);
 
+void delete_object(GtkWidget *, gpointer);
+
+int call_repl(char *);
+
 GtkWindow *class_browser_window;
 
 GtkTreeView *packages_list;
@@ -63,6 +74,13 @@ GtkWidget *raw_radio_button, *pretty_printed_radio_button;
 GtkWidget *breakpoint_check;
 
 GtkTextTag *class_browser_error_tag;
+
+GtkToolItem *delete_button;
+
+enum SelectedObject selected_object;
+smalltalk_package_t *selected_package = NULL;
+OBJECT_PTR selected_class;
+char *selected_method = NULL;
 
 extern OBJECT_PTR Package;
 
@@ -93,6 +111,8 @@ extern smalltalk_package_t **g_smalltalk_packages;
 extern GtkSourceCompletionProvider *provider;
 
 extern char *g_class_docstring;
+
+extern OBJECT_PTR Smalltalk;
 
 void remove_all_from_packages_list(GtkTreeView *list)
 {
@@ -141,6 +161,7 @@ GtkToolbar *create_class_browser_toolbar()
 
   GtkWidget *accept_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/accept.png");
   GtkWidget *refresh_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/refresh.png");
+  GtkWidget *delete_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/delete.png");
   GtkWidget *exit_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/exit32x32.png");
 
   toolbar = gtk_toolbar_new ();
@@ -158,10 +179,23 @@ GtkToolbar *create_class_browser_toolbar()
   g_signal_connect (refresh_button, "clicked", G_CALLBACK (refresh_sys_browser), class_browser_window);
   gtk_toolbar_insert((GtkToolbar *)toolbar, refresh_button, 1);
 
+  //delete_button is global since we need
+  //to enable it when a package/class/method
+  //is selected
+  delete_button = gtk_tool_button_new(delete_icon, NULL);
+  gtk_tool_item_set_tooltip_text(delete_button, "Delete object");
+  g_signal_connect (delete_button, "clicked", G_CALLBACK (delete_object), class_browser_window);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, delete_button, 2);
+
   GtkToolItem *close_button = gtk_tool_button_new(exit_icon, NULL);
   gtk_tool_item_set_tooltip_text(close_button, "Close (Ctrl-W)");
   g_signal_connect (close_button, "clicked", G_CALLBACK (close_window), class_browser_window);
-  gtk_toolbar_insert((GtkToolbar *)toolbar, close_button, 2);
+  gtk_toolbar_insert((GtkToolbar *)toolbar, close_button, 3);
+
+  gtk_widget_set_sensitive(GTK_WIDGET(delete_button), FALSE);
+  gtk_widget_set_sensitive(GTK_WIDGET(pretty_printed_radio_button), FALSE);
+  gtk_widget_set_sensitive(GTK_WIDGET(raw_radio_button), FALSE);
+  gtk_widget_set_sensitive(GTK_WIDGET(breakpoint_check), FALSE);
 
   return (GtkToolbar *)toolbar;
 }
@@ -291,6 +325,8 @@ void set_up_class_browser_source_buffer()
 
 void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 {
+  gtk_widget_set_sensitive(GTK_WIDGET(delete_button), TRUE);
+
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (packages_list));
   GtkTreeIter  iter;
 
@@ -319,6 +355,13 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 
     //TODO: check if this is relevant
     //print_context_pkg_index = id;
+
+    selected_object = PACKAGE_SELECTED;
+    selected_package = (smalltalk_package_t *)id;
+
+    gtk_widget_set_sensitive(GTK_WIDGET(pretty_printed_radio_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(raw_radio_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(breakpoint_check), FALSE);
 
     remove_all_from_list(classes_list);
 
@@ -377,6 +420,8 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 
 void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 {
+  gtk_widget_set_sensitive(GTK_WIDGET(delete_button), TRUE);
+
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (classes_list));
   GtkTreeIter  iter;
 
@@ -403,6 +448,13 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
     //TODO: check if this is relevant
     //print_context_pkg_index = id;
+
+    selected_object = CLASS_SELECTED;
+    selected_class = (OBJECT_PTR)id;
+
+    gtk_widget_set_sensitive(GTK_WIDGET(pretty_printed_radio_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(raw_radio_button), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(breakpoint_check), FALSE);
 
     remove_all_from_list(methods_list);
 
@@ -532,6 +584,8 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
 void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 {
+  gtk_widget_set_sensitive(GTK_WIDGET(delete_button), TRUE);
+
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (methods_list));
   GtkTreeIter  iter;
 
@@ -560,6 +614,11 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
     //TODO: check if this is relevant
     //print_context_pkg_index = val;
 
+    selected_object = METHOD_SELECTED;
+    selected_method = GC_strdup(name);
+
+    gtk_widget_set_sensitive(GTK_WIDGET(breakpoint_check), TRUE);
+
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), "", -1);
     
     method_t *m = (method_t *)val;
@@ -571,6 +630,9 @@ void fetch_code_for_method(GtkWidget *list, gpointer selection1)
 
     if(m->code_str != NIL)
     {
+      gtk_widget_set_sensitive(GTK_WIDGET(pretty_printed_radio_button), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(raw_radio_button), TRUE);
+
       if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pretty_printed_radio_button)))
       {
         char header[200];
@@ -870,4 +932,111 @@ gboolean navigate_to_class(class_object_t *cls_obj)
 gboolean navigate_to_method(method_t *m)
 {
   return navigate_to_row(GTK_TREE_VIEW(methods_list), 1, (gint64)m);
+}
+
+void delete_object(GtkWidget *widget,
+                   gpointer data)
+{
+  action_triggering_window = class_browser_window;
+
+  if(selected_object == PACKAGE_SELECTED)
+  {
+
+    GtkWidget *dialog = gtk_message_dialog_new ((GtkWindow *)class_browser_window,
+                                                GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                GTK_MESSAGE_QUESTION,
+                                                GTK_BUTTONS_YES_NO,
+                                                "Proceed with deletion of package?");
+
+    gtk_widget_grab_focus(gtk_dialog_get_widget_for_response(GTK_DIALOG(dialog), GTK_RESPONSE_NO));
+
+    if(gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_YES)
+    {
+      gtk_widget_destroy((GtkWidget *)dialog);
+
+      char *qualified_name = get_qualified_name(selected_package);
+
+      //"Smalltalk deletePackage: " is 25 characters,
+      //adding two for the enclosing quotes for the package name
+      //and one more for null terminator
+      size_t len = strlen(qualified_name) + 28;
+
+      char *buf = (char *)GC_MALLOC(len * sizeof(char));
+      memset(buf, '\0', len);
+      sprintf(buf, "Smalltalk deletePackage: '%s'", qualified_name);
+
+      call_repl(buf);
+      refresh_system_browser();
+    }
+    else
+      gtk_widget_destroy((GtkWidget *)dialog);
+  }
+  else if(selected_object == CLASS_SELECTED)
+  {
+
+    GtkWidget *dialog = gtk_message_dialog_new ((GtkWindow *)class_browser_window,
+                                                GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                GTK_MESSAGE_QUESTION,
+                                                GTK_BUTTONS_YES_NO,
+                                                "Proceed with deletion of class?");
+
+    gtk_widget_grab_focus(gtk_dialog_get_widget_for_response(GTK_DIALOG(dialog), GTK_RESPONSE_NO));
+
+    if(gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_YES)
+    {
+      gtk_widget_destroy((GtkWidget *)dialog);
+
+      //we cannot use call_repl() as the class is passed as the
+      //OBJECT_PTR wrapper to the class_object_t object; this
+      //cannot be passed call_repl() as call_repl() needs
+      //parse-able (Smalltalk source) strings.
+
+      OBJECT_PTR val = message_send(g_msg_snd_closure,
+                                    Smalltalk,
+                                    NIL,
+                                    get_symbol("_deleteClass:"),
+                                    convert_int_to_object(1),
+                                    selected_class,
+                                    g_idclo);
+
+      navigate_to_package(selected_package);
+    }
+    else
+      gtk_widget_destroy((GtkWidget *)dialog);
+  }
+  else if(selected_object == METHOD_SELECTED)
+  {
+
+    GtkWidget *dialog = gtk_message_dialog_new ((GtkWindow *)class_browser_window,
+                                                GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                GTK_MESSAGE_QUESTION,
+                                                GTK_BUTTONS_YES_NO,
+                                                "Proceed with deletion of method?");
+
+    gtk_widget_grab_focus(gtk_dialog_get_widget_for_response(GTK_DIALOG(dialog), GTK_RESPONSE_NO));
+
+    if(gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_YES)
+    {
+      gtk_widget_destroy((GtkWidget *)dialog);
+
+      //we cannot use call_repl() for the same
+      //reason as above
+
+      OBJECT_PTR val = message_send(g_msg_snd_closure,
+                                    Smalltalk,
+                                    NIL,
+                                    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)) ?
+                                    get_symbol("_deleteClassMethod:ofClass:") : get_symbol("_deleteInstanceMethod:ofClass:"),
+                                    convert_int_to_object(2),
+                                    get_smalltalk_symbol(selected_method),
+                                    selected_class,
+                                    g_idclo);
+
+      navigate_to_class((class_object_t *)extract_ptr(selected_class));
+    }
+    else
+      gtk_widget_destroy((GtkWidget *)dialog);
+  }
+  else
+    assert(false);
 }

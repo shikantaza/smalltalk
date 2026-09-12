@@ -1584,6 +1584,11 @@ OBJECT_PTR delete_method(OBJECT_PTR closure,
 
       if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
       {
+        method_t *m = cls_obj->instance_methods->bindings[i]->val;
+
+        if(m->code_str == NIL)
+          return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete primitive method"), cont);
+
         cls_obj->instance_methods->bindings[i]->delete_flag = true;
         break;
       }
@@ -1603,6 +1608,11 @@ OBJECT_PTR delete_method(OBJECT_PTR closure,
 
       if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
       {
+        method_t *m = cls_obj->class_methods->bindings[i]->val;
+
+        if(m->code_str == NIL)
+          return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete primitive method"), cont);
+
         cls_obj->class_methods->bindings[i]->delete_flag = true;
         break;
       }
