@@ -71,6 +71,8 @@ char *g_method_code;
 class_object_t *g_last_created_class = NULL;
 method_t *g_last_created_method = NULL;
 
+BOOLEAN g_system_changed = false;
+
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
 extern OBJECT_PTR NIL;
@@ -310,6 +312,8 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
   g_last_created_class = cls_obj;
   g_last_created_method = NULL;
 
+  g_system_changed = true;
+
   return invoke_cont_on_val(cont, class_object);
 }
 
@@ -401,6 +405,8 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
 
   pop_if_top(entry);
 
+  g_system_changed = true;
+
   return invoke_cont_on_val(cont, class_obj);
 }
 
@@ -468,6 +474,8 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   cls_obj->shared_vars->bindings[cls_obj->shared_vars->count-1]->val = cons(NIL, NIL);
 
   pop_if_top(entry);
+
+  g_system_changed = true;
 
   return invoke_cont_on_val(cont, class_obj);
 }
@@ -739,6 +747,8 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
   add_to_autocomplete_list(get_smalltalk_symbol_name(selector));
 
+  g_system_changed = true;
+
   return class_obj;
 }
 
@@ -909,6 +919,8 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
   add_to_autocomplete_list(get_smalltalk_symbol_name(selector));
 
+  g_system_changed = true;
+
   return class_obj;
 }
 
@@ -1008,6 +1020,8 @@ OBJECT_PTR new_object_internal(OBJECT_PTR receiver,
 #ifdef DEBUG
   printf("Exiting new_object_internal()\n");
 #endif
+
+  g_system_changed = true;
 
   return ret;
 }
@@ -1204,6 +1218,8 @@ OBJECT_PTR create_global_valued(OBJECT_PTR closure,
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, global_val);
 
+  g_system_changed = true;
+
   return ret;
 }
 
@@ -1231,6 +1247,8 @@ OBJECT_PTR smalltalk_gensym(OBJECT_PTR closure,
   pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, get_smalltalk_symbol(sym));
+
+  g_system_changed = true;
 
   return ret;
 }
@@ -1453,6 +1471,8 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
 
   pop_if_top(entry);
 
+  g_system_changed = true;
+
   return invoke_cont_on_val(cont, receiver);
 }
 
@@ -1507,6 +1527,8 @@ OBJECT_PTR delete_global(OBJECT_PTR closure,
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
 
+  g_system_changed = true;
+
   return ret;
 }
 
@@ -1542,6 +1564,8 @@ OBJECT_PTR delete_class(OBJECT_PTR closure,
   pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  g_system_changed = true;
 
   return ret;
 }
@@ -1624,6 +1648,8 @@ OBJECT_PTR delete_method(OBJECT_PTR closure,
   pop_if_top(entry);
 
   OBJECT_PTR ret = invoke_cont_on_val(cont, receiver);
+
+  g_system_changed = true;
 
   return ret;
 }
@@ -1744,6 +1770,8 @@ OBJECT_PTR delete_package(OBJECT_PTR closure,
   }
 
   pop_if_top(entry);
+
+  g_system_changed = true;
 
   return invoke_cont_on_val(cont, receiver);
 }

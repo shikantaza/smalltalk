@@ -80,6 +80,8 @@ void initialize_pre_image();
 void load_from_image(char *);
 void initialize_pass2();
 
+void save_image();
+
 gboolean navigate_to_package(smalltalk_package_t *);
 gboolean navigate_to_class(class_object_t *);
 gboolean navigate_to_method(method_t *);
@@ -141,6 +143,8 @@ extern BOOLEAN g_debugger_serialized;
 
 extern class_object_t *g_last_created_class;
 extern method_t *g_last_created_method;
+
+extern BOOLEAN g_system_changed;
 
 char *get_selected_text()
 {
@@ -328,15 +332,7 @@ void quit_application()
   {
     gtk_widget_destroy((GtkWidget *)dialog);
 
-    /*
-    if(!check_for_sys_browser_changes())
-      return;
-    
-    //uncomment this if we want to
-    //auto save image on quit
-    //if(loaded_image_file_name != NULL)
-    //  save_image();
-    if(system_changed && loaded_image_file_name)
+    if(g_system_changed && loaded_image_file_name)
     {
       GtkWidget *dialog1 = gtk_message_dialog_new ((GtkWindow *)transcript_window,
                                                    GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -353,8 +349,6 @@ void quit_application()
       }
     }
 
-    cleanup();
-    */
     cleanupJIT(NULL);
     gtk_main_quit();
     exit(0);
@@ -464,6 +458,8 @@ void save_image()
 
   print_to_transcript("Image saved successfully\n");
   update_transcript_title();
+
+  g_system_changed = false;
 
   gdk_window_set_cursor(win, NULL);
 }

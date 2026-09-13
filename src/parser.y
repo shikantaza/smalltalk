@@ -70,6 +70,8 @@ void print_to_debugger_code_panel(char *str, GtkTextTag *tag);
 
 void set_lexer_docstring_state(int);
 
+void show_info_dialog(char *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -121,6 +123,8 @@ extern GtkWindow *debugger_window;
 extern char *g_method_code;
 
 extern BOOLEAN expecting_docstring;
+
+extern GtkWindow *transcript_window;
 
 char *loaded_image_file_name = NULL;
 %}
@@ -1285,6 +1289,19 @@ int main(int argc, char **argv)
   }
 
   g_ui_mode = GUI;
+
+  if(!loaded_image_file_name)
+  {
+    action_triggering_window = transcript_window;
+
+    show_info_dialog("Default image file 'smalltalk.image' not found in the current " \
+		     "directory. Working with an image is faster and more convenient, " \
+		     "as the core library doesn't have to be recompiled each time " \
+		     "the system is invoked. You can create the image file by choosing " \
+		     "the 'Save image' option in the Transcript window. " \
+		     "If you name your image file as 'smalltalk.image', the system will use " \
+		     "this file automatically.");
+  }
 
   gtk_main();
 
