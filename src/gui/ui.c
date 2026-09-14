@@ -49,6 +49,8 @@ void debug_accept(GtkWidget *, gpointer);
 void print_to_workspace(char *, GtkTextTag *);
 void print_to_transcript(char *);
 
+void close_application_window(GtkWidget **window);
+
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
 
@@ -66,8 +68,12 @@ GtkWindow *action_triggering_window;
 
 GtkWindow *transcript_window;
 GtkWindow *workspace_window;
+GtkWindow *object_inspector_window = NULL;
 
 GtkTextView *transcript_textview;
+
+GtkTextView *object_inspector_textview;
+GtkTextBuffer *object_inspector_buffer;
 
 GtkTextTag *workspace_tag;
 GtkTextTag *debugger_tag;
@@ -93,6 +99,8 @@ extern stack_type *g_call_chain;
 extern void update_transcript_title();
 
 extern debug_serialization_t *g_debug_data;
+
+extern stack_type *g_inspected_objects;
 
 GtkToolbar *create_transcript_toolbar()
 {
@@ -826,4 +834,132 @@ void print_to_debugger_code_panel(char *str, GtkTextTag *tag)
   GtkTextIter iter;
   gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(debugger_source_buffer), &iter );
   gtk_text_buffer_insert_with_tags(GTK_TEXT_BUFFER(debugger_source_buffer), &iter, str, -1, tag, NULL);
+}
+
+void show_object_inspector_window();
+
+gboolean close_object_inspector(GtkWidget *widget,
+                                GdkEvent *event,
+                                gpointer data)
+{
+  if(!stack_is_empty(g_inspected_objects))
+    stack_pop(g_inspected_objects);
+
+  if(stack_is_empty(g_inspected_objects))
+  {
+    close_application_window(&widget);
+    object_inspector_window = NULL;
+    return FALSE;
+  }
+  else
+  {
+    show_object_inspector_window();
+    return TRUE;
+  }
+}
+
+gboolean handle_inspector_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+  if(event->keyval == GDK_KEY_Escape)
+  {
+    if(!stack_is_empty(g_inspected_objects))
+      stack_pop(g_inspected_objects);
+
+    if(stack_is_empty(g_inspected_objects))
+    {
+      close_application_window(&widget);
+      object_inspector_window = NULL;
+    }
+    else
+      show_object_inspector_window();
+
+    return false;
+  }
+}
+
+void create_object_inspector_window(int posx, int posy, int width, int height)
+{
+  if(object_inspector_window)
+    return;
+
+  GtkWidget *scrolled_win, *vbox;
+
+  PangoFontDescription *font =
+    pango_font_description_from_string(FONT);
+
+  object_inspector_window = (GtkWindow *)gtk_window_new (GTK_WINDOW_TOPLEVEL);
+
+  gtk_window_set_icon_from_file(object_inspector_window, SMALLTALKDATADIR "/icons/smalltalk.png", NULL);
+
+  gtk_window_set_default_size(object_inspector_window, width, height);
+
+  gtk_window_move(object_inspector_window, posx, posy);
+
+  g_signal_connect(object_inspector_window, "delete-event",
+		   G_CALLBACK (close_object_inspector), NULL);
+
+  g_signal_connect(object_inspector_window,
+                  "key_press_event",
+                  G_CALLBACK (handle_inspector_key_press_events),
+                  NULL);
+
+  gtk_container_set_border_width (GTK_CONTAINER (object_inspector_window), 10);
+
+  GtkWidget *textview = gtk_text_view_new ();
+
+  object_inspector_textview = (GtkTextView *)textview;
+
+  gtk_text_view_set_editable((GtkTextView *)object_inspector_textview, FALSE);
+  gtk_text_view_set_cursor_visible((GtkTextView *)object_inspector_textview, FALSE);
+
+  gtk_widget_override_font(GTK_WIDGET(textview), font);
+
+  pango_font_description_free(font);
+
+  object_inspector_buffer = gtk_text_view_get_buffer((GtkTextView *)object_inspector_textview);
+
+  scrolled_win = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (scrolled_win), textview);
+
+  vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+
+  gtk_box_pack_start (GTK_BOX (vbox), scrolled_win, TRUE, TRUE, 0);
+
+  gtk_container_add (GTK_CONTAINER (object_inspector_window), vbox);
+}
+
+void show_object_inspector_window()
+{
+  if(stack_is_empty(g_inspected_objects))
+    return;
+
+  if(!object_inspector_window)
+    create_object_inspector_window(DEFAULT_OBJ_INSPECTOR_WINDOW_POSX,
+                                   DEFAULT_OBJ_INSPECTOR_WINDOW_POSY,
+                                   DEFAULT_OBJ_INSPECTOR_WINDOW_WIDTH,
+                                   DEFAULT_OBJ_INSPECTOR_WINDOW_HEIGHT);
+
+  OBJECT_PTR obj = (OBJECT_PTR)stack_top(g_inspected_objects);
+
+  char title[100];
+  memset(title, '\0', 100);
+  sprintf(title, "a(n) %s", ((class_object_t *)extract_ptr(get_class_object(obj)))->name);
+
+  gtk_window_set_title(object_inspector_window, title);
+
+  char str[1024];
+  memset(str, '\0', 1024);
+  print_object_to_string(obj, str);
+
+  gtk_text_buffer_set_text(object_inspector_buffer, "", -1);
+
+  GtkTextMark *mark = gtk_text_buffer_get_insert(object_inspector_buffer);
+  GtkTextIter iter;
+
+  gtk_text_buffer_get_end_iter(object_inspector_buffer, &iter );
+  gtk_text_buffer_move_mark(object_inspector_buffer, mark, &iter );
+  gtk_text_buffer_insert_at_cursor(object_inspector_buffer, str, -1 );
+  gtk_text_view_scroll_to_mark(object_inspector_textview, mark, 0.0, TRUE, 0.5, 1 );
+
+  gtk_widget_show_all((GtkWidget *)object_inspector_window);
 }

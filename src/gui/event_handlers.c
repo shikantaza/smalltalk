@@ -211,6 +211,21 @@ void evaluate_for_print()
   g_free(expression);
 }
 
+void evaluate_for_inspection()
+{
+  char *expression = get_selected_text();
+
+  //100 characters for the additional wrapper text, one character for null terminator
+  char *decorated_expression = (char *)GC_MALLOC((strlen(expression) + 101) * sizeof(char));
+  memset(decorated_expression, '\0', strlen(expression) + 101);
+
+  sprintf(decorated_expression, "[%s] value inspect)", expression);
+
+  call_repl(decorated_expression);
+
+  g_free(expression);
+}
+
 gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_d)
@@ -247,6 +262,12 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
   {
     action_triggering_window = workspace_window;
     evaluate_for_print();
+    return TRUE;
+  }
+  else if(widget == (GtkWidget *)workspace_window && (event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_i)
+  {
+    action_triggering_window = workspace_window;
+    evaluate_for_inspection();
     return TRUE;
   }
   else if(event->keyval == GDK_KEY_F2)

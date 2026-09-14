@@ -41,6 +41,8 @@ int exists_in_top_level(OBJECT_PTR);
 
 stack_type *get_class_hierarchy(OBJECT_PTR);
 
+void show_object_inspector_window();
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -72,6 +74,8 @@ class_object_t *g_last_created_class = NULL;
 method_t *g_last_created_method = NULL;
 
 BOOLEAN g_system_changed = false;
+
+stack_type *g_inspected_objects = NULL;
 
 extern OBJECT_PTR Array;
 extern OBJECT_PTR InvalidArgument;
@@ -1128,6 +1132,23 @@ OBJECT_PTR object_is_kind_of(OBJECT_PTR closure, OBJECT_PTR candidate_class, OBJ
   return invoke_cont_on_val(cont, FALSE);
 }
 
+OBJECT_PTR object_inspect(OBJECT_PTR closure, OBJECT_PTR cont)
+{
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  if(!g_inspected_objects)
+    g_inspected_objects = stack_create();
+
+  stack_push(g_inspected_objects, (void *)receiver);
+
+  show_object_inspector_window();
+
+  return invoke_cont_on_val(cont, receiver);
+}
+
 void create_Object()
 {
   //class_object_t *cls_obj = (class_object_t *)GC_MALLOC(sizeof(class_object_t));
@@ -1151,7 +1172,7 @@ void create_Object()
   cls_obj->shared_vars = NULL;
 
   cls_obj->instance_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->instance_methods->count = 4;
+  cls_obj->instance_methods->count = 5;
   cls_obj->instance_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->instance_methods->count * sizeof(method_binding_t *));
 
   cls_obj->instance_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
@@ -1181,6 +1202,13 @@ void create_Object()
 						    convert_native_fn_to_object((nativefn)object_is_kind_of),
 						    NIL, NIL,
 						    1, NIL, NULL);
+
+  cls_obj->instance_methods->bindings[4] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->instance_methods->bindings[4]->key = get_symbol("_inspect");
+  cls_obj->instance_methods->bindings[4]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
+						    convert_native_fn_to_object((nativefn)object_inspect),
+						    NIL, NIL,
+						    0, NIL, NULL);
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 1;
