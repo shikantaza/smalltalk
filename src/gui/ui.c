@@ -51,6 +51,8 @@ void print_to_transcript(char *);
 
 void close_application_window(GtkWidget **window);
 
+void show_object_inspector_window();
+
 GtkTextBuffer *transcript_buffer;
 GtkTextBuffer *workspace_buffer;
 
@@ -101,6 +103,8 @@ extern void update_transcript_title();
 extern debug_serialization_t *g_debug_data;
 
 extern stack_type *g_inspected_objects;
+
+extern BOOLEAN g_debug_in_progress;
 
 GtkToolbar *create_transcript_toolbar()
 {
@@ -525,12 +529,37 @@ void initialize_temp_vars_list(GtkTreeView *list)
                                                      renderer, "text", 1, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
 
-  store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
+  store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
 
   gtk_tree_view_set_model(GTK_TREE_VIEW (list),
                           GTK_TREE_MODEL(store));
 
   g_object_unref(store);
+}
+
+void inspect_temp_variable(GtkWidget *list, gpointer selection1)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (temp_vars_list));
+  GtkTreeIter  iter;
+
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(temp_vars_list));
+
+  if(!selection)
+    return;
+
+  if(gtk_tree_selection_get_selected(selection, &model, &iter))
+  {
+    gint64 id;
+
+    gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+    if(!g_inspected_objects)
+      g_inspected_objects = stack_create();
+
+    stack_push(g_inspected_objects, (void *)id);
+
+    show_object_inspector_window();
+  }
 }
 
 GtkToolbar *create_debug_toolbar()
@@ -719,13 +748,15 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   //TODO: if we want to allow multiple debug windows
   //having temp_vars_list as global would be a problem
   temp_vars_list = (GtkTreeView *)gtk_tree_view_new();
-  gtk_tree_view_set_headers_visible(temp_vars_list, FALSE);
+  gtk_tree_view_set_headers_visible(temp_vars_list, TRUE);
 
   gtk_widget_override_font(GTK_WIDGET(temp_vars_list), font);
 
   pango_font_description_free(font);
 
   initialize_temp_vars_list(temp_vars_list);
+
+  g_signal_connect(temp_vars_list, "row-activated", G_CALLBACK(inspect_temp_variable), NULL);
 
   gtk_container_add(GTK_CONTAINER (scrolled_win3), (GtkWidget *)temp_vars_list);
 
@@ -1062,6 +1093,12 @@ void show_object_inspector_window()
                                    DEFAULT_OBJ_INSPECTOR_WINDOW_POSY,
                                    DEFAULT_OBJ_INSPECTOR_WINDOW_WIDTH,
                                    DEFAULT_OBJ_INSPECTOR_WINDOW_HEIGHT);
+
+  if(g_debug_in_progress)
+  {
+    gtk_window_set_transient_for((GtkWindow *)object_inspector_window, GTK_WINDOW(debugger_window));
+    gtk_window_set_modal((GtkWindow *)object_inspector_window, TRUE);
+  }
 
   OBJECT_PTR obj = (OBJECT_PTR)stack_top(g_inspected_objects);
 

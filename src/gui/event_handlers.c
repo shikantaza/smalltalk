@@ -682,7 +682,7 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 	print_object_to_string(car(car(rest)), var_val);
 
 	gtk_list_store_append(store1, &iter1);
-	gtk_list_store_set(store1, &iter1, 0, var_name, 1, var_val, -1);
+	gtk_list_store_set(store1, &iter1, 0, var_name, 1, var_val, 2, car(car(rest)), -1);
 
 	rest = cdr(rest);
 	rest1 = cdr(rest1);
