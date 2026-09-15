@@ -809,7 +809,7 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
 {
   if(obj == NIL)
     return Nil;
-  else if(IS_SYMBOL_OBJECT(obj))
+  else if(IS_SYMBOL_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj))
     return Symbol;
   else if(IS_INTEGER_OBJECT(obj))
     return Integer;

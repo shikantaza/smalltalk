@@ -877,12 +877,110 @@ gboolean handle_inspector_key_press_events(GtkWidget *widget, GdkEventKey *event
   }
 }
 
+GtkWidget *object_inspector_stack = NULL;
+GtkTreeView *array_elements_list = NULL;
+GtkTreeView *objects_list = NULL;
+
+void initialize_array_elements_list(GtkTreeView *list)
+{
+  GtkCellRenderer    *renderer;
+  GtkTreeViewColumn  *column1, *column2;
+  GtkListStore       *store;
+
+  renderer = gtk_cell_renderer_text_new();
+
+  column1 = gtk_tree_view_column_new_with_attributes("Array Index",
+                                                     renderer, "text", 0, NULL);
+  column2 = gtk_tree_view_column_new_with_attributes("Element",
+                                                     renderer, "text", 1, NULL);
+
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
+
+  //index, object desc (from print_object()), OBJECT_PTR value
+  store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW (list),
+                          GTK_TREE_MODEL(store));
+
+  g_object_unref(store);
+}
+
+void initialize_objects_list(GtkTreeView *list)
+{
+  GtkCellRenderer    *renderer;
+  GtkTreeViewColumn  *column1, *column2;
+  GtkListStore       *store;
+
+  renderer = gtk_cell_renderer_text_new();
+
+  column1 = gtk_tree_view_column_new_with_attributes("Instance Variable",
+                                                     renderer, "text", 0, NULL);
+  column2 = gtk_tree_view_column_new_with_attributes("Value",
+                                                     renderer, "text", 1, NULL);
+
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
+
+  //index, object desc (from print_object()), OBJECT_PTR value
+  store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW (list),
+                          GTK_TREE_MODEL(store));
+
+  g_object_unref(store);
+}
+
+void inspect_array_element(GtkWidget *list, gpointer selection1)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (array_elements_list));
+  GtkTreeIter  iter;
+
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(array_elements_list));
+
+  if(!selection)
+    return;
+
+  if(gtk_tree_selection_get_selected(selection, &model, &iter))
+  {
+    gint64 id;
+
+    gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+    stack_push(g_inspected_objects, (void *)id);
+
+    show_object_inspector_window();
+  }
+}
+
+void inspect_instance_variable(GtkWidget *list, gpointer selection1)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (objects_list));
+  GtkTreeIter  iter;
+
+  GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(objects_list));
+
+  if(!selection)
+    return;
+
+  if(gtk_tree_selection_get_selected(selection, &model, &iter))
+  {
+    gint64 id;
+
+    gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+    stack_push(g_inspected_objects, (void *)car(id));
+
+    show_object_inspector_window();
+  }
+}
+
 void create_object_inspector_window(int posx, int posy, int width, int height)
 {
   if(object_inspector_window)
     return;
 
-  GtkWidget *scrolled_win, *vbox;
+  GtkWidget *scrolled_win, *scrolled_win1, *scrolled_win2, *vbox, *vbox1;
 
   PangoFontDescription *font =
     pango_font_description_from_string(FONT);
@@ -914,16 +1012,42 @@ void create_object_inspector_window(int posx, int posy, int width, int height)
 
   gtk_widget_override_font(GTK_WIDGET(textview), font);
 
-  pango_font_description_free(font);
-
   object_inspector_buffer = gtk_text_view_get_buffer((GtkTextView *)object_inspector_textview);
 
   scrolled_win = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrolled_win), textview);
 
+  array_elements_list = (GtkTreeView *)gtk_tree_view_new();
+  gtk_widget_override_font(GTK_WIDGET(array_elements_list), font);
+  initialize_array_elements_list(array_elements_list);
+  g_signal_connect(array_elements_list, "row-activated", G_CALLBACK(inspect_array_element), NULL);
+
+  objects_list = (GtkTreeView *)gtk_tree_view_new();
+  gtk_widget_override_font(GTK_WIDGET(objects_list), font);
+  initialize_objects_list(objects_list);
+  g_signal_connect(objects_list, "row-activated", G_CALLBACK(inspect_instance_variable), NULL);
+
+  pango_font_description_free(font);
+
+  scrolled_win1 = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (scrolled_win1), GTK_WIDGET(array_elements_list));
+
+  scrolled_win2 = gtk_scrolled_window_new (NULL, NULL);
+  gtk_container_add (GTK_CONTAINER (scrolled_win2), GTK_WIDGET(objects_list));
+
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 
-  gtk_box_pack_start (GTK_BOX (vbox), scrolled_win, TRUE, TRUE, 0);
+  object_inspector_stack = gtk_stack_new();
+  gtk_stack_set_transition_type(GTK_STACK(object_inspector_stack), GTK_STACK_TRANSITION_TYPE_SLIDE_UP_DOWN);
+  gtk_box_pack_start(GTK_BOX(vbox), object_inspector_stack, TRUE, TRUE, 0);
+
+  gtk_widget_show(scrolled_win);
+  gtk_widget_show(scrolled_win1);
+  gtk_widget_show(scrolled_win2);
+
+  gtk_stack_add_named(GTK_STACK(object_inspector_stack), scrolled_win, "window_one");
+  gtk_stack_add_named(GTK_STACK(object_inspector_stack), scrolled_win1, "window_two");
+  gtk_stack_add_named(GTK_STACK(object_inspector_stack), scrolled_win2, "window_three");
 
   gtk_container_add (GTK_CONTAINER (object_inspector_window), vbox);
 }
@@ -947,19 +1071,89 @@ void show_object_inspector_window()
 
   gtk_window_set_title(object_inspector_window, title);
 
-  char str[1024];
-  memset(str, '\0', 1024);
-  print_object_to_string(obj, str);
+  if(IS_ARRAY_OBJECT(obj))
+  {
+    GtkListStore *store2;
+    GtkTreeIter  iter2;
 
-  gtk_text_buffer_set_text(object_inspector_buffer, "", -1);
+    int i, n;
 
-  GtkTextMark *mark = gtk_text_buffer_get_insert(object_inspector_buffer);
-  GtkTextIter iter;
+    remove_all_from_list(array_elements_list);
 
-  gtk_text_buffer_get_end_iter(object_inspector_buffer, &iter );
-  gtk_text_buffer_move_mark(object_inspector_buffer, mark, &iter );
-  gtk_text_buffer_insert_at_cursor(object_inspector_buffer, str, -1 );
-  gtk_text_view_scroll_to_mark(object_inspector_textview, mark, 0.0, TRUE, 0.5, 1 );
+    store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(array_elements_list)));
+
+    array_object_t *arr_obj = (array_object_t *)extract_ptr(obj);
+
+    n = arr_obj->nof_elements;
+
+    char str[1024], s[10];
+
+    for(i=0; i<n; i++)
+    {
+      memset(str, '\0', 1024);
+      print_object_to_string(arr_obj->elements[i], str);
+
+      memset(s, '\0', 10);
+      sprintf(s, "%d", i+1);
+
+      gtk_list_store_append(store2, &iter2);
+      gtk_list_store_set(store2, &iter2, 0, s, -1);
+      gtk_list_store_set(store2, &iter2, 1, str, -1);
+      gtk_list_store_set(store2, &iter2, 2, arr_obj->elements[i], -1);
+    }
+
+    gtk_stack_set_visible_child_name(GTK_STACK(object_inspector_stack), "window_two");
+  }
+  else if(IS_OBJECT_OBJECT(obj))
+  {
+    GtkListStore *store2;
+    GtkTreeIter  iter2;
+
+    int i, n;
+
+    remove_all_from_list(objects_list);
+
+    store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(objects_list)));
+
+    object_t *native_obj = (object_t *)extract_ptr(obj);
+
+    n = native_obj->instance_vars->count;
+
+    char str[1024];
+
+    for(i=0; i<n; i++)
+    {
+      char *key = get_symbol_name(native_obj->instance_vars->bindings[i]->key);
+
+      memset(str, '\0', 1024);
+      print_object_to_string(car(native_obj->instance_vars->bindings[i]->val), str);
+
+      gtk_list_store_append(store2, &iter2);
+      gtk_list_store_set(store2, &iter2, 0, key, -1);
+      gtk_list_store_set(store2, &iter2, 1, str, -1);
+      gtk_list_store_set(store2, &iter2, 2, native_obj->instance_vars->bindings[i]->val, -1);
+    }
+
+    gtk_stack_set_visible_child_name(GTK_STACK(object_inspector_stack), "window_three");
+  }
+  else
+  {
+    char str[1024];
+    memset(str, '\0', 1024);
+    print_object_to_string(obj, str);
+
+    gtk_text_buffer_set_text(object_inspector_buffer, "", -1);
+
+    GtkTextMark *mark = gtk_text_buffer_get_insert(object_inspector_buffer);
+    GtkTextIter iter;
+
+    gtk_text_buffer_get_end_iter(object_inspector_buffer, &iter );
+    gtk_text_buffer_move_mark(object_inspector_buffer, mark, &iter );
+    gtk_text_buffer_insert_at_cursor(object_inspector_buffer, str, -1 );
+    gtk_text_view_scroll_to_mark(object_inspector_textview, mark, 0.0, TRUE, 0.5, 1 );
+
+    gtk_stack_set_visible_child_name(GTK_STACK(object_inspector_stack), "window_one");
+  }
 
   gtk_widget_show_all((GtkWidget *)object_inspector_window);
 }
