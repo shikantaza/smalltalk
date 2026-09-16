@@ -681,11 +681,17 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 	print_object_to_string(car(rest1), var_name);
 	print_object_to_string(car(car(rest)), var_val);
 
+        gchar *markup = g_markup_printf_escaped (
+          "<span foreground=\"#0000EE\" underline=\"single\">%s</span>",
+          var_val);
+
 	gtk_list_store_append(store1, &iter1);
-	gtk_list_store_set(store1, &iter1, 0, var_name, 1, var_val, 2, car(car(rest)), -1);
+	gtk_list_store_set(store1, &iter1, 0, var_name, 1, markup, 2, car(car(rest)), -1);
 
 	rest = cdr(rest);
 	rest1 = cdr(rest1);
+
+        g_free(markup);
       }
       //
     }

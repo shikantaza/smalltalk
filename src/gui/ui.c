@@ -513,10 +513,12 @@ void populate_call_chain_list(BOOLEAN invoked_for_exception, GtkTreeView *call_c
   }
 }
 
+static GtkTreeViewColumn *temp_var_link_column = NULL;
+
 void initialize_temp_vars_list(GtkTreeView *list)
 {
   GtkCellRenderer    *renderer;
-  GtkTreeViewColumn  *column1, *column2;
+  GtkTreeViewColumn  *column1 ;
   GtkListStore       *store;
 
   renderer = gtk_cell_renderer_text_new();
@@ -525,9 +527,9 @@ void initialize_temp_vars_list(GtkTreeView *list)
                                                      renderer, "text", 0, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
 
-  column2 = gtk_tree_view_column_new_with_attributes("Value",
-                                                     renderer, "text", 1, NULL);
-  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
+  temp_var_link_column = gtk_tree_view_column_new_with_attributes("Value",
+                                                     renderer, "markup", 1, NULL);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), temp_var_link_column);
 
   store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
 
@@ -537,7 +539,56 @@ void initialize_temp_vars_list(GtkTreeView *list)
   g_object_unref(store);
 }
 
-void inspect_temp_variable(GtkWidget *list, gpointer selection1)
+//TODO: the three inspect_*() functions are identical
+//except for the link column comparison. they
+//should be merged/parameterized
+gboolean
+inspect_temp_variable(GtkWidget      *treeview,
+                      GdkEventButton *event,
+                      gpointer        user_data)
+{
+    if (event->button != 1) /* only handle left click */
+        return FALSE;
+
+    GtkTreePath       *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    gint cell_x, cell_y;
+
+    gboolean found = gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (treeview),
+                                                     (gint) event->x,
+                                                     (gint) event->y,
+                                                     &path,
+                                                     &column,
+                                                     &cell_x,
+                                                     &cell_y);
+
+    if (found && column == temp_var_link_column)
+    {
+        GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (treeview));
+        GtkTreeIter iter;
+
+        if (gtk_tree_model_get_iter (model, &iter, path))
+        {
+          gint64 id;
+
+          gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+          stack_push(g_inspected_objects, (void *)id);
+
+          show_object_inspector_window();
+        }
+        gtk_tree_path_free (path);
+        /* Return TRUE to stop the click from also changing the selection */
+        return TRUE;
+    }
+
+    if (path != NULL)
+        gtk_tree_path_free (path);
+
+    return FALSE;
+}
+
+void inspect_temp_variable_orig(GtkWidget *list, gpointer selection1)
 {
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (temp_vars_list));
   GtkTreeIter  iter;
@@ -750,13 +801,16 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   temp_vars_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(temp_vars_list, TRUE);
 
+  gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW (temp_vars_list)),
+                              GTK_SELECTION_NONE);
+
   gtk_widget_override_font(GTK_WIDGET(temp_vars_list), font);
 
   pango_font_description_free(font);
 
   initialize_temp_vars_list(temp_vars_list);
 
-  g_signal_connect(temp_vars_list, "row-activated", G_CALLBACK(inspect_temp_variable), NULL);
+  g_signal_connect(temp_vars_list, "button-press-event", G_CALLBACK(inspect_temp_variable), NULL);
 
   gtk_container_add(GTK_CONTAINER (scrolled_win3), (GtkWidget *)temp_vars_list);
 
@@ -912,21 +966,24 @@ GtkWidget *object_inspector_stack = NULL;
 GtkTreeView *array_elements_list = NULL;
 GtkTreeView *objects_list = NULL;
 
+static GtkTreeViewColumn *object_link_column = NULL;
+static GtkTreeViewColumn *array_elem_link_column = NULL;
+
 void initialize_array_elements_list(GtkTreeView *list)
 {
   GtkCellRenderer    *renderer;
-  GtkTreeViewColumn  *column1, *column2;
+  GtkTreeViewColumn  *column1;
   GtkListStore       *store;
 
   renderer = gtk_cell_renderer_text_new();
 
   column1 = gtk_tree_view_column_new_with_attributes("Array Index",
                                                      renderer, "text", 0, NULL);
-  column2 = gtk_tree_view_column_new_with_attributes("Element",
-                                                     renderer, "text", 1, NULL);
+  array_elem_link_column = gtk_tree_view_column_new_with_attributes("Element",
+                                                     renderer, "markup", 1, NULL);
 
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
-  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), array_elem_link_column);
 
   //index, object desc (from print_object()), OBJECT_PTR value
   store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
@@ -940,18 +997,18 @@ void initialize_array_elements_list(GtkTreeView *list)
 void initialize_objects_list(GtkTreeView *list)
 {
   GtkCellRenderer    *renderer;
-  GtkTreeViewColumn  *column1, *column2;
+  GtkTreeViewColumn  *column1;
   GtkListStore       *store;
 
   renderer = gtk_cell_renderer_text_new();
 
   column1 = gtk_tree_view_column_new_with_attributes("Instance Variable",
                                                      renderer, "text", 0, NULL);
-  column2 = gtk_tree_view_column_new_with_attributes("Value",
-                                                     renderer, "text", 1, NULL);
+  object_link_column = gtk_tree_view_column_new_with_attributes("Value",
+                                                     renderer, "markup", 1, NULL);
 
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
-  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column2);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), object_link_column);
 
   //index, object desc (from print_object()), OBJECT_PTR value
   store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
@@ -962,7 +1019,53 @@ void initialize_objects_list(GtkTreeView *list)
   g_object_unref(store);
 }
 
-void inspect_array_element(GtkWidget *list, gpointer selection1)
+gboolean
+inspect_array_element(GtkWidget      *treeview,
+                      GdkEventButton *event,
+                      gpointer        user_data)
+{
+    if (event->button != 1) /* only handle left click */
+        return FALSE;
+
+    GtkTreePath       *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    gint cell_x, cell_y;
+
+    gboolean found = gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (treeview),
+                                                     (gint) event->x,
+                                                     (gint) event->y,
+                                                     &path,
+                                                     &column,
+                                                     &cell_x,
+                                                     &cell_y);
+
+    if (found && column == array_elem_link_column)
+    {
+        GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (treeview));
+        GtkTreeIter iter;
+
+        if (gtk_tree_model_get_iter (model, &iter, path))
+        {
+          gint64 id;
+
+          gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+          stack_push(g_inspected_objects, (void *)id);
+
+          show_object_inspector_window();
+        }
+        gtk_tree_path_free (path);
+        /* Return TRUE to stop the click from also changing the selection */
+        return TRUE;
+    }
+
+    if (path != NULL)
+        gtk_tree_path_free (path);
+
+    return FALSE;
+}
+
+void inspect_array_element_orig(GtkWidget *list, gpointer selection1)
 {
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (array_elements_list));
   GtkTreeIter  iter;
@@ -984,7 +1087,53 @@ void inspect_array_element(GtkWidget *list, gpointer selection1)
   }
 }
 
-void inspect_instance_variable(GtkWidget *list, gpointer selection1)
+gboolean
+inspect_instance_variable(GtkWidget      *treeview,
+                          GdkEventButton *event,
+                          gpointer        user_data)
+{
+    if (event->button != 1) /* only handle left click */
+        return FALSE;
+
+    GtkTreePath       *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    gint cell_x, cell_y;
+
+    gboolean found = gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (treeview),
+                                                     (gint) event->x,
+                                                     (gint) event->y,
+                                                     &path,
+                                                     &column,
+                                                     &cell_x,
+                                                     &cell_y);
+
+    if (found && column == object_link_column)
+    {
+        GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (treeview));
+        GtkTreeIter iter;
+
+        if (gtk_tree_model_get_iter (model, &iter, path))
+        {
+          gint64 id;
+
+          gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+          stack_push(g_inspected_objects, (void *)car(id));
+
+          show_object_inspector_window();
+        }
+        gtk_tree_path_free (path);
+        /* Return TRUE to stop the click from also changing the selection */
+        return TRUE;
+    }
+
+    if (path != NULL)
+        gtk_tree_path_free (path);
+
+    return FALSE;
+}
+
+void inspect_instance_variable_orig(GtkWidget *list, gpointer selection1)
 {
   GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (objects_list));
   GtkTreeIter  iter;
@@ -1050,13 +1199,17 @@ void create_object_inspector_window(int posx, int posy, int width, int height)
 
   array_elements_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_widget_override_font(GTK_WIDGET(array_elements_list), font);
+  gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW (array_elements_list)),
+                              GTK_SELECTION_NONE);
   initialize_array_elements_list(array_elements_list);
-  g_signal_connect(array_elements_list, "row-activated", G_CALLBACK(inspect_array_element), NULL);
+  g_signal_connect(array_elements_list, "button-press-event", G_CALLBACK(inspect_array_element), NULL);
 
   objects_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_widget_override_font(GTK_WIDGET(objects_list), font);
+  gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW (objects_list)),
+                              GTK_SELECTION_NONE);
   initialize_objects_list(objects_list);
-  g_signal_connect(objects_list, "row-activated", G_CALLBACK(inspect_instance_variable), NULL);
+  g_signal_connect(objects_list, "button-press-event", G_CALLBACK(inspect_instance_variable), NULL);
 
   pango_font_description_free(font);
 
@@ -1133,10 +1286,16 @@ void show_object_inspector_window()
       memset(s, '\0', 10);
       sprintf(s, "%d", i+1);
 
+      gchar *markup = g_markup_printf_escaped (
+        "<span foreground=\"#0000EE\" underline=\"single\">%s</span>",
+        str);
+
       gtk_list_store_append(store2, &iter2);
       gtk_list_store_set(store2, &iter2, 0, s, -1);
-      gtk_list_store_set(store2, &iter2, 1, str, -1);
+      gtk_list_store_set(store2, &iter2, 1, markup, -1);
       gtk_list_store_set(store2, &iter2, 2, arr_obj->elements[i], -1);
+
+      g_free(markup);
     }
 
     gtk_stack_set_visible_child_name(GTK_STACK(object_inspector_stack), "window_two");
@@ -1165,10 +1324,16 @@ void show_object_inspector_window()
       memset(str, '\0', 1024);
       print_object_to_string(car(native_obj->instance_vars->bindings[i]->val), str);
 
+      gchar *markup = g_markup_printf_escaped (
+        "<span foreground=\"#0000EE\" underline=\"single\">%s</span>",
+        str);
+
       gtk_list_store_append(store2, &iter2);
       gtk_list_store_set(store2, &iter2, 0, key, -1);
-      gtk_list_store_set(store2, &iter2, 1, str, -1);
+      gtk_list_store_set(store2, &iter2, 1, markup, -1);
       gtk_list_store_set(store2, &iter2, 2, native_obj->instance_vars->bindings[i]->val, -1);
+
+      g_free(markup);
     }
 
     gtk_stack_set_visible_child_name(GTK_STACK(object_inspector_stack), "window_three");
