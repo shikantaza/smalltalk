@@ -43,6 +43,8 @@ stack_type *get_class_hierarchy(OBJECT_PTR);
 
 void show_object_inspector_window();
 
+void show_info_dialog(char *);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -358,8 +360,11 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
   for(i=0; i<n; i++)
     if(cls_obj->inst_vars[i] == var_sym)
     {
-      printf("Instance variable %s already exists\n", get_smalltalk_symbol_name(var));
-      return NIL;
+      char buf[100];
+      memset(buf, '\0', 100);
+      sprintf(buf, "Instance variable %s already exists", get_smalltalk_symbol_name(var));
+      show_info_dialog(buf);
+      return invoke_cont_on_val(cont, class_obj);
     }
 
   //check that the instance variable doesn't conflict with an existing class variable
@@ -367,8 +372,11 @@ OBJECT_PTR add_instance_var(OBJECT_PTR closure,
   for(i=0; i<n; i++)
     if(cls_obj->shared_vars->bindings[i]->key == var_sym)
     {
-      printf("Instance variable %s conflicts with an existing class variable\n", get_smalltalk_symbol_name(var));
-      return NIL;
+      char buf[100];
+      memset(buf, '\0', 100);
+      sprintf(buf, "Instance variable %s conflicts with an existing class variable", get_smalltalk_symbol_name(var));
+      show_info_dialog(buf);
+      return invoke_cont_on_val(cont, class_obj);
     }
   
   cls_obj->nof_instance_vars++;
@@ -447,16 +455,22 @@ OBJECT_PTR add_class_var(OBJECT_PTR closure,
   for(i=0; i<n; i++)
     if(cls_obj->shared_vars->bindings[i]->key == var_sym)
     {
-      printf("Class variable %s already exists\n", get_smalltalk_symbol_name(var));
-      return NIL;
+      char buf[100];
+      memset(buf, '\0', 100);
+      sprintf(buf, "Class variable %s already exists", get_smalltalk_symbol_name(var));
+      show_info_dialog(buf);
+      return invoke_cont_on_val(cont, class_obj);
     }
   //check that the class variable doesn't conflict with an existing instance variable
   n = cls_obj->nof_instance_vars;
   for(i=0; i<n; i++)
     if(cls_obj->inst_vars[i] == var_sym)
     {
-      printf("Class variable %s conflicts with an existing instance variable\n", get_smalltalk_symbol_name(var));
-      return NIL;
+      char buf[100];
+      memset(buf, '\0', 100);
+      sprintf(buf, "Class variable %s conflicts with an existing instance variable", get_smalltalk_symbol_name(var));
+      show_info_dialog(buf);
+      return invoke_cont_on_val(cont, class_obj);
     }
   
   if(!cls_obj->shared_vars->bindings)

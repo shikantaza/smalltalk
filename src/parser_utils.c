@@ -407,3 +407,19 @@ void print_debug_expression(FILE *fp, debug_expression_t *debug_exp)
   else
     assert(false);
 }
+
+BOOLEAN contains_duplicates(unsigned int count, char **strings)
+{
+  unsigned int i, j;
+
+  for(i=0; i<count; i++)
+  {
+    for(j=i+1; j<count; j++)
+    {
+      if(!strcmp(strings[i], strings[j]))
+        return true;
+    }
+  }
+
+  return false;
+}

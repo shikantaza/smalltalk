@@ -72,6 +72,8 @@ void set_lexer_docstring_state(int);
 
 void show_info_dialog(char *);
 
+BOOLEAN contains_duplicates(unsigned int, char **);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -250,6 +252,12 @@ temporaries:
     |
     T_VERTICAL_BAR identifiers T_VERTICAL_BAR
     {
+      if(contains_duplicates($2->nof_identifiers, $2->identifiers))
+      {
+	yyerror("Duplicates in temporary variables list");
+	YYABORT;
+      }
+
       temporaries_t *temps = (temporaries_t *)GC_MALLOC(sizeof(temporaries_t));
       temps->nof_temporaries = $2->nof_identifiers;
 
@@ -481,6 +489,13 @@ opt_block_args:
       assert(temp);
       $1->identifiers = temp;
       $1->identifiers[$1->nof_args - 1] = GC_strdup($2);
+
+      if(contains_duplicates($1->nof_args, $1->identifiers))
+      {
+	yyerror("Duplicates in block arguments list");
+	YYABORT;
+      }
+
       $$ = $1;
     }
     ;
