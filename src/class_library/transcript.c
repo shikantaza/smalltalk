@@ -126,5 +126,8 @@ void create_Transcript()
 						 NIL, NIL,
 						 0, NIL, NULL);
   
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   Transcript =  convert_class_object_to_object_ptr(cls_obj);
 }

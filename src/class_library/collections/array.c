@@ -344,5 +344,8 @@ void create_Array()
 						 NIL, NIL,
 						 1, NIL, NULL);
 
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   Array =  convert_class_object_to_object_ptr(cls_obj);
 }

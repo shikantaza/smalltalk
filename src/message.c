@@ -42,6 +42,9 @@ OBJECT_PTR call_nf(nativefn,
                    unsigned int,
                    OBJECT_PTR *);
 
+stack_type *fetch_class_from_pkg(char *);
+OBJECT_PTR fetch_aliased_class(class_object_t *, char *);
+
 //NIL; since NIL is declared later, using its value
 //TODO: ensure this is reset after a debug cycle is completed
 OBJECT_PTR g_run_till_cont = 1;
@@ -278,7 +281,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
   if(count != m->arity)
   {
-    assert(false);
+    OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						   convert_fn_to_closure((nativefn)new_object_internal),
+						   g_idclo);
+    char str[100];
+    sprintf(str, "Method expects %d argument(s), but %d argument(s) passed", m->arity, count);
+    return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
   }
   
   native_fn_obj_t *nfobj = (native_fn_obj_t *)extract_ptr(m->nativefn_obj);
@@ -302,6 +310,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     shared_vars = ((class_object_t *)extract_ptr(get_class_object(receiver)))->shared_vars;
     inst_vars = ((object_t *)extract_ptr(receiver))->instance_vars;
   }
+
+  class_object_t *cls_obj = IS_CLASS_OBJECT(receiver) ?
+    (class_object_t *)extract_ptr(receiver) : (class_object_t *)extract_ptr(get_class_object(receiver));
   
   while(rest != NIL)
   {
@@ -337,20 +348,50 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       }
     }
 
-    if(get_top_level_val(car(rest), &closed_val_cons))
+    stack_type *classes = fetch_class_from_pkg(get_symbol_name(car(rest)));
+
+    if(!stack_is_empty(classes))
     {
-      ret = cons(closed_val_cons, ret);
+      OBJECT_PTR class_val = (OBJECT_PTR)stack_pop(classes);
+
+      //more than one class with matching name found
+      if(!stack_is_empty(classes))
+      {
+	OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_idclo);
+	char str[100];
+	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(car(rest)));
+	return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
+      }
+
+      ret = cons(cons(class_val, NIL), ret);
       rest = cdr(rest);
     }
     else
     {
-      OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						     convert_fn_to_closure((nativefn)new_object_internal),
-						     g_idclo);
-      char str[100];
-      sprintf(str, "Unbound variable: %s", get_symbol_name(car(rest)));
+      OBJECT_PTR class_val1 = fetch_aliased_class(cls_obj, get_symbol_name(car(rest)));
 
-      return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
+      if(class_val1 != NIL)
+      {
+	ret = cons(cons(class_val1, NIL), ret);
+	rest = cdr(rest);
+      }
+      else if(get_top_level_val(car(rest), &closed_val_cons))
+      {
+	ret = cons(closed_val_cons, ret);
+	rest = cdr(rest);
+      }
+      else
+      {
+	OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_idclo);
+	char str[100];
+	sprintf(str, "Unbound variable: %s", get_symbol_name(car(rest)));
+
+	return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
+      }
     }
   }
 
@@ -936,4 +977,38 @@ OBJECT_PTR call_nf(nativefn nf,
     free(arg_values);
 
     return result;
+}
+
+OBJECT_PTR fetch_aliased_class(class_object_t *cls_obj, char *alias)
+{
+  int i, n;
+
+  n = cls_obj->nof_aliases;
+
+  for(i=0; i<n; i++)
+  {
+    smalltalk_package_t *pkg = cls_obj->aliases[i].pkg;
+
+    if(pkg->delete_flag)
+      continue;
+
+    if(!strcmp(get_smalltalk_symbol_name(cls_obj->aliases[i].alias_sym), alias))
+    {
+      int j, n1;
+      n1 = pkg->nof_classes;
+
+      for(j=0; j<n1; j++)
+      {
+	class_object_t *cls_obj1 = (class_object_t *)extract_ptr(pkg->member_classes[j]);
+
+	if(cls_obj1->delete_flag)
+	  continue;
+
+	if(!strcmp(cls_obj1->name, get_smalltalk_symbol_name(cls_obj->aliases[i].class_sym)))
+	  return pkg->member_classes[j];
+      }
+    }
+  }
+
+  return NIL;
 }

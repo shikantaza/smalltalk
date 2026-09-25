@@ -159,7 +159,17 @@ typedef struct smalltalk_package
   struct smalltalk_package *parent;
   unsigned int nof_children;
   struct smalltalk_package **children;
+
+  unsigned int nof_classes;
+  OBJECT_PTR *member_classes;
 } smalltalk_package_t;
+
+typedef struct alias
+{
+  smalltalk_package_t *pkg;
+  OBJECT_PTR class_sym;
+  OBJECT_PTR alias_sym;
+} alias_t;
 
 typedef struct
 {
@@ -184,6 +194,10 @@ typedef struct
   //and the method source Lisp object
 
   char *docstring;
+
+  unsigned int nof_aliases;
+  alias_t *aliases;
+
 } class_object_t;
 
 typedef struct method

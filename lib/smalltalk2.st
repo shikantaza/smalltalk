@@ -87,6 +87,18 @@ Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPack
   ^ret
 ]
 
+Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPackage:aliases: toClass: Smalltalk withBody:
+[ :className :parentClass :instVars :classVars :package :aliases|
+  | ret |
+  ret := self createClass: className parentClass: parentClass inPackage: package.
+  self addInstanceVariables: instVars toClass: ret.
+  self addClassVariables: classVars toClass: ret.
+  aliases do: [ :entry |
+    self createAlias: (entry at: 1) for: (entry at: 2) fromPackage: (entry at: 3) inClass: ret
+  ].
+  ^ret
+]
+
 Smalltalk addClassMethod: #createClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
 [ :className :instVars :classVars :package |
   ^(self createClass: className parentClass: Object instanceVars: instVars classVars: classVars inPackage: package)

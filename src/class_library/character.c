@@ -63,6 +63,9 @@ void create_Character()
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
 
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   Character =  convert_class_object_to_object_ptr(cls_obj);
 }
 

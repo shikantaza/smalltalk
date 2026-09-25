@@ -307,9 +307,15 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 
   cls_obj->docstring = g_class_docstring ? GC_strdup(g_class_docstring) : NULL;
 
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   OBJECT_PTR class_object = convert_class_object_to_object_ptr(cls_obj);
-  
-  add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
+
+  //only classes in the core package or its child packages
+  //should get added to g_top_level
+  if(!g_system_initialized)
+    add_binding_to_top_level(get_symbol(get_smalltalk_symbol_name(class_sym)), cons(class_object, NIL));
 
   add_to_autocomplete_list(cls_obj->name);
 
@@ -1235,6 +1241,9 @@ void create_Object()
 						 NIL, NIL,
 						 1, NIL, NULL);
 
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
 
@@ -1511,6 +1520,30 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
     return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
   }
 
+  cls->package->nof_classes++;
+
+  if(!cls->package->member_classes)
+    cls->package->member_classes = (OBJECT_PTR *)GC_MALLOC(cls->package->nof_classes * sizeof(OBJECT_PTR));
+  else
+  {
+    OBJECT_PTR *temp = (OBJECT_PTR *)GC_REALLOC(cls->package->member_classes, cls->package->nof_classes * sizeof(OBJECT_PTR));
+    assert(temp);
+    cls->package->member_classes = temp;
+  }
+
+  cls->package->member_classes[cls->package->nof_classes - 1] = class_obj;
+
+  memset(err_msg, '\0', 100);
+
+  smalltalk_package_t *core_pkg = get_package("core", err_msg);
+  assert(core_pkg);
+
+  //only classes belonging to the 'core' package or its child packages
+  //should get bound at the top level
+  if(g_system_initialized)
+    if(cls->package == core_pkg || is_package_descendent_of(cls->package, core_pkg))
+      add_binding_to_top_level(get_symbol(cls->name), cons(class_obj, NIL));
+
   pop_if_top(entry);
 
   g_system_changed = true;
@@ -1716,8 +1749,8 @@ OBJECT_PTR delete_class_method(OBJECT_PTR closure,
 //non-existent package name is passed, this package will
 //get created then deleted
 OBJECT_PTR delete_package(OBJECT_PTR closure,
-                                    OBJECT_PTR pkg_str,
-                                    OBJECT_PTR cont)
+                          OBJECT_PTR pkg_str,
+                          OBJECT_PTR cont)
 {
   char err_msg[100];
 
@@ -1818,6 +1851,75 @@ OBJECT_PTR delete_package(OBJECT_PTR closure,
   return invoke_cont_on_val(cont, receiver);
 }
 
+OBJECT_PTR create_alias(OBJECT_PTR closure,
+                        OBJECT_PTR alias_sym,
+                        OBJECT_PTR class_sym,
+                        OBJECT_PTR pkg_str,
+                        OBJECT_PTR dest_class,
+                        OBJECT_PTR cont)
+{
+  char err_msg[100];
+
+  OBJECT_PTR receiver = car(get_binding_val(g_top_level, SELF));
+
+  assert(IS_CLOSURE_OBJECT(closure));
+
+  call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(alias_sym))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  //we are not checking if such class exists in the the specified
+  //package to keep things dynamic (that class can be created later)
+
+  if(!IS_SMALLTALK_SYMBOL_OBJECT(class_sym))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_STRING_LITERAL_OBJECT(pkg_str))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(!IS_CLASS_OBJECT(dest_class))
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  assert(IS_CLOSURE_OBJECT(cont));
+
+  memset(err_msg, '\0', 100);
+
+  smalltalk_package_t *pkg = get_package(g_string_literals[pkg_str >> OBJECT_SHIFT], err_msg);
+
+  if(!pkg)
+  {
+    char buf[300];
+    sprintf(buf, "Unable to get package %s: %s", g_string_literals[pkg_str >> OBJECT_SHIFT], err_msg);
+    return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
+  }
+
+  class_object_t *cls_obj = (class_object_t *)extract_ptr(dest_class);
+
+  cls_obj->nof_aliases++;
+
+  if(!cls_obj->aliases)
+    cls_obj->aliases = (alias_t *)GC_MALLOC(cls_obj->nof_aliases * sizeof(alias_t));
+  else
+  {
+    alias_t *temp = (alias_t *)GC_REALLOC(cls_obj->aliases, cls_obj->nof_aliases * sizeof(alias_t));
+    assert(temp);
+    cls_obj->aliases = temp;
+  }
+
+  cls_obj->aliases[cls_obj->nof_aliases - 1].alias_sym = alias_sym;
+  cls_obj->aliases[cls_obj->nof_aliases - 1].class_sym = class_sym;
+  cls_obj->aliases[cls_obj->nof_aliases - 1].pkg = pkg;
+
+  pop_if_top(entry);
+
+  g_system_changed = true;
+
+  return invoke_cont_on_val(cont, receiver);
+}
+
+//TODO: method to remove an alias
+
 void create_Smalltalk()
 {
   class_object_t *cls_obj;
@@ -1846,7 +1948,7 @@ void create_Smalltalk()
   cls_obj->instance_methods->bindings = NULL;
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 20;
+  cls_obj->class_methods->count = 21;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   //addInstanceMethod and addClassMethod cannot be brought into
@@ -1992,6 +2094,16 @@ void create_Smalltalk()
 						 NIL, NIL,
 						 1, NIL, NULL);
 
+  cls_obj->class_methods->bindings[20] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[20]->key = get_symbol("_createAlias:for:fromPackage:inClass:");
+  cls_obj->class_methods->bindings[20]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+						 convert_native_fn_to_object((nativefn)create_alias),
+						 NIL, NIL,
+						 4, NIL, NULL);
+
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
+
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
 
@@ -2099,6 +2211,9 @@ void create_Nil()
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
+
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
 
   Nil =  convert_class_object_to_object_ptr(cls_obj);
 }
@@ -2456,6 +2571,9 @@ void create_Compiler()
 						 convert_native_fn_to_object((nativefn)compiler_compile_pass),
 						 NIL, NIL,
 						 2, NIL, NULL);
+
+  cls_obj->nof_aliases = 0;
+  cls_obj->aliases = NULL;
 
   Compiler =  convert_class_object_to_object_ptr(cls_obj);
 }

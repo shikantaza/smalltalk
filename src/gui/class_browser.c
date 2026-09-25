@@ -372,31 +372,20 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
 
     int i, n;
 
-    n = g_top_level->count;
+    smalltalk_package_t *pkg = (smalltalk_package_t *)id;
+
+    n = pkg->nof_classes;
 
     for(i=0; i<n; i++)
     {
-      if(g_top_level->bindings[i]->key == SELF ||
-	 g_top_level->bindings[i]->key == SUPER ||
-	 g_top_level->bindings[i]->key == THIS_CONTEXT)
-	continue;
+      class_object_t *cls_obj = (class_object_t *)extract_ptr(pkg->member_classes[i]);
 
-      OBJECT_PTR binding_val = g_top_level->bindings[i]->val;
+      if(cls_obj->delete_flag)
+        continue;
 
-      if(IS_CLASS_OBJECT(car(binding_val)))
-      {
-	class_object_t *cls_obj_int = (class_object_t *)extract_ptr(car(binding_val));
-
-        if(cls_obj_int->delete_flag)
-          continue;
-
-	if(cls_obj_int->package == (void*)id)
-	{
-	  gtk_list_store_append(store2, &iter2);
-	  gtk_list_store_set(store2, &iter2, 0, cls_obj_int->name, -1);  
-	  gtk_list_store_set(store2, &iter2, 1, car(binding_val), -1);
-	}
-      }
+      gtk_list_store_append(store2, &iter2);
+      gtk_list_store_set(store2, &iter2, 0, cls_obj->name, -1);
+      gtk_list_store_set(store2, &iter2, 1, pkg->member_classes[i], -1);
     }
 
     char code[200];
@@ -407,7 +396,8 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
     len += sprintf(code+len, "  parentClass: SomeParentClass\n");
     len += sprintf(code+len, "  instanceVars: #(#var1 #var2)\n");
     len += sprintf(code+len, "  classVars: #(#var3 #var4)\n");
-    len += sprintf(code+len, "  inPackage: '%s'", get_qualified_name((smalltalk_package_t *)id));
+    len += sprintf(code+len, "  inPackage: '%s'\n", get_qualified_name((smalltalk_package_t *)id));
+    len += sprintf(code+len, "  aliases: #()\n");
 
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), code, -1);
     //gtk_statusbar_remove_all(class_browser_statusbar, 0);
@@ -523,6 +513,24 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     char *pkg_name = cls_obj->package->name;
 
     len += sprintf(str+len, "  inPackage: \'%s'\n", pkg_name);
+
+    n = cls_obj->nof_aliases;
+
+    len += sprintf(str+len, "  aliases: #(");
+
+    for(i=0; i<n; i++)
+    {
+      if(i!=0)
+        len += sprintf(str+len, "             ");
+      len += sprintf(str+len, "#(#%s #%s '%s')",
+                     get_smalltalk_symbol_name(cls_obj->aliases[i].alias_sym),
+                     get_smalltalk_symbol_name(cls_obj->aliases[i].class_sym),
+                     get_qualified_name(cls_obj->aliases[i].pkg));
+      if(i != n -1)
+        len += sprintf(str+len, "\n");
+    }
+
+    len += sprintf(str+len, ")");
 
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), "", -1);
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(class_browser_source_buffer), str, -1);

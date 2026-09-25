@@ -74,6 +74,8 @@ void show_info_dialog(char *);
 
 BOOLEAN contains_duplicates(unsigned int, char **);
 
+stack_type *fetch_class_from_pkg(char *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -1385,7 +1387,28 @@ OBJECT_PTR repl_common()
   {
     OBJECT_PTR closed_val = car(rest);
     OBJECT_PTR closed_val_cons;
-    if(get_binding_val_regular(g_top_level, closed_val, &closed_val_cons))
+
+    stack_type *classes = fetch_class_from_pkg(get_symbol_name(closed_val));
+
+    if(!stack_is_empty(classes))
+    {
+      OBJECT_PTR class_val = (OBJECT_PTR)stack_pop(classes);
+
+      //more than one class with matching name found
+      if(!stack_is_empty(classes))
+      {
+	OBJECT_PTR exception_obj = new_object_internal(CompileError,
+						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_idclo);
+	char str[100];
+	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(closed_val));
+	return signal_exception_with_text(exception_obj, get_string_obj(str), g_idclo);
+      }
+
+      ret = cons(cons(class_val, NIL), ret);
+      rest = cdr(rest);
+    }
+    else if(get_binding_val_regular(g_top_level, closed_val, &closed_val_cons))
     {
 	ret = cons(closed_val_cons, ret);
 	rest = cdr(rest);

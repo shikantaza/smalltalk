@@ -50,6 +50,8 @@ smalltalk_package_t **g_smalltalk_packages = NULL;
 regex_t regex;
 BOOLEAN is_regex_valid = false;
 
+extern OBJECT_PTR NIL;
+
 #ifdef PACKAGE_TEST
 char *substring(const char* str, size_t begin, size_t len)
 {
@@ -101,6 +103,9 @@ smalltalk_package_t *get_package_with_parent(char *name, smalltalk_package_t *pa
   }
   else
     new_pkg->parent = NULL;
+
+  new_pkg->nof_classes = 0;
+  new_pkg->member_classes = NULL;
 
   g_nof_smalltalk_packages++;
 
@@ -303,6 +308,35 @@ BOOLEAN is_package_descendent_of(smalltalk_package_t *pkg, smalltalk_package_t *
   }
 
   return false;
+}
+
+stack_type *fetch_class_from_pkg(char *name)
+{
+  stack_type *ret = stack_create();
+
+  unsigned int i, j, n;
+
+  n = g_nof_smalltalk_packages;
+
+  for(i=0; i<n; i++)
+  {
+    if(g_smalltalk_packages[i]->delete_flag)
+      continue;
+
+    unsigned int nof_classes = g_smalltalk_packages[i]->nof_classes;
+    for(j=0; j<nof_classes; j++)
+    {
+      OBJECT_PTR cls_obj = g_smalltalk_packages[i]->member_classes[j];
+      class_object_t *cls_obj_int = (class_object_t *)extract_ptr(cls_obj);
+
+      if(cls_obj_int->delete_flag)
+        continue;
+
+      if(!strcmp(name, cls_obj_int->name))
+        stack_push(ret, (void *)cls_obj);
+    }
+  }
+  return ret;
 }
 
 #ifdef PACKAGE_TEST
