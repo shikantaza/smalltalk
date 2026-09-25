@@ -1,4 +1,4 @@
-Smalltalk createClass: #UnitTestFramework
+Smalltalk createClass: #UnitTestFramework inPackage: 'tests'
 
 Smalltalk addClassVariable: #passedCases toClass: UnitTestFramework
 
@@ -872,5 +872,26 @@ Smalltalk createClass: #Test inPackage: 'test'
 Smalltalk deletePackage: 'test'
 
 UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Transcript show: Test' ] exception: CompileError withID: 198
+
+Smalltalk createClass: #Class1 inPackage: 'first'
+
+Smalltalk createClass: #Class1 inPackage: 'second'
+
+Smalltalk createClass: #Test
+
+Smalltalk addClassMethod: #test toClass: Test withBody: [ ^ Class1 new]
+
+UnitTestFramework runExceptionTestCase: [ Smalltalk eval: 'Test test'] exception: CompileError withID: 199
+
+Smalltalk createClass: #Test2
+  parentClass: Object
+  instanceVars: #()
+  classVars: #()
+  inPackage: 'user'
+  aliases: #(#(#MyClass #Class1 'first'))
+
+Smalltalk addClassMethod: #test toClass: Test2 withBody: [ |x| x := MyClass new. ^ 42 ]
+
+UnitTestFramework runTestCase: [ (Test2 test) = 42 ] withID: 200
 
 UnitTestFramework reportStatus
