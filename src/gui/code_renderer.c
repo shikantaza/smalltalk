@@ -462,12 +462,12 @@ void render_block_constructor(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
       render_string_to_buffer(code_buf, highlight, index, "\n\n");
     }
   }
-  else
+  else if(b->type == NO_BLOCK_ARGS)
     render_string_to_buffer(code_buf, highlight, index, "\n");
 
   if(b->type == BLOCK_ARGS)
   {
-    render_string_to_buffer(code_buf, highlight, index, "  ");
+    render_string_to_buffer(code_buf, highlight, index, " ");
     render_block_arguments(code_buf, indents, highlight, index, b->block_args);
     render_string_to_buffer(code_buf, highlight, index, "\n");
     *indents += 2;

@@ -477,7 +477,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     else
       len += sprintf(str+len, "  parentClass: nil\n");
 
-    len += sprintf(str+len, "  instVars : #(");
+    len += sprintf(str+len, "  instanceVars: #(");
 
     n = cls_obj->nof_instance_vars;
 
@@ -489,7 +489,7 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
     }
     len += sprintf(str+len, ")\n");
 
-    len += sprintf(str+len, "  classVars : #(");
+    len += sprintf(str+len, "  classVars: #(");
 
     binding_env_t *shared_vars = cls_obj->shared_vars;
 

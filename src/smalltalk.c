@@ -249,9 +249,6 @@ OBJECT_PTR create_class(OBJECT_PTR closure,
 			OBJECT_PTR parent_class_object,
 			OBJECT_PTR cont)
 {
-  //TODO: what to do if the class to be created
-  //already exists?
-
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
   assert(IS_CLOSURE_OBJECT(closure));
@@ -1520,18 +1517,37 @@ OBJECT_PTR smalltalk_assign_class_to_package(OBJECT_PTR closure,
     return create_and_signal_exception_with_text(Error, get_string_obj(buf), cont);
   }
 
-  cls->package->nof_classes++;
+  unsigned int i, n;
+  n = cls->package->nof_classes;
 
-  if(!cls->package->member_classes)
-    cls->package->member_classes = (OBJECT_PTR *)GC_MALLOC(cls->package->nof_classes * sizeof(OBJECT_PTR));
-  else
+  BOOLEAN existing_class = false;
+
+  for(i=0; i<n; i++)
   {
-    OBJECT_PTR *temp = (OBJECT_PTR *)GC_REALLOC(cls->package->member_classes, cls->package->nof_classes * sizeof(OBJECT_PTR));
-    assert(temp);
-    cls->package->member_classes = temp;
+    class_object_t *cls_obj = (class_object_t *)extract_ptr(cls->package->member_classes[i]);
+    if(!strcmp(cls->name, cls_obj->name))
+    {
+      cls->package->member_classes[i] = class_obj;
+      existing_class = true;
+      break;
+    }
   }
 
-  cls->package->member_classes[cls->package->nof_classes - 1] = class_obj;
+  if(!existing_class)
+  {
+    cls->package->nof_classes++;
+
+    if(!cls->package->member_classes)
+      cls->package->member_classes = (OBJECT_PTR *)GC_MALLOC(cls->package->nof_classes * sizeof(OBJECT_PTR));
+    else
+    {
+      OBJECT_PTR *temp = (OBJECT_PTR *)GC_REALLOC(cls->package->member_classes, cls->package->nof_classes * sizeof(OBJECT_PTR));
+      assert(temp);
+      cls->package->member_classes = temp;
+    }
+
+    cls->package->member_classes[cls->package->nof_classes - 1] = class_obj;
+  }
 
   memset(err_msg, '\0', 100);
 
