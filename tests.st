@@ -894,4 +894,6 @@ Smalltalk addClassMethod: #test toClass: Test2 withBody: [ |x| x := MyClass new.
 
 UnitTestFramework runTestCase: [ (Test2 test) = 42 ] withID: 200
 
+UnitTestFramework runExceptionTestCase: [ [1/0] on: Exception do: [:ex | ex signal] ] exception: ZeroDivide withID: 201
+
 UnitTestFramework reportStatus

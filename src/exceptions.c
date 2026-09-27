@@ -519,7 +519,7 @@ OBJECT_PTR signal_exception_with_text(OBJECT_PTR exception, OBJECT_PTR signalerT
                                    g_idclo);
 
     //if(cls_obj == handler->selector || is_super_class(handler->selector, cls_obj))
-    if(ret1 == TRUE)
+    if(ret1 == TRUE && handler != g_active_handler)
     {
       g_active_handler = handler;
 
@@ -719,7 +719,8 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  invoke_curtailed_blocks(g_active_handler->cont);
+  if(g_active_handler)
+    invoke_curtailed_blocks(g_active_handler->cont);
 
   assert(!stack_is_empty(g_exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
@@ -729,6 +730,8 @@ OBJECT_PTR exception_resume(OBJECT_PTR closure, OBJECT_PTR cont)
   //TODO: check if the exception object is resumable,
   //if it is, return the default resumption value
 
+  g_active_handler = NULL;
+
   return invoke_cont_on_val(exception_context, NIL);
 }
 
@@ -737,12 +740,15 @@ OBJECT_PTR exception_resume_with_val(OBJECT_PTR closure, OBJECT_PTR val, OBJECT_
   assert(IS_CLOSURE_OBJECT(closure));
   assert(IS_CLOSURE_OBJECT(cont));
 
-  invoke_curtailed_blocks(g_active_handler->cont);
+  if(g_active_handler)
+    invoke_curtailed_blocks(g_active_handler->cont);
 
   assert(!stack_is_empty(g_exception_contexts));
   OBJECT_PTR exception_context = (OBJECT_PTR)stack_pop(g_exception_contexts);
 
   assert(IS_CLOSURE_OBJECT(exception_context));
+
+  g_active_handler = NULL;
 
   return invoke_cont_on_val(exception_context, val);
 }
