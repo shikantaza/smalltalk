@@ -1228,12 +1228,19 @@ void create_Object()
 						    0, NIL, NULL);
 
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
-  cls_obj->class_methods->count = 1;
+  cls_obj->class_methods->count = 2;
   cls_obj->class_methods->bindings = (method_binding_t **)GC_MALLOC(cls_obj->class_methods->count * sizeof(method_binding_t *));
 
   cls_obj->class_methods->bindings[0] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
-  cls_obj->class_methods->bindings[0]->key = get_symbol("_messageNotUnderstood:");
-  cls_obj->class_methods->bindings[0]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
+  cls_obj->class_methods->bindings[0]->key = get_symbol("_=");
+  cls_obj->class_methods->bindings[0]->val = create_method(convert_class_object_to_object_ptr(cls_obj), false,
+						    convert_native_fn_to_object((nativefn)object_eq),
+						    NIL, NIL,
+						    1, NIL, NULL);
+
+  cls_obj->class_methods->bindings[1] = (method_binding_t *)GC_MALLOC(sizeof(method_binding_t));
+  cls_obj->class_methods->bindings[1]->key = get_symbol("_messageNotUnderstood:");
+  cls_obj->class_methods->bindings[1]->val = create_method(convert_class_object_to_object_ptr(cls_obj), true,
 						 convert_native_fn_to_object((nativefn)object_message_not_understood),
 						 NIL, NIL,
 						 1, NIL, NULL);

@@ -88,15 +88,19 @@ Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPack
 ]
 
 Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPackage:aliases: toClass: Smalltalk withBody:
-[ :className :parentClass :instVars :classVars :package :aliases|
-  | ret |
-  ret := self createClass: className parentClass: parentClass inPackage: package.
-  self addInstanceVariables: instVars toClass: ret.
-  self addClassVariables: classVars toClass: ret.
-  aliases do: [ :entry |
-    self createAlias: (entry at: 1) for: (entry at: 2) fromPackage: (entry at: 3) inClass: ret
-  ].
-  ^ret
+[ :className :parentClass :instVars :classVars :package :aliases |
+  |ret|
+  [
+    ret := self createClass: className parentClass: parentClass inPackage: package.
+    self addInstanceVariables: instVars toClass: ret.
+    self addClassVariables: classVars toClass: ret.
+    aliases do: [ :entry |
+      self createAlias: (entry at: 1) for: (entry at: 2) fromPackage: (entry at: 3) inClass: ret
+    ].
+    ^ret
+  ] on: Exception do: [ :ex |
+    ret = nil ifFalse: [ self deleteClass: ret. ex signal ]
+  ]
 ]
 
 Smalltalk addClassMethod: #createClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
