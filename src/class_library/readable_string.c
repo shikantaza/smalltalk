@@ -61,7 +61,14 @@ OBJECT_PTR readable_string_size(OBJECT_PTR closure, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, convert_int_to_object(strlen(g_string_literals[receiver >> OBJECT_SHIFT])));
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, convert_int_to_object(strlen(g_string_literals[receiver >> OBJECT_SHIFT])));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, convert_int_to_object(strlen(get_smalltalk_symbol_name(receiver))));
+  else if(IS_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, convert_int_to_object(strlen(get_symbol_name(receiver))));
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 }
 
 OBJECT_PTR readable_string_is_empty(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -72,7 +79,14 @@ OBJECT_PTR readable_string_is_empty(OBJECT_PTR closure, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, strlen(g_string_literals[receiver >> OBJECT_SHIFT]) == 0 ? TRUE : FALSE);
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(g_string_literals[receiver >> OBJECT_SHIFT]) == 0 ? TRUE : FALSE);
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(get_smalltalk_symbol_name(receiver)) == 0 ? TRUE : FALSE);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(get_symbol_name(receiver)) == 0 ? TRUE : FALSE);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 }
 
 OBJECT_PTR readable_string_not_empty(OBJECT_PTR closure, OBJECT_PTR cont)
@@ -83,7 +97,14 @@ OBJECT_PTR readable_string_not_empty(OBJECT_PTR closure, OBJECT_PTR cont)
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, strlen(g_string_literals[receiver >> OBJECT_SHIFT]) == 0 ? FALSE : TRUE);
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(g_string_literals[receiver >> OBJECT_SHIFT]) == 0 ? FALSE : TRUE);
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(get_smalltalk_symbol_name(receiver)) == 0 ? FALSE : TRUE);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, strlen(get_symbol_name(receiver)) == 0 ? FALSE : TRUE);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 }
 
 OBJECT_PTR readable_string_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_PTR cont)
@@ -92,7 +113,16 @@ OBJECT_PTR readable_string_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_P
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -131,7 +161,16 @@ OBJECT_PTR readable_string_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operat
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -196,7 +235,16 @@ OBJECT_PTR readable_string_select(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -248,7 +296,15 @@ OBJECT_PTR readable_string_select(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  if(!strlen(ret_str))
+    return invoke_cont_on_val(cont, NIL);
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+  else
+    return invoke_cont_on_val(cont, get_symbol(ret_str));
 }
 
 OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, OBJECT_PTR cont)
@@ -257,7 +313,16 @@ OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -309,7 +374,15 @@ OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, 
   
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  if(!strlen(ret_str))
+    return invoke_cont_on_val(cont, NIL);
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+  else
+    return invoke_cont_on_val(cont, get_symbol(ret_str));
 }
 
 OBJECT_PTR readable_string_occurrences_of(OBJECT_PTR closure, OBJECT_PTR target, OBJECT_PTR cont)
@@ -318,7 +391,16 @@ OBJECT_PTR readable_string_occurrences_of(OBJECT_PTR closure, OBJECT_PTR target,
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -343,7 +425,16 @@ OBJECT_PTR readable_string_includes(OBJECT_PTR closure, OBJECT_PTR target, OBJEC
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -374,7 +465,16 @@ OBJECT_PTR readable_string_detect_if_none(OBJECT_PTR closure,
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -417,7 +517,16 @@ OBJECT_PTR readable_string_detect(OBJECT_PTR closure,
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -451,7 +560,16 @@ OBJECT_PTR readable_string_collect(OBJECT_PTR closure, OBJECT_PTR transformer, O
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size = strlen(str);
 
@@ -479,7 +597,12 @@ OBJECT_PTR readable_string_collect(OBJECT_PTR closure, OBJECT_PTR transformer, O
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+  else
+    return invoke_cont_on_val(cont, get_symbol(ret_str));
 }
 
 OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJECT_PTR end, OBJECT_PTR cont)
@@ -488,7 +611,16 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  char *str = g_string_literals[receiver >> OBJECT_SHIFT];
+  char *str;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   if(!IS_INTEGER_OBJECT(start) || !IS_INTEGER_OBJECT(end))
     create_and_signal_exception(InvalidArgument, cont);
@@ -513,7 +645,12 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+  else
+    return invoke_cont_on_val(cont, get_symbol(ret_str));
 }
 
 OBJECT_PTR readable_string_concat(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)
@@ -522,11 +659,29 @@ OBJECT_PTR readable_string_concat(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT
 
   call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
 
-  if(!(get_class_object(operand) == ReadableString))
-      return create_and_signal_exception(InvalidArgument, cont);
+  /* if(!(get_class_object(operand) == ReadableString)) */
+  /*     return create_and_signal_exception(InvalidArgument, cont); */
 
-  char *str1 = g_string_literals[receiver >> OBJECT_SHIFT];
-  char *str2 = g_string_literals[operand >> OBJECT_SHIFT];
+  char *str1;
+  char *str2;
+
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    str1 = g_string_literals[receiver >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    str1 = get_smalltalk_symbol_name(receiver);
+  else if(IS_SYMBOL_OBJECT(receiver))
+    str1 = get_symbol_name(receiver);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
+
+  if(IS_STRING_LITERAL_OBJECT(operand))
+    str2 = g_string_literals[operand >> OBJECT_SHIFT];
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(operand))
+    str2 = get_smalltalk_symbol_name(operand);
+  else if(IS_SYMBOL_OBJECT(operand))
+    str2 = get_symbol_name(operand);
+  else
+    return create_and_signal_exception(InvalidArgument, cont);
 
   unsigned int size1 = strlen(str1);
   unsigned int size2 = strlen(str2);
@@ -538,7 +693,12 @@ OBJECT_PTR readable_string_concat(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  if(IS_STRING_LITERAL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+  else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
+    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+  else
+    return invoke_cont_on_val(cont, get_symbol(ret_str));
 }
 
 void create_ReadableString()

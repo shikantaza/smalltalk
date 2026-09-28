@@ -26,7 +26,6 @@
 #include "global_decls.h"
 
 int g_gensym_count = 0;
-OBJECT_PTR Symbol;
 
 unsigned int g_nof_native_fns = 0;
 native_fn_src_mapping_t *g_native_fn_objects = NULL;
@@ -810,7 +809,11 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
   if(obj == NIL)
     return Nil;
   else if(IS_SYMBOL_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj))
-    return Symbol;
+  {
+    OBJECT_PTR retval;
+    assert(get_binding_val_regular(g_top_level, get_symbol("Symbol"), &retval));
+    return car(retval);
+  }
   else if(IS_INTEGER_OBJECT(obj))
     return Integer;
   else if(IS_FLOAT_OBJECT(obj))

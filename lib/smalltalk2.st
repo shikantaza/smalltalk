@@ -46,6 +46,8 @@ Smalltalk assignClass: Stack toPackage: 'core.util.collections'
 
 Smalltalk assignClass:  CompileError toPackage: 'core'
 
+Smalltalk assignClass:  Symbol toPackage: 'core.util.collections'
+
 Smalltalk addClassMethod: #createClass:inPackage: toClass: Smalltalk withBody:
 [ :className :package |
   | ret |

@@ -896,4 +896,49 @@ UnitTestFramework runTestCase: [ (Test2 test) = 42 ] withID: 200
 
 UnitTestFramework runExceptionTestCase: [ [1/0] on: Exception do: [:ex | ex signal] ] exception: ZeroDivide withID: 201
 
+UnitTestFramework runTestCase: [(#Helloworld size) = 10] withID: 202
+
+UnitTestFramework runTestCase: [(#Helloworld isEmpty) = false] withID: 203
+
+UnitTestFramework runTestCase: [(#Helloworld notEmpty) = true] withID: 204
+
+|sum|
+sum := 0.
+#Helloworld do: [ :c | sum := sum + 1].
+UnitTestFramework runTestCase: [ sum = 10 ] withID: 205
+
+UnitTestFramework runTestCase: [ (#Helloworld select: [ :c | c = $o ]) = #oo] withID: 206
+
+UnitTestFramework runTestCase: [ (#Helloworld reject: [ :c | c = $o ]) = #Hellwrld] withID: 207
+
+UnitTestFramework runTestCase: [ (#Helloworld occurrencesOf: $o) = 2 ] withID: 208
+
+UnitTestFramework runTestCase: [ #Helloworld includes: $o ] withID: 209
+
+UnitTestFramework runNegativeTestCase: [ #Helloworld includes: $x ] withID: 210
+
+|x|
+x := 0.
+UnitTestFramework runTestCase: [ ((#Helloworld detect: [ :c | c = $o] ifNone: [ x := 42]) = $o) & (x = 0)] withID: 211
+
+UnitTestFramework runTestCase: [ (#Helloworld detect: [ :c | c = $x] ifNone: [ 42 ]) = 42 ] withID: 212
+
+UnitTestFramework runTestCase: [ (#Helloworld detect: [ :c | c = $o]) = $o ] withID: 213
+
+UnitTestFramework runTestCase: [ (#Helloworld detect: [ :c | c = $x]) = nil ] withID: 214
+
+UnitTestFramework runTestCase: [
+  (#Helloworld collect: [ :c |
+    (c = $o) ifTrue: [ $x ] ifFalse: [ c ]
+  ]) = #Hellxwxrld
+] withID: 215
+
+UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) size) = 3 ] withID: 216
+
+UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) at: 1) = #Hell ] withID: 217
+
+UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) at: 2) = #w ] withID: 218
+
+UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) at: 3) = #rld ] withID: 219
+
 UnitTestFramework reportStatus
