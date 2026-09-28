@@ -28,6 +28,10 @@
       <keyword>Smalltalk</keyword>
       <keyword>self</keyword>
       <keyword>super</keyword>
+      <keyword>true</keyword>
+      <keyword>false</keyword>
+      <keyword>thisContext</keyword>
+      <keyword>nil</keyword>
     </context>
 
     <!-- Keywords: an identifier immediately followed by a colon, e.g. "at:" "put:" -->
