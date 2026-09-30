@@ -20,6 +20,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <stdint.h>
 
 #include "gc.h"
 
@@ -27,7 +28,7 @@
 
 //#define HASHSIZE 1000001
 
-unsigned hash(void * val, unsigned int hash_size) { return (unsigned int)val % hash_size; }
+static unsigned hash(void * val, unsigned int hash_size) { return (unsigned)((uintptr_t)val % hash_size); }
 
 unsigned int hashtable_count(hashtable_t *tab)
 {
@@ -66,6 +67,8 @@ hashtable_entry_t *hashtable_put(hashtable_t *hashtab, void *ptr, void *value)
 
     hashtab->count++;
   }
+
+  assert(np->value == value);
 
   hashtab->an_element = np;
 
@@ -107,6 +110,9 @@ void hashtable_remove(hashtable_t *hashtab, void *ptr)
       //free(np);
       hashtab->count--;
 
+      if(hashtab->count == 0)
+        hashtab->an_element = NULL;
+
       return;
     }
     prev = np;
@@ -119,9 +125,12 @@ hashtable_t *hashtable_create(unsigned int hash_size)
 {
   hashtable_t *ret = (hashtable_t *)GC_MALLOC(sizeof(hashtable_t));
 
+  assert(ret);
+
   ret->count = 0;
 
   ret->entries = (hashtable_entry_t **)GC_MALLOC(hash_size * sizeof(hashtable_entry_t *));
+  assert(ret->entries);
   ret->hash_size = hash_size;
 
   int i;
@@ -162,6 +171,7 @@ hashtable_entry_t *clone_entries(hashtable_entry_t *np)
   {
     hashtable_entry_t *temp = (hashtable_entry_t *)GC_MALLOC(sizeof(hashtable_entry_t));
 
+    assert(temp);
     temp->ptr = np->ptr;
     temp->value = np->value;
     temp->next = NULL;
@@ -186,6 +196,8 @@ hashtable_entry_t *clone_entries(hashtable_entry_t *np)
 hashtable_entry_t *hashtable_entries(hashtable_t *tab)
 {
   hashtable_entry_t **replica = (hashtable_entry_t **)GC_MALLOC(tab->hash_size * sizeof(hashtable_entry_t *));
+
+  assert(replica);
 
   int i;
 

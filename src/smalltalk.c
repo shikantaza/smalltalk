@@ -127,6 +127,8 @@ extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR DyadicValuable;
 extern OBJECT_PTR Character;
 
+extern OBJECT_PTR Symbol;
+
 extern char *g_class_docstring;
 
 extern OBJECT_PTR SUPER;
@@ -227,6 +229,7 @@ void initialize_top_level()
   add_binding_to_top_level(get_symbol("ReadableString"), cons(ReadableString, NIL));
   add_binding_to_top_level(get_symbol("DyadicValuable"), cons(DyadicValuable, NIL));
   add_binding_to_top_level(get_symbol("Character"), cons(Character, NIL));
+  add_binding_to_top_level(get_symbol("Symbol"), cons(Symbol, NIL));
 }
 
 int exists_in_top_level(OBJECT_PTR sym)

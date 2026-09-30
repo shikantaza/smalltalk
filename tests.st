@@ -941,4 +941,8 @@ UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) at
 
 UnitTestFramework runTestCase: [ ((#Helloworld substringsForSeparators: 'o' ) at: 3) = #rld ] withID: 219
 
+UnitTestFramework runTestCase: [ (#Helloworld asString) = 'Helloworld' ] withID: 220
+
+UnitTestFramework runTestCase: [ (#Helloworld asSymbol) = #Helloworld ] withID: 221
+
 UnitTestFramework reportStatus

@@ -15,6 +15,9 @@
   along with this file.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
+
 typedef struct hashtable_entry
 {
   struct hashtable_entry *next;
@@ -38,3 +41,7 @@ hashtable_entry_t *hashtable_put(hashtable_t *, void *ptr, void *value);
 void hashtable_remove(hashtable_t *, void *ptr);
 hashtable_entry_t *hashtable_entries(hashtable_t *);
 hashtable_entry_t *hashtable_get_any_element(hashtable_t *);
+void hashtable_delete(hashtable_t *);
+unsigned int hashtable_count(hashtable_t *);
+
+#endif

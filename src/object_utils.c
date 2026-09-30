@@ -69,6 +69,7 @@ extern OBJECT_PTR SUPER;
 
 extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR Character;
+extern OBJECT_PTR Symbol;
 
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
@@ -809,11 +810,7 @@ OBJECT_PTR get_class_object(OBJECT_PTR obj)
   if(obj == NIL)
     return Nil;
   else if(IS_SYMBOL_OBJECT(obj) || IS_SMALLTALK_SYMBOL_OBJECT(obj))
-  {
-    OBJECT_PTR retval;
-    assert(get_binding_val_regular(g_top_level, get_symbol("Symbol"), &retval));
-    return car(retval);
-  }
+    return Symbol;
   else if(IS_INTEGER_OBJECT(obj))
     return Integer;
   else if(IS_FLOAT_OBJECT(obj))

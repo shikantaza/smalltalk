@@ -86,6 +86,7 @@ void create_Compiler();
 void create_ReadableString();
 void create_Character();
 void create_DyadicValuable();
+void create_Symbol();
 
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
@@ -174,6 +175,7 @@ extern OBJECT_PTR OrderedCollection;
 extern OBJECT_PTR Compiler;
 extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR Character;
+extern OBJECT_PTR Symbol;
 
 //extern queue_t *pinned_items;
 
@@ -397,6 +399,7 @@ void initialize()
 
   create_ReadableString();
   create_Character();
+  create_Symbol();
 
   initialize_top_level();
 
@@ -1151,4 +1154,6 @@ void create_core_class_binding(class_object_t *cls_obj)
     ReadableString = convert_class_object_to_object_ptr(cls_obj);
   else if(!strcmp(class_name, "Character"))
     Character = convert_class_object_to_object_ptr(cls_obj);
+  else if(!strcmp(class_name, "Symbol"))
+    Symbol = convert_class_object_to_object_ptr(cls_obj);
 }

@@ -140,7 +140,7 @@ OBJECT_PTR readable_string_do(OBJECT_PTR closure, OBJECT_PTR operation, OBJECT_P
 		       convert_char_to_object(str[i]),
 		       g_idclo);
 
-    if(call_chain_entry_exists(entry) & !g_eval_aborted)
+    if(call_chain_entry_exists(entry) && !g_eval_aborted)
       continue;
     else
       break;
@@ -178,7 +178,7 @@ OBJECT_PTR readable_string_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operat
 
   OBJECT_PTR ret1=NIL, ret2=NIL;
 
-  BOOLEAN ret_from_do, ret_from_separated_by;
+  BOOLEAN ret_from_do = false, ret_from_separated_by = false;
 
   for(i=0; i<size; i++)
   {
@@ -250,28 +250,7 @@ OBJECT_PTR readable_string_select(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 
   int i;
 
-  unsigned int count = 0;
-
-  //this is inefficient: we loop twice
-  //through the string elements. but
-  //this obviates the complexity of
-  //dynamically expanding the return string
-
-  for(i=0; i<size; i++)
-  {
-    OBJECT_PTR ret = message_send(g_msg_snd_closure,
-				  discriminator,
-				  NIL,
-				  VALUE1_SELECTOR,
-				  convert_int_to_object(1),
-				  convert_char_to_object(str[i]),
-				  g_idclo);
-
-    if(ret == TRUE)
-      count++;
-  }
-
-  char *ret_str = (char *)GC_MALLOC((count+1) * sizeof(char));
+  char *ret_str = (char *)GC_MALLOC((size+1) * sizeof(char));
 
   int j = 0;
 
@@ -286,13 +265,10 @@ OBJECT_PTR readable_string_select(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 				  g_idclo);
 
     if(ret == TRUE)
-    {
-      ret_str[j] = str[i];
-      j++;
-    }
+      ret_str[j++] = str[i];
   }
 
-  ret_str[count] = '\0';
+  ret_str[j] = '\0';
 
   pop_if_top(entry);
 
@@ -328,28 +304,7 @@ OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 
   int i;
 
-  unsigned int count = 0;
-
-  //this is inefficient: we loop twice
-  //through the string elements. but
-  //this obviates the complexity of
-  //dynamically expanding the return string
-
-  for(i=0; i<size; i++)
-  {
-    OBJECT_PTR ret = message_send(g_msg_snd_closure,
-				  discriminator,
-				  NIL,
-				  VALUE1_SELECTOR,
-				  convert_int_to_object(1),
-				  convert_char_to_object(str[i]),
-				  g_idclo);
-
-    if(ret == FALSE)
-      count++;
-  }
-
-  char *ret_str = (char *)GC_MALLOC((count+1) * sizeof(char));
+  char *ret_str = (char *)GC_MALLOC((size+1) * sizeof(char));
 
   int j = 0;
   
@@ -364,13 +319,10 @@ OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, 
 				  g_idclo);
 
     if(ret == FALSE)
-    {
-      ret_str[j] = str[i];
-      j++;
-    }
+      ret_str[j++] = str[i];
   }
 
-  ret_str[count] = '\0';
+  ret_str[j] = '\0';
   
   pop_if_top(entry);
 
@@ -623,14 +575,15 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
     return create_and_signal_exception(InvalidArgument, cont);
 
   if(!IS_INTEGER_OBJECT(start) || !IS_INTEGER_OBJECT(end))
-    create_and_signal_exception(InvalidArgument, cont);
+    return create_and_signal_exception(InvalidArgument, cont);
 
   int start_int, end_int;
   start_int = get_int_value(start);
   end_int = get_int_value(end);
+  int len       = (int)strlen(str);
 
-  if(end < start)
-    create_and_signal_exception_with_text(Error, get_string_obj("End index less than start index"), cont);
+  if(start_int < 1 || end_int > len)
+    return create_and_signal_exception_with_text(Error, get_string_obj("End index less than start index"), cont);
 
   unsigned int substr_size = end_int - start_int + 1;
 

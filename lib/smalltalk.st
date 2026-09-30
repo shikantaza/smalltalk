@@ -73,5 +73,3 @@ Smalltalk addInstanceMethod: #substringsForSeparators: toClass: ReadableString w
   ].
   ^arr
 ]
-
-Smalltalk createClassPreInitialize: #Symbol parentClass: ReadableString

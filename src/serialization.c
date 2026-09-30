@@ -34,7 +34,7 @@
 
 #define NULL_NATIVE_PTR -1
 
-#define NOF_INBUILT_FNS 111
+#define NOF_INBUILT_FNS 113
 
 //Object
 OBJECT_PTR object_eq(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
@@ -173,6 +173,10 @@ OBJECT_PTR readable_string_detect(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR readable_string_collect(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR readable_string_substring(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
 OBJECT_PTR readable_string_concat(OBJECT_PTR, OBJECT_PTR, OBJECT_PTR);
+
+//Symbol
+OBJECT_PTR symbol_as_string(OBJECT_PTR, OBJECT_PTR);
+OBJECT_PTR symbol_as_symbol(OBJECT_PTR, OBJECT_PTR);
 
 //to correctly handle nativefns that are generated
 //from Smalltalk code (as compared to built-ins)
@@ -563,9 +567,13 @@ void initialize_inbuiltfns()
   inbuiltfns[106] = (nativefn)readable_string_substring;
   inbuiltfns[107] = (nativefn)readable_string_concat ;
 
-  inbuiltfns[108] = (nativefn)message_send;
-  inbuiltfns[109] = (nativefn)message_send_super;
-  inbuiltfns[110] = (nativefn)identity_function;
+  //Symbol
+  inbuiltfns[108] = (nativefn)symbol_as_string;
+  inbuiltfns[109] = (nativefn)symbol_as_symbol;
+
+  inbuiltfns[110] = (nativefn)message_send;
+  inbuiltfns[111] = (nativefn)message_send_super;
+  inbuiltfns[112] = (nativefn)identity_function;
 }
 
 int get_inbuiltfn_index(nativefn fn)
@@ -3308,7 +3316,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     elems->nof_elements = JSON_get_array_size(ptr_entry);
 
-    elems->elements = (struct array_element *)GC_MALLOC(elems->nof_elements * sizeof(struct array_element *));
+    elems->elements = (struct array_element *)GC_MALLOC(elems->nof_elements * sizeof(struct array_element));
 
     for(i=0; i<elems->nof_elements; i++)
     {
