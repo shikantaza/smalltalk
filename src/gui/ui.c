@@ -88,6 +88,7 @@ GtkSourceBuffer *debugger_source_buffer;
 GtkWindow *debugger_window;
 
 GtkTreeView *temp_vars_list;
+GtkTreeView *args_list;
 
 OBJECT_PTR g_debug_cont;
 
@@ -487,23 +488,23 @@ void populate_call_chain_list(BOOLEAN invoked_for_exception, GtkTreeView *call_c
 
     char *str = get_symbol_name(entry->selector);
 
-    len += sprintf(buf+len, "%s; ", substring(str, 1, strlen(str)-1));
+    len += sprintf(buf+len, "%s", substring(str, 1, strlen(str)-1));
 
-    if(entry->nof_args > 0)
-      len += sprintf(buf+len, "args: [");
+    /* if(entry->nof_args > 0) */
+    /*   len += sprintf(buf+len, "args: ["); */
 
-    for(j=0; j<entry->nof_args; j++)
-    {
-      char arg[100];
-      memset(arg, '\0', 100);
-      print_object_to_string(entry->args[j], arg);
-      len += sprintf(buf+len, "%s", arg);
-      if(j != entry->nof_args -1)
-	len += sprintf(buf+len, " ");
-    }
+    /* for(j=0; j<entry->nof_args; j++) */
+    /* { */
+    /*   char arg[100]; */
+    /*   memset(arg, '\0', 100); */
+    /*   print_object_to_string(entry->args[j], arg); */
+    /*   len += sprintf(buf+len, "%s", arg); */
+    /*   if(j != entry->nof_args -1) */
+    /*     len += sprintf(buf+len, " "); */
+    /* } */
 
-    if(entry->nof_args > 0)
-      len += sprintf(buf+len, "]");
+    /* if(entry->nof_args > 0) */
+    /*   len += sprintf(buf+len, "]"); */
 
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter, 0, buf, -1);
@@ -523,7 +524,7 @@ void initialize_temp_vars_list(GtkTreeView *list)
 
   renderer = gtk_cell_renderer_text_new();
 
-  column1 = gtk_tree_view_column_new_with_attributes("Variable",
+  column1 = gtk_tree_view_column_new_with_attributes("Local Variable",
                                                      renderer, "text", 0, NULL);
   gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
 
@@ -539,9 +540,84 @@ void initialize_temp_vars_list(GtkTreeView *list)
   g_object_unref(store);
 }
 
-//TODO: the three inspect_*() functions are identical
+static GtkTreeViewColumn *arg_link_column = NULL;
+
+void initialize_args_list(GtkTreeView *list)
+{
+  GtkCellRenderer    *renderer;
+  GtkTreeViewColumn  *column1 ;
+  GtkListStore       *store;
+
+  renderer = gtk_cell_renderer_text_new();
+
+  column1 = gtk_tree_view_column_new_with_attributes("Argument",
+                                                     renderer, "text", 0, NULL);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), column1);
+
+  arg_link_column = gtk_tree_view_column_new_with_attributes("Value",
+                                                     renderer, "markup", 1, NULL);
+  gtk_tree_view_append_column(GTK_TREE_VIEW (list), arg_link_column);
+
+  store = gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT64);
+
+  gtk_tree_view_set_model(GTK_TREE_VIEW (list),
+                          GTK_TREE_MODEL(store));
+
+  g_object_unref(store);
+}
+
+//TODO: the inspect_*() functions are identical
 //except for the link column comparison. they
 //should be merged/parameterized
+gboolean
+inspect_argument(GtkWidget      *treeview,
+                 GdkEventButton *event,
+                 gpointer        user_data)
+{
+    if (event->button != 1) /* only handle left click */
+        return FALSE;
+
+    GtkTreePath       *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    gint cell_x, cell_y;
+
+    gboolean found = gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (treeview),
+                                                     (gint) event->x,
+                                                     (gint) event->y,
+                                                     &path,
+                                                     &column,
+                                                     &cell_x,
+                                                     &cell_y);
+
+    if (found && column == arg_link_column)
+    {
+        GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW (treeview));
+        GtkTreeIter iter;
+
+        if (gtk_tree_model_get_iter (model, &iter, path))
+        {
+          gint64 id;
+
+          gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+          if(!g_inspected_objects)
+            g_inspected_objects = stack_create();
+
+          stack_push(g_inspected_objects, (void *)id);
+
+          show_object_inspector_window();
+        }
+        gtk_tree_path_free (path);
+        /* Return TRUE to stop the click from also changing the selection */
+        return TRUE;
+    }
+
+    if (path != NULL)
+        gtk_tree_path_free (path);
+
+    return FALSE;
+}
+
 gboolean
 inspect_temp_variable(GtkWidget      *treeview,
                       GdkEventButton *event,
@@ -572,6 +648,9 @@ inspect_temp_variable(GtkWidget      *treeview,
           gint64 id;
 
           gtk_tree_model_get(model, &iter, 2, &id, -1);
+
+          if(!g_inspected_objects)
+            g_inspected_objects = stack_create();
 
           stack_push(g_inspected_objects, (void *)id);
 
@@ -711,8 +790,8 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
   gtk_window_set_modal((GtkWindow *)win, TRUE);
   gtk_window_set_keep_above((GtkWindow *)win, TRUE);
 
-  GtkWidget *scrolled_win1, *scrolled_win3;
-  GtkWidget *vbox, *hbox, *hbox2;
+  GtkWidget *scrolled_win1, *scrolled_win3, *scrolled_win4;
+  GtkWidget *vbox, *hbox, *hbox2, *vars_vbox;
 
   PangoFontDescription *font =
     pango_font_description_from_string(FONT);
@@ -735,6 +814,7 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   scrolled_win1 = gtk_scrolled_window_new(NULL, NULL);
   scrolled_win3 = gtk_scrolled_window_new(NULL, NULL);
+  scrolled_win4 = gtk_scrolled_window_new(NULL, NULL);
 
   call_chain_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(call_chain_list, TRUE);
@@ -796,8 +876,14 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   hbox2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
-  //TODO: if we want to allow multiple debug windows
-  //having temp_vars_list as global would be a problem
+  args_list = (GtkTreeView *)gtk_tree_view_new();
+  gtk_tree_view_set_headers_visible(args_list, TRUE);
+
+  gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW (args_list)),
+                              GTK_SELECTION_NONE);
+
+  gtk_widget_override_font(GTK_WIDGET(args_list), font);
+
   temp_vars_list = (GtkTreeView *)gtk_tree_view_new();
   gtk_tree_view_set_headers_visible(temp_vars_list, TRUE);
 
@@ -808,17 +894,24 @@ void create_debug_window(int posx, int posy, int width, int height, char *title)
 
   pango_font_description_free(font);
 
+  initialize_args_list(args_list);
   initialize_temp_vars_list(temp_vars_list);
 
+  g_signal_connect(args_list, "button-press-event", G_CALLBACK(inspect_argument), NULL);
   g_signal_connect(temp_vars_list, "button-press-event", G_CALLBACK(inspect_temp_variable), NULL);
 
-  gtk_container_add(GTK_CONTAINER (scrolled_win3), (GtkWidget *)temp_vars_list);
+  gtk_container_add(GTK_CONTAINER (scrolled_win3), (GtkWidget *)args_list);
+  gtk_container_add(GTK_CONTAINER (scrolled_win4), (GtkWidget *)temp_vars_list);
+
+  vars_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+  gtk_box_pack_start (GTK_BOX (vars_vbox), scrolled_win3, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (vars_vbox), scrolled_win4, TRUE, TRUE, 0);
 
   scrolled_win = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (scrolled_win), (GtkWidget *)debugger_source_view);
 
   gtk_box_pack_start(GTK_BOX (hbox2), scrolled_win, TRUE, TRUE, 0);
-  gtk_box_pack_start(GTK_BOX (hbox2), scrolled_win3, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX (hbox2), vars_vbox, TRUE, TRUE, 0);
 
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
   gtk_box_pack_start (GTK_BOX (vbox), (GtkWidget *)create_debug_toolbar(), FALSE, FALSE, 0);
@@ -1050,6 +1143,9 @@ inspect_array_element(GtkWidget      *treeview,
 
           gtk_tree_model_get(model, &iter, 2, &id, -1);
 
+          if(!g_inspected_objects)
+            g_inspected_objects = stack_create();
+
           stack_push(g_inspected_objects, (void *)id);
 
           show_object_inspector_window();
@@ -1257,7 +1353,7 @@ void show_object_inspector_window()
 
   char title[100];
   memset(title, '\0', 100);
-  sprintf(title, "a(n) %s", ((class_object_t *)extract_ptr(get_class_object(obj)))->name);
+  sprintf(title, "An instance of %s", ((class_object_t *)extract_ptr(get_class_object(obj)))->name);
 
   gtk_window_set_title(object_inspector_window, title);
 

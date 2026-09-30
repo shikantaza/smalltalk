@@ -112,6 +112,7 @@ extern OBJECT_PTR NIL;
 extern char **g_string_literals;
 
 extern GtkTreeView *temp_vars_list;
+extern GtkTreeView *args_list;
 
 extern GtkWindow *debugger_window;
 
@@ -625,6 +626,7 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
     //method_t *m = (method_t *)extract_ptr(method);
     method_t *m = entry->method;
 
+    remove_all_from_list(args_list);
     remove_all_from_list(temp_vars_list);
 
     action_triggering_window = debugger_window;
@@ -658,7 +660,6 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
       render_executable_code(debugger_source_buffer, &indents, false, call_chain_entry_index, m->exec_code);
 
       //fetch temp vars for the call chain entry
-
       GtkListStore *store1;
       GtkTreeIter  iter1;
 
@@ -693,7 +694,38 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
         g_free(markup);
       }
-      //
+      // end of fetch temp vars
+
+      //fetch arguments for the call chain entry
+      GtkListStore *store2;
+      GtkTreeIter  iter2;
+
+      store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(args_list)));
+
+      unsigned int i, n = entry->nof_args;
+
+      char arg_val[100];
+
+      for(i=0; i<n; i++)
+      {
+        memset(arg_val, '\0', 100);
+
+        //this looks very brittle, but the assumption here
+        //is that m->exec_code is a valid block element
+        char *arg_name = m->exec_code->statements->exp->basic_exp->prim->blk_cons->block_args->identifiers[i];
+
+        print_object_to_string(entry->args[i], arg_val);
+
+        gchar *markup = g_markup_printf_escaped (
+          "<span foreground=\"#0000EE\" underline=\"single\">%s</span>",
+          arg_val);
+
+        gtk_list_store_append(store2, &iter2);
+        gtk_list_store_set(store2, &iter2, 0, arg_name, 1, markup, 2, entry->args[i], -1);
+
+        g_free(markup);
+      }
+      // end of fetch arguments
     }
     else
       gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,

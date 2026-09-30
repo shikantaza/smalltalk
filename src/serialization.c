@@ -4577,6 +4577,8 @@ void serialize_class_browser(FILE *fp)
       g_free(path_string);
       gtk_tree_path_free(path);
     }
+    else
+      fprintf(fp, "\"\", ");
 
     GtkTreeModel *model2 = gtk_tree_view_get_model (GTK_TREE_VIEW (classes_list));
     GtkTreeIter  iter2;
@@ -4591,11 +4593,13 @@ void serialize_class_browser(FILE *fp)
       g_free(path_string);
       gtk_tree_path_free(path);
     }
+    else
+      fprintf(fp, "\"\", ");
 
     if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)))
-      fprintf(fp, "\"class_methods\", ");
+      fprintf(fp, "\"class_methods\" ");
     else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button)))
-      fprintf(fp, "\"instance_methods\", ");
+      fprintf(fp, "\"instance_methods\" ");
     else
       assert(false);
 
@@ -4607,11 +4611,13 @@ void serialize_class_browser(FILE *fp)
       GtkTreePath *path = gtk_tree_model_get_path(model3, &iter3);
       gchar *path_string = gtk_tree_path_to_string(path);
 
-      fprintf(fp, "\"%s\"", path_string);
+      fprintf(fp, ", \"%s\"", path_string);
 
       g_free(path_string);
       gtk_tree_path_free(path);
     }
+    else
+      fprintf(fp, ", \"\" ");
 
     fprintf(fp, "] ");
   }
@@ -4633,16 +4639,22 @@ void deserialize_class_browser(struct JSONObject *class_browser,
     GtkTreePath *path;
 
     path_str = JSON_get_array_item(class_browser, 4)->strvalue;
-    path = gtk_tree_path_new_from_string(path_str);
-    gtk_tree_view_expand_to_path(packages_list, path);
-    gtk_tree_view_set_cursor(packages_list, path, NULL, FALSE);
-    gtk_tree_path_free(path);
+    if(strlen(path_str) > 0)
+    {
+      path = gtk_tree_path_new_from_string(path_str);
+      gtk_tree_view_expand_to_path(packages_list, path);
+      gtk_tree_view_set_cursor(packages_list, path, NULL, FALSE);
+      gtk_tree_path_free(path);
+    }
 
     path_str = JSON_get_array_item(class_browser, 5)->strvalue;
+    if(strlen(path_str) > 0)
+    {
     path = gtk_tree_path_new_from_string(path_str);
     gtk_tree_view_expand_to_path(classes_list, path);
     gtk_tree_view_set_cursor(classes_list, path, NULL, FALSE);
     gtk_tree_path_free(path);
+    }
 
     char *method_type = JSON_get_array_item(class_browser, 6)->strvalue;
 
@@ -4654,10 +4666,13 @@ void deserialize_class_browser(struct JSONObject *class_browser,
       assert(false);
 
     path_str = JSON_get_array_item(class_browser, 7)->strvalue;
-    path = gtk_tree_path_new_from_string(path_str);
-    gtk_tree_view_expand_to_path(methods_list, path);
-    gtk_tree_view_set_cursor(methods_list, path, NULL, FALSE);
-    gtk_tree_path_free(path);
+    if(strlen(path_str) > 0)
+    {
+      path = gtk_tree_path_new_from_string(path_str);
+      gtk_tree_view_expand_to_path(methods_list, path);
+      gtk_tree_view_set_cursor(methods_list, path, NULL, FALSE);
+      gtk_tree_path_free(path);
+    }
   }
 }
 
@@ -4837,7 +4852,8 @@ void process_event_for_debug_serialization()
   if(g_debug_action == STEP_OUT)
     g_run_till_cont = g_debug_data->step_out_cont;
 
-  put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[0], NIL));
+  if(g_debug_data->arg_count <= 4)
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[0], NIL));
 
   nativefn nf = ((native_fn_obj_t *)extract_ptr(g_debug_data->nf_obj))->nf;
 
@@ -4903,6 +4919,8 @@ void process_event_for_debug_serialization()
 
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = stack_args[n-1];
+
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
     /*
     for(i=n-1; i>=0; i--)
