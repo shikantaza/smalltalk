@@ -60,8 +60,10 @@ extern struct JSONObject *root_obj;
 %type   <object_value>           object
 %type   <object_value>           root
 %type   <pairs>                  name_value_pairs
+%type   <pairs>                  name_value_pairs_list
 %type   <array>                  array
 %type   <values>                 values
+%type   <values>                 value_list
 %type   <pair>                   name_value_pair
 
 %%
@@ -90,8 +92,12 @@ name_value_pairs:
     {
       $$ = (struct name_value_pairs *)GC_MALLOC(sizeof(struct name_value_pairs));
       $$->count = 0;
+      $$->elements = NULL;
     }
     |
+    name_value_pairs_list { $$ = $1; };
+
+name_value_pairs_list:
     name_value_pair
     {
       $$ = (struct name_value_pairs *)GC_MALLOC(sizeof(struct name_value_pairs));
@@ -100,7 +106,7 @@ name_value_pairs:
       $$->elements[0] = $1;
     }
     |
-    name_value_pairs T_COMMA name_value_pair
+    name_value_pairs_list T_COMMA name_value_pair
     {
       $1->count++;
 
@@ -151,8 +157,12 @@ values:
     {
       $$ = (struct JSONArray *)GC_MALLOC(sizeof(struct JSONArray));
       $$->count = 0;
+      $$->elements = NULL;
     }
     |
+    value_list  { $$ = $1; };
+
+value_list:
     value
     {
       $$ = (struct JSONArray *)GC_MALLOC(sizeof(struct JSONArray));
@@ -161,7 +171,7 @@ values:
       $$->elements[0] = $1;
     }
     |
-    values T_COMMA value
+    value_list T_COMMA value
     {
       $1->count++;
 

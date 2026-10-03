@@ -1591,7 +1591,7 @@ OBJECT_PTR smalltalk_print_to_workspace(OBJECT_PTR closure, OBJECT_PTR arg, OBJE
 
   pop_if_top(entry);
 
-  return invoke_cont_on_val(cont, NIL);
+  return invoke_cont_on_val(cont, arg);
 }
 
 OBJECT_PTR delete_global(OBJECT_PTR closure,

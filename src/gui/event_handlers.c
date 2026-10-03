@@ -82,6 +82,8 @@ void initialize_pass2();
 
 void save_image();
 
+stack_type *extract_arg_names(char *selector);
+
 gboolean navigate_to_package(smalltalk_package_t *);
 gboolean navigate_to_class(class_object_t *);
 gboolean navigate_to_method(method_t *);
@@ -728,8 +730,39 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
       // end of fetch arguments
     }
     else
+    {
       gtk_text_buffer_insert_at_cursor((GtkTextBuffer *)debugger_source_buffer,
 				       "<primitive method>", -1);
+
+      //fetch arguments for the call chain entry
+      GtkListStore *store2;
+      GtkTreeIter  iter2;
+
+      store2 = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(args_list)));
+
+      unsigned int i, n = entry->nof_args;
+
+      stack_type *arg_names = extract_arg_names(get_symbol_name(entry->selector));
+
+      char arg_val[100];
+
+      for(i=0; i<n; i++)
+      {
+        memset(arg_val, '\0', 100);
+
+        print_object_to_string(entry->args[i], arg_val);
+
+        gchar *markup = g_markup_printf_escaped (
+          "<span foreground=\"#0000EE\" underline=\"single\">%s</span>",
+          arg_val);
+
+        gtk_list_store_append(store2, &iter2);
+        gtk_list_store_set(store2, &iter2, 0, (char *)stack_pop(arg_names), 1, markup, 2, entry->args[i], -1);
+
+        g_free(markup);
+      }
+      // end of fetch arguments
+    }
   }
 }
 

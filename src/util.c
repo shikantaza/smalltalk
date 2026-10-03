@@ -555,3 +555,35 @@ char *replace_newlines_for_serialization(char *str)
   printf("%s\n", ret);
   return ret;
 }
+
+stack_type *extract_arg_names(char *selector)
+{
+  stack_type *staging_stack = stack_create();
+
+  unsigned int i=0, j=0, n = strlen(selector);
+
+  BOOLEAN keyword_found = false;
+
+  while(i < n)
+  {
+    if(selector[i] == ':')
+    {
+      keyword_found = true;
+      stack_push(staging_stack, (void *)substring(selector, j+1, i-j-1));
+      j = i+1;
+    }
+    i++;
+  }
+
+  stack_type *ret = stack_create();
+
+  if(!keyword_found)
+    stack_push(ret, (void *)GC_strdup(substring(selector,1, strlen(selector)-1)));
+  else
+  {
+    while(!stack_is_empty(staging_stack))
+      stack_push(ret, stack_pop(staging_stack));
+  }
+
+  return ret;
+}

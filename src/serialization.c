@@ -2391,7 +2391,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
   }
   else if(ptr_type == BINDING_PTR)
   {
-    binding_t *binding = (binding_t *)GC_MALLOC(sizeof(binding_env_t));
+    binding_t *binding = (binding_t *)GC_MALLOC(sizeof(binding_t));
 
     hashtable_put(native_ptr_ht, (void *)ref, (void *)binding);
 
@@ -4852,15 +4852,14 @@ void process_event_for_debug_serialization()
   if(g_debug_action == STEP_OUT)
     g_run_till_cont = g_debug_data->step_out_cont;
 
-  if(g_debug_data->arg_count <= 4)
-    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[0], NIL));
-
   nativefn nf = ((native_fn_obj_t *)extract_ptr(g_debug_data->nf_obj))->nf;
 
   if(g_debug_data->arg_count == 0)
   {
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = g_debug_data->args[0];
+
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[0], NIL));
 
     nf(g_debug_data->closure_form,
        g_debug_data->args[0]);
@@ -4870,6 +4869,8 @@ void process_event_for_debug_serialization()
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = g_debug_data->args[1];
 
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[1], NIL));
+
     nf(g_debug_data->closure_form,
        g_debug_data->args[0],
        g_debug_data->args[1]);
@@ -4878,6 +4879,8 @@ void process_event_for_debug_serialization()
   {
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = g_debug_data->args[2];
+
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[2], NIL));
 
     nf(g_debug_data->closure_form,
        g_debug_data->args[0],
@@ -4889,6 +4892,8 @@ void process_event_for_debug_serialization()
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = g_debug_data->args[3];
 
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[3], NIL));
+
     nf(g_debug_data->closure_form,
        g_debug_data->args[0],
        g_debug_data->args[1],
@@ -4899,6 +4904,8 @@ void process_event_for_debug_serialization()
   {
     if(g_debug_action == STEP_OVER)
       g_run_till_cont = g_debug_data->args[4];
+
+    put_binding_val(g_top_level, THIS_CONTEXT, cons(g_debug_data->args[4], NIL));
 
     nf(g_debug_data->closure_form,
        g_debug_data->args[0],
@@ -4921,27 +4928,6 @@ void process_event_for_debug_serialization()
       g_run_till_cont = stack_args[n-1];
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
-
-    /*
-    for(i=n-1; i>=0; i--)
-      asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
-
-    //using a for loop screws up the registers.
-    //so we populate them after the stack push operations
-    asm volatile("mov %0, %%rdi\n\t" : : "r"(g_debug_data->closure_form) : "%rdi");
-    asm volatile("mov %0, %%rsi\n\t" : : "r"(g_debug_data->args[0]) : "%rsi");
-    asm volatile("mov %0, %%rdx\n\t" : : "r"(g_debug_data->args[1]) : "%rdx");
-    asm volatile("mov %0, %%rcx\n\t" : : "r"(g_debug_data->args[2]) : "%rcx");
-    asm volatile("mov %0, %%r8\n\t"  : : "r"(g_debug_data->args[3]) : "%r8");
-    asm volatile("mov %0, %%r9\n\t"  : : "r"(g_debug_data->args[4]) : "%r9");
-
-    asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
-
-    //asm volatile("mov %%rax, %0\n\t" : "=r"(retval) : : "%rax" );
-
-    for(i=0; i<n; i++)
-      asm volatile("addq $8, %%rsp\n\t" : : : );
-    */
 
     call_nf(nf,
             g_debug_data->closure_form,
