@@ -562,14 +562,20 @@ stack_type *extract_arg_names(char *selector)
 
   unsigned int i=0, j=0, n = strlen(selector);
 
-  BOOLEAN keyword_found = false;
+  BOOLEAN keyword_found = false, first_time = true;
 
   while(i < n)
   {
     if(selector[i] == ':')
     {
       keyword_found = true;
-      stack_push(staging_stack, (void *)substring(selector, j+1, i-j-1));
+      if(first_time) //to skip the leading underscore
+      {
+	stack_push(staging_stack, (void *)substring(selector, j+1, i-j-1));
+	first_time = false;
+      }
+      else
+	stack_push(staging_stack, (void *)substring(selector, j, i-j));
       j = i+1;
     }
     i++;

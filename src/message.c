@@ -777,35 +777,6 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       OBJECT_PTR retval = NIL;
 
-      /*
-      //invoke nf via assembly on the args and cont directly
-      //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-      //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-      //asm("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-      //asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-      //asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-      //asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
-
-      for(i=n-1; i>=0; i--)
-        asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
-
-      //using a for loop screws up the registers.
-      //so we populate them after the stack push operations
-      asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-      asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-      asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-      asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-      asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-      asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
-
-      asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
-
-      asm volatile("mov %%rax, %0\n\t" : "=r"(retval) : : "%rax" );
-
-      for(i=0; i<n; i++)
-        asm volatile("addq $8, %%rsp\n\t" : : : );
-      */
-
       retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
 
       return retval;
@@ -813,39 +784,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
     put_binding_val(g_top_level, THIS_CONTEXT, cons(stack_args[n-1], NIL));
 
-    //nf = (nativefn)f;
-
     OBJECT_PTR retval = NIL;
 
     assert(is_valid_object(closure_form));
-
-    /*
-    //asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    //asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    //asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    //asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    //asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-    //asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
-
-    for(i=n-1; i>=0; i--)
-     asm volatile("push %0\n\t"       : : "r"(stack_args[i]) : );
-
-    //using a for loop screws up the registers.
-    //so we populate them after the stack push operations
-    asm volatile("mov %0, %%rdi\n\t" : : "r"(closure_form) : "%rdi");
-    asm volatile("mov %0, %%rsi\n\t" : : "r"(arg1) : "%rsi");
-    asm volatile("mov %0, %%rdx\n\t" : : "r"(arg2) : "%rdx");
-    asm volatile("mov %0, %%rcx\n\t" : : "r"(arg3) : "%rcx");
-    asm volatile("mov %0, %%r8\n\t"  : : "r"(arg4) : "%r8");
-    asm volatile("mov %0, %%r9\n\t"  : : "r"(arg5) : "%r9");
-
-    asm volatile("call *%0\n\t" : : "m"(nf) : "%rax", "%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9", "%r10", "%r11", "memory", "cc");
-
-    asm volatile("mov %%rax, %0\n\t" : "=r"(retval) : : "%rax" );
-
-    for(i=0; i<n; i++)
-      asm volatile("addq $8, %%rsp\n\t" : : : );
-    */
 
     retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
 
