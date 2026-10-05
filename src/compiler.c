@@ -623,8 +623,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
   {
     OBJECT_PTR res = NIL;
 
-    debug_expression_t *debug_exp;
-    allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+    debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
     debug_exp->type = DEBUG_BASIC_EXPRESSION;
     debug_exp->be = be;
@@ -870,8 +869,7 @@ OBJECT_PTR convert_keyword_argument_to_lisp(keyword_argument_t *k)
   if(!k)
     return NIL;
 
-  debug_expression_t *debug_exp;
-  allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+  debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
   debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
   debug_exp->kw_arg = k;
@@ -1002,8 +1000,7 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
   if(!arg)
     return NIL;
 
-  debug_expression_t *debug_exp;
-  allocate_memory((void **)&debug_exp, sizeof(debug_expression_t));
+  debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
   debug_exp->type = DEBUG_BINARY_ARGUMENT;
   debug_exp->bin_arg = arg;

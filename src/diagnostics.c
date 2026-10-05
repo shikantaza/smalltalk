@@ -57,6 +57,9 @@ extern unsigned int          g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 extern int                   g_gensym_count;
 extern int                   g_smalltalk_gensym_count;
+extern unsigned int          g_nof_debug_expressions;
+extern debug_expression_t  **g_debug_expressions;
+extern stack_type           *g_inspected_objects;
 
 extern OBJECT_PTR NIL;
 
@@ -193,7 +196,7 @@ void print_call_chain_entry(call_chain_entry_t *e, FILE *fp)
 {
   fprintf(fp, "exp_ptr: ");
   if(e->exp_ptr != NIL)
-    print_debug_expression(fp, (debug_expression_t *)extract_ptr(e->exp_ptr));
+    print_debug_expression(fp, g_debug_expressions[get_int_value(e->exp_ptr)]);
   fprintf(fp, "\n");
 
   fprintf(fp, "super: %s\n", e->super ? "true" : "false");
@@ -407,6 +410,13 @@ void print_diagnostics(char *fname)
   fprintf(fp, "g_gensym_count: %d\n", g_gensym_count);
 
   fprintf(fp, "g_smalltalk_gensym_count: %d\n", g_smalltalk_gensym_count);
+
+  //TODO: print the newly-added globals
+  /*
+  g_nof_debug_expressions
+  g_debug_expressions
+  g_inspected_objects
+  */
 
   fclose(fp);
 }
