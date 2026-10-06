@@ -1650,13 +1650,13 @@ OBJECT_PTR delete_class(OBJECT_PTR closure,
 
   class_object_t *cls_obj = (class_object_t *)extract_ptr(class_object);
 
-  OBJECT_PTR val = message_send(g_msg_snd_closure,
-				receiver,
-				NIL,
-				get_symbol("_deleteGlobal:"),
-				convert_int_to_object(1),
-                                get_smalltalk_symbol(cls_obj->name),
-				g_idclo);
+  message_send(g_msg_snd_closure,
+               receiver,
+               NIL,
+               get_symbol("_deleteGlobal:"),
+               convert_int_to_object(1),
+               get_smalltalk_symbol(cls_obj->name),
+               g_idclo);
 
   cls_obj->delete_flag = true;
 
@@ -1859,13 +1859,13 @@ OBJECT_PTR delete_package(OBJECT_PTR closure,
         //this will in turn trigger the delete of
         //the corresponding top level entry, but
         //this should not be an issue
-        OBJECT_PTR val = message_send(g_msg_snd_closure,
-                                      receiver,
-                                      NIL,
-                                      get_symbol("_deleteClass:"),
-                                      convert_int_to_object(1),
-                                      car(binding_val),
-                                      g_idclo);
+        message_send(g_msg_snd_closure,
+                     receiver,
+                     NIL,
+                     get_symbol("_deleteClass:"),
+                     convert_int_to_object(1),
+                     car(binding_val),
+                     g_idclo);
       }
     }
   }

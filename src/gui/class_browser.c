@@ -999,13 +999,13 @@ void delete_object(GtkWidget *widget,
       //cannot be passed call_repl() as call_repl() needs
       //parse-able (Smalltalk source) strings.
 
-      OBJECT_PTR val = message_send(g_msg_snd_closure,
-                                    Smalltalk,
-                                    NIL,
-                                    get_symbol("_deleteClass:"),
-                                    convert_int_to_object(1),
-                                    selected_class,
-                                    g_idclo);
+      message_send(g_msg_snd_closure,
+                   Smalltalk,
+                   NIL,
+                   get_symbol("_deleteClass:"),
+                   convert_int_to_object(1),
+                   selected_class,
+                   g_idclo);
 
       navigate_to_package(selected_package);
     }
@@ -1030,15 +1030,15 @@ void delete_object(GtkWidget *widget,
       //we cannot use call_repl() for the same
       //reason as above
 
-      OBJECT_PTR val = message_send(g_msg_snd_closure,
-                                    Smalltalk,
-                                    NIL,
-                                    gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)) ?
-                                    get_symbol("_deleteClassMethod:ofClass:") : get_symbol("_deleteInstanceMethod:ofClass:"),
-                                    convert_int_to_object(2),
-                                    get_smalltalk_symbol(selected_method),
-                                    selected_class,
-                                    g_idclo);
+      message_send(g_msg_snd_closure,
+                   Smalltalk,
+                   NIL,
+                   gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(class_radio_button)) ?
+                   get_symbol("_deleteClassMethod:ofClass:") : get_symbol("_deleteInstanceMethod:ofClass:"),
+                   convert_int_to_object(2),
+                   get_smalltalk_symbol(selected_method),
+                   selected_class,
+                   g_idclo);
 
       navigate_to_class((class_object_t *)extract_ptr(selected_class));
     }

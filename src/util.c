@@ -232,7 +232,7 @@ char *append_char(char *s, char a)
 
   char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
 
-  strncpy(ret,s,n);
+  strcpy(ret,s);
 
   ret[n] = a;
   ret[n+1] = '\0';
@@ -248,7 +248,7 @@ char *prepend_char(char *s, char a)
 
   char *ret = (char *)GC_MALLOC((n+2) * sizeof(char));
 
-  strncpy(ret+1,s,n);
+  strcpy(ret+1,s);
 
   ret[0] = a;
   ret[n+1] = '\0';
@@ -482,14 +482,12 @@ int extract_json_from_image_zip_file(const char *archive_name, char *json_file_n
 
     char buffer[BUFFER_SIZE];
     zip_int64_t bytes_read;
-    int write_error = 0;
 
     while ((bytes_read = zip_fread(zip_file, buffer, sizeof(buffer))) > 0)
     {
       size_t bytes_written = fwrite(buffer, 1, bytes_read, dest_file);
       if (bytes_written < (size_t)bytes_read) {
 	sprintf(err_msg, "Write error occurred while writing %s\n", st.name);
-	write_error = 1;
 	break;
       }
     }

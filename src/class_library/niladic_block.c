@@ -304,12 +304,12 @@ OBJECT_PTR niladic_block_ensure(OBJECT_PTR closure,
   if(e)
   {
     e->termination_blk_invoked = true;
-    OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
-					    ensure_block,
-					    NIL,
-					    VALUE_SELECTOR,
-					    convert_int_to_object(0),
-					    g_idclo);
+    message_send(g_msg_snd_closure,
+                 ensure_block,
+                 NIL,
+                 VALUE_SELECTOR,
+                 convert_int_to_object(0),
+                 g_idclo);
   }
 
   if(pop_if_top(entry))

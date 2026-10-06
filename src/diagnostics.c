@@ -249,7 +249,14 @@ void print_diagnostics(char *fname)
 {
   int i;
 
-  FILE *fp = fopen(fname, "w");
+  char tag[10], decorated_fname[30];
+  memset(tag, '\0', 10);
+  memset(decorated_fname, '\0', 30);
+  printf("Enter tag for diagnostics file name: ");
+  scanf("%s", tag);
+  sprintf(decorated_fname,"%s_%s", fname, tag);
+
+  FILE *fp = fopen(decorated_fname, "w");
 
   assert(fp);
 

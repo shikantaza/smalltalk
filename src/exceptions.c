@@ -341,12 +341,12 @@ void invoke_curtailed_blocks(OBJECT_PTR cont)
     if(termination_blk != NIL &&
        entry->termination_blk_invoked == false)
     {
-      OBJECT_PTR discarded_ret = message_send(g_msg_snd_closure,
-					      termination_blk,
-					      NIL,
-					      VALUE_SELECTOR,
-					      convert_int_to_object(0),
-					      g_idclo);
+      message_send(g_msg_snd_closure,
+                   termination_blk,
+                   NIL,
+                   VALUE_SELECTOR,
+                   convert_int_to_object(0),
+                   g_idclo);
       entry->termination_blk_invoked = true;
     }
     

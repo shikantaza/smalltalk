@@ -469,8 +469,6 @@ void populate_call_chain_list(BOOLEAN invoked_for_exception, GtkTreeView *call_c
   else
     i = count - 1;
 
-  int j;
-
   char buf[500];
 
   while(i >= 0)
@@ -1053,6 +1051,7 @@ gboolean handle_inspector_key_press_events(GtkWidget *widget, GdkEventKey *event
 
     return false;
   }
+  return true;
 }
 
 GtkWidget *object_inspector_stack = NULL;
@@ -1256,7 +1255,7 @@ void create_object_inspector_window(int posx, int posy, int width, int height)
   if(object_inspector_window)
     return;
 
-  GtkWidget *scrolled_win, *scrolled_win1, *scrolled_win2, *vbox, *vbox1;
+  GtkWidget *scrolled_win, *scrolled_win1, *scrolled_win2, *vbox;
 
   PangoFontDescription *font =
     pango_font_description_from_string(FONT);
@@ -1372,14 +1371,14 @@ void show_object_inspector_window()
 
     n = arr_obj->nof_elements;
 
-    char str[1024], s[10];
+    char str[1024], s[20];
 
     for(i=0; i<n; i++)
     {
       memset(str, '\0', 1024);
       print_object_to_string(arr_obj->elements[i], str);
 
-      memset(s, '\0', 10);
+      memset(s, '\0', 20);
       sprintf(s, "%d", i+1);
 
       gchar *markup = g_markup_printf_escaped (

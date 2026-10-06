@@ -662,7 +662,7 @@ void print_native_ptr_reference(FILE *fp,
     fprintf(fp, "%d", (int)e->value);
   else
   {
-    fprintf(fp, "%lu", native_ptr_count);
+    fprintf(fp, "%d", native_ptr_count);
     hashtable_put(native_ptr_hashtable, native_ptr, (void *)native_ptr_count);
     native_ptr_count++;
   }
@@ -3750,8 +3750,6 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
   OBJECT_PTR retval;
 
   struct JSONObject *heap_obj = JSON_get_array_item(heap, ref >> OBJECT_SHIFT);
-
-  uintptr_t ptr;
 
   if(object_type == CONS_TAG)
   {
