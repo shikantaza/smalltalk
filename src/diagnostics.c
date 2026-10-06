@@ -418,12 +418,28 @@ void print_diagnostics(char *fname)
 
   fprintf(fp, "g_smalltalk_gensym_count: %d\n", g_smalltalk_gensym_count);
 
-  //TODO: print the newly-added globals
-  /*
-  g_nof_debug_expressions
-  g_debug_expressions
-  g_inspected_objects
-  */
+  fprintf(fp, "g_nof_debug_expressions: %d\n", g_nof_debug_expressions);
+
+  for(i=0; i< g_nof_debug_expressions; i++)
+    print_debug_expression(fp, g_debug_expressions[i]);
+
+  fprintf(fp, "\n");
+
+  fprintf(fp, "g_inspected_objects:");
+
+  if(g_inspected_objects)
+  {
+    OBJECT_PTR *inspected_objects = (OBJECT_PTR *)stack_data(g_inspected_objects);
+    count = stack_count(g_inspected_objects);
+
+    for(i = count-1; i>=0; i--)
+    {
+      print_object_to_file(inspected_objects[i], fp);
+      fprintf(fp, "\n");
+    }
+  }
+  else
+    fprintf(fp, "NULL\n");
 
   fclose(fp);
 }
