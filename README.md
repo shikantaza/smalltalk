@@ -44,7 +44,8 @@ The target platform is x86_64 Linux for the first version.
 * libgtk-3-dev
 * libgtksourceview-3.0-dev
 * libffi
-  
+* libzip-dev
+    
 # Build Instructions
 
 Navigate to the directory where the project has been cloned and run these commands:
