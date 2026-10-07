@@ -1497,14 +1497,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     fprintf(fp, "[ ");
 
-    if(entry->exp_ptr == NIL)
-      fprintf(fp, "-1");
-    else
-    {
-      //debug_expression_t *exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
-      debug_expression_t *exp = g_debug_expressions[get_int_value(entry->exp_ptr)];
-      print_native_ptr_reference(fp, DEBUG_EXPRESSION_PTR, (void *)exp);
-    }
+    print_object_ptr_reference(fp, entry->exp_ptr);
     fprintf(fp, ", ");
 
     if(entry->super)
@@ -3085,25 +3078,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     long long ref1;
 
-    ref1 = JSON_get_array_item(ptr_entry, 0)->ivalue;
-    debug_expression_t *debug_exp = (debug_expression_t *)deserialize_native_ptr_reference(heap,
-                                                                                           DEBUG_EXPRESSION_PTR,
-                                                                                           ref1,
-                                                                                           obj_ht,
-                                                                                           native_ptr_ht);
-
-    if(!debug_exp)
-      entry->exp_ptr = NIL;
-    else
-    {
-      /* if(!pinned_items) */
-      /*   pinned_items = queue_create(); */
-
-      /* queue_enqueue(pinned_items, (void *)debug_exp); */
-
-      //entry->exp_ptr = (uintptr_t)debug_exp + OBJECT_TAG;
-      entry->exp_ptr = convert_int_to_object(add_debug_expression(debug_exp));
-    }
+    entry->exp_ptr = JSON_get_array_item(ptr_entry, 0)->ivalue;
 
     if(!strcmp(JSON_get_array_item(ptr_entry, 1)->strvalue, "true"))
       entry->super = true;
