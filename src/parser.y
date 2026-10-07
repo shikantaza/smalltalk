@@ -40,14 +40,6 @@ void initialize_pass2();
 void initialize_inbuiltfns();
 void initialize_pre_image();
 
-BOOLEAN is_create_class_exp(OBJECT_PTR);
-BOOLEAN is_add_var_exp(OBJECT_PTR, char *);
-BOOLEAN is_add_instance_var_exp(OBJECT_PTR);
-BOOLEAN is_add_class_var_exp(OBJECT_PTR);
-BOOLEAN is_add_method_exp(OBJECT_PTR, char *);
-BOOLEAN is_add_instance_method_exp(OBJECT_PTR);
-BOOLEAN is_add_class_method_exp(OBJECT_PTR);
-
 void gtk_main();
 void gtk_init(int *, char ***);
 void create_transcript_window(int, int, int, int, char *);
@@ -989,9 +981,9 @@ void yyerror(const char *s)
     assert(false);
 }
 
-int repl2()
+void cleanup_for_repl()
 {
-  //TODO: if repl2() gets called
+  //TODO: if repl() gets called
   //by an evaluation triggered by
   //the debugger, some of these
   //actions may need to be avoided
@@ -1010,152 +1002,6 @@ int repl2()
   g_debug_action = CONTINUE;
 
   g_eval_aborted = false;
-
-  //OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
-
-  //exp = decorate_message_selectors(exp);
-
-#ifdef DEBUG
-  print_object(exp); printf("\n");
-#endif
-
-  /*
-  //awkward conditionals because of
-  //absence of shortcirtuing for && (confirm)
-  if(!IS_CONS_OBJECT(exp))
-    repl();
-  else if(cons_length(exp) != 3)
-    repl();
-  else if(!IS_CONS_OBJECT(third(exp)))
-    repl();
-  else if(first(third(exp)) == MESSAGE_SEND &&
-	  second(third(exp)) == SMALLTALK &&
-	  fourth(third(exp)) == get_symbol("_addInstanceMethod:toClass:withBody:"))
-  {
-    if(!IS_SMALLTALK_SYMBOL_OBJECT(sixth(third(exp))))
-    {
-      printf("Invalid method selector passed to Smalltalk>>addInstanceMethod\n");
-      return 0;
-    }
-
-    OBJECT_PTR class_object_val, class_object;
-
-    //TODO: figure out how to convert these
-    //asserts into exceptions
-
-    if(!IS_SYMBOL_OBJECT(seventh(third(exp))))
-    {
-      printf("Smalltalk>>addInstanceMethod: Invalid class name\n");
-      return 0;
-    }
-
-    if(!get_top_level_val(seventh(third(exp)), &class_object_val))
-    {
-      printf("Smalltalk>>addInstanceMethod: Class does not exist\n");
-      return 0;
-    }
-
-    class_object = car(class_object_val);
-
-    if(!IS_CLASS_OBJECT(class_object))
-    {
-      printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
-      return 0;
-    }
-
-    //if(!IS_CONS_OBJECT(seventh(third(exp))))
-    if(!IS_CONS_OBJECT(nth(convert_int_to_object(7), third(exp))))
-    {
-      printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
-      return 0;
-    }
-
-    OBJECT_PTR ret = add_instance_method(class_object,
-					 sixth(third(exp)),
-					 list(3, LET, NIL, nth(convert_int_to_object(7), third(exp))),
-					 NIL, //we do not have a code string to pass; will be resolved when we
-					 g_exp);  //switch to addInstanceMethod:toClass:withBodyStr
-    if(g_loading_core_library == false)
-    {
-      //printf("\n");
-      //print_object(ret);
-      //printf("\n");
-
-      //not printing anything by default
-      //char buf[500];
-      //memset(buf, '\0', 500);
-      //print_object_to_string(ret, buf);
-      //print_to_transcript(buf);
-    }
-    g_last_eval_result = ret;
-  }
-  else if(first(third(exp)) == MESSAGE_SEND &&
-	  second(third(exp)) == SMALLTALK &&
-	  fourth(third(exp)) == get_symbol("_addClassMethod:toClass:withBody:"))
-  {
-    if(!IS_SMALLTALK_SYMBOL_OBJECT(sixth(third(exp))))
-    {
-      printf("Invalid method selector passed to Smalltalk>>addClassMethod\n");
-      return 0;
-    }
-
-    OBJECT_PTR class_object_val, class_object;
-
-    //TODO: figure out how to convert these
-    //asserts into exceptions
-
-    if(!IS_SYMBOL_OBJECT(seventh(third(exp))))
-    {
-      printf("Smalltalk>>addClassMethod: Invalid class name\n");
-      return 0;
-    }
-
-    if(!get_top_level_val(seventh(third(exp)), &class_object_val))
-    {
-      printf("Smalltalk>>addClassMethod: Class does not exist\n");
-      return 0;
-    }
-
-    class_object = car(class_object_val);
-
-    if(!IS_CLASS_OBJECT(class_object))
-    {
-      printf("Invalid class passed to Smalltalk>>addInstanceMethod\n");
-      return 0;
-    }
-
-    //if(!IS_CONS_OBJECT(seventh(third(exp))))
-    if(!IS_CONS_OBJECT(nth(convert_int_to_object(7), third(exp))))
-    {
-      printf("Invalid block passed to Smalltalk>>addInstanceMethod\n");
-      return 0;
-    }
-
-    OBJECT_PTR ret = add_class_method(class_object,
-				      sixth(third(exp)),
-				      list(3, LET, NIL, nth(convert_int_to_object(7), third(exp))),
-				      NIL, //we do not have a code string to pass; will be resolved
-				      g_exp); //switch to addInstanceMethod:toClass:withBodyStr
-    if(g_loading_core_library == false)
-    {
-      //printf("\n");
-      //print_object(ret);
-      //printf("\n");
-
-      //not printing anything by default
-      //char buf[500];
-      //memset(buf, '\0', 500);
-      //print_object_to_string(ret, buf);
-      //print_to_transcript(buf);
-    }
-    g_last_eval_result = ret;
-  }
-  else
-    repl();
-  */
-  repl();
-
-  return 0;
 }
 
 void parse_from_fp(FILE *fp)
@@ -1194,7 +1040,7 @@ void parse_from_fp(FILE *fp)
     if(!yyparse())
     {
       g_method_code = GC_strdup(buf);
-      repl2();
+      repl();
     }
 
     yy_delete_buffer(bs);
@@ -1415,9 +1261,6 @@ OBJECT_PTR repl_common()
     }
     else
     {
-      //printf("Unbound variable: %s\n", get_symbol_name(closed_val));
-      //return NIL;
-
       //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
       OBJECT_PTR exception_obj = new_object_internal(CompileError,
 						     convert_fn_to_closure((nativefn)new_object_internal),
@@ -1437,6 +1280,8 @@ OBJECT_PTR repl_common()
 
 void repl()
 {
+  cleanup_for_repl();
+
   OBJECT_PTR repl_ret_val = repl_common();
 
   OBJECT_PTR ret;
@@ -1452,121 +1297,7 @@ void repl()
   else //unhandled exception would have triggered debugger, so return value from debugger user action
     ret = repl_ret_val;
 
-  if(g_loading_core_library == false)
-  {
-    //printf("\n");
-    //print_object(ret);
-    //printf("\n");
-
-    //not printing anything by default
-    //char buf[500];
-    //memset(buf, '\0', 500);
-    //print_object_to_string(ret, buf);
-    //print_to_transcript(buf);
-  }
   g_last_eval_result = ret;
-}
-
-//this too could have been brought under
-//the is_add_var_exp code template
-BOOLEAN is_create_class_exp(OBJECT_PTR exp)
-{
-  if(!IS_CONS_OBJECT(exp))
-    return false;
-
-  if(cons_length(exp) != 3)
-    return false;
-
-  OBJECT_PTR third_obj = third(exp);
-  
-  if(!IS_CONS_OBJECT(third_obj))
-    return false;
-
-  if(cons_length(third_obj) != 6)
-    return false;
-     
-  if(first(third_obj) == MESSAGE_SEND &&
-     second(third_obj) == SMALLTALK &&
-     fourth(third_obj) == get_symbol("_createClass:parentClass:") &&
-     IS_SYMBOL_OBJECT(fifth(third_obj)) &&
-     IS_SYMBOL_OBJECT(sixth(third_obj)))
-    return true;
-  else
-    return false;  
-}
-
-BOOLEAN is_add_var_exp(OBJECT_PTR exp, char *msg)
-{
-  if(!IS_CONS_OBJECT(exp))
-    return false;
-
-  if(cons_length(exp) != 3)
-    return false;
-
-  OBJECT_PTR third_obj = third(exp);
-  
-  if(!IS_CONS_OBJECT(third_obj))
-    return false;
-
-  if(cons_length(third_obj) != 6)
-    return false;
-     
-  if(first(third_obj) == MESSAGE_SEND &&
-     second(third_obj) == SMALLTALK &&
-     fourth(third_obj) == get_symbol(msg) &&
-     IS_SYMBOL_OBJECT(fifth(third_obj)) &&
-     IS_SYMBOL_OBJECT(sixth(third_obj)))
-    return true;
-  else
-    return false;  
-  
-}
-
-BOOLEAN is_add_instance_var_exp(OBJECT_PTR exp)
-{
-  return is_add_var_exp(exp, "_addInstanceVariable:toClass:");
-}
-
-BOOLEAN is_add_class_var_exp(OBJECT_PTR exp)
-{
-  return is_add_var_exp(exp, "_addClassVariable:toClass:");
-}
-
-BOOLEAN is_add_method_exp(OBJECT_PTR exp, char *msg)
-{
-  if(!IS_CONS_OBJECT(exp))
-    return false;
-
-  if(cons_length(exp) != 3)
-    return false;
-  
-  OBJECT_PTR third_obj = third(exp);
-  
-  if(!IS_CONS_OBJECT(third_obj))
-    return false;
-
-  if(cons_length(third_obj) != 7)
-    return false;
-     
-  if(first(third_obj) == MESSAGE_SEND &&
-     second(third_obj) == SMALLTALK &&
-     fourth(third_obj) == get_symbol(msg) &&
-     IS_SMALLTALK_SYMBOL_OBJECT(fifth(third_obj)) &&
-     IS_CONS_OBJECT(seventh(third_obj)) && //TODO: maybe some stronger checks?
-     IS_SYMBOL_OBJECT(sixth(third_obj)))
-    return true;
-  else
-    return false;  
-}
-
-BOOLEAN is_add_instance_method_exp(OBJECT_PTR exp)
-{
-  return is_add_method_exp(exp, "_addInstanceMethod:toClass:withBody:");
-}
-
-BOOLEAN is_add_class_method_exp(OBJECT_PTR exp)
-{
-  return is_add_method_exp(exp, "_addClassMethod:toClass:withBody:");
 }
 
 #endif

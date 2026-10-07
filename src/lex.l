@@ -36,7 +36,7 @@ int g_include_stack_ptr = 0;
 
 BOOLEAN expecting_docstring = 0;
 
-int repl2();
+int repl();
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR g_last_eval_result;
@@ -87,7 +87,7 @@ int call_repl(char *expression)
   if(!yyparse())
   {
     g_method_code = GC_strdup(expression);
-    repl2();
+    repl();
     yy_delete_buffer(buf);
     return 0;
   }
@@ -106,7 +106,7 @@ int call_repl_orig(char *expression)
 
   while((ret = yyparse()) == 0)
   {
-    if(repl2())
+    if(repl())
     {
       yy_delete_buffer(buf);
       return -1;

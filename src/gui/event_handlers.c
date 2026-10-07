@@ -88,6 +88,8 @@ gboolean navigate_to_package(smalltalk_package_t *);
 gboolean navigate_to_class(class_object_t *);
 gboolean navigate_to_method(method_t *);
 
+void cleanup_for_repl();
+
 BOOLEAN g_debug_in_progress;
 
 enum DebugAction g_debug_action;
@@ -575,6 +577,8 @@ gboolean delete_event(GtkWidget *widget,
     g_last_eval_result = NIL;
     hide_debug_window();
     g_debug_in_progress = false;
+
+    cleanup_for_repl();
   }
 
   return FALSE;
@@ -783,6 +787,8 @@ void debug_abort(GtkWidget *widget, gpointer data)
   g_last_eval_result = NIL;
   hide_debug_window();
   g_debug_in_progress = false;
+
+  cleanup_for_repl();
 }
 
 void debug_retry(GtkWidget *widget, gpointer data)
