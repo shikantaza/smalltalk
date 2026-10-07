@@ -700,7 +700,7 @@ GtkToolbar *create_debug_toolbar()
   GtkWidget *resume_with_val_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/resume_with_val32x32.png");
   GtkWidget *continue_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/continue.png");
   GtkWidget *step_into_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_into.png");
-  GtkWidget *step_over_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_over_new.png");
+  GtkWidget *step_over_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_over.png");
   GtkWidget *step_out_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/step_out.png");
   GtkWidget *accept_icon = gtk_image_new_from_file (SMALLTALKDATADIR "/icons/accept.png");
 
