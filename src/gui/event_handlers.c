@@ -567,6 +567,15 @@ gboolean delete_event(GtkWidget *widget,
     close_application_window((GtkWidget **)&workspace_window);
   else if(widget == (GtkWidget *)class_browser_window)
     close_application_window((GtkWidget **)&class_browser_window);
+  else if(widget == (GtkWidget *)debugger_window)
+  {
+    g_debug_action = ABORT;
+
+    gtk_main_quit();
+    g_last_eval_result = NIL;
+    hide_debug_window();
+    g_debug_in_progress = false;
+  }
 
   return FALSE;
 }
