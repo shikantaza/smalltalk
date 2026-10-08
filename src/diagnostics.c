@@ -60,6 +60,8 @@ extern int                   g_smalltalk_gensym_count;
 extern unsigned int          g_nof_debug_expressions;
 extern debug_expression_t  **g_debug_expressions;
 extern stack_type           *g_inspected_objects;
+extern unsigned int          g_nof_native_fns;
+extern native_fn_src_mapping_t *g_native_fn_objects;
 
 extern OBJECT_PTR NIL;
 
@@ -440,6 +442,18 @@ void print_diagnostics(char *fname)
   }
   else
     fprintf(fp, "NULL\n");
+
+  fprintf(fp, "g_native_fn_objects:\n");
+
+  for(i=0; i<g_nof_native_fns; i++)
+  {
+    fprintf(fp, "-----\n");
+    fprintf(fp, "state_index = %d\n", g_native_fn_objects[i].state_index);
+    fprintf(fp, "fname = %s\n", g_native_fn_objects[i].fname);
+    fprintf(fp, "nf = %p\n", g_native_fn_objects[i].nf);
+    fprintf(fp, "source = %s\n", g_native_fn_objects[i].source);
+    fprintf(fp, "-----\n");
+  }
 
   fclose(fp);
 }
