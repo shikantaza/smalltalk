@@ -218,7 +218,7 @@ OBJECT_PTR array_do_separated_by(OBJECT_PTR closure, OBJECT_PTR operation, OBJEC
 
   OBJECT_PTR ret1=NIL, ret2=NIL;
 
-  BOOLEAN ret_from_do, ret_from_separated_by;
+  BOOLEAN ret_from_do = false, ret_from_separated_by = false;
 
   for(i=0; i<size; i++)
   {
