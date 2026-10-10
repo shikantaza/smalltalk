@@ -3789,8 +3789,8 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
                                                      0)->ivalue;
     OBJECT_PTR closed_vals_json = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
                                                       1)->ivalue;
-    OBJECT_PTR arity = convert_int_to_object(JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
-                                                                 2)->ivalue);
+    OBJECT_PTR arity = JSON_get_array_item(JSON_get_array_item(heap, ref >> OBJECT_SHIFT),
+                                           2)->ivalue;
 
     uintptr_t ptr1 = object_alloc(2, CONS_TAG);
     uintptr_t ptr2 = object_alloc(2, CONS_TAG);
@@ -3800,7 +3800,7 @@ OBJECT_PTR deserialize_object_reference(struct JSONObject *heap,
 
     set_heap(ptr1, 0, deserialize_object_reference(heap, native_fn_index, obj_ht, native_ptr_ht));
     set_heap(ptr2, 0, deserialize_object_reference(heap, closed_vals_json, obj_ht, native_ptr_ht));
-    set_heap(ptr3, 0, arity);
+    set_heap(ptr3, 0, convert_int_to_object(arity));
 
     set_heap(ptr1, 1, ptr2 + CONS_TAG);
     set_heap(ptr2, 1, ptr3 + CONS_TAG);
@@ -3969,9 +3969,15 @@ int load_from_image(char *image_file_name)
                                                1)->ivalue;
   assert(closed_vals == NIL);
 
+  OBJECT_PTR msg_snd_nativefn = deserialize_object_reference(heap,
+                                                             JSON_get_array_item(JSON_get_array_item(heap, object_heap_index),
+                                                                                 0)->ivalue,
+                                                             object_hashtable,
+                                                             native_ptr_hashtable);
+
   g_msg_snd_closure = create_closure(convert_int_to_object(arity),
                                      convert_int_to_object(cons_length(closed_vals)),
-                                     (nativefn)message_send);
+                                     get_nativefn_value(msg_snd_nativefn));
   /////
 
   //4. g_msg_snd_super_closure
@@ -3988,9 +3994,15 @@ int load_from_image(char *image_file_name)
                                     1)->ivalue;
   assert(closed_vals == NIL);
 
+  OBJECT_PTR msg_snd_super_nativefn = deserialize_object_reference(heap,
+                                                                   JSON_get_array_item(JSON_get_array_item(heap, object_heap_index),
+                                                                                       0)->ivalue,
+                                                                   object_hashtable,
+                                                                   native_ptr_hashtable);
+
   g_msg_snd_super_closure = create_closure(convert_int_to_object(arity),
                                            convert_int_to_object(cons_length(closed_vals)),
-                                           (nativefn)message_send_super);
+                                           get_nativefn_value(msg_snd_super_nativefn));
   /////
 
   //5. g_compile_time_method_selector
@@ -4154,6 +4166,7 @@ int load_from_image(char *image_file_name)
                                                                                        "g_top_level")->ivalue,
                                                                   object_hashtable,
                                                                   native_ptr_hashtable);
+
   /////
 
   //24. g_debugger_invoked_for_exception
