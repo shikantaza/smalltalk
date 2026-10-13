@@ -1062,7 +1062,7 @@ void load_file(char *file_name)
 void load_core_library()
 {
   g_loading_core_library = true;
-  printf("Loading core library (Phase 1)...");
+  printf("Loading core library...");
   load_file(SMALLTALKDATADIR "/smalltalk.st");
   printf("done.\n");
   g_loading_core_library = false;
@@ -1114,7 +1114,7 @@ int main(int argc, char **argv)
 
       initialize_pass2();
 
-      load_core_library2();
+      //load_core_library2();
 
       initialize_inbuiltfns();
 

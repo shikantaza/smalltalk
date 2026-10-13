@@ -1,3 +1,65 @@
+Smalltalk addClassMethod: #createClass:inPackage: toClass: Smalltalk withBody:
+[ :className :package |
+  | ret |
+  ret := self createClassPreInitialize: className.
+  self assignClass: ret toPackage: package.
+  ^ ret
+]
+
+Smalltalk addClassMethod: #createClass:parentClass:inPackage: toClass: Smalltalk withBody:
+[ :className :parentClass :package |
+  | ret |
+  ret := self createClassPreInitialize: className parentClass: parentClass.
+  self assignClass: ret toPackage: package.
+  ^ ret
+]
+
+Smalltalk addClassMethod: #createClass: toClass: Smalltalk withBody:
+[ :className |
+  | ret |
+  ret := self createClassPreInitialize: className.
+  self assignClass: ret toPackage: 'user'.
+  ^ ret
+]
+
+Smalltalk addClassMethod: #createClass:parentClass: toClass: Smalltalk withBody:
+[ :className :parentClass |
+  | ret |
+  ret := self createClassPreInitialize: className parentClass: parentClass.
+  self assignClass: ret toPackage: 'user'.
+  ^ ret
+]
+
+Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
+[ :className :parentClass :instVars :classVars :package |
+  | ret |
+  ret := self createClass: className parentClass: parentClass inPackage: package.
+  self addInstanceVariables: instVars toClass: ret.
+  self addClassVariables: classVars toClass: ret.
+  ^ret
+]
+
+Smalltalk addClassMethod: #createClass:parentClass:instanceVars:classVars:inPackage:aliases: toClass: Smalltalk withBody:
+[ :className :parentClass :instVars :classVars :package :aliases |
+  |ret|
+  [
+    ret := self createClass: className parentClass: parentClass inPackage: package.
+    self addInstanceVariables: instVars toClass: ret.
+    self addClassVariables: classVars toClass: ret.
+    aliases do: [ :entry |
+      self createAlias: (entry at: 1) for: (entry at: 2) fromPackage: (entry at: 3) inClass: ret
+    ].
+    ^ret
+  ] on: Exception do: [ :ex |
+    ret = nil ifFalse: [ self deleteClass: ret. ex signal ]
+  ]
+]
+
+Smalltalk addClassMethod: #createClass:instanceVars:classVars:inPackage: toClass: Smalltalk withBody:
+[ :className :instVars :classVars :package |
+  ^(self createClass: className parentClass: Object instanceVars: instVars classVars: classVars inPackage: package)
+]
+
 Smalltalk addClassMethod: #addInstanceVariables:toClass: toClass: Smalltalk  withBody: [
   :lst :cls |
   lst do: [ :v | self addInstanceVariable: v toClass: cls ]
@@ -8,19 +70,19 @@ Smalltalk addClassMethod: #addClassVariables:toClass: toClass: Smalltalk  withBo
   lst do: [ :v | self addClassVariable: v toClass: cls ]
 ]
 
-Smalltalk createClassPreInitialize: #Error parentClass: Exception
+Smalltalk createClass: #Error parentClass: Exception inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #MessageNotUnderstood parentClass: Error
+Smalltalk createClass: #MessageNotUnderstood parentClass: Error inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #ZeroDivide parentClass: Error
+Smalltalk createClass: #ZeroDivide parentClass: Error inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #InvalidArgument parentClass: Error
+Smalltalk createClass: #InvalidArgument parentClass: Error inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #IndexOutofBounds parentClass: Error
+Smalltalk createClass: #IndexOutofBounds parentClass: Error inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #EmptyCollection parentClass: Error
+Smalltalk createClass: #EmptyCollection parentClass: Error inPackage: 'core'
 
-Smalltalk createClassPreInitialize: #Stack
+Smalltalk createClass: #Stack inPackage: 'core.util.collections'
 
 Smalltalk addInstanceVariable: #coll toClass: Stack
 
@@ -40,7 +102,7 @@ Smalltalk addInstanceMethod: #top toClass: Stack withBody: [
     ifFalse: [ ^ coll at: (coll size)]
 ]
 
-Smalltalk createClassPreInitialize: #CompileError parentClass: Error
+Smalltalk createClass: #CompileError parentClass: Error inPackage: 'core'
 
 Smalltalk addInstanceMethod: #contains: toClass: ReadableString withBody:
 [ :char |
@@ -73,3 +135,5 @@ Smalltalk addInstanceMethod: #substringsForSeparators: toClass: ReadableString w
   ].
   ^arr
 ]
+
+Smalltalk loadFile: 'smalltalk2.st'

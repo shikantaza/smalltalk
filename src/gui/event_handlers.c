@@ -245,7 +245,7 @@ gboolean handle_key_press_events(GtkWidget *widget, GdkEventKey *event, gpointer
     {
       action_triggering_window = class_browser_window;
       evaluate();
-      refresh_system_browser();
+      //refresh_system_browser();
 
       if(g_last_created_class)
       {
