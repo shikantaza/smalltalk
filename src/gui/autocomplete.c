@@ -23,7 +23,7 @@
 
 #include <assert.h>
 
-#include "gc.h"
+#include "../gc.h"
 
 #include "../global_decls.h"
 #include "../util.h"

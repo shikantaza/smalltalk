@@ -400,7 +400,7 @@ char *replace_newlines(char *str)
 
   assert(j==len_new_string);
 
-  ret[j+1] = '\0';
+  ret[j] = '\0';
 
   return ret;
 }

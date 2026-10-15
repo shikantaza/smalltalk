@@ -30,6 +30,11 @@ int g_gensym_count = 0;
 unsigned int g_nof_native_fns = 0;
 native_fn_src_mapping_t *g_native_fn_objects = NULL;
 
+extern unsigned int g_nof_smalltalk_packages;
+extern smalltalk_package_t **g_smalltalk_packages;
+
+extern package_t *g_smalltalk_symbols;
+
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR LET;
 extern OBJECT_PTR SET;
@@ -1187,4 +1192,102 @@ BOOLEAN is_valid_array_obj(OBJECT_PTR arr_obj_ptr)
   }
 
   return true;
+}
+
+void free_binding_env(binding_env_t *env)
+{
+  if(!env)
+    return;
+
+  unsigned int i, n;
+
+  n = env->count;
+
+  for(i=0; i<n; i++)
+    free(env->bindings[i]);
+
+  free(env->bindings);
+}
+
+void free_method_binding_env(method_binding_env_t *env)
+{
+  unsigned int i, n;
+
+  n = env->count;
+
+  for(i=0; i<n; i++)
+    free(env->bindings[i]);
+
+  free(env->bindings);
+}
+
+void free_object_ptr(OBJECT_PTR obj)
+{
+  //TODO
+}
+
+void free_class_object(class_object_t *cls_obj)
+{
+  unsigned int i;
+
+  free(cls_obj->name);
+
+  for(i=0; i<cls_obj->nof_instances; i++)
+    free_object_ptr(cls_obj->instances[i]);
+
+  free(cls_obj->instances);
+
+  //the individual instance variables
+  //would be handled when the underlying
+  //symbol is freed
+  free(cls_obj->inst_vars);
+
+  free_binding_env(cls_obj->shared_vars);
+  free_method_binding_env(cls_obj->instance_methods);
+  free_method_binding_env(cls_obj->class_methods);
+
+  if(cls_obj->docstring)
+    free(cls_obj->docstring);
+
+  free(cls_obj->aliases);
+}
+
+void cleanup()
+{
+  unsigned int i, j;
+
+  //g_smalltalk_packages
+  for(i=0; i<g_nof_smalltalk_packages; i++)
+  {
+    free(g_smalltalk_packages[i]->name);
+
+    for(j=0; j<g_smalltalk_packages[i]->nof_classes; j++)
+    {
+      class_object_t *cls_obj = (class_object_t *)extract_ptr(g_smalltalk_packages[i]->member_classes[j]);
+      free_class_object(cls_obj);
+    }
+
+    free(g_smalltalk_packages[i]->member_classes);
+    free(g_smalltalk_packages[i]);
+  }
+  free(g_smalltalk_packages);
+  //
+
+  free_binding_env(g_top_level);
+
+  //g_compiler_package
+  for(i=0; i<g_compiler_package->nof_symbols; i++)
+    free(g_compiler_package->symbols[i]);
+
+  free(g_compiler_package->name);
+  free(g_compiler_package->symbols);
+  //
+
+  //g_smalltalk_symbols
+  for(i=0; i<g_smalltalk_symbols->nof_symbols; i++)
+    free(g_smalltalk_symbols->symbols[i]);
+
+  free(g_smalltalk_symbols->name);
+  free(g_smalltalk_symbols->symbols);
+  //
 }

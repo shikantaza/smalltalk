@@ -20,7 +20,7 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "gc.h"
+#include "../gc.h"
 
 #include "../global_decls.h"
 
@@ -126,6 +126,8 @@ void create_Transcript()
 						 NIL, NIL,
 						 0, NIL, NULL);
   
+  cls_obj->docstring = NULL;
+
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 

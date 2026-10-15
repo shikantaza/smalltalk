@@ -733,6 +733,8 @@ void create_Exception()
 						 NIL, NIL,
 						 0, NIL, NULL);
   
+  cls_obj->docstring = NULL;
+
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 

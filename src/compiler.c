@@ -329,10 +329,12 @@ void initialize()
   g_compiler_package = (package_t *)GC_MALLOC(sizeof(package_t));
   g_compiler_package->name = GC_strdup("CORE");
   g_compiler_package->nof_symbols = 0;
+  g_compiler_package->symbols = NULL;
 
   g_smalltalk_symbols = (package_t *)GC_MALLOC(sizeof(package_t));
   g_smalltalk_symbols->name = GC_strdup("SMALLTALK");
   g_smalltalk_symbols->nof_symbols = 0;
+  g_smalltalk_symbols->symbols = NULL;
 
   //IMPORTANT: the order of these
   //additions should match the sequence

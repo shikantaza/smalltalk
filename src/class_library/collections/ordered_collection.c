@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "gc.h"
+#include "../../gc.h"
 
 #include "../../queue.h"
 #include "../../global_decls.h"
@@ -93,7 +93,7 @@ OBJECT_PTR ordered_collection_initialize(OBJECT_PTR closure, OBJECT_PTR cont)
 
   /* queue_enqueue(pinned_items, (void *)obj->elements); */
 
-  GC_register_finalizer((void *)obj->elements, object_finalizer, NULL, NULL, NULL);
+  //GC_register_finalizer((void *)obj->elements, object_finalizer, NULL, NULL, NULL);
 
   int i;
 
@@ -397,6 +397,8 @@ void create_OrderedCollection()
 						 convert_native_fn_to_object((nativefn)ordered_collection_new),
 						 NIL, NIL,
 						 0, NIL, NULL);
+
+  cls_obj->docstring = NULL;
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;

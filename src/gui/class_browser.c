@@ -23,7 +23,7 @@
 #include <gtksourceview/gtksource.h>
 #include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 
-#include "gc.h"
+#include "../gc.h"
 
 #include "../global_decls.h"
 #include "../util.h"
@@ -388,8 +388,8 @@ void fetch_classes_for_package(GtkWidget *list, gpointer selection1)
       gtk_list_store_set(store2, &iter2, 1, pkg->member_classes[i], -1);
     }
 
-    char code[200];
-    memset(code, '\0', 200);
+    char code[300];
+    memset(code, '\0', 300);
     unsigned int len = 0;
     len += sprintf(code+len, "\"Insert docstring here\"\n");
     len += sprintf(code+len, "Smalltalk createClass: #SomeClass\n");

@@ -40,9 +40,9 @@ AM_LIBS = ${gtk_LIBS} ${gtksourceview_LIBS} ${LEXLIB}
 ACLOCAL_AMFLAGS = -I m4 --install
 
 if WINDOWS
-smalltalk_LDADD = ${AM_LIBS} -lgc $(LIBS) libsmalltalkjitllvm.la -lversion -lstdc++ -ldl
+smalltalk_LDADD = ${AM_LIBS} $(LIBS) libsmalltalkjitllvm.la -lversion -lstdc++ -ldl
 else
-smalltalk_LDADD = ${AM_LIBS} -lgc $(LIBS) libsmalltalkjitllvm.la -ldl
+smalltalk_LDADD = ${AM_LIBS} $(LIBS) libsmalltalkjitllvm.la -ldl
 endif
 
 lib_LTLIBRARIES = libsmalltalkjitllvm.la

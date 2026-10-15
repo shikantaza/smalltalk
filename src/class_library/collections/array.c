@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "gc.h"
+#include "../../gc.h"
 
 #include "../../global_decls.h"
 #include "../../util.h"
@@ -343,6 +343,8 @@ void create_Array()
 						 convert_native_fn_to_object((nativefn)array_new),
 						 NIL, NIL,
 						 1, NIL, NULL);
+
+  cls_obj->docstring = NULL;
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;

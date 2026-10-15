@@ -24,7 +24,7 @@
 
 #include <assert.h>
 
-#include "gc.h"
+#include "../gc.h"
 
 #include "../global_decls.h"
 
@@ -376,6 +376,7 @@ void quit_application()
     }
 
     cleanupJIT(NULL);
+    cleanup();
     gtk_main_quit();
     exit(0);
   }

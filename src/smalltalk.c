@@ -154,7 +154,7 @@ void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
   else
   {
     binding_t **temp = (binding_t **)GC_REALLOC(g_top_level->bindings,
-					      g_top_level->count * sizeof(binding_t *));
+                                                g_top_level->count * sizeof(binding_t *));
     assert(temp);
     g_top_level->bindings = temp;
   }
@@ -1248,6 +1248,8 @@ void create_Object()
 						 NIL, NIL,
 						 1, NIL, NULL);
 
+  cls_obj->docstring = NULL;
+
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
@@ -2127,6 +2129,8 @@ void create_Smalltalk()
 						 NIL, NIL,
 						 4, NIL, NULL);
 
+  cls_obj->docstring = NULL;
+
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
@@ -2237,6 +2241,8 @@ void create_Nil()
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
+
+  cls_obj->docstring = NULL;
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
@@ -2597,6 +2603,8 @@ void create_Compiler()
 						 convert_native_fn_to_object((nativefn)compiler_compile_pass),
 						 NIL, NIL,
 						 2, NIL, NULL);
+
+  cls_obj->docstring = NULL;
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;

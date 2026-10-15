@@ -20,7 +20,7 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "gc.h"
+#include "../gc.h"
 
 #include "../global_decls.h"
 
@@ -62,6 +62,8 @@ void create_Character()
   cls_obj->class_methods = (method_binding_env_t *)GC_MALLOC(sizeof(method_binding_env_t));
   cls_obj->class_methods->count = 0;
   cls_obj->class_methods->bindings = NULL;
+
+  cls_obj->docstring = NULL;
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
