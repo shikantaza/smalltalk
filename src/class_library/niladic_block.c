@@ -438,5 +438,7 @@ void create_NiladicBlock()
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
+  cls_obj->delete_flag = false;
+
   NiladicBlock =  convert_class_object_to_object_ptr(cls_obj);
 }

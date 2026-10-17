@@ -1253,6 +1253,8 @@ void create_Object()
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
+  cls_obj->delete_flag = false;
+
   Object = (uintptr_t)cls_obj + CLASS_OBJECT_TAG;
 }
 
@@ -2134,6 +2136,8 @@ void create_Smalltalk()
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
+  cls_obj->delete_flag = false;
+
   Smalltalk =  convert_class_object_to_object_ptr(cls_obj);
 }
 
@@ -2246,6 +2250,8 @@ void create_Nil()
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
+
+  cls_obj->delete_flag = false;
 
   Nil =  convert_class_object_to_object_ptr(cls_obj);
 }
@@ -2608,6 +2614,8 @@ void create_Compiler()
 
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
+
+  cls_obj->delete_flag = false;
 
   Compiler =  convert_class_object_to_object_ptr(cls_obj);
 }

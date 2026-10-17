@@ -1074,11 +1074,19 @@ BOOLEAN pop_if_top(call_chain_entry_t *e)
   {
     if((call_chain_entry_t *)stack_top(g_call_chain) == e)
     {
+      call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+      free(entry->args);
+      free(entry);
       stack_pop(g_call_chain);
       reached = true;
     }
     else
+    {
+      call_chain_entry_t *entry = (call_chain_entry_t *)stack_top(g_call_chain);
+      free(entry->args);
+      free(entry);
       stack_pop(g_call_chain);
+    }
   }
 
   return true;

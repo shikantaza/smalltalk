@@ -302,5 +302,7 @@ void create_Float()
   cls_obj->nof_aliases = 0;
   cls_obj->aliases = NULL;
 
+  cls_obj->delete_flag = false;
+
   Float =  convert_class_object_to_object_ptr(cls_obj);
 }

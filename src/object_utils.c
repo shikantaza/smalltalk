@@ -76,6 +76,8 @@ extern OBJECT_PTR ReadableString;
 extern OBJECT_PTR Character;
 extern OBJECT_PTR Symbol;
 
+extern debug_expression_t  **g_debug_expressions;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   if(!is_valid_object_shallow(obj))
@@ -1194,6 +1196,58 @@ BOOLEAN is_valid_array_obj(OBJECT_PTR arr_obj_ptr)
   return true;
 }
 
+//forward declarations
+void free_binding_env(binding_env_t *);
+void free_method(method_t *);
+void free_method_binding_env(method_binding_env_t *);
+void free_class_object(class_object_t *);
+void free_executable_code(executable_code_t *);
+
+void free_object_ptr(OBJECT_PTR obj)
+{
+  unsigned int i, n;
+
+  if(!is_dynamic_memory_object(obj))
+    return;
+
+  if(IS_CONS_OBJECT(obj))
+  {
+    free_object_ptr(car(obj));
+    free_object_ptr(cdr(obj));
+  }
+  else if(IS_ARRAY_OBJECT(obj))
+  {
+    array_object_t *arr_obj = (array_object_t *)extract_ptr(obj);
+
+    n = arr_obj->nof_elements;
+    for(i=0; i<n; i++)
+      free_object_ptr(arr_obj->elements[i]);
+    free(arr_obj);
+  }
+  else if(IS_CLOSURE_OBJECT(obj))
+  {
+    OBJECT_PTR cons_form = extract_ptr(obj) + CONS_TAG;
+
+    free_object_ptr(first(cons_form)); //nativefn_obj
+    free_object_ptr(second(cons_form)); //closed_vals
+    //no need to free arity as it's not a dynamic memory object
+  }
+  else if(IS_FLOAT_OBJECT(obj))
+    free((double *)extract_ptr(obj));
+  else if(IS_OBJECT_OBJECT(obj))
+  {
+    object_t *obj_int = (object_t *)extract_ptr(obj);
+
+    //class_object will be freed elsewhere
+
+    free_binding_env(obj_int->instance_vars);
+    free(obj_int->instance_vars);
+  }
+  //class objects will be freed elsewhere
+  else if(IS_NATIVE_FN_OBJECT(obj))
+    free(get_nativefn_value(obj));
+}
+
 void free_binding_env(binding_env_t *env)
 {
   if(!env)
@@ -1209,6 +1263,18 @@ void free_binding_env(binding_env_t *env)
   free(env->bindings);
 }
 
+void free_method(method_t *m)
+{
+  //only these members have to be freed;
+  //the rest will be freed when the
+  //underlying structures are freed
+  //(class objects, native function objects,
+  //string literals)
+  free_object_ptr(m->closed_syms);
+  free_object_ptr(m->temporaries);
+  free_executable_code(m->exec_code);
+}
+
 void free_method_binding_env(method_binding_env_t *env)
 {
   unsigned int i, n;
@@ -1216,14 +1282,12 @@ void free_method_binding_env(method_binding_env_t *env)
   n = env->count;
 
   for(i=0; i<n; i++)
+  {
+    free_method(env->bindings[i]->val);
     free(env->bindings[i]);
+  }
 
   free(env->bindings);
-}
-
-void free_object_ptr(OBJECT_PTR obj)
-{
-  //TODO
 }
 
 void free_class_object(class_object_t *cls_obj)
@@ -1243,6 +1307,7 @@ void free_class_object(class_object_t *cls_obj)
   free(cls_obj->inst_vars);
 
   free_binding_env(cls_obj->shared_vars);
+  free(cls_obj->shared_vars);
   free_method_binding_env(cls_obj->instance_methods);
   free_method_binding_env(cls_obj->class_methods);
 
@@ -1274,6 +1339,7 @@ void cleanup()
   //
 
   free_binding_env(g_top_level);
+  free(g_top_level);
 
   //g_compiler_package
   for(i=0; i<g_compiler_package->nof_symbols; i++)
@@ -1290,4 +1356,19 @@ void cleanup()
   free(g_smalltalk_symbols->name);
   free(g_smalltalk_symbols->symbols);
   //
+
+  //g_string_literals
+  for(i=0; i<g_nof_string_literals; i++)
+    free(g_string_literals[i]);
+
+  free(g_string_literals);
+  //
+
+  //the AST components need not be freed here
+  //as they will be freed when we free the
+  //root executable_code_t object
+  free(g_debug_expressions);
 }
+
+//TODO:
+//other globals (see print_diagnostics() or print_global_variables())
