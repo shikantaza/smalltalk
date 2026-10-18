@@ -363,6 +363,7 @@ extern int                   g_smalltalk_gensym_count;
 extern unsigned int          g_nof_debug_expressions;
 extern debug_expression_t  **g_debug_expressions;
 extern stack_type           *g_inspected_objects;
+extern unsigned int          g_debug_id_count;
 
 extern OBJECT_PTR NIL;
 
@@ -1262,12 +1263,15 @@ void print_native_ptr_heap_representation(FILE *fp,
     /*
     struct primary *prim;
     struct unary_messages *unary_messages;
+    unsigned int id;
     */
 
     fprintf(fp, "[ ");
     print_native_ptr_reference(fp, PRIMARY_PTR, (void *)bin_arg->prim);
     fprintf(fp, ", ");
     print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)bin_arg->unary_messages);
+    fprintf(fp, ", ");
+    fprintf(fp,"%d ", bin_arg->id);
     fprintf(fp, "] ");
   }
   else if(type == KEYWORD_ARGUMENT_PTR)
@@ -1278,6 +1282,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     struct primary *prim;
     struct unary_messages *unary_messages;
     struct binary_messages *binary_messages;
+    unsigned int id;
     */
 
     fprintf(fp, "[ ");
@@ -1286,6 +1291,8 @@ void print_native_ptr_heap_representation(FILE *fp,
     print_native_ptr_reference(fp, UNARY_MESSAGES_PTR, (void *)kw_arg->unary_messages);
     fprintf(fp, ", ");
     print_native_ptr_reference(fp, BINARY_MESSAGES_PTR, (void *)kw_arg->binary_messages);
+    fprintf(fp, ", ");
+    fprintf(fp,"%d ", kw_arg->id);
     fprintf(fp, "] ");
   }
   else if(type == KEYWORD_ARGUMENT_PAIR_PTR)
@@ -1601,6 +1608,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     struct primary *prim;
     struct message *msg;
     struct cascaded_messages *cascaded_msgs;
+    unsigned int id;
     */
 
     fprintf(fp, "[ ");
@@ -1620,6 +1628,10 @@ void print_native_ptr_heap_representation(FILE *fp,
     }
     else
       assert(false);
+
+    fprintf(fp, ", ");
+    fprintf(fp,"%d ", basic_exp->id);
+
     fprintf(fp, "] ");
   }
   else if(type == UNARY_MESSAGES_PTR)
@@ -1811,6 +1823,7 @@ void print_global_variables(FILE *fp)
     unsigned int g_nof_debug_expressions;
     debug_expression_t **g_debug_expressions;
     stack_type *g_inspected_objects;
+    unsigned int g_debug_id_count;
   */
 
   unsigned int i;
@@ -2043,6 +2056,8 @@ void print_global_variables(FILE *fp)
   g_sub_type = OBJECT_PTR1;
   print_native_ptr_reference(fp, STACK_TYPE_PTR, (void *)g_inspected_objects);
   g_sub_type = NONE;
+
+  fprintf(fp, ", \"g_debug_id_count\" : %d", g_debug_id_count);
 
   fprintf(fp, " } ");
 }
@@ -2831,6 +2846,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                          ref2,
                                                                                          obj_ht,
                                                                                          native_ptr_ht);
+    bin_arg->id = JSON_get_array_item(ptr_entry, 2)->ivalue;
 
     return (void *)bin_arg;
   }
@@ -2860,6 +2876,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                          ref3,
                                                                                          obj_ht,
                                                                                          native_ptr_ht);
+    kw_arg->id = JSON_get_array_item(ptr_entry, 3)->ivalue;
 
     return (void *)kw_arg;
   }
@@ -3238,6 +3255,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                            ref1,
                                                                            obj_ht,
                                                                            native_ptr_ht);
+      basic_exp->id = JSON_get_array_item(ptr_entry, 2)->ivalue;
     }
     else if(!strcmp(JSON_get_array_item(ptr_entry, 0)->strvalue, "PRIMARY_PLUS_MESSAGES"))
     {
@@ -3263,9 +3281,11 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                               ref3,
                                                                                               obj_ht,
                                                                                               native_ptr_ht);
+      basic_exp->id = JSON_get_array_item(ptr_entry, 4)->ivalue;
     }
     else
       assert(false);
+
 
     return (void *)basic_exp;
   }
@@ -4278,6 +4298,9 @@ int load_from_image(char *image_file_name)
                                         object_hashtable,
                                         native_ptr_hashtable);
   /////
+
+  //38. g_debug_id_count
+  g_debug_id_count = JSON_get_object_item(global_variables, "g_debug_id_count")->ivalue;
 
   initialize_frequently_used_selectors();
 

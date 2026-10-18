@@ -62,6 +62,7 @@ extern debug_expression_t  **g_debug_expressions;
 extern stack_type           *g_inspected_objects;
 extern unsigned int          g_nof_native_fns;
 extern native_fn_src_mapping_t *g_native_fn_objects;
+extern unsigned int          g_debug_id_count;
 
 extern OBJECT_PTR NIL;
 
@@ -454,6 +455,8 @@ void print_diagnostics(char *fname)
     fprintf(fp, "source = %s\n", g_native_fn_objects[i].source);
     fprintf(fp, "-----\n");
   }
+
+  fprintf(fp, "g_debug_id_count: %d\n", g_debug_id_count);
 
   fclose(fp);
 }

@@ -68,6 +68,8 @@ BOOLEAN contains_duplicates(unsigned int, char **);
 
 stack_type *fetch_class_from_pkg(char *);
 
+void free_executable_code(executable_code_t *);
+
 executable_code_t *g_exp;
 int g_open_square_brackets;
 BOOLEAN g_loading_core_library;
@@ -81,6 +83,11 @@ BOOLEAN g_system_initialized;
 enum UIMode g_ui_mode;
 
 char *g_class_docstring = NULL;
+
+//to assign to the 'id' field of
+//basic_expression_t, keyword_argument_t,
+//and binary_argument_t
+unsigned int g_debug_id_count = 0;
 
 extern OBJECT_PTR NIL;
 extern OBJECT_PTR MESSAGE_SEND;
@@ -381,6 +388,7 @@ basic_expression:
       basic_exp->prim = $1;
       basic_exp->msg = NULL;
       basic_exp->cascaded_msgs = NULL;
+      basic_exp->id = g_debug_id_count++;
       $$ = basic_exp;
     }
     |
@@ -391,6 +399,7 @@ basic_expression:
       basic_exp->prim = $1;
       basic_exp->msg = $2;
       basic_exp->cascaded_msgs = $3;
+      basic_exp->id = g_debug_id_count++;
       $$ = basic_exp;
     }
     ;
@@ -703,6 +712,7 @@ binary_argument:
       binary_argument_t *bin_arg = (binary_argument_t *)GC_MALLOC(sizeof(binary_argument_t));
       bin_arg->prim = $1;
       bin_arg->unary_messages = $2;
+      bin_arg->id = g_debug_id_count++;
       $$ = bin_arg;
     }
     ;
@@ -728,6 +738,7 @@ keyword_argument:
       kw_arg->prim = $1;
       kw_arg->unary_messages = $2;
       kw_arg->binary_messages = $3;
+      kw_arg->id = g_debug_id_count++;
       $$ = kw_arg;
     }
     ;
@@ -1298,6 +1309,9 @@ void repl()
     ret = repl_ret_val;
 
   g_last_eval_result = ret;
+
+  free_executable_code(g_exp);
+  g_exp = NULL;
 }
 
 #endif

@@ -45,6 +45,8 @@ void show_object_inspector_window();
 
 void show_info_dialog(char *);
 
+executable_code_t *clone_executable_code(executable_code_t *);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -530,9 +532,9 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
     //g_exp = prev_exp;
 
     if(instance_method)
-      ret = add_instance_method(class_obj, selector, exp, code_str, g_exp);
+      ret = add_instance_method(class_obj, selector, exp, code_str, clone_executable_code(g_exp));
     else
-      ret = add_class_method(class_obj, selector, exp, code_str, g_exp);
+      ret = add_class_method(class_obj, selector, exp, code_str, clone_executable_code(g_exp));
 
     g_exp = prev_exp;
 

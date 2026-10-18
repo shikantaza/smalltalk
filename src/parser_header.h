@@ -115,6 +115,10 @@ typedef struct basic_expression
   struct primary *prim;
   struct message *msg;
   struct cascaded_messages *cascaded_msgs;
+
+  //used for matching the basic expression
+  //with the one to highlight in the debugger
+  unsigned int id;
 } basic_expression_t;
 
 typedef struct cascaded_messages
@@ -206,6 +210,10 @@ typedef struct binary_argument
 {
   struct primary *prim;
   struct unary_messages *unary_messages;
+
+  //used for matching the basic expression
+  //with the one to highlight in the debugger
+  unsigned int id;
 } binary_argument_t;
 
 typedef struct keyword_message
@@ -225,6 +233,10 @@ typedef struct keyword_argument
   struct primary *prim;
   struct unary_messages *unary_messages;
   struct binary_messages *binary_messages;
+
+  //used for matching the basic expression
+  //with the one to highlight in the debugger
+  unsigned int id;
 } keyword_argument_t;
 
 enum LiteralType

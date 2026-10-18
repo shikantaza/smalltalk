@@ -339,7 +339,7 @@ void render_basic_expression(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
 	//debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
         debug_expression_t *debug_exp = g_debug_expressions[get_int_value(entry->exp_ptr)];
 
-	if(debug_exp->type == DEBUG_BASIC_EXPRESSION && debug_exp->be == b)
+	if(debug_exp->type == DEBUG_BASIC_EXPRESSION && debug_exp->be->id == b->id)
 	  my_highlight = true;
       }
     }
@@ -596,7 +596,7 @@ void render_binary_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
       //debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
       debug_expression_t *debug_exp = g_debug_expressions[get_int_value(entry->exp_ptr)];
 
-      if(debug_exp->type == DEBUG_BINARY_ARGUMENT && debug_exp->bin_arg == arg)
+      if(debug_exp->type == DEBUG_BINARY_ARGUMENT && debug_exp->bin_arg->id == arg->id)
 	my_highlight = true;
     }
   }
@@ -646,7 +646,7 @@ void render_keyword_argument(GtkTextBuffer *code_buf, int *indents, BOOLEAN high
       //debug_expression_t *debug_exp = (debug_expression_t *)extract_ptr(entry->exp_ptr);
       debug_expression_t *debug_exp = g_debug_expressions[get_int_value(entry->exp_ptr)];
 
-      if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT && debug_exp->kw_arg == arg)
+      if(debug_exp->type == DEBUG_KEYWORD_ARGUMENT && debug_exp->kw_arg->id == arg->id)
 	my_highlight = true;
     }
   }

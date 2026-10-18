@@ -25,17 +25,26 @@ static void free_statements(statement_t *);
 static void free_return_statement(return_statement_t *);
 static void free_expression(expression_t *);
 static void free_assignment(assignment_t *);
-static void free_basic_expression(basic_expression_t *);
+
+//needed outside this file, so not static
+void free_basic_expression(basic_expression_t *);
+
 static void free_primary(primary_t *);
-static void free_block_constructor(block_constructor_t *);
+
+//needed outside this file, so not static
+void free_block_constructor(block_constructor_t *);
+
 static void free_block_arguments(block_arguments_t *);
 static void free_unary_messages(unary_messages_t *);
 static void free_binary_messages(binary_messages_t *);
 static void free_cascaded_messages(cascaded_messages_t *);
 static void free_message(message_t *);
 static void free_keyword_message(keyword_message_t *);
-static void free_binary_argument(binary_argument_t *);
-static void free_keyword_argument(keyword_argument_t *);
+
+//needed outside this file, so not static
+void free_binary_argument(binary_argument_t *);
+void free_keyword_argument(keyword_argument_t *);
+
 static void free_literal(literal_t *);
 static void free_array_elements(array_elements_t *);
 static void free_number(number_t *);
@@ -119,7 +128,7 @@ static void free_literal(literal_t *lit)
 
 /* ---- messages ---- */
 
-static void free_binary_argument(binary_argument_t *ba)
+void free_binary_argument(binary_argument_t *ba)
 {
   if (!ba) return;
   free_primary(ba->prim);
@@ -144,7 +153,7 @@ static void free_binary_messages(binary_messages_t *bms)
   free(bms);
 }
 
-static void free_keyword_argument(keyword_argument_t *ka)
+void free_keyword_argument(keyword_argument_t *ka)
 {
   if (!ka) return;
   free_primary(ka->prim);
@@ -207,7 +216,7 @@ static void free_primary(primary_t *p)
   free(p);
 }
 
-static void free_basic_expression(basic_expression_t *be)
+void free_basic_expression(basic_expression_t *be)
 {
   if (!be) return;
   free_primary(be->prim);
@@ -252,7 +261,7 @@ static void free_statements(statement_t *s)
   }
 }
 
-static void free_block_constructor(block_constructor_t *bc)
+void free_block_constructor(block_constructor_t *bc)
 {
   if (!bc) return;
   free(bc->docstring);

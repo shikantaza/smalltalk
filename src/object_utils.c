@@ -77,6 +77,7 @@ extern OBJECT_PTR Character;
 extern OBJECT_PTR Symbol;
 
 extern debug_expression_t  **g_debug_expressions;
+extern unsigned int g_nof_debug_expressions;
 
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
@@ -1202,6 +1203,13 @@ void free_method(method_t *);
 void free_method_binding_env(method_binding_env_t *);
 void free_class_object(class_object_t *);
 void free_executable_code(executable_code_t *);
+//
+
+//external declarations
+void free_basic_expression(basic_expression_t *);
+void free_binary_argument(binary_argument_t *);
+void free_keyword_argument(keyword_argument_t *);
+//
 
 void free_object_ptr(OBJECT_PTR obj)
 {
@@ -1364,10 +1372,20 @@ void cleanup()
   free(g_string_literals);
   //
 
-  //the AST components need not be freed here
-  //as they will be freed when we free the
-  //root executable_code_t object
+  //g_debug_expressions
+  for(i=0; i<g_nof_debug_expressions; i++)
+  {
+    free_basic_expression(g_debug_expressions[i]->be);
+    free_binary_argument(g_debug_expressions[i]->bin_arg);
+    free_keyword_argument(g_debug_expressions[i]->kw_arg);
+    free(g_debug_expressions[i]);
+    g_debug_expressions[i] = NULL;
+  }
+
   free(g_debug_expressions);
+  g_debug_expressions = NULL;
+  g_nof_debug_expressions = 0;
+  //
 }
 
 //TODO:

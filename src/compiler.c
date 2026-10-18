@@ -88,6 +88,10 @@ void create_Character();
 void create_DyadicValuable();
 void create_Symbol();
 
+binary_argument_t *clone_binary_argument(const binary_argument_t *);
+keyword_argument_t *clone_keyword_argument(const keyword_argument_t *);
+basic_expression_t *clone_basic_expression(const basic_expression_t *);
+
 package_t *g_compiler_package;
 package_t *g_smalltalk_symbols;
 
@@ -210,6 +214,9 @@ OBJECT_PTR CDDDR(OBJECT_PTR x)   { return cdr(cdr(cdr(x))); }
 
 int add_debug_expression(debug_expression_t *exp)
 {
+  for(int i=0; i<g_nof_debug_expressions; i++)
+    assert(g_debug_expressions[i] != exp);
+
   g_nof_debug_expressions++;
 
   debug_expression_t **temp = (debug_expression_t **)GC_REALLOC(g_debug_expressions,
@@ -628,7 +635,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
     debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
     debug_exp->type = DEBUG_BASIC_EXPRESSION;
-    debug_exp->be = be;
+    debug_exp->be = clone_basic_expression(be);
 
     /* if(!pinned_items) */
     /*   pinned_items = queue_create(); */
@@ -683,7 +690,7 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
         unsigned int i;
         unsigned int nof_msgs = cm->nof_cascaded_msgs;
         for(i=0; i< nof_msgs; i++)
-          res1 = cons(convert_msg(convert_int_to_object(add_debug_expression(debug_exp)),
+          res1 = cons(convert_msg(convert_int_to_object(g_nof_debug_expressions-1), //to avoid adding the debug_exp object again
 				  be->prim,
                                   cm->cascaded_msgs[i].unary_messages,
                                   cm->cascaded_msgs[i].binary_messages,
@@ -874,7 +881,7 @@ OBJECT_PTR convert_keyword_argument_to_lisp(keyword_argument_t *k)
   debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
   debug_exp->type = DEBUG_KEYWORD_ARGUMENT;
-  debug_exp->kw_arg = k;
+  debug_exp->kw_arg = clone_keyword_argument(k);
 
   /* if(!pinned_items) */
   /*   pinned_items = queue_create(); */
@@ -1005,7 +1012,7 @@ OBJECT_PTR convert_binary_argument_to_lisp(binary_argument_t *arg)
   debug_expression_t *debug_exp = (debug_expression_t *)GC_MALLOC(sizeof(debug_expression_t));
 
   debug_exp->type = DEBUG_BINARY_ARGUMENT;
-  debug_exp->bin_arg = arg;
+  debug_exp->bin_arg = clone_binary_argument(arg);
 
   /* if(!pinned_items) */
   /*   pinned_items = queue_create(); */
