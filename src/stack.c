@@ -88,6 +88,9 @@ unsigned int stack_count(stack_type *s)
 void stack_empty(stack_type *s)
 {
   s->count = 0;
+  //it is the stack client's responsibility
+  //to free the individual data entries
+  free(s->data);
   s->data = NULL;
 }
 

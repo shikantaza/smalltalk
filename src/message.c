@@ -423,7 +423,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   {
     cont = args[0];
 
-    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
                                                      closure_form, 0, NULL, cont, NIL, false));
@@ -478,7 +479,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg1 = args[0];
     cont = args[1];
 
-    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
                                                      closure_form, 1, args, cont, NIL, false));
@@ -534,7 +536,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg2 = args[1];
     cont = args[2];
 
-    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
                                                      closure_form, 2, args, cont, NIL, false));
@@ -591,7 +594,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg3 = args[2];
     cont = args[3];
 
-    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
                                                      closure_form, 3, args, cont, NIL, false));
@@ -649,7 +653,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     arg4 = args[3];
     cont = args[4];
 
-    g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,cont), g_method_call_stack);
 
     stack_push(g_call_chain, create_call_chain_entry(exp_ptr, super, receiver, selector, m,
                                                      closure_form, 4, args, cont, NIL, false));
@@ -731,7 +736,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #endif      
     }
 
-    g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
+    //TODO: g_method_call_stack is not being used, actually; can be removed altogether
+    //g_method_call_stack = cons(cons(selector,stack_args[n-1]), g_method_call_stack);
 
     stack_push(g_call_chain,
                create_call_chain_entry(exp_ptr, super, receiver, selector, m,

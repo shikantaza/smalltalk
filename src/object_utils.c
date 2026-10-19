@@ -79,6 +79,28 @@ extern OBJECT_PTR Symbol;
 extern debug_expression_t  **g_debug_expressions;
 extern unsigned int g_nof_debug_expressions;
 
+extern OBJECT_PTR g_message_selector;
+extern OBJECT_PTR g_idclo;
+extern OBJECT_PTR g_msg_snd_closure;
+extern OBJECT_PTR g_msg_snd_super_closure;
+extern OBJECT_PTR g_compile_time_method_selector;
+extern OBJECT_PTR g_run_till_cont;
+
+extern stack_type *g_exception_environment;
+extern stack_type *g_exception_contexts;
+extern stack_type *g_breakpointed_methods;
+
+extern OBJECT_PTR g_method_call_stack;
+
+extern exception_handler_t *g_active_handler;
+
+extern OBJECT_PTR g_debug_cont;
+
+extern stack_type *g_handler_environment;
+extern stack_type *g_signalling_environment;
+
+extern stack_type *g_inspected_objects;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   if(!is_valid_object_shallow(obj))
@@ -1203,6 +1225,7 @@ void free_method(method_t *);
 void free_method_binding_env(method_binding_env_t *);
 void free_class_object(class_object_t *);
 void free_executable_code(executable_code_t *);
+void free_exception_env(stack_type *);
 //
 
 //external declarations
@@ -1253,7 +1276,12 @@ void free_object_ptr(OBJECT_PTR obj)
   }
   //class objects will be freed elsewhere
   else if(IS_NATIVE_FN_OBJECT(obj))
-    free(get_nativefn_value(obj));
+  {
+    native_fn_obj_t *nf_obj = (native_fn_obj_t *)extract_ptr(obj);
+    nativefn nf = nf_obj->nf;
+    if(nf != (nativefn)message_send && nf != (nativefn)message_send_super)
+      free(nf_obj);
+  }
 }
 
 void free_binding_env(binding_env_t *env)
@@ -1273,6 +1301,9 @@ void free_binding_env(binding_env_t *env)
 
 void free_method(method_t *m)
 {
+  if(!m)
+    return;
+
   //only these members have to be freed;
   //the rest will be freed when the
   //underlying structures are freed
@@ -1281,6 +1312,7 @@ void free_method(method_t *m)
   free_object_ptr(m->closed_syms);
   free_object_ptr(m->temporaries);
   free_executable_code(m->exec_code);
+  free(m);
 }
 
 void free_method_binding_env(method_binding_env_t *env)
@@ -1292,6 +1324,7 @@ void free_method_binding_env(method_binding_env_t *env)
   for(i=0; i<n; i++)
   {
     free_method(env->bindings[i]->val);
+    env->bindings[i]->val = NULL;
     free(env->bindings[i]);
   }
 
@@ -1323,6 +1356,70 @@ void free_class_object(class_object_t *cls_obj)
     free(cls_obj->docstring);
 
   free(cls_obj->aliases);
+}
+
+void free_exception_handler(exception_handler_t *h)
+{
+  if(!h)
+    return;
+
+  free_object_ptr(h->protected_block);
+  free_object_ptr(h->selector);
+  free_object_ptr(h->exception_action);
+
+  //not freeing it here; this will be handled
+  //when the exception environments are freed
+  //elsewhere
+  //free_exception_env(h->exception_environment);
+
+  free_object_ptr(h->cont);
+  free(h);
+}
+
+void free_exception_env(stack_type *env)
+{
+  if(!env)
+    return;
+
+  while(!stack_is_empty(env))
+    free_exception_handler((exception_handler_t *)stack_pop(env));
+
+  stack_empty(env);
+  free(env);
+}
+
+void free_exception_contexts(stack_type *contexts)
+{
+  while(!stack_is_empty(contexts))
+    free_object_ptr((OBJECT_PTR)stack_pop(contexts));
+  stack_empty(contexts);
+  free(contexts);
+}
+
+void free_breakpointed_methods(stack_type *breakpointed_methods)
+{
+  if(!breakpointed_methods)
+    return;
+
+  //not freeing the underlying method_t objects as
+  //they would have been freed elsewhere
+  while(!stack_is_empty(breakpointed_methods))
+    stack_pop(breakpointed_methods);
+  stack_empty(breakpointed_methods);
+  free(breakpointed_methods);
+}
+
+void free_inspected_objects(stack_type *inspected_objects)
+{
+  if(!inspected_objects)
+    return;
+
+  //not freeing the underlying OBJECT_PTRs as
+  //they would have been freed elsewhere
+  while(!stack_is_empty(inspected_objects))
+    stack_pop(inspected_objects);
+  stack_empty(inspected_objects);
+  free(inspected_objects);
 }
 
 void cleanup()
@@ -1375,9 +1472,15 @@ void cleanup()
   //g_debug_expressions
   for(i=0; i<g_nof_debug_expressions; i++)
   {
-    free_basic_expression(g_debug_expressions[i]->be);
-    free_binary_argument(g_debug_expressions[i]->bin_arg);
-    free_keyword_argument(g_debug_expressions[i]->kw_arg);
+    if(g_debug_expressions[i]->type == DEBUG_BASIC_EXPRESSION)
+      free_basic_expression(g_debug_expressions[i]->be);
+
+    if(g_debug_expressions[i]->type == DEBUG_BINARY_ARGUMENT)
+      free_binary_argument(g_debug_expressions[i]->bin_arg);
+
+    if(g_debug_expressions[i]->type == DEBUG_KEYWORD_ARGUMENT)
+      free_keyword_argument(g_debug_expressions[i]->kw_arg);
+
     free(g_debug_expressions[i]);
     g_debug_expressions[i] = NULL;
   }
@@ -1386,6 +1489,52 @@ void cleanup()
   g_debug_expressions = NULL;
   g_nof_debug_expressions = 0;
   //
+
+  free_object_ptr(g_message_selector);
+
+  //this should not be freed here,
+  //it will be taken care of when
+  //g_method_call_stack is freed
+  //free_object_ptr(g_idclo);
+
+  free_object_ptr(g_msg_snd_closure);
+  free_object_ptr(g_msg_snd_super_closure);
+  free_object_ptr(g_compile_time_method_selector);
+  free_object_ptr(g_run_till_cont);
+
+  free_exception_env(g_exception_environment);
+  g_exception_environment = NULL;
+
+  free_exception_contexts(g_exception_contexts);
+  g_exception_contexts = NULL;
+
+  free_breakpointed_methods(g_breakpointed_methods);
+  g_breakpointed_methods = NULL;
+
+  free_object_ptr(g_method_call_stack);
+
+  //should g_last_eval_result be freed at all?
+  //if yes, where? repl cleanup?
+
+  free_exception_handler(g_active_handler);
+  g_active_handler = NULL;
+
+  free_object_ptr(g_debug_cont);
+
+  //not freeing it here; this will be handled
+  //when the exception environments are freed
+  //elsewhere
+  //free_exception_env(g_handler_environment);
+  g_handler_environment = NULL;
+
+  //not freeing it here; this will be handled
+  //when the exception environments are freed
+  //elsewhere
+  //free_exception_env(g_signalling_environment);
+  g_signalling_environment = NULL;
+
+  free_inspected_objects(g_inspected_objects);
+  g_inspected_objects = NULL;
 }
 
 //TODO:
