@@ -146,6 +146,7 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
   unsigned int len = 0;
 
   len += sprintf(buf+len, "uintptr_t %s(", fname);
+  free(fname);
 
   OBJECT_PTR params = second(second(lambda_form));
 
@@ -161,6 +162,7 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
       len += sprintf(buf+len, ", ");
 
     len += sprintf(buf+len, "uintptr_t %s", pname);
+    free(pname);
 
     rest = cdr(rest);
     first_time = false;
@@ -197,6 +199,7 @@ unsigned int build_c_string(OBJECT_PTR lambda_form, char *buf, BOOLEAN serialize
   //len += sprintf(buf+len, "printf(\"IS_CLOSURE_OBJECT() returns true\\n\");\n");
 
   len += sprintf(buf+len, "set_most_recent_closure(%s);\n", closure_name);
+  free(closure_name);
 
   len += sprintf(buf+len, "uintptr_t nil = 1;\n");
 
@@ -232,6 +235,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
   {
     char *var = extract_variable_string(exp, serialize_flag);
     len += sprintf(buf+len, "%s;\n", var);
+    free(var);
   }
   else if(car(exp) == LET || car(exp) == LET1)
   {
@@ -256,6 +260,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
         //uncomment for debugging
         //len += sprintf(buf+len, "printf(\"%%p\\n\", %s);\n", var);
       }
+      free(var);
 
       rest = cdr(rest);
     }
@@ -298,6 +303,7 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
         {
           char *arg_name = extract_variable_string(car(rest), serialize_flag);
           len += sprintf(buf+len, "%s%s", (i == 2 && !strcmp(var, "create_closure")) ? "(nativefn)" : "", arg_name);
+	  free(arg_name);
         }
         else
           len += build_c_fragment(car(rest), buf+len, true, serialize_flag);
@@ -309,6 +315,8 @@ unsigned int build_c_fragment(OBJECT_PTR exp, char *buf, BOOLEAN nested_call, BO
 
       len += sprintf(buf+len, ")");
     }
+
+    free(var);
 
     if(!nested_call)
     {

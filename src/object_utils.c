@@ -1279,7 +1279,9 @@ void free_object_ptr(OBJECT_PTR obj)
   {
     native_fn_obj_t *nf_obj = (native_fn_obj_t *)extract_ptr(obj);
     nativefn nf = nf_obj->nf;
-    if(nf != (nativefn)message_send && nf != (nativefn)message_send_super)
+    if(nf != (nativefn)message_send &&
+       nf != (nativefn)message_send_super &&
+       nf != (nativefn)identity_function)
       free(nf_obj);
   }
 }
@@ -1535,7 +1537,18 @@ void cleanup()
 
   free_inspected_objects(g_inspected_objects);
   g_inspected_objects = NULL;
+
+  //g_native_fn_objects
+  for(i=0; i<g_nof_native_fns; i++)
+  {
+    free(g_native_fn_objects[i].fname);
+    g_native_fn_objects[i].fname = NULL;
+
+    free(g_native_fn_objects[i].source);
+    g_native_fn_objects[i].source = NULL;
+  }
+
+  free(g_native_fn_objects);
+  //
 }
 
-//TODO:
-//other globals (see print_diagnostics() or print_global_variables())
