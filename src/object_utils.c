@@ -30,6 +30,8 @@ int g_gensym_count = 0;
 unsigned int g_nof_native_fns = 0;
 native_fn_src_mapping_t *g_native_fn_objects = NULL;
 
+stack_type *g_compiler_memory_objects = NULL;
+
 extern unsigned int g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
 
@@ -131,6 +133,11 @@ uintptr_t object_alloc(int size, int tag)
     error("Unable to allocate memory\n");
     exit(1);
   }
+
+  if(!g_compiler_memory_objects)
+    g_compiler_memory_objects = stack_create();
+
+  stack_push(g_compiler_memory_objects, (void *)ret);
   
   return (uintptr_t)ret;
 }
@@ -1549,6 +1556,15 @@ void cleanup()
   }
 
   free(g_native_fn_objects);
+  //
+
+  //free the CONS and other Lisp objects
+  //created during compilation
+  while(!stack_is_empty(g_compiler_memory_objects))
+    free(stack_pop(g_compiler_memory_objects));
+
+  stack_empty(g_compiler_memory_objects);
+  g_compiler_memory_objects = NULL;
   //
 }
 
