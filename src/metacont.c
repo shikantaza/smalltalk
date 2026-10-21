@@ -142,9 +142,26 @@ OBJECT_PTR let_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
   new_vals[nof_vals] = val;
 
   metacont_closure_t *mcls = mcps(second(first(bindings)));
-  
-  return mcls->mfn(mcls,
-                   create_reg_let_closure(cdr(bindings), full_bindings, body, nof_vals+1, new_vals, (reg_closure_t *)cls->data));
+  reg_closure_t *rcls = create_reg_let_closure(cdr(bindings), full_bindings, body, nof_vals+1, new_vals, (reg_closure_t *)cls->data);
+
+  OBJECT_PTR ret = mcls->mfn(mcls,
+                             rcls);
+
+  free(new_vals);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
+
+  return ret;
 }
 
 OBJECT_PTR let_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
@@ -170,11 +187,19 @@ OBJECT_PTR let_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
   ret = concat(2, ret, list(1, list(2, car(car(reversed_full_bindings)), val)));
 
   metacont_closure_t *mcls = mcps(body);
-  
+
+  OBJECT_PTR temp = mcls->mfn(mcls, (reg_closure_t *)cls->data);
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
+
   return list(3,
               LET,
               ret,
-              mcls->mfn(mcls, (reg_closure_t *)cls->data));
+              temp);
 }
 
 reg_closure_t *create_reg_let_closure(OBJECT_PTR    bindings,
@@ -221,7 +246,22 @@ OBJECT_PTR lambda_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   OBJECT_PTR body   = mcls->closed_vals[1];
 
   metacont_closure_t *mcls1 = mcps(body);
-  
+  reg_closure_t *rcls = id_to_mc(i_kcall);
+
+  OBJECT_PTR temp = mcls1->mfn(mcls1, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
   return list(3,
               LET,
               list(1,
@@ -231,7 +271,7 @@ OBJECT_PTR lambda_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
                              LAMBDA,
                              concat(2, params, list(1, i_kcall)),
                              list(2, SAVE_CONTINUATION, i_kcall),
-                             mcls1->mfn(mcls1, id_to_mc(i_kcall))))),
+                             temp))),
               cls->fn(cls, i_abs));  
 }
 
@@ -244,8 +284,23 @@ OBJECT_PTR let_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   OBJECT_PTR e = second(first(bindings));
   
   metacont_closure_t *mcls1 = mcps(e);
-  
-  return mcls1->mfn(mcls1, create_reg_let_closure(cdr(bindings), full_bindings, body, 0, NULL, cls));  
+  reg_closure_t *rcls = create_reg_let_closure(cdr(bindings), full_bindings, body, 0, NULL, cls);
+
+  OBJECT_PTR temp = mcls1->mfn(mcls1, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR primop_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
@@ -264,9 +319,25 @@ OBJECT_PTR primop_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
   new_vals[nof_vals] = val;
 
   metacont_closure_t *mcls = mcps(first(operands));
-  
-  return mcls->mfn(mcls,
-                   create_reg_primop_closure(operator, cdr(operands), nof_vals+1, new_vals, (reg_closure_t *)cls->data));
+  reg_closure_t *rcls = create_reg_primop_closure(operator, cdr(operands), nof_vals+1, new_vals, (reg_closure_t *)cls->data);
+  OBJECT_PTR temp =  mcls->mfn(mcls,
+                               rcls);
+
+  free(new_vals);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR primop_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
@@ -330,8 +401,23 @@ OBJECT_PTR primop_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   OBJECT_PTR e = first(operands);
   
   metacont_closure_t *mcls1 = mcps(e);
-  
-  return mcls1->mfn(mcls1, create_reg_primop_closure(operator, cdr(operands), 0, NULL, cls));  
+  reg_closure_t *rcls = create_reg_primop_closure(operator, cdr(operands), 0, NULL, cls);
+
+  OBJECT_PTR temp = mcls1->mfn(mcls1, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR app_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
@@ -349,9 +435,26 @@ OBJECT_PTR app_cont_fn_recur(reg_closure_t *cls, OBJECT_PTR val)
   new_vals[nof_vals] = val;
 
   metacont_closure_t *mcls = mcps(first(exp));
+
+  reg_closure_t *rcls = create_reg_app_closure(cdr(exp), nof_vals+1, new_vals, (reg_closure_t *)cls->data);
   
-  return mcls->mfn(mcls,
-                   create_reg_app_closure(cdr(exp), nof_vals+1, new_vals, (reg_closure_t *)cls->data));
+  OBJECT_PTR temp = mcls->mfn(mcls,
+                              rcls);
+  free(new_vals);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR app_cont_fn_non_recur(reg_closure_t *cls, OBJECT_PTR val)
@@ -407,8 +510,23 @@ OBJECT_PTR app_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   OBJECT_PTR e = first(exp);
   
   metacont_closure_t *mcls1 = mcps(e);
-  
-  return mcls1->mfn(mcls1, create_reg_app_closure(cdr(exp), 0, NULL, cls));  
+
+  reg_closure_t *rcls = create_reg_app_closure(cdr(exp), 0, NULL, cls);
+  OBJECT_PTR temp = mcls1->mfn(mcls1, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR ret_from_fn2(reg_closure_t *cls, OBJECT_PTR val)
@@ -438,8 +556,23 @@ OBJECT_PTR ret_from_fn1(reg_closure_t *cls, OBJECT_PTR val)
   OBJECT_PTR ret_exp = cls->closed_vals[0];
 
   metacont_closure_t *mcls = mcps(ret_exp);
+  reg_closure_t *rcls = create_reg_ret_from_closure2(val);
 
-  return mcls->mfn(mcls, create_reg_ret_from_closure2(val));
+  OBJECT_PTR temp = mcls->mfn(mcls, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
+
+  return temp;
 }
 
 reg_closure_t *create_reg_ret_from_closure1(OBJECT_PTR ret_exp, reg_closure_t *cls)
@@ -464,8 +597,23 @@ OBJECT_PTR return_from_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
   OBJECT_PTR ret_exp = third(exp);
   
   metacont_closure_t *mcls1 = mcps(fn_exp);
-  
-  return mcls1->mfn(mcls1, create_reg_ret_from_closure1(ret_exp, cls));  
+  reg_closure_t *rcls = create_reg_ret_from_closure1(ret_exp, cls);
+
+  OBJECT_PTR temp = mcls1->mfn(mcls1, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR call_cc_reg_fn(reg_closure_t *cls, OBJECT_PTR val)
@@ -493,7 +641,15 @@ OBJECT_PTR call_cc_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
 
   metacont_closure_t *mcls1 = mcps(call_cc_exp);
 
-  return mcls1->mfn(mcls1, create_call_cc_reg_closure(cls));
+  OBJECT_PTR temp = mcls1->mfn(mcls1, create_call_cc_reg_closure(cls));
+
+  free(mcls1->closed_vals);
+  mcls1->closed_vals = NULL;
+
+  free(mcls1);
+  mcls1 = NULL;
+
+  return temp;
 }
 
 OBJECT_PTR break_metacont_fn(metacont_closure_t *mcls, reg_closure_t *cls)
@@ -616,10 +772,25 @@ OBJECT_PTR mcps_transform(OBJECT_PTR exp)
   OBJECT_PTR i_k = gensym();
   
   metacont_closure_t *mcls = mcps(exp);
+  reg_closure_t *rcls = id_to_mc(i_k);
+
+  OBJECT_PTR temp = mcls->mfn(mcls, rcls);
+
+  free(rcls->closed_vals);
+  rcls->closed_vals = NULL;
+
+  free(rcls);
+  rcls = NULL;
+
+  free(mcls->closed_vals);
+  mcls->closed_vals = NULL;
+
+  free(mcls);
+  mcls = NULL;
 
   return list(4,
               LAMBDA,
               list(1, i_k),
               list(2, SAVE_CONTINUATION, i_k),
-              mcls->mfn(mcls, id_to_mc(i_k)));
+              temp);
 }

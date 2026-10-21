@@ -103,6 +103,9 @@ extern stack_type *g_signalling_environment;
 
 extern stack_type *g_inspected_objects;
 
+extern char **autocomplete_words;
+extern unsigned int nof_autocomplete_words;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   if(!is_valid_object_shallow(obj))
@@ -1565,6 +1568,13 @@ void cleanup()
 
   stack_empty(g_compiler_memory_objects);
   g_compiler_memory_objects = NULL;
+  //
+
+  //auto_complete_words
+  for(i=0; i<nof_autocomplete_words; i++)
+    free(autocomplete_words[i]);
+
+  free(autocomplete_words);
   //
 }
 

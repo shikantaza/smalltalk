@@ -335,8 +335,6 @@ char *extract_variable_string(OBJECT_PTR var, BOOLEAN serialize_flag)
 
   if(IS_SYMBOL_OBJECT(var))
   {
-    char *raw_name = GC_strdup(get_symbol_name(var));
-
     if(primop(var))
     {
       char *s = (char *)GC_MALLOC(40*sizeof(char));
@@ -380,7 +378,10 @@ char *extract_variable_string(OBJECT_PTR var, BOOLEAN serialize_flag)
         return convert_to_lower_case(convert_identifier(get_symbol_name(var)));
     }
     else
+    {
+      char *raw_name = GC_strdup(get_symbol_name(var));
       return convert_to_lower_case(replace_hyphens(raw_name));
+    }
   }
   else
   {

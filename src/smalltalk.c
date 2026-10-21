@@ -672,12 +672,16 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
 
     add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
+    free(fname1);
+
     lambdas = cdr(lambdas);
   }
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
+
+  free(fname);
 
   assert(nf);
   
@@ -844,12 +848,16 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
 
     add_native_fn_source(g_nof_compiler_states, fname1, get_function(state, fname1), source);
 
+    free(fname1);
+
     lambdas = cdr(lambdas);
   }
 
   char *fname = extract_variable_string(fourth(first(res)), true);
 
   nativefn nf = get_function(state, fname);
+
+  free(fname);
 
   assert(nf);
 
