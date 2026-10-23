@@ -589,5 +589,8 @@ stack_type *extract_arg_names(char *selector)
       stack_push(ret, stack_pop(staging_stack));
   }
 
+  stack_empty(staging_stack);
+  free(staging_stack);
+
   return ret;
 }

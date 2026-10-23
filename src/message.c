@@ -785,6 +785,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 
       retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
 
+      free(stack_args);
+
       return retval;
     }
 
@@ -795,6 +797,8 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
     assert(is_valid_object(closure_form));
 
     retval = call_nf(nf, closure_form, arg1, arg2, arg3, arg4, arg5, n, stack_args);
+
+    free(stack_args);
 
     return retval;
   }
@@ -827,7 +831,9 @@ OBJECT_PTR message_send_internal_va_list(BOOLEAN super,
     }
   }
 
-  return message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+  OBJECT_PTR ret = message_send_internal(super, receiver, exp_ptr, selector, count1, args);
+  free(args);
+  return ret;
 }
 
 OBJECT_PTR message_send(OBJECT_PTR msg_send_closure,

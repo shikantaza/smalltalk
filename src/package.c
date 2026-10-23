@@ -252,6 +252,9 @@ char *get_qualified_name(smalltalk_package_t *pkg)
       first_time = false;
   }
 
+  stack_empty(stack);
+  free(stack);
+
   return ret;
 }
 

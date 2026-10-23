@@ -106,6 +106,8 @@ extern stack_type *g_inspected_objects;
 extern char **autocomplete_words;
 extern unsigned int nof_autocomplete_words;
 
+extern stack_type *g_message_type_hierarchy;
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   if(!is_valid_object_shallow(obj))
@@ -1061,12 +1063,24 @@ OBJECT_PTR initialize_object(OBJECT_PTR obj)
 	OBJECT_PTR ret1 = nf(closure_form, g_idclo);
 
 	if(ret1 == NIL)
+	{
+	  while(!stack_is_empty(hier))
+	    stack_pop(hier);
+	  stack_empty(hier);
+	  free(hier);
+
 	  return NIL;
+	}
 
 	break;
       }
     }
   }
+
+  while(!stack_is_empty(hier))
+    stack_pop(hier);
+  stack_empty(hier);
+  free(hier);
 
   return obj;
 }
@@ -1341,6 +1355,7 @@ void free_method_binding_env(method_binding_env_t *env)
   }
 
   free(env->bindings);
+  free(env);
 }
 
 void free_class_object(class_object_t *cls_obj)
@@ -1434,25 +1449,39 @@ void free_inspected_objects(stack_type *inspected_objects)
   free(inspected_objects);
 }
 
+void free_package(smalltalk_package_t *pkg)
+{
+  unsigned int i;
+
+  if(!pkg)
+    return;
+
+  free(pkg->name);
+  pkg->name = NULL;
+
+  for(i=0; i<pkg->nof_classes; i++)
+  {
+    class_object_t *cls_obj = (class_object_t *)extract_ptr(pkg->member_classes[i]);
+    free_class_object(cls_obj);
+  }
+
+  free(pkg->children);
+  free(pkg->member_classes);
+  free(pkg);
+}
+
 void cleanup()
 {
-  unsigned int i, j;
+  unsigned int i;
 
   //g_smalltalk_packages
   for(i=0; i<g_nof_smalltalk_packages; i++)
   {
-    free(g_smalltalk_packages[i]->name);
-
-    for(j=0; j<g_smalltalk_packages[i]->nof_classes; j++)
-    {
-      class_object_t *cls_obj = (class_object_t *)extract_ptr(g_smalltalk_packages[i]->member_classes[j]);
-      free_class_object(cls_obj);
-    }
-
-    free(g_smalltalk_packages[i]->member_classes);
-    free(g_smalltalk_packages[i]);
+    free_package(g_smalltalk_packages[i]);
+    g_smalltalk_packages[i] = NULL;
   }
   free(g_smalltalk_packages);
+  g_smalltalk_packages = NULL;
   //
 
   free_binding_env(g_top_level);
@@ -1576,5 +1605,15 @@ void cleanup()
 
   free(autocomplete_words);
   //
+
+  //g_message_type_hierarchy
+  if(g_message_type_hierarchy)
+  {
+    while(!stack_is_empty(g_message_type_hierarchy))
+      free(stack_pop(g_message_type_hierarchy));
+    stack_empty(g_message_type_hierarchy);
+    free(g_message_type_hierarchy);
+    g_message_type_hierarchy = NULL;
+  }
 }
 

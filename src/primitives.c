@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "global_decls.h"
 #include "stack.h"
@@ -183,7 +184,13 @@ OBJECT_PTR get_continuation(OBJECT_PTR selector)
     call_chain_entry_t *entry = (call_chain_entry_t *)stack_pop(g_call_chain);
 
     while(entry->selector != selector && !stack_is_empty(g_call_chain))
+    {
+      free(entry->args);
+      free(entry);
       entry = (call_chain_entry_t *)stack_pop(g_call_chain);
+    }
+    free(entry->args);
+    free(entry);
   }
 
   if(g_run_till_cont == cont)

@@ -525,6 +525,8 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
 
   YY_BUFFER_STATE bs = yy_scan_string(buf);
 
+  free(buf);
+
   if(!yyparse())
   {
     OBJECT_PTR exp = convert_exec_code_to_lisp(g_exp);
@@ -641,7 +643,9 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  g_compile_time_method_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
+  char *prepended_sym_name = prepend_char(get_smalltalk_symbol_name(selector),'_');
+  g_compile_time_method_selector = get_symbol(prepended_sym_name);
+  free(prepended_sym_name);
 
   OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
@@ -817,7 +821,9 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
   assert(IS_SMALLTALK_SYMBOL_OBJECT(selector));
   assert(IS_CONS_OBJECT(code)); //TODO: maybe some stronger checks?
 
-  g_compile_time_method_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
+  char *prepended_sym_name = prepend_char(get_smalltalk_symbol_name(selector),'_');
+  g_compile_time_method_selector = get_symbol(prepended_sym_name);
+  free(prepended_sym_name);
   
   OBJECT_PTR selector_sym = g_compile_time_method_selector;
 
@@ -1161,8 +1167,18 @@ OBJECT_PTR object_is_kind_of(OBJECT_PTR closure, OBJECT_PTR candidate_class, OBJ
     OBJECT_PTR curr_parent = (OBJECT_PTR)stack_pop(hier);
 
     if(curr_parent == candidate_class)
+    {
+      while(!stack_is_empty(hier))
+        stack_pop(hier);
+      stack_empty(hier);
+      free(hier);
+
       return invoke_cont_on_val(cont, TRUE);
+    }
   }
+
+  stack_empty(hier);
+  free(hier);
 
   return invoke_cont_on_val(cont, FALSE);
 }
@@ -1348,6 +1364,8 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
 
   yy_scan_string(buf);
 
+  free(buf);
+
   if(!yyparse())
   {
     OBJECT_PTR closure_form = repl_common();
@@ -1415,6 +1433,7 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
   {
     char buf[300];
     sprintf(buf, "Unable to open file '%s'", file_name_str);
+    free(file_name_str);
     return create_and_signal_exception_with_text(Exception, get_string_obj(buf), cont);
   }
 
@@ -1422,6 +1441,8 @@ OBJECT_PTR smalltalk_load_file(OBJECT_PTR closure,
   parse_from_fp(fp);
 
   fclose(fp);
+
+  free(file_name_str);
 
   pop_if_top(entry);
   return invoke_cont_on_val(cont, receiver);
@@ -1447,7 +1468,9 @@ OBJECT_PTR smalltalk_add_remove_breakpoint(OBJECT_PTR closure,
 
   assert(IS_CLOSURE_OBJECT(cont));
 
-  OBJECT_PTR decorated_selector = get_symbol(prepend_char(get_smalltalk_symbol_name(selector),'_'));
+  char *prepended_sym_name = prepend_char(get_smalltalk_symbol_name(selector),'_');
+  OBJECT_PTR decorated_selector = get_symbol(prepended_sym_name);
+  free(prepended_sym_name);
 
   class_object_t *cls_obj = (class_object_t *)extract_ptr(class_obj);
 

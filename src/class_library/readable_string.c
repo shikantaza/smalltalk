@@ -273,14 +273,21 @@ OBJECT_PTR readable_string_select(OBJECT_PTR closure, OBJECT_PTR discriminator, 
   pop_if_top(entry);
 
   if(!strlen(ret_str))
+  {
+    free(ret_str);
     return invoke_cont_on_val(cont, NIL);
+  }
 
+  OBJECT_PTR ret_str_obj;
   if(IS_STRING_LITERAL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+    ret_str_obj = get_string_obj(ret_str);
   else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+    ret_str_obj = get_smalltalk_symbol(ret_str);
   else
-    return invoke_cont_on_val(cont, get_symbol(ret_str));
+    ret_str_obj = get_symbol(ret_str);
+
+  free(ret_str);
+  return invoke_cont_on_val(cont, ret_str_obj);
 }
 
 OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, OBJECT_PTR cont)
@@ -327,14 +334,21 @@ OBJECT_PTR readable_string_reject(OBJECT_PTR closure, OBJECT_PTR discriminator, 
   pop_if_top(entry);
 
   if(!strlen(ret_str))
+  {
+    free(ret_str);
     return invoke_cont_on_val(cont, NIL);
+  }
 
+  OBJECT_PTR ret_str_obj;
   if(IS_STRING_LITERAL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+    ret_str_obj = get_string_obj(ret_str);
   else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+    ret_str_obj = get_smalltalk_symbol(ret_str);
   else
-    return invoke_cont_on_val(cont, get_symbol(ret_str));
+    ret_str_obj = get_symbol(ret_str);
+
+  free(ret_str);
+  return invoke_cont_on_val(cont, ret_str_obj);
 }
 
 OBJECT_PTR readable_string_occurrences_of(OBJECT_PTR closure, OBJECT_PTR target, OBJECT_PTR cont)
@@ -549,12 +563,16 @@ OBJECT_PTR readable_string_collect(OBJECT_PTR closure, OBJECT_PTR transformer, O
 
   pop_if_top(entry);
 
+  OBJECT_PTR ret_str_obj;
   if(IS_STRING_LITERAL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+    ret_str_obj = get_string_obj(ret_str);
   else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+    ret_str_obj = get_smalltalk_symbol(ret_str);
   else
-    return invoke_cont_on_val(cont, get_symbol(ret_str));
+    ret_str_obj = get_symbol(ret_str);
+
+  free(ret_str);
+  return invoke_cont_on_val(cont, ret_str_obj);
 }
 
 OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJECT_PTR end, OBJECT_PTR cont)
@@ -598,12 +616,16 @@ OBJECT_PTR readable_string_substring(OBJECT_PTR closure, OBJECT_PTR start, OBJEC
 
   pop_if_top(entry);
 
+  OBJECT_PTR ret_str_obj;
   if(IS_STRING_LITERAL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_string_obj(ret_str));
+    ret_str_obj = get_string_obj(ret_str);
   else if(IS_SMALLTALK_SYMBOL_OBJECT(receiver))
-    return invoke_cont_on_val(cont, get_smalltalk_symbol(ret_str));
+    ret_str_obj = get_smalltalk_symbol(ret_str);
   else
-    return invoke_cont_on_val(cont, get_symbol(ret_str));
+    ret_str_obj = get_symbol(ret_str);
+
+  free(ret_str);
+  return invoke_cont_on_val(cont, ret_str_obj);
 }
 
 OBJECT_PTR readable_string_concat(OBJECT_PTR closure, OBJECT_PTR operand, OBJECT_PTR cont)

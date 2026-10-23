@@ -46,6 +46,8 @@ OBJECT_PTR convert_message_sends(OBJECT_PTR);
 OBJECT_PTR mcps_transform(OBJECT_PTR);
 OBJECT_PTR lift_transform(OBJECT_PTR, OBJECT_PTR);
 
+void free_binding_env(binding_env_t *env);
+
 OBJECT_PTR g_message_selector;
 
 extern OBJECT_PTR NIL;
@@ -170,13 +172,18 @@ OBJECT_PTR decorate_message_selectors(OBJECT_PTR res)
   if(is_atom(res))
     return res;
   else if(car(res) == MESSAGE_SEND)
-    return concat(2,
-		  list(4,
-		       MESSAGE_SEND,
-		       decorate_message_selectors(second(res)),
-		       third(res),
-		       get_symbol(prepend_char(get_symbol_name(fourth(res)),'_'))),
-		  map(decorate_message_selectors,cdr(CDDDR(res))));
+  {
+    char *prepended_sym_name = prepend_char(get_symbol_name(fourth(res)),'_');
+    OBJECT_PTR ret = concat(2,
+                            list(4,
+                                 MESSAGE_SEND,
+                                 decorate_message_selectors(second(res)),
+                                 third(res),
+                                 get_symbol(prepended_sym_name)),
+                            map(decorate_message_selectors,cdr(CDDDR(res))));
+    free(prepended_sym_name);
+    return ret;
+  }
   else
     return map(decorate_message_selectors, res);
 }
@@ -230,8 +237,11 @@ OBJECT_PTR apply_lisp_transforms(OBJECT_PTR obj)
 #ifdef DEBUG
   print_object(res); printf(" is returned by desugar_il()\n");
 #endif
-  
-  res = ren_transform(res, create_binding_env());
+
+  binding_env_t *env = create_binding_env();
+  res = ren_transform(res, env);
+  free_binding_env(env);
+  free(env);
 
 #ifdef DEBUG
   print_object(res); printf(" is returned by ren_transform()\n");
