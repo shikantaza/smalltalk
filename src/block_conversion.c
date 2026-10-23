@@ -52,6 +52,9 @@ unsigned int convert_array_element(char *, array_element_t *);
 //Smalltalk>>createClassMethod and Smalltalk>>createInstanceMethod
 void replace_block_constructor(executable_code_t *e)
 {
+  if(!e->statements)
+    return;
+
   if(e->statements->type != EXPRESSION)
     return;
 
@@ -83,17 +86,17 @@ void replace_block_constructor(executable_code_t *e)
   if(kw_msg->nof_args != 3)
     return;
 
-  if(strcmp(kw_msg->kw_arg_pairs[0].keyword, "addClassMethod:") &&
-     strcmp(kw_msg->kw_arg_pairs[0].keyword, "addInstanceMethod:"))
+  if(strcmp(kw_msg->kw_arg_pairs[0]->keyword, "addClassMethod:") &&
+     strcmp(kw_msg->kw_arg_pairs[0]->keyword, "addInstanceMethod:"))
     return;
 
-  if(strcmp(kw_msg->kw_arg_pairs[1].keyword, "toClass:"))
+  if(strcmp(kw_msg->kw_arg_pairs[1]->keyword, "toClass:"))
     return;
 
-  if(strcmp(kw_msg->kw_arg_pairs[2].keyword, "withBody:"))
+  if(strcmp(kw_msg->kw_arg_pairs[2]->keyword, "withBody:"))
     return;
 
-  keyword_argument_t *kw_arg = kw_msg->kw_arg_pairs[2].kw_arg;
+  keyword_argument_t *kw_arg = kw_msg->kw_arg_pairs[2]->kw_arg;
   primary_t *prim1 = kw_arg->prim;
 
   if(prim1->type == BLOCK_CONSTRUCTOR)
@@ -287,7 +290,7 @@ unsigned int convert_cascaded_messages(char *buf, cascaded_messages_t *c)
   for(i=0; i < c->nof_cascaded_msgs; i++)
   {
     len += sprintf(buf+len, "; ");
-    len += convert_message(buf+len, c->cascaded_msgs + i);
+    len += convert_message(buf+len, c->cascaded_msgs[i]);
   }
 
   return len;
@@ -409,7 +412,7 @@ unsigned int convert_binary_messages(char *buf, binary_messages_t *msgs)
 
   unsigned int i = msgs->nof_messages;
   for(i=0; i < msgs->nof_messages; i++)
-    len += convert_binary_message(buf+len, msgs->bin_msgs + i);
+    len += convert_binary_message(buf+len, msgs->bin_msgs[i]);
 
   return len;
 }
@@ -484,7 +487,7 @@ unsigned int convert_keyword_message(char *buf, keyword_message_t *msg)
 
   unsigned int i;
   for(i=0; i < msg->nof_args; i++)
-    len += convert_keyword_argument_pair(buf+len, msg->kw_arg_pairs + i);
+    len += convert_keyword_argument_pair(buf+len, msg->kw_arg_pairs[i]);
 
   return len;
 }
@@ -533,7 +536,7 @@ unsigned int convert_array_elements(char *buf, array_elements_t *e)
   unsigned int i;
   for(i=0; i < e->nof_elements; i++)
   {
-    len += convert_array_element(buf+len, e->elements + i);
+    len += convert_array_element(buf+len, e->elements[i]);
     len += sprintf(buf+len, " ");
   }
   len += sprintf(buf+len, ")");

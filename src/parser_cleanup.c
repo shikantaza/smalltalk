@@ -111,7 +111,10 @@ static void free_array_elements(array_elements_t *aes)
   if (!aes) return;
   if (aes->elements) {
     for (unsigned int i = 0; i < aes->nof_elements; i++)
-      free_array_element_contents(&aes->elements[i]);
+    {
+      free_array_element_contents(aes->elements[i]);
+      free(aes->elements[i]);
+    }
     free(aes->elements);
   }
   free(aes);
@@ -147,7 +150,10 @@ static void free_binary_messages(binary_messages_t *bms)
   if (!bms) return;
   if (bms->bin_msgs) {
     for (unsigned int i = 0; i < bms->nof_messages; i++)
-      free_binary_message_contents(&bms->bin_msgs[i]);
+    {
+      free_binary_message_contents(bms->bin_msgs[i]);
+      free(bms->bin_msgs[i]);
+    }
     free(bms->bin_msgs);
   }
   free(bms);
@@ -173,7 +179,10 @@ static void free_keyword_message(keyword_message_t *km)
   if (!km) return;
   if (km->kw_arg_pairs) {
     for (unsigned int i = 0; i < km->nof_args; i++)
-      free_keyword_argument_pair_contents(&km->kw_arg_pairs[i]);
+    {
+      free_keyword_argument_pair_contents(km->kw_arg_pairs[i]);
+      free(km->kw_arg_pairs[i]);
+    }
     free(km->kw_arg_pairs);
   }
   free(km);
@@ -198,7 +207,10 @@ static void free_cascaded_messages(cascaded_messages_t *cm)
   if (!cm) return;
   if (cm->cascaded_msgs) {
     for (unsigned int i = 0; i < cm->nof_cascaded_msgs; i++)
-      free_message_contents(&cm->cascaded_msgs[i]);
+    {
+      free_message_contents(cm->cascaded_msgs[i]);
+      free(cm->cascaded_msgs[i]);
+    }
     free(cm->cascaded_msgs);
   }
   free(cm);

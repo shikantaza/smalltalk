@@ -2630,7 +2630,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     casc_msgs->nof_cascaded_msgs = JSON_get_array_size(ptr_entry);
 
-    casc_msgs->cascaded_msgs = (struct message *)GC_MALLOC(casc_msgs->nof_cascaded_msgs * sizeof(struct message));
+    casc_msgs->cascaded_msgs = (struct message **)GC_MALLOC(casc_msgs->nof_cascaded_msgs * sizeof(struct message *));
 
     for(i=0; i<casc_msgs->nof_cascaded_msgs; i++)
     {
@@ -2640,7 +2640,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                ref1,
                                                                                obj_ht,
                                                                                native_ptr_ht);
-      casc_msgs->cascaded_msgs[i] = *msg;
+      casc_msgs->cascaded_msgs[i] = msg;
     }
 
     return (void *)casc_msgs;
@@ -2772,7 +2772,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     hashtable_put(native_ptr_ht, (void *)ref, (void *)bin_msgs);
 
     bin_msgs->nof_messages = JSON_get_array_size(ptr_entry);
-    bin_msgs->bin_msgs = (struct binary_message *)GC_MALLOC(bin_msgs->nof_messages * sizeof(struct binary_message));
+    bin_msgs->bin_msgs = (struct binary_message **)GC_MALLOC(bin_msgs->nof_messages * sizeof(struct binary_message *));
 
     for(i=0; i<bin_msgs->nof_messages; i++)
     {
@@ -2782,7 +2782,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                                  ref1,
                                                                                                  obj_ht,
                                                                                                  native_ptr_ht);
-      bin_msgs->bin_msgs[i] = *bin_msg;
+      bin_msgs->bin_msgs[i] = bin_msg;
     }
 
     return (void *)bin_msgs;
@@ -2811,7 +2811,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     hashtable_put(native_ptr_ht, (void *)ref, (void *)kw_msg);
 
     kw_msg->nof_args = JSON_get_array_size(ptr_entry);
-    kw_msg->kw_arg_pairs = (struct keyword_argument_pair *)GC_MALLOC(kw_msg->nof_args * sizeof(struct keyword_argument_pair));
+    kw_msg->kw_arg_pairs = (struct keyword_argument_pair **)GC_MALLOC(kw_msg->nof_args * sizeof(struct keyword_argument_pair *));
 
     for(i=0; i<kw_msg->nof_args; i++)
     {
@@ -2822,7 +2822,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                          ref1,
                                                                          obj_ht,
                                                                          native_ptr_ht);
-      kw_msg->kw_arg_pairs[i] = *arg_pair;
+      kw_msg->kw_arg_pairs[i] = arg_pair;
     }
 
     return (void *)kw_msg;
@@ -3311,7 +3311,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
 
     elems->nof_elements = JSON_get_array_size(ptr_entry);
 
-    elems->elements = (struct array_element *)GC_MALLOC(elems->nof_elements * sizeof(struct array_element));
+    elems->elements = (struct array_element **)GC_MALLOC(elems->nof_elements * sizeof(struct array_element *));
 
     for(i=0; i<elems->nof_elements; i++)
     {
@@ -3321,7 +3321,7 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
                                                                                             ref1,
                                                                                             obj_ht,
                                                                                             native_ptr_ht);
-      elems->elements[i] = *elem;
+      elems->elements[i] = elem;
     }
 
     return (void *)elems;

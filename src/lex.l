@@ -209,13 +209,11 @@ char *remove_backslash(char *s)
 
 \^ {
   expecting_docstring = 0;
-  yylval.default_value = GC_strdup(yytext); 
   return T_RETURN_OPERATOR; 
 }
 
 := {
   expecting_docstring = 0;
-  yylval.default_value = GC_strdup(yytext); 
   return T_ASSIGNMENT_OPERATOR; 
 }
 

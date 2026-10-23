@@ -692,9 +692,9 @@ OBJECT_PTR convert_basic_exp_to_lisp(basic_expression_t *be)
         for(i=0; i< nof_msgs; i++)
           res1 = cons(convert_msg(convert_int_to_object(g_nof_debug_expressions-1), //to avoid adding the debug_exp object again
 				  be->prim,
-                                  cm->cascaded_msgs[i].unary_messages,
-                                  cm->cascaded_msgs[i].binary_messages,
-                                  cm->cascaded_msgs[i].kw_msg),
+                                  cm->cascaded_msgs[i]->unary_messages,
+                                  cm->cascaded_msgs[i]->binary_messages,
+                                  cm->cascaded_msgs[i]->kw_msg),
                       res1);
 
         //res = cons(CASCADED, cons(res, reverse(res1)));
@@ -831,9 +831,9 @@ OBJECT_PTR convert_msg(OBJECT_PTR expr_ptr,
                  MESSAGE_SEND,
                  res,
 		 expr_ptr,
-                 convert_binary_selector_to_atom(binary_messages->bin_msgs[i].binary_selector),
+                 convert_binary_selector_to_atom(binary_messages->bin_msgs[i]->binary_selector),
 		 convert_int_to_object(1),
-                 convert_binary_argument_to_lisp(binary_messages->bin_msgs[i].bin_arg));
+                 convert_binary_argument_to_lisp(binary_messages->bin_msgs[i]->bin_arg));
   }
 
   if(kw_msg)
@@ -845,7 +845,7 @@ OBJECT_PTR convert_msg(OBJECT_PTR expr_ptr,
     char *combined_keyword;
           
     for(i=0; i<nof_arg_pairs; i++)
-      total_len += strlen(kw_msg->kw_arg_pairs[i].keyword);
+      total_len += strlen(kw_msg->kw_arg_pairs[i]->keyword);
 
     combined_keyword = (char *)GC_MALLOC((total_len+1)*sizeof(char));
     memset(combined_keyword, '\0', total_len + 1);
@@ -853,7 +853,7 @@ OBJECT_PTR convert_msg(OBJECT_PTR expr_ptr,
     unsigned int len = 0;
 
     for(i=0; i<nof_arg_pairs; i++)
-      len += sprintf(combined_keyword+len, "%s", kw_msg->kw_arg_pairs[i].keyword);
+      len += sprintf(combined_keyword+len, "%s", kw_msg->kw_arg_pairs[i]->keyword);
 
     res = list(4,
                MESSAGE_SEND,
@@ -861,10 +861,12 @@ OBJECT_PTR convert_msg(OBJECT_PTR expr_ptr,
 	       expr_ptr,
                convert_identifier_to_atom(combined_keyword));
 
+    free(combined_keyword);
+
     OBJECT_PTR res1 = NIL;
           
     for(i=0; i<nof_arg_pairs; i++)
-      res1 = cons(convert_keyword_argument_to_lisp(kw_msg->kw_arg_pairs[i].kw_arg),
+      res1 = cons(convert_keyword_argument_to_lisp(kw_msg->kw_arg_pairs[i]->kw_arg),
                   res1);
 
     res = concat(2, res, concat(2, list(1, convert_int_to_object(cons_length(res1))), reverse(res1)));
@@ -958,10 +960,10 @@ OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)
 
   for(i=0; i<n; i++)
   {
-    if(e->elements[i].type == IDENTIFIER1)
-      arr_obj->elements[i] = convert_identifier_to_atom(e->elements[i].identifier);
-    else if(e->elements[i].type == LITERAL1)
-      arr_obj->elements[i] = convert_literal_to_lisp(e->elements[i].lit);
+    if(e->elements[i]->type == IDENTIFIER1)
+      arr_obj->elements[i] = convert_identifier_to_atom(e->elements[i]->identifier);
+    else if(e->elements[i]->type == LITERAL1)
+      arr_obj->elements[i] = convert_literal_to_lisp(e->elements[i]->lit);
     else
       assert(false);
   }

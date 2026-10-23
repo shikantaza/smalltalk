@@ -416,7 +416,7 @@ void render_cascaded_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN hig
     else
       render_string_to_buffer(code_buf, highlight, index, "; ");
 
-    render_message(code_buf, indents, highlight, index, c->cascaded_msgs + i);
+    render_message(code_buf, indents, highlight, index, c->cascaded_msgs[i]);
   }
 }
 
@@ -538,7 +538,7 @@ void render_binary_messages(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
   
   unsigned int i = msgs->nof_messages;
   for(i=0; i < msgs->nof_messages; i++)
-    render_binary_message(code_buf, indents, highlight, index, msgs->bin_msgs + i);
+    render_binary_message(code_buf, indents, highlight, index, msgs->bin_msgs[i]);
 }
 
 void render_message(GtkTextBuffer *code_buf, int *indents, BOOLEAN highlight, gint64 index, message_t *msg)
@@ -613,7 +613,7 @@ void render_keyword_message(GtkTextBuffer *code_buf, int *indents, BOOLEAN highl
   unsigned int i;
   for(i=0; i < msg->nof_args; i++)
   {
-    render_keyword_argument_pair(code_buf, indents, highlight, index, msg->kw_arg_pairs + i);
+    render_keyword_argument_pair(code_buf, indents, highlight, index, msg->kw_arg_pairs[i]);
     if(i != msg->nof_args - 1)
       render_space_to_buffer(code_buf, highlight, index);
   }
@@ -666,7 +666,7 @@ void render_array_elements(GtkTextBuffer *code_buf, int *indents, BOOLEAN highli
   unsigned int i;
   for(i=0; i < e->nof_elements; i++)
   {
-    render_array_element(code_buf, indents, highlight, index, e->elements + i);
+    render_array_element(code_buf, indents, highlight, index, e->elements[i]);
     if(i != e->nof_elements-1)
       render_space_to_buffer(code_buf, highlight, index);
   }

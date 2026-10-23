@@ -124,7 +124,7 @@ typedef struct basic_expression
 typedef struct cascaded_messages
 {
   unsigned int nof_cascaded_msgs;
-  struct message *cascaded_msgs;
+  struct message **cascaded_msgs;
 } cascaded_messages_t;
 
 enum PrimaryType
@@ -179,7 +179,7 @@ typedef struct unary_messages
 typedef struct binary_messages
 {
   unsigned int nof_messages;
-  struct binary_message *bin_msgs;
+  struct binary_message **bin_msgs;
 } binary_messages_t;
 
 enum MessageType
@@ -219,7 +219,7 @@ typedef struct binary_argument
 typedef struct keyword_message
 {
   unsigned int nof_args;
-  struct keyword_argument_pair *kw_arg_pairs;
+  struct keyword_argument_pair **kw_arg_pairs;
 } keyword_message_t;
 
 typedef struct keyword_argument_pair
@@ -252,7 +252,7 @@ enum LiteralType
 typedef struct array_elements
 {
   unsigned int nof_elements;
-  struct array_element *elements;
+  struct array_element **elements;
 } array_elements_t;
 
 enum ArrayElementType

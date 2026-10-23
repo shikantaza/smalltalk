@@ -163,7 +163,7 @@ void print_cascaded_messages(FILE *fp, cascaded_messages_t *c)
   unsigned int i;
   for(i=0; i < c->nof_cascaded_msgs; i++)
   {
-    print_message(fp, c->cascaded_msgs + i);
+    print_message(fp, c->cascaded_msgs[i]);
     fprintf(fp, "\n");
   }
 }
@@ -248,7 +248,7 @@ void print_binary_messages(FILE *fp, binary_messages_t *msgs)
   fprintf(fp, "----------------\n");
   unsigned int i = msgs->nof_messages;
   for(i=0; i < msgs->nof_messages; i++)
-    print_binary_message(fp, msgs->bin_msgs + i);
+    print_binary_message(fp, msgs->bin_msgs[i]);
   fprintf(fp, "----------------\n");
 }
 
@@ -307,7 +307,7 @@ void print_keyword_message(FILE *fp, keyword_message_t *msg)
   fprintf(fp, "----------------\n");
   unsigned int i;
   for(i=0; i < msg->nof_args; i++)
-    print_keyword_argument_pair(fp, msg->kw_arg_pairs + i);
+    print_keyword_argument_pair(fp, msg->kw_arg_pairs[i]);
   fprintf(fp, "\n----------------\n");
 }
 
@@ -339,7 +339,7 @@ void print_array_elements(FILE *fp, array_elements_t *e)
   unsigned int i;
   for(i=0; i < e->nof_elements; i++)
   {
-    print_array_element(fp, e->elements + i);
+    print_array_element(fp, e->elements[i]);
     fprintf(fp, " ");
   }
 

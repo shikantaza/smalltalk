@@ -47,6 +47,8 @@ void show_info_dialog(char *);
 
 executable_code_t *clone_executable_code(executable_code_t *);
 
+void free_executable_code(executable_code_t *);
+
 binding_env_t *g_top_level;
 
 OBJECT_PTR Object;
@@ -536,6 +538,8 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
     else
       ret = add_class_method(class_obj, selector, exp, code_str, clone_executable_code(g_exp));
 
+    free_executable_code(g_exp);
+
     g_exp = prev_exp;
 
     pop_if_top(entry);
@@ -546,6 +550,7 @@ OBJECT_PTR add_method_str_internal(OBJECT_PTR class_obj,
   }
   else
   {
+    free_executable_code(g_exp);
     g_exp = prev_exp;
 
     yy_delete_buffer(bs);
@@ -1363,6 +1368,8 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
     else
       ret = NIL;
 
+    free_executable_code(g_exp);
+
     g_exp = prev_exp;
 
     pop_if_top(entry);
@@ -1371,6 +1378,7 @@ OBJECT_PTR smalltalk_eval(OBJECT_PTR closure,
   }
   else
   {
+    free_executable_code(g_exp);
     g_exp = prev_exp;
     return create_and_signal_exception(CompileError, cont);
   }
@@ -2522,6 +2530,8 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
     else
       create_and_signal_exception(InvalidArgument, cont);
 
+    free_executable_code(g_exp);
+
     g_exp = prev_exp;
     g_message_selector = prev_message_selectors;
 
@@ -2531,6 +2541,7 @@ OBJECT_PTR compiler_compile_pass(OBJECT_PTR closure,
   }
   else
   {
+    free_executable_code(g_exp);
     g_exp = prev_exp;
     g_message_selector = prev_message_selectors;
     return create_and_signal_exception(CompileError, cont);
@@ -2562,6 +2573,8 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
 
     OBJECT_PTR res = apply_lisp_transforms(exp);
 
+    free_executable_code(g_exp);
+
     g_exp = prev_exp;
 
     pop_if_top(entry);
@@ -2570,6 +2583,7 @@ OBJECT_PTR compiler_compile(OBJECT_PTR closure,
   }
   else
   {
+    free_executable_code(g_exp);
     g_exp = prev_exp;
     return create_and_signal_exception(CompileError, cont);
   }

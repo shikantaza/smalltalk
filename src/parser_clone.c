@@ -20,6 +20,8 @@
 #include <string.h>
 #include "parser_header.h"
 
+#include "gc.h"
+
 /* Public entry point (add this prototype to parser_header.h, since
    clone_block_constructor() below calls it before its definition). */
 executable_code_t *clone_executable_code(const executable_code_t *);
@@ -145,9 +147,12 @@ static array_elements_t *clone_array_elements(const array_elements_t *aes)
   array_elements_t *c = xcalloc(1, sizeof *c);
   c->nof_elements = aes->nof_elements;
   if (aes->elements) {
-    c->elements = xcalloc(aes->nof_elements, sizeof(array_element_t));
+    c->elements = xcalloc(aes->nof_elements, sizeof(array_element_t *));
     for (unsigned int i = 0; i < aes->nof_elements; i++)
-      clone_array_element_into(&c->elements[i], &aes->elements[i]);
+    {
+      c->elements[i] = (array_element_t *)GC_MALLOC(sizeof(array_element_t));
+      clone_array_element_into(c->elements[i], aes->elements[i]);
+    }
   }
   return c;
 }
@@ -187,9 +192,12 @@ static binary_messages_t *clone_binary_messages(const binary_messages_t *bms)
   binary_messages_t *c = xcalloc(1, sizeof *c);
   c->nof_messages = bms->nof_messages;
   if (bms->bin_msgs) {
-    c->bin_msgs = xcalloc(bms->nof_messages, sizeof(binary_message_t));
+    c->bin_msgs = xcalloc(bms->nof_messages, sizeof(binary_message_t *));
     for (unsigned int i = 0; i < bms->nof_messages; i++)
-      clone_binary_message_into(&c->bin_msgs[i], &bms->bin_msgs[i]);
+    {
+      c->bin_msgs[i] = (binary_message_t *)GC_MALLOC(sizeof(binary_message_t));
+      clone_binary_message_into(c->bin_msgs[i], bms->bin_msgs[i]);
+    }
   }
   return c;
 }
@@ -218,9 +226,12 @@ static keyword_message_t *clone_keyword_message(const keyword_message_t *km)
   keyword_message_t *c = xcalloc(1, sizeof *c);
   c->nof_args = km->nof_args;
   if (km->kw_arg_pairs) {
-    c->kw_arg_pairs = xcalloc(km->nof_args, sizeof(keyword_argument_pair_t));
+    c->kw_arg_pairs = xcalloc(km->nof_args, sizeof(keyword_argument_pair_t *));
     for (unsigned int i = 0; i < km->nof_args; i++)
-      clone_keyword_argument_pair_into(&c->kw_arg_pairs[i], &km->kw_arg_pairs[i]);
+    {
+      c->kw_arg_pairs[i] = (keyword_argument_pair_t *)GC_MALLOC(sizeof(keyword_argument_pair_t));
+      clone_keyword_argument_pair_into(c->kw_arg_pairs[i], km->kw_arg_pairs[i]);
+    }
   }
   return c;
 }
@@ -247,9 +258,12 @@ static cascaded_messages_t *clone_cascaded_messages(const cascaded_messages_t *c
   cascaded_messages_t *c = xcalloc(1, sizeof *c);
   c->nof_cascaded_msgs = cm->nof_cascaded_msgs;
   if (cm->cascaded_msgs) {
-    c->cascaded_msgs = xcalloc(cm->nof_cascaded_msgs, sizeof(message_t));
+    c->cascaded_msgs = xcalloc(cm->nof_cascaded_msgs, sizeof(message_t *));
     for (unsigned int i = 0; i < cm->nof_cascaded_msgs; i++)
-      clone_message_into(&c->cascaded_msgs[i], &cm->cascaded_msgs[i]);
+    {
+      c->cascaded_msgs[i] = (message_t *)GC_MALLOC(sizeof(message_t));
+      clone_message_into(c->cascaded_msgs[i], cm->cascaded_msgs[i]);
+    }
   }
   return c;
 }

@@ -232,7 +232,7 @@ executable_code:
        ignoring this warning */
     { set_lexer_docstring_state(1); } doc_string temporaries statements
     {
-      g_class_docstring = $2 ? GC_strdup($2) : NULL;
+      g_class_docstring = $2;
       executable_code_t *exec_code = (executable_code_t *)GC_MALLOC(sizeof(executable_code_t));
       exec_code->temporaries = $3;
       exec_code->statements = $4;
@@ -255,6 +255,7 @@ temporaries:
     {
       if(contains_duplicates($2->nof_identifiers, $2->identifiers))
       {
+	//TODO: freeing of memory required here?
 	yyerror("Duplicates in temporary variables list");
 	YYABORT;
       }
@@ -266,7 +267,13 @@ temporaries:
 
       unsigned int i;
       for(i=0; i < temps->nof_temporaries; i++)
+      {
         temps->temporaries[i] = GC_strdup($2->identifiers[i]);
+	free($2->identifiers[i]);
+      }
+
+      free($2->identifiers);
+      free($2);
       
       $$ = temps;
     }
@@ -289,7 +296,7 @@ identifiers:
       assert(temp);
       $1->identifiers = temp;
 
-      $1->identifiers[$1->nof_identifiers - 1] = GC_strdup($2);
+      $1->identifiers[$1->nof_identifiers - 1] = $2;
       $$ = $1;
     }
     ;
@@ -409,7 +416,7 @@ primary:
     {
       primary_t *prim = (primary_t *)GC_MALLOC(sizeof(primary_t));
       prim->type = IDENTIFIER;
-      prim->identifier = GC_strdup($1);
+      prim->identifier = $1;
       prim->lit = NULL;
       prim->blk_cons = NULL;
       prim->exp = NULL;
@@ -461,7 +468,7 @@ block_constructor:
     {
       block_constructor_t *blk_cons = (block_constructor_t *)GC_MALLOC(sizeof(block_constructor_t));
       blk_cons->type = $4 ? BLOCK_ARGS : NO_BLOCK_ARGS;
-      blk_cons->docstring = $3 ? GC_strdup($3) : NULL;
+      blk_cons->docstring = $3;
       blk_cons->block_args = $4;
       blk_cons->exec_code = $5;
       $$ = blk_cons;
@@ -476,7 +483,7 @@ doc_string:
     |
     T_DOCSTRING
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
 
 opt_block_args:
@@ -491,10 +498,11 @@ opt_block_args:
       char **temp = (char **)GC_REALLOC($1->identifiers, $1->nof_args * sizeof(char *));
       assert(temp);
       $1->identifiers = temp;
-      $1->identifiers[$1->nof_args - 1] = GC_strdup($2);
+      $1->identifiers[$1->nof_args - 1] = $2;
 
       if(contains_duplicates($1->nof_args, $1->identifiers))
       {
+	//TODO: freeing of memory required here?
 	yyerror("Duplicates in block arguments list");
 	YYABORT;
       }
@@ -534,7 +542,7 @@ block_argument:
       sprintf(str, ":%s", $2);
       $$ = str;
       */
-      $$ = GC_strdup($2); //having the colon in the argument name screws up the renaming transformation
+      $$ = $2; //having the colon in the argument name screws up the renaming transformation
     }
     ;
 
@@ -548,15 +556,10 @@ message:
       char **temp  = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
       assert(temp);
       $1->identifiers = temp;
-      $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
+      $1->identifiers[$1->nof_messages - 1] = $2;
 
       msg->unary_messages = $1;
-
-      if($3->nof_messages > 0)
-        msg->binary_messages = $3;
-      else
-        msg->binary_messages = NULL;
-
+      msg->binary_messages = $3;
       msg->kw_msg = NULL;
       
       $$ = msg;
@@ -571,15 +574,10 @@ message:
       char **temp = (char **)GC_REALLOC($1->identifiers, $1->nof_messages * sizeof(char *));
       assert(temp);
       $1->identifiers = temp;
-      $1->identifiers[$1->nof_messages - 1] = GC_strdup($2);
+      $1->identifiers[$1->nof_messages - 1] = $2;
 
       msg->unary_messages = $1;
-
-      if($3->nof_messages > 0)
-        msg->binary_messages = $3;
-      else
-        msg->binary_messages = NULL;
-
+      msg->binary_messages = $3;
       msg->kw_msg = $4;
 
       $$ = msg;     
@@ -593,10 +591,10 @@ message:
       msg->unary_messages = NULL;
 
       $1->nof_messages++;
-      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      binary_message_t **temp = (binary_message_t **)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_message_t *));
       assert(temp);
       $1->bin_msgs = temp;
-      $1->bin_msgs[$1->nof_messages - 1] = *($2);
+      $1->bin_msgs[$1->nof_messages - 1] = $2;
 
       msg->binary_messages = $1;
 
@@ -613,10 +611,10 @@ message:
       msg->unary_messages = NULL;
 
       $1->nof_messages++;
-      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_messages_t));
+      binary_message_t **temp = (binary_message_t **)GC_REALLOC($1->bin_msgs, $1->nof_messages * sizeof(binary_message_t *));
       assert(temp);
       $1->bin_msgs = temp;
-      $1->bin_msgs[$1->nof_messages - 1] = *($2);
+      $1->bin_msgs[$1->nof_messages - 1] = $2;
 
       msg->binary_messages = $1;
 
@@ -639,7 +637,7 @@ message:
 unary_message:
     T_IDENTIFIER
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
     ;
 
@@ -678,12 +676,12 @@ binary_messages:
     binary_messages binary_message
     {
       $1->nof_messages++;
-      binary_message_t *temp = (binary_message_t *)GC_REALLOC($1->bin_msgs,
-							      $1->nof_messages * sizeof(binary_message_t));
+      binary_message_t **temp = (binary_message_t **)GC_REALLOC($1->bin_msgs,
+								$1->nof_messages * sizeof(binary_message_t *));
       assert(temp);
       $1->bin_msgs = temp;
 
-      $1->bin_msgs[$1->nof_messages - 1] = *($2);
+      $1->bin_msgs[$1->nof_messages - 1] = $2;
       $$ = $1;      
     }
     ;
@@ -692,7 +690,7 @@ binary_message:
     T_BINARY_SELECTOR binary_argument
     {
       binary_message_t *bin_msg = (binary_message_t *)GC_MALLOC(sizeof(binary_message_t));
-      bin_msg->binary_selector = GC_strdup($1);
+      bin_msg->binary_selector = $1;
       bin_msg->bin_arg = $2;
       $$ = bin_msg;
     }
@@ -721,11 +719,11 @@ keyword_message:
     keyword_arg_pairs keyword_arg_pair
     {
       $1->nof_args++;
-      keyword_argument_pair_t *temp = (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs,
-									    $1->nof_args * sizeof(keyword_argument_pair_t));
+      keyword_argument_pair_t **temp = (keyword_argument_pair_t **)GC_REALLOC($1->kw_arg_pairs,
+									      $1->nof_args * sizeof(keyword_argument_pair_t *));
       assert(temp);
       $1->kw_arg_pairs = temp;
-      $1->kw_arg_pairs[$1->nof_args - 1] = *($2);
+      $1->kw_arg_pairs[$1->nof_args - 1] = $2;
 
       $$ = $1;
     }
@@ -748,7 +746,7 @@ keyword_arg_pair:
     {
       keyword_argument_pair_t *pair =
         (keyword_argument_pair_t *)GC_MALLOC(sizeof(keyword_argument_pair_t));
-      pair->keyword = GC_strdup($1);
+      pair->keyword = $1;
       pair->kw_arg = $2;
       $$ = pair;
     }
@@ -766,13 +764,13 @@ keyword_arg_pairs:
     keyword_arg_pairs keyword_arg_pair
     {
       $1->nof_args++;
-      keyword_argument_pair_t *temp =
-        (keyword_argument_pair_t *)GC_REALLOC($1->kw_arg_pairs,
-                                              $1->nof_args * sizeof(keyword_argument_pair_t));
+      keyword_argument_pair_t **temp =
+        (keyword_argument_pair_t **)GC_REALLOC($1->kw_arg_pairs,
+					       $1->nof_args * sizeof(keyword_argument_pair_t *));
       assert(temp);
       $1->kw_arg_pairs = temp;
 
-      $1->kw_arg_pairs[$1->nof_args - 1] = *($2);
+      $1->kw_arg_pairs[$1->nof_args - 1] = $2;
       $$ = $1;
     }
     ;
@@ -789,13 +787,13 @@ cascaded_messages:
     cascaded_messages cascaded_message
     {
       $1->nof_cascaded_msgs++;
-      message_t *temp =
-        (message_t *)GC_REALLOC($1->cascaded_msgs,
-                                $1->nof_cascaded_msgs * sizeof(message_t));
+      message_t **temp =
+        (message_t **)GC_REALLOC($1->cascaded_msgs,
+				 $1->nof_cascaded_msgs * sizeof(message_t *));
       assert(temp);
       $1->cascaded_msgs = temp;
 
-      $1->cascaded_msgs[$1->nof_cascaded_msgs - 1] = *($2);
+      $1->cascaded_msgs[$1->nof_cascaded_msgs - 1] = $2;
       $$ = $1;
     }
     ;
@@ -869,7 +867,7 @@ number:
     {
       number_t *n = (number_t *)GC_MALLOC(sizeof(number_t));
       n->type = INTEGER;
-      n->val = GC_strdup($1);
+      n->val = $1;
       $$ = n;
     }
     |
@@ -877,7 +875,7 @@ number:
     {
       number_t *n = (number_t *)GC_MALLOC(sizeof(number_t));
       n->type = FLOAT;
-      n->val = GC_strdup($1);
+      n->val = $1;
       $$ = n;
     }
     |
@@ -885,7 +883,7 @@ number:
     {
       number_t *n = (number_t *)GC_MALLOC(sizeof(number_t));
       n->type = SCALED_DECIMAL;
-      n->val = GC_strdup($1);
+      n->val = $1;
       $$ = n;
     }
     ;
@@ -893,28 +891,28 @@ number:
 character_literal:
     T_QUOTED_CHARACTER
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
     ;
 
 string_literal:
     T_QUOTED_STRING
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
     ;
 
 symbol_literal:
     T_HASHED_STRING
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
     ;
 
 selector_literal:
     T_QUOTED_SELECTOR
     {
-      $$ = GC_strdup($1);
+      $$ = $1;
     }
     ;
 
@@ -936,12 +934,12 @@ array_elements:
     array_elements array_element
     {
       $1->nof_elements++;
-      array_element_t *temp = (array_element_t *)GC_REALLOC($1->elements,
-							    $1->nof_elements * sizeof(array_element_t));
+      array_element_t **temp = (array_element_t **)GC_REALLOC($1->elements,
+							      $1->nof_elements * sizeof(array_element_t *));
       assert(temp);
       $1->elements = temp;
 
-      $1->elements[$1->nof_elements - 1] = *($2);
+      $1->elements[$1->nof_elements - 1] = $2;
       $$ = $1;      
     }
     ;
@@ -961,7 +959,7 @@ array_element:
       array_element_t *elem = (array_element_t *)GC_MALLOC(sizeof(array_element_t));
       elem->type = IDENTIFIER1;
       elem->lit = NULL;
-      elem->identifier = GC_strdup($1);
+      elem->identifier = $1;
       $$ = elem;
     }    
     ;
@@ -1050,8 +1048,9 @@ void parse_from_fp(FILE *fp)
 
     if(!yyparse())
     {
-      g_method_code = GC_strdup(buf);
+      g_method_code = buf;
       repl();
+      g_method_code = NULL;
     }
 
     yy_delete_buffer(bs);
@@ -1295,6 +1294,7 @@ OBJECT_PTR repl_common()
 
 void repl()
 {
+  executable_code_t *exp_to_free = g_exp;
   cleanup_for_repl();
 
   OBJECT_PTR repl_ret_val = repl_common();
@@ -1314,7 +1314,7 @@ void repl()
 
   g_last_eval_result = ret;
 
-  free_executable_code(g_exp);
+  free_executable_code(exp_to_free);
   g_exp = NULL;
 }
 
