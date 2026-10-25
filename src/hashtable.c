@@ -153,14 +153,14 @@ void hashtable_delete(hashtable_t *tab)
     while(np != NULL)
     {
       hashtable_entry_t *temp = np->next;
-      //free(np);
+      free(np);
       np = temp;
     }
   }
 
-  //free(tab->entries);
+  free(tab->entries);
 
-  //free(tab);
+  free(tab);
 }
 
 hashtable_entry_t *clone_entries(hashtable_entry_t *np)

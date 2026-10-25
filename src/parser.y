@@ -26,6 +26,7 @@
 
 #include "global_decls.h"
 #include "stack.h"
+#include "hashtable.h"
 
 // declarations specific to parser,
 // so they have not been moved
@@ -69,6 +70,7 @@ BOOLEAN contains_duplicates(unsigned int, char **);
 stack_type *fetch_class_from_pkg(char *);
 
 void free_executable_code(executable_code_t *);
+void free_exception_handler(exception_handler_t *);
 
 executable_code_t *g_exp;
 int g_open_square_brackets;
@@ -128,6 +130,8 @@ extern char *g_method_code;
 extern BOOLEAN expecting_docstring;
 
 extern GtkWindow *transcript_window;
+
+extern hashtable_t *g_freed_pointers;
 
 char *loaded_image_file_name = NULL;
 %}
@@ -1002,7 +1006,13 @@ void cleanup_for_repl()
   if(!g_eval_from_debugger)
     stack_empty(g_call_chain);
 
-  stack_empty(g_exception_environment);
+  while(!stack_is_empty(g_exception_environment))
+  {
+    exception_handler_t *eh = (exception_handler_t *)stack_pop(g_exception_environment);
+    //free_exception_handler(eh); //this frees underlying objects which is undesirable
+    hashtable_put(g_freed_pointers, (void *)eh, (void *)1);
+    free(eh);
+  }
 
   stack_empty(g_exception_contexts);
 
@@ -1101,6 +1111,8 @@ int main(int argc, char **argv)
 {
   gtk_init(&argc, &argv);
 
+  g_freed_pointers = hashtable_create(1000001);
+
   if(argc == 1) //no image
   {
     if(access("smalltalk.image", F_OK) != -1)
@@ -1145,6 +1157,8 @@ int main(int argc, char **argv)
 			  DEFAULT_DEBUG_WINDOW_WIDTH,
 			  DEFAULT_DEBUG_WINDOW_HEIGHT,
 			  "Debugger");
+
+      //print_diagnostics("diagnostics");
     }
   }
   else
@@ -1158,7 +1172,7 @@ int main(int argc, char **argv)
 
     initialize_pass2();
 
-    //print_diagnostics("diagnostics_post.txt");
+    //print_diagnostics("diagnostics");
   }
 
   g_ui_mode = GUI;

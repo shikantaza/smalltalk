@@ -24,6 +24,7 @@
 #include "gc.h"
 
 #include "global_decls.h"
+#include "hashtable.h"
 
 int g_gensym_count = 0;
 
@@ -1258,6 +1259,8 @@ void free_binary_argument(binary_argument_t *);
 void free_keyword_argument(keyword_argument_t *);
 //
 
+hashtable_t *g_freed_pointers = NULL;
+
 void free_object_ptr(OBJECT_PTR obj)
 {
   unsigned int i, n;
@@ -1274,10 +1277,18 @@ void free_object_ptr(OBJECT_PTR obj)
   {
     array_object_t *arr_obj = (array_object_t *)extract_ptr(obj);
 
-    n = arr_obj->nof_elements;
-    for(i=0; i<n; i++)
-      free_object_ptr(arr_obj->elements[i]);
-    free(arr_obj);
+    if(!hashtable_get(g_freed_pointers, (void *)arr_obj))
+    {
+      n = arr_obj->nof_elements;
+
+      for(i=0; i<n; i++)
+	free_object_ptr(arr_obj->elements[i]);
+
+      free(arr_obj->elements);
+
+      hashtable_put(g_freed_pointers, (void *)arr_obj, (void *)1);
+      free(arr_obj);
+    }
   }
   else if(IS_CLOSURE_OBJECT(obj))
   {
@@ -1295,18 +1306,32 @@ void free_object_ptr(OBJECT_PTR obj)
 
     //class_object will be freed elsewhere
 
-    free_binding_env(obj_int->instance_vars);
-    free(obj_int->instance_vars);
+    if(!hashtable_get(g_freed_pointers, (void *)obj_int))
+    {
+      free_binding_env(obj_int->instance_vars);
+      free(obj_int->instance_vars);
+
+      hashtable_put(g_freed_pointers, (void *)obj_int, (void *)1);
+      free(obj_int);
+    }
   }
   //class objects will be freed elsewhere
   else if(IS_NATIVE_FN_OBJECT(obj))
   {
     native_fn_obj_t *nf_obj = (native_fn_obj_t *)extract_ptr(obj);
-    nativefn nf = nf_obj->nf;
-    if(nf != (nativefn)message_send &&
-       nf != (nativefn)message_send_super &&
-       nf != (nativefn)identity_function)
-      free(nf_obj);
+
+    //this native fn object wasn't already freed
+    if(!hashtable_get(g_freed_pointers, (void *)nf_obj))
+    {
+      nativefn nf = nf_obj->nf;
+      if(nf != (nativefn)message_send &&
+	 nf != (nativefn)message_send_super &&
+	 nf != (nativefn)identity_function)
+      {
+	hashtable_put(g_freed_pointers, (void *)nf_obj, (void *)1);
+	free(nf_obj);
+      }
+    }
   }
 }
 
@@ -1390,17 +1415,22 @@ void free_exception_handler(exception_handler_t *h)
   if(!h)
     return;
 
-  free_object_ptr(h->protected_block);
-  free_object_ptr(h->selector);
-  free_object_ptr(h->exception_action);
+  if(!hashtable_get(g_freed_pointers, (void *)h))
+  {
+    free_object_ptr(h->protected_block);
+    free_object_ptr(h->selector);
+    free_object_ptr(h->exception_action);
 
-  //not freeing it here; this will be handled
-  //when the exception environments are freed
-  //elsewhere
-  //free_exception_env(h->exception_environment);
+    //not freeing it here; this will be handled
+    //when the exception environments are freed
+    //elsewhere
+    //free_exception_env(h->exception_environment);
 
-  free_object_ptr(h->cont);
-  free(h);
+    free_object_ptr(h->cont);
+
+    hashtable_put(g_freed_pointers, (void *)h, (void *)1);
+    free(h);
+  }
 }
 
 void free_exception_env(stack_type *env)
@@ -1473,16 +1503,6 @@ void free_package(smalltalk_package_t *pkg)
 void cleanup()
 {
   unsigned int i;
-
-  //g_smalltalk_packages
-  for(i=0; i<g_nof_smalltalk_packages; i++)
-  {
-    free_package(g_smalltalk_packages[i]);
-    g_smalltalk_packages[i] = NULL;
-  }
-  free(g_smalltalk_packages);
-  g_smalltalk_packages = NULL;
-  //
 
   free_binding_env(g_top_level);
   free(g_top_level);
@@ -1615,5 +1635,18 @@ void cleanup()
     free(g_message_type_hierarchy);
     g_message_type_hierarchy = NULL;
   }
+
+  //g_smalltalk_packages
+  for(i=0; i<g_nof_smalltalk_packages; i++)
+  {
+    free_package(g_smalltalk_packages[i]);
+    g_smalltalk_packages[i] = NULL;
+  }
+  free(g_smalltalk_packages);
+  g_smalltalk_packages = NULL;
+  //
+
+  hashtable_delete(g_freed_pointers);
+  g_freed_pointers = NULL;
 }
 

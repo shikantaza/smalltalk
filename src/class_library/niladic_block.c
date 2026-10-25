@@ -232,8 +232,8 @@ OBJECT_PTR niladic_block_on_do(OBJECT_PTR closure,
 
   assert(IS_CLOSURE_OBJECT(receiver));
 
-  //since exception selecto could also be
-  //an ExceptioSet object
+  //since exception selector could also be
+  //an ExceptionSet object
   //assert(IS_CLASS_OBJECT(exception_selector));
   assert(IS_CLOSURE_OBJECT(exception_action));
 

@@ -833,7 +833,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     fprintf(fp, ", ");
 
     if(cls_obj->docstring)
-      fprintf(fp, "\"%s\", ", replace_newlines_for_serialization(cls_obj->docstring));
+    {
+      char *temp = replace_newlines_for_serialization(cls_obj->docstring);
+      fprintf(fp, "\"%s\", ", temp);
+      free(temp);
+    }
     else
       fprintf(fp, "\"\", ");
 
@@ -1035,7 +1039,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     /*
     unsigned int nof_cascaded_msgs;
-    struct message *cascaded_msgs;
+    struct message **cascaded_msgs;
     */
 
     unsigned int count = casc_msgs->nof_cascaded_msgs;
@@ -1044,7 +1048,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_native_ptr_reference(fp, MESSAGE_PTR, (void *)(casc_msgs->cascaded_msgs+i));
+      print_native_ptr_reference(fp, MESSAGE_PTR, (void *)(casc_msgs->cascaded_msgs[i]));
       if(i != count - 1)
         fprintf(fp, ", ");
     }
@@ -1156,7 +1160,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"BLOCK_ARGS\", ");
       if(constructor->docstring)
-        fprintf(fp, "\"%s\"", replace_newlines_for_serialization(constructor->docstring));
+      {
+        char *temp = replace_newlines_for_serialization(constructor->docstring);
+        fprintf(fp, "\"%s\"", temp);
+        free(temp);
+      }
       else
         fprintf(fp, "\"\"");
       fprintf(fp, ", ");
@@ -1168,7 +1176,11 @@ void print_native_ptr_heap_representation(FILE *fp,
     {
       fprintf(fp, "\"NO_BLOCK_ARGS\", ");
       if(constructor->docstring)
-        fprintf(fp, "\"%s\"", replace_newlines_for_serialization(constructor->docstring));
+      {
+        char *temp = replace_newlines_for_serialization(constructor->docstring);
+        fprintf(fp, "\"%s\"", temp);
+        free(temp);
+      }
       else
         fprintf(fp, "\"\"");
       fprintf(fp, ", ");
@@ -1205,7 +1217,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     /*
     unsigned int nof_messages;
-    struct binary_message *bin_msgs;
+    struct binary_message **bin_msgs;
     */
     unsigned int count = bin_msgs->nof_messages;
 
@@ -1213,7 +1225,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_native_ptr_reference(fp, BINARY_MESSAGE_PTR, (void *)(bin_msgs->bin_msgs+i));
+      print_native_ptr_reference(fp, BINARY_MESSAGE_PTR, (void *)(bin_msgs->bin_msgs[i]));
       if(i != count - 1)
         fprintf(fp, ", ");
     }
@@ -1240,7 +1252,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     /*
     unsigned int nof_args;
-    struct keyword_argument_pair *kw_arg_pairs;
+    struct keyword_argument_pair **kw_arg_pairs;
     */
 
     unsigned int count = kw_msg->nof_args;
@@ -1249,7 +1261,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     for(i=0; i<count; i++)
     {
-      print_native_ptr_reference(fp, KEYWORD_ARGUMENT_PAIR_PTR, (void *)(kw_msg->kw_arg_pairs+i));
+      print_native_ptr_reference(fp, KEYWORD_ARGUMENT_PAIR_PTR, (void *)(kw_msg->kw_arg_pairs[i]));
       if(i != count - 1)
         fprintf(fp, ", ");
     }
@@ -1664,7 +1676,7 @@ void print_native_ptr_heap_representation(FILE *fp,
 
     /*
     unsigned int nof_elements;
-    struct array_element *elements;
+    struct array_element **elements;
     */
 
     //fprintf(fp, "[ ");
@@ -1674,7 +1686,7 @@ void print_native_ptr_heap_representation(FILE *fp,
     fprintf(fp, "[ ");
     for(i=0; i<count; i++)
     {
-      print_native_ptr_reference(fp, ARRAY_ELEMENT_PTR, (void *)(elems->elements+i));
+      print_native_ptr_reference(fp, ARRAY_ELEMENT_PTR, (void *)(elems->elements[i]));
       if(i != count - 1)
         fprintf(fp, ", ");
     }
@@ -2085,7 +2097,7 @@ void create_image(char *file_name)
   if(access(file_name, F_OK) != -1)
     backup_image(file_name);
 
-  //print_diagnostics("diagnostics_pre.txt");
+  //print_diagnostics("diagnostics");
 
   char json_file_name[] = "smalltalkXXXXXX";
 
@@ -2133,6 +2145,9 @@ void create_image(char *file_name)
   queue_delete(native_ptr_print_queue);
   hashtable_delete(native_ptr_hashtable);
   hashtable_delete(printed_native_objects);
+
+  hashtable_delete(obj_hashtable);
+  hashtable_delete(printed_objects);
 
   fprintf(fp, "] ");
   //end of heap
@@ -3917,9 +3932,12 @@ void load_native_functions(struct JSONObject *native_functions)
       source_with_fn_decls = append_string(source_with_fn_decls, source);
       state = compile_functions_from_string(source_with_fn_decls);
 
+      free(source_with_fn_decls);
+
       for(j=prev_state_start_index; j<i; j++)
         g_native_fn_objects[j].nf = get_function(state, g_native_fn_objects[j].fname);
 
+      free(source);
       source = GC_strdup(g_native_fn_objects[i].source);
     }
   }
@@ -3928,6 +3946,9 @@ void load_native_functions(struct JSONObject *native_functions)
   source_with_fn_decls = GC_strdup(fn_decls);
   source_with_fn_decls = append_string(source_with_fn_decls, source);
   state = compile_functions_from_string(source_with_fn_decls);
+
+  free(source);
+  free(source_with_fn_decls);
 
   for(j=state_start_index; j<g_nof_native_fns; j++)
     g_native_fn_objects[j].nf = get_function(state, g_native_fn_objects[j].fname);
@@ -4328,6 +4349,11 @@ int load_from_image(char *image_file_name)
   sprintf(cmd, "rm %s", json_file_name);
   system(cmd);
 
+  free(cmd);
+
+  hashtable_delete(object_hashtable);
+  hashtable_delete(native_ptr_hashtable);
+
   return 0;
 }
 
@@ -4524,6 +4550,8 @@ void deserialize_transcript(struct JSONObject *transcript)
       }
       ii++;
     }
+
+    free(json_text);
 
     if(transcript_window)
     {
