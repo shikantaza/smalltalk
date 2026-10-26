@@ -486,7 +486,9 @@ void populate_call_chain_list(BOOLEAN invoked_for_exception, GtkTreeView *call_c
 
     char *str = get_symbol_name(entry->selector);
 
-    len += sprintf(buf+len, "%s", substring(str, 1, strlen(str)-1));
+    char *temp = substring(str, 1, strlen(str)-1);
+    len += sprintf(buf+len, "%s", temp);
+    free(temp);
 
     /* if(entry->nof_args > 0) */
     /*   len += sprintf(buf+len, "args: ["); */

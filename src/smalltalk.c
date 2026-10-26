@@ -1752,16 +1752,23 @@ OBJECT_PTR delete_method(OBJECT_PTR closure,
       char *str1 = get_symbol_name(cls_obj->instance_methods->bindings[i]->key);
       char *str2 = get_smalltalk_symbol_name(selector);
 
-      if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
+      char *temp = substring(str1, 1, strlen(str1)-1);
+
+      if(!strcmp(temp, str2))
       {
         method_t *m = cls_obj->instance_methods->bindings[i]->val;
 
         if(m->code_str == NIL)
+        {
+          free(temp);
           return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete primitive method"), cont);
+        }
 
         cls_obj->instance_methods->bindings[i]->delete_flag = true;
+        free(temp);
         break;
       }
+      free(temp);
     }
   }
   else
@@ -1776,16 +1783,23 @@ OBJECT_PTR delete_method(OBJECT_PTR closure,
       char *str1 = get_symbol_name(cls_obj->class_methods->bindings[i]->key);
       char *str2 = get_smalltalk_symbol_name(selector);
 
-      if(!strcmp(substring(str1, 1, strlen(str1)-1), str2))
+      char *temp = substring(str1, 1, strlen(str1)-1);
+
+      if(!strcmp(temp, str2))
       {
         method_t *m = cls_obj->class_methods->bindings[i]->val;
 
         if(m->code_str == NIL)
+        {
+          free(temp);
           return create_and_signal_exception_with_text(Error, get_string_obj("Cannot delete primitive method"), cont);
+        }
 
         cls_obj->class_methods->bindings[i]->delete_flag = true;
+        free(temp);
         break;
       }
+      free(temp);
     }
   }
 
@@ -2317,7 +2331,9 @@ void print_call_chain()
     printf("; ");
     printf("selector: ");
     char *str = get_symbol_name(entry->selector);
-    printf("%s ", substring(str, 1, strlen(str)-1));
+    char *temp = substring(str, 1, strlen(str)-1);
+    printf("%s ", temp);
+    free(temp);
     printf("; ");
 
     if(entry->nof_args > 0)

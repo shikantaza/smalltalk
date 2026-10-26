@@ -201,6 +201,10 @@ char *substring(const char* str, size_t begin, size_t len)
 //strips the last colon from keyword messages selectors
 //that are meant for single arguments, to do a successful
 //message lookup
+//TODO: this function is no longer being used (the one
+//call location in message.c has been commented out).
+//if it is used going forward, address the memory
+//leak associated with the return value ('if' part leaks)
 char *strip_last_colon(char *s)
 {
   unsigned int i, n;
@@ -582,7 +586,7 @@ stack_type *extract_arg_names(char *selector)
   stack_type *ret = stack_create();
 
   if(!keyword_found)
-    stack_push(ret, (void *)GC_strdup(substring(selector,1, strlen(selector)-1)));
+    stack_push(ret, (void *)substring(selector,1, strlen(selector)-1));
   else
   {
     while(!stack_is_empty(staging_stack))

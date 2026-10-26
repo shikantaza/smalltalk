@@ -75,7 +75,10 @@ void *stack_pop(stack_type *s)
     s->data = temp;
   }
   else
+  {
+    free(s->data);
     s->data = NULL;
+  }
 
   return ret;
 }

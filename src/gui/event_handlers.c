@@ -665,11 +665,13 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
 
       char *sym = get_symbol_name(entry->selector);
 
+      char *temp = substring(sym, 1, strlen(sym) - 1);
       sprintf(header,
 	      "Smalltalk %s #%s toClass: %s withBody:\n",
 	      m->class_method ? "addClassMethod:" : "addInstanceMethod:",
-	      substring(sym, 1, strlen(sym) - 1),
+	      temp,
 	      ((class_object_t *)extract_ptr(m->cls_obj))->name);
+      free(temp);
       gtk_text_buffer_insert_at_cursor(debugger_source_buffer, header, -1);
 
       int indents = 0;
@@ -771,10 +773,14 @@ void fetch_details_for_call_chain_entry(GtkWidget *lst, gpointer data)
           arg_val);
 
         gtk_list_store_append(store2, &iter2);
-        gtk_list_store_set(store2, &iter2, 0, (char *)stack_pop(arg_names), 1, markup, 2, entry->args[i], -1);
+        char *temp = (char *)stack_pop(arg_names);
+        gtk_list_store_set(store2, &iter2, 0, temp, 1, markup, 2, entry->args[i], -1);
+        free(temp);
 
         g_free(markup);
       }
+      stack_empty(arg_names);
+      free(arg_names);
       // end of fetch arguments
     }
   }

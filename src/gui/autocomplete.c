@@ -104,11 +104,17 @@ void add_to_autocomplete_list(char *word)
     add_to_autocomplete_list_single(word);
   else
   {
+    char *temp;
+
     //add the part before the colon
-    add_to_autocomplete_list_single(substring(word, 0, colon_idx + 1));
+    temp = substring(word, 0, colon_idx + 1);
+    add_to_autocomplete_list_single(temp);
+    free(temp);
 
     //recurse for the part after the colon
-    add_to_autocomplete_list(substring(word, colon_idx + 1, len - colon_idx - 1));
+    temp = substring(word, colon_idx + 1, len - colon_idx - 1);
+    add_to_autocomplete_list(temp);
+    free(temp);
   }
 }
 

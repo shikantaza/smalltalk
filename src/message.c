@@ -262,7 +262,9 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 #endif
 
     char *selector_name = get_symbol_name(stripped_selector);
-    OBJECT_PTR trimmed_selector = get_symbol(substring(selector_name, 1, strlen(selector_name)-1));
+    char *temp = substring(selector_name, 1, strlen(selector_name)-1);
+    OBJECT_PTR trimmed_selector = get_symbol(temp);
+    free(temp);
 
     return message_send(g_msg_snd_closure,
                         receiver,
@@ -362,6 +364,12 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 						       g_idclo);
 	char str[100];
 	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(car(rest)));
+
+	while(!stack_is_empty(classes))
+	  stack_pop(classes);
+	stack_empty(classes);
+	free(classes);
+
 	return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
       }
 
@@ -390,9 +398,19 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
 	char str[100];
 	sprintf(str, "Unbound variable: %s", get_symbol_name(car(rest)));
 
+	while(!stack_is_empty(classes))
+	  stack_pop(classes);
+	stack_empty(classes);
+	free(classes);
+
 	return signal_exception_with_text(exception_obj, get_string_obj(str), args[count]);
       }
     }
+
+    while(!stack_is_empty(classes))
+      stack_pop(classes);
+    stack_empty(classes);
+    free(classes);
   }
 
   OBJECT_PTR cons_form = list(3, m->nativefn_obj, reverse(ret), count1);

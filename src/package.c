@@ -163,7 +163,10 @@ smalltalk_package_t *get_package_internal(char *name)
 
     parent = get_package_internal(s1);
 
-    return get_package_with_parent(s2, parent);
+    smalltalk_package_t *ret = get_package_with_parent(s2, parent);
+    free(s1);
+    free(s2);
+    return ret;
   }
 }
 

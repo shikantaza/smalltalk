@@ -2446,7 +2446,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     char *key_sym = get_symbol_name(binding->key);
     unsigned int len = strlen(key_sym);
 
-    add_to_autocomplete_list(substring(key_sym, 1, len-1));
+    char *autocomplete_word = substring(key_sym, 1, len-1);
+    add_to_autocomplete_list(autocomplete_word);
+    free(autocomplete_word);
 
     return (void *)binding;
   }
@@ -2508,7 +2510,9 @@ void *deserialize_native_ptr_reference(struct JSONObject *heap,
     char *key_sym = get_symbol_name(binding->key);
     unsigned int len = strlen(key_sym);
 
-    add_to_autocomplete_list(substring(key_sym, 1, len-1));
+    char *autocomplete_word = substring(key_sym, 1, len-1);
+    add_to_autocomplete_list(autocomplete_word);
+    free(autocomplete_word);
 
     return (void *)binding;
   }

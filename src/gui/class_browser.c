@@ -550,7 +550,9 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);
-	gtk_list_store_set(store2, &iter2, 0, substring(method_name, 1, strlen(method_name)-1), 1, val, -1);  
+        char *temp = substring(method_name, 1, strlen(method_name)-1);
+	gtk_list_store_set(store2, &iter2, 0, temp, 1, val, -1);
+        free(temp);
       }
     }
     else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(instance_radio_button)))
@@ -567,7 +569,9 @@ void fetch_methods_for_class(GtkWidget *list, gpointer selection1)
 
 	gtk_list_store_append(store2, &iter2);
 	char *method_name = get_symbol_name(key);
-	gtk_list_store_set(store2, &iter2, 0, substring(method_name, 1, strlen(method_name)-1), 1, val, -1);  
+        char *temp = substring(method_name, 1, strlen(method_name)-1);
+	gtk_list_store_set(store2, &iter2, 0, temp, 1, val, -1);
+        free(temp);
       }
     }
     else

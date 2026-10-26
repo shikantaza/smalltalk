@@ -917,7 +917,10 @@ OBJECT_PTR convert_number_literal_to_atom(number_t *n)
 
 OBJECT_PTR convert_string_literal_to_atom(char *s)
 {
-  return get_string_obj(substring(s, 1, strlen(s)-2));
+  char *temp = substring(s, 1, strlen(s)-2);
+  OBJECT_PTR ret = get_string_obj(temp);
+  free(temp);
+  return ret;
 }
 
 OBJECT_PTR convert_char_literal_to_atom(char *s)
@@ -927,7 +930,10 @@ OBJECT_PTR convert_char_literal_to_atom(char *s)
 
 OBJECT_PTR convert_symbol_literal_to_atom(char *s)
 {
-  return get_smalltalk_symbol(substring(s, 2, strlen(s)-3));
+  char *temp = substring(s, 2, strlen(s)-3);
+  OBJECT_PTR ret = get_smalltalk_symbol(temp);
+  free(temp);
+  return ret;
 }
 
 OBJECT_PTR convert_selector_literal_to_atom(char *s)
@@ -936,7 +942,10 @@ OBJECT_PTR convert_selector_literal_to_atom(char *s)
 
   //TODO: need to unify pLisp symbol objects and
   //Smalltalk symbol objects
-  return get_smalltalk_symbol(stripped_selector);
+
+  OBJECT_PTR ret = get_smalltalk_symbol(stripped_selector);
+  free(stripped_selector);
+  return ret;
 }
 
 OBJECT_PTR convert_array_literal_to_atom(array_elements_t *e)

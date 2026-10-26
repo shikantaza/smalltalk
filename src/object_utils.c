@@ -1270,8 +1270,10 @@ void free_object_ptr(OBJECT_PTR obj)
 
   if(IS_CONS_OBJECT(obj))
   {
+    uintptr_t ptr = extract_ptr(obj);
     free_object_ptr(car(obj));
     free_object_ptr(cdr(obj));
+    free((void *)ptr);
   }
   else if(IS_ARRAY_OBJECT(obj))
   {
@@ -1292,11 +1294,14 @@ void free_object_ptr(OBJECT_PTR obj)
   }
   else if(IS_CLOSURE_OBJECT(obj))
   {
-    OBJECT_PTR cons_form = extract_ptr(obj) + CONS_TAG;
+    uintptr_t ptr = extract_ptr(obj);
+    OBJECT_PTR cons_form = ptr + CONS_TAG;
 
     free_object_ptr(first(cons_form)); //nativefn_obj
     free_object_ptr(second(cons_form)); //closed_vals
     //no need to free arity as it's not a dynamic memory object
+
+    free((void *)ptr);
   }
   else if(IS_FLOAT_OBJECT(obj))
     free((double *)extract_ptr(obj));

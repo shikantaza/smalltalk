@@ -1253,7 +1253,7 @@ OBJECT_PTR repl_common()
   OBJECT_PTR nfo = convert_native_fn_to_object(nf);
 
   OBJECT_PTR closed_vals = cdr(CDDDR(first(res)));
-  
+
   OBJECT_PTR rest = closed_vals;
   OBJECT_PTR ret = NIL;
 
@@ -1276,6 +1276,12 @@ OBJECT_PTR repl_common()
 						       g_idclo);
 	char str[100];
 	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(closed_val));
+
+	while(!stack_is_empty(classes))
+	  stack_pop(classes);
+	stack_empty(classes);
+	free(classes);
+
 	return signal_exception_with_text(exception_obj, get_string_obj(str), g_idclo);
       }
 
@@ -1296,8 +1302,18 @@ OBJECT_PTR repl_common()
       char str[100];
       sprintf(str, "Unbound variable: %s", get_symbol_name(closed_val));
 
+      while(!stack_is_empty(classes))
+	stack_pop(classes);
+      stack_empty(classes);
+      free(classes);
+
       return signal_exception_with_text(exception_obj, get_string_obj(str), g_idclo);
     }
+
+    while(!stack_is_empty(classes))
+      stack_pop(classes);
+    stack_empty(classes);
+    free(classes);
   }  
 
   OBJECT_PTR lst_form = list(3, nfo, reverse(ret), second(first(res)));
