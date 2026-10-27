@@ -49,6 +49,8 @@ extern OBJECT_PTR VALUE1_SELECTOR;
 
 extern BOOLEAN g_eval_aborted;
 
+extern OBJECT_PTR g_new_object_closure;
+
 //workaround to fix memory corruption
 //issue involving array_object_t's
 //'elements' variable
@@ -56,7 +58,7 @@ extern BOOLEAN g_eval_aborted;
 
 OBJECT_PTR ordered_collection_new(OBJECT_PTR closure, OBJECT_PTR cont)
 {
-  return new_object_internal(OrderedCollection, convert_fn_to_closure((nativefn)new_object_internal), cont);
+  return new_object_internal(OrderedCollection, g_new_object_closure, cont);
 }
 
 //to capture corruption of the array_object_t->elements member

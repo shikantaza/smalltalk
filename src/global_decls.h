@@ -79,6 +79,7 @@ call_chain_entry_t  *create_call_chain_entry(OBJECT_PTR,
 OBJECT_PTR           create_closure(OBJECT_PTR, OBJECT_PTR, nativefn, ...);
 void                 create_core_class_binding(class_object_t *);
 void                 create_idclo();
+void                 create_new_object_closure();
 void                 create_image(char *);
 exception_handler_t *create_exception_handler(OBJECT_PTR,
 					      OBJECT_PTR,

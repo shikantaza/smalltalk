@@ -84,6 +84,8 @@ extern BOOLEAN g_eval_from_debugger;
 
 extern OBJECT_PTR CompileError;
 
+extern OBJECT_PTR g_new_object_closure;
+
 call_chain_entry_t *create_call_chain_entry(OBJECT_PTR exp_ptr,
                                             BOOLEAN super,
                                             OBJECT_PTR receiver,
@@ -284,7 +286,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
   if(count != m->arity)
   {
     OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						   convert_fn_to_closure((nativefn)new_object_internal),
+						   g_new_object_closure,
 						   g_idclo);
     char str[100];
     sprintf(str, "Method expects %d argument(s), but %d argument(s) passed", m->arity, count);
@@ -360,7 +362,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       if(!stack_is_empty(classes))
       {
 	OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_new_object_closure,
 						       g_idclo);
 	char str[100];
 	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(car(rest)));
@@ -393,7 +395,7 @@ OBJECT_PTR message_send_internal(BOOLEAN super,
       else
       {
 	OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_new_object_closure,
 						       g_idclo);
 	char str[100];
 	sprintf(str, "Unbound variable: %s", get_symbol_name(car(rest)));

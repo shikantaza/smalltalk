@@ -48,6 +48,7 @@ void show_info_dialog(char *);
 executable_code_t *clone_executable_code(executable_code_t *);
 
 void free_executable_code(executable_code_t *);
+void free_object_ptr(OBJECT_PTR);
 
 binding_env_t *g_top_level;
 
@@ -139,6 +140,8 @@ extern OBJECT_PTR SUPER;
 
 extern unsigned int g_nof_smalltalk_packages;
 extern smalltalk_package_t **g_smalltalk_packages;
+
+extern OBJECT_PTR g_new_object_closure;
 
 void add_binding_to_top_level(OBJECT_PTR sym, OBJECT_PTR val)
 {
@@ -701,12 +704,15 @@ OBJECT_PTR add_instance_method(OBJECT_PTR class_obj,
   //they will be dereferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
-  OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
+  OBJECT_PTR temp = convert_native_fn_to_object(nf);
+  OBJECT_PTR lst_form = list(3, temp, closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
   OBJECT_PTR result_closure = invoke_cont_on_val(closure_form, g_idclo);
+
+  free_object_ptr(temp);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -879,12 +885,15 @@ OBJECT_PTR add_class_method(OBJECT_PTR class_obj,
   //they will be dereferenced only when the method
   //is invoked, at which time the correct values
   //would have been populated
-  OBJECT_PTR lst_form = list(3, convert_native_fn_to_object(nf), closed_vals, second(first(res)));
+  OBJECT_PTR temp = convert_native_fn_to_object(nf);
+  OBJECT_PTR lst_form = list(3, temp, closed_vals, second(first(res)));
   OBJECT_PTR closure_form = extract_ptr(lst_form) + CLOSURE_TAG;
 
   put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
   
   OBJECT_PTR result_closure = invoke_cont_on_val(closure_form, g_idclo);
+
+  free_object_ptr(temp);
 
   assert(IS_CLOSURE_OBJECT(result_closure));
   
@@ -1113,7 +1122,7 @@ OBJECT_PTR object_message_not_understood(OBJECT_PTR closure, OBJECT_PTR selector
 
   //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
   OBJECT_PTR exception_obj = new_object_internal(mnu_class_obj,
-						 convert_fn_to_closure((nativefn)new_object_internal),
+						 g_new_object_closure,
 						 g_idclo);
   char *selector_str = get_symbol_name(selector);
   char buf[300], obj_str[100];

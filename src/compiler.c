@@ -130,6 +130,7 @@ stack_type *g_call_chain;
 OBJECT_PTR g_idclo;
 OBJECT_PTR g_msg_snd_closure;
 OBJECT_PTR g_msg_snd_super_closure;
+OBJECT_PTR g_new_object_closure;
 
 OBJECT_PTR VALUE_SELECTOR;
 OBJECT_PTR VALUE1_SELECTOR;
@@ -319,6 +320,13 @@ void create_message_send_super_closure()
 					   (nativefn)message_send_super);
 }
 
+void create_new_object_closure()
+{
+  g_new_object_closure = create_closure(convert_int_to_object(3),
+					convert_int_to_object(0),
+					(nativefn)new_object_internal);
+}
+
 void initialize_frequently_used_selectors()
 {
   VALUE_SELECTOR = get_symbol("_value");
@@ -377,6 +385,7 @@ void initialize()
   create_idclo();
   create_message_send_closure();
   create_message_send_super_closure();
+  create_new_object_closure();
   
   g_exception_environment = stack_create();
   

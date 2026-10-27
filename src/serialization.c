@@ -4050,6 +4050,8 @@ int load_from_image(char *image_file_name)
                                            get_nativefn_value(msg_snd_super_nativefn));
   /////
 
+  create_new_object_closure();
+
   //5. g_compile_time_method_selector
   struct JSONObject *compile_time_method_selector = JSON_get_object_item(global_variables, "g_compile_time_method_selector");
   g_compile_time_method_selector = compile_time_method_selector->ivalue;

@@ -86,6 +86,7 @@ extern OBJECT_PTR g_message_selector;
 extern OBJECT_PTR g_idclo;
 extern OBJECT_PTR g_msg_snd_closure;
 extern OBJECT_PTR g_msg_snd_super_closure;
+extern OBJECT_PTR g_new_object_closure;
 extern OBJECT_PTR g_compile_time_method_selector;
 extern OBJECT_PTR g_run_till_cont;
 
@@ -140,10 +141,10 @@ uintptr_t object_alloc(int size, int tag)
     exit(1);
   }
 
-  /* if(!g_compiler_memory_objects) */
-  /*   g_compiler_memory_objects = stack_create(); */
+  if(!g_compiler_memory_objects)
+    g_compiler_memory_objects = stack_create();
 
-  /* stack_push(g_compiler_memory_objects, (void *)ret); */
+  stack_push(g_compiler_memory_objects, (void *)ret);
   
   return (uintptr_t)ret;
 }
@@ -713,13 +714,12 @@ OBJECT_PTR gensym()
 
 OBJECT_PTR convert_native_fn_to_object(nativefn nf)
 {
-  native_fn_obj_t *nfobj;
+  native_fn_obj_t *nfobj = (native_fn_obj_t *)GC_MALLOC(sizeof(native_fn_obj_t));
 
-  if(allocate_memory((void **)&nfobj, sizeof(native_fn_obj_t)))
-  {
-    printf("convert_native_fn_to_object(): Unable to allocate memory\n");
-    exit(1);
-  }
+  if(!g_compiler_memory_objects)
+    g_compiler_memory_objects = stack_create();
+
+  stack_push(g_compiler_memory_objects, nfobj);
 
   nfobj->nf = nf;
 
@@ -1331,6 +1331,7 @@ void free_object_ptr(OBJECT_PTR obj)
       nativefn nf = nf_obj->nf;
       if(nf != (nativefn)message_send &&
 	 nf != (nativefn)message_send_super &&
+	 nf != (nativefn)new_object_internal &&
 	 nf != (nativefn)identity_function)
       {
 	hashtable_put(g_freed_pointers, (void *)nf_obj, (void *)1);
@@ -1338,6 +1339,27 @@ void free_object_ptr(OBJECT_PTR obj)
       }
     }
   }
+}
+
+void free_native_fn_object_of_closure(OBJECT_PTR obj)
+{
+  assert(IS_CLOSURE_OBJECT(obj));
+  OBJECT_PTR list_form = extract_ptr(obj) + CONS_TAG;
+  free_object_ptr(first(list_form));
+}
+
+void free_closure(OBJECT_PTR obj)
+{
+  assert(IS_CLOSURE_OBJECT(obj));
+
+  uintptr_t ptr = extract_ptr(obj);
+  OBJECT_PTR cons_form = ptr + CONS_TAG;
+
+  free((native_fn_obj_t *)extract_ptr(first(cons_form)));
+  free_object_ptr(second(cons_form)); //closed_vals
+  //no need to free arity as it's not a dynamic memory object
+
+  free((void *)ptr);
 }
 
 void free_binding_env(binding_env_t *env)
@@ -1365,6 +1387,7 @@ void free_method(method_t *m)
   //underlying structures are freed
   //(class objects, native function objects,
   //string literals)
+  free_object_ptr(m->nativefn_obj);
   free_object_ptr(m->closed_syms);
   free_object_ptr(m->temporaries);
   free_executable_code(m->exec_code);
@@ -1563,8 +1586,10 @@ void cleanup()
   //g_method_call_stack is freed
   //free_object_ptr(g_idclo);
 
-  free_object_ptr(g_msg_snd_closure);
-  free_object_ptr(g_msg_snd_super_closure);
+  free_closure(g_msg_snd_closure);
+  free_closure(g_msg_snd_super_closure);
+  free_closure(g_idclo);
+  free_closure(g_new_object_closure);
   free_object_ptr(g_compile_time_method_selector);
   free_object_ptr(g_run_till_cont);
 

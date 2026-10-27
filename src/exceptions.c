@@ -89,6 +89,8 @@ extern BOOLEAN g_eval_aborted;
 
 extern enum UIMode g_ui_mode;
 
+extern OBJECT_PTR g_new_object_closure;
+
 void invoke_curtailed_blocks(OBJECT_PTR cont)
 {
   assert(!stack_is_empty(g_call_chain));
@@ -759,7 +761,7 @@ OBJECT_PTR create_and_signal_exception_with_text(OBJECT_PTR excp_class_obj,
   stack_push(g_exception_contexts, (void *)excp_cont);
 
   OBJECT_PTR excp_obj = new_object_internal(excp_class_obj,
-					    convert_fn_to_closure((nativefn)new_object_internal),
+					    g_new_object_closure,
 					    g_idclo);
   return message_send(g_msg_snd_closure,
 		      excp_obj,
@@ -782,7 +784,7 @@ OBJECT_PTR create_and_signal_exception(OBJECT_PTR excp_class_obj, OBJECT_PTR exc
   stack_push(g_exception_contexts, (void *)excp_cont);
 
   OBJECT_PTR excp_obj = new_object_internal(excp_class_obj,
-					    convert_fn_to_closure((nativefn)new_object_internal),
+					    g_new_object_closure,
 					    g_idclo);
   return message_send(g_msg_snd_closure,
 		      excp_obj,

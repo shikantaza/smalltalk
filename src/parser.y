@@ -71,6 +71,8 @@ stack_type *fetch_class_from_pkg(char *);
 
 void free_executable_code(executable_code_t *);
 void free_exception_handler(exception_handler_t *);
+void free_object_ptr(OBJECT_PTR);
+void free_native_fn_object_of_closure(OBJECT_PTR);
 
 executable_code_t *g_exp;
 int g_open_square_brackets;
@@ -132,6 +134,8 @@ extern BOOLEAN expecting_docstring;
 extern GtkWindow *transcript_window;
 
 extern hashtable_t *g_freed_pointers;
+
+extern OBJECT_PTR g_new_object_closure;
 
 char *loaded_image_file_name = NULL;
 %}
@@ -1272,7 +1276,7 @@ OBJECT_PTR repl_common()
       if(!stack_is_empty(classes))
       {
 	OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						       convert_fn_to_closure((nativefn)new_object_internal),
+						       g_new_object_closure,
 						       g_idclo);
 	char str[100];
 	sprintf(str, "Unable to disambiguate class name: %s", get_symbol_name(closed_val));
@@ -1297,7 +1301,7 @@ OBJECT_PTR repl_common()
     {
       //TODO: the exception object's messageText has to be set (after adding it as an instance variable)
       OBJECT_PTR exception_obj = new_object_internal(CompileError,
-						     convert_fn_to_closure((nativefn)new_object_internal),
+						     g_new_object_closure,
 						     g_idclo);
       char str[100];
       sprintf(str, "Unbound variable: %s", get_symbol_name(closed_val));
@@ -1338,6 +1342,8 @@ void repl()
     put_binding_val(g_top_level, THIS_CONTEXT, cons(g_idclo, NIL));
 
     ret = invoke_cont_on_val(repl_ret_val, g_idclo);
+
+    free_native_fn_object_of_closure(repl_ret_val);
   }
   else //unhandled exception would have triggered debugger, so return value from debugger user action
     ret = repl_ret_val;
