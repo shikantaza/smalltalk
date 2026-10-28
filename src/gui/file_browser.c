@@ -134,8 +134,8 @@ BOOLEAN quit_file_browser()
     {
       gtk_widget_destroy((GtkWidget *)dialog1);    
 
-      /* if(current_file_name) */
-      /*   free(current_file_name); */
+      if(current_file_name)
+        free(current_file_name);
 
       cleanup_file_name_widgets();
 
@@ -169,7 +169,7 @@ void fb_select_file(GtkWidget *widget, gpointer data)
 {
   file_name_and_widget_t *fnw = (file_name_and_widget_t *)data;
 
-  //free(current_file_name);
+  free(current_file_name);
   current_file_name = (char *)GC_MALLOC(strlen(fnw->file_name) + 1);
   memset(current_file_name, '\0', strlen(current_file_name) + 1);
   strcpy(current_file_name, fnw->file_name);
@@ -295,7 +295,7 @@ void new_source_file()
   add_file_name_and_widget(fnw);
 
   //to work around focus not being set to the newly-created view/scrolled window
-  //free(current_file_name);
+  free(current_file_name);
   current_file_name = (char *)GC_MALLOC(strlen(fnw->file_name) + 1);
   memset(current_file_name, '\0', strlen(current_file_name) + 1);
   strcpy(current_file_name, fnw->file_name);
@@ -379,7 +379,7 @@ void fb_load_source_file()
     add_file_name_and_widget(fnw);
 
     //to work around focus not being set to the newly-created view/scrolled window
-    //free(current_file_name);
+    free(current_file_name);
     current_file_name = (char *)GC_MALLOC(strlen(fnw->file_name) + 1);
     memset(current_file_name, '\0', strlen(current_file_name) + 1);
     strcpy(current_file_name, fnw->file_name);
@@ -398,8 +398,8 @@ void fb_load_source_file()
     }
 
     gtk_text_buffer_set_text((GtkTextBuffer *)buffer, file_contents == (char *)-1 ? "" : file_contents, -1);
-    /* if(file_contents && file_contents != -1) */
-    /*   free(file_contents); */
+    if(file_contents && file_contents != -1)
+      free(file_contents);
 
     gtk_notebook_append_page((GtkNotebook *)fb_notebook, scrolled_win, label);
     gtk_widget_show_all((GtkWidget *)file_browser_window);
@@ -579,7 +579,7 @@ void reload_file()
         }
 
         gtk_text_buffer_set_text(curr_file_browser_buffer, file_contents, -1);
-        //free(file_contents);
+        free(file_contents);
 
         gtk_text_buffer_set_modified(curr_file_browser_buffer, FALSE);
 
@@ -883,7 +883,7 @@ void add_file_to_file_browser(char *file_name)
   add_file_name_and_widget(fnw);
 
   //to work around focus not being set to the newly-created view/scrolled window
-  //free(current_file_name);
+  free(current_file_name);
   current_file_name = (char *)GC_MALLOC(strlen(fnw->file_name) + 1);
   memset(current_file_name, '\0', strlen(current_file_name) + 1);
   strcpy(current_file_name, fnw->file_name);
@@ -905,8 +905,8 @@ void add_file_to_file_browser(char *file_name)
   }
 
   gtk_text_buffer_set_text((GtkTextBuffer *)buffer, file_contents == (char *)-1 ? "" : file_contents, -1);
-  /* if(file_contents && file_contents != -1) */
-  /*   free(file_contents); */
+  if(file_contents && file_contents != -1)
+    free(file_contents);
 
   gtk_notebook_append_page((GtkNotebook *)fb_notebook, scrolled_win, label);
   gtk_text_buffer_set_modified(curr_file_browser_buffer, FALSE);  

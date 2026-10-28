@@ -86,7 +86,7 @@ int call_repl(char *expression)
 
   if(!yyparse())
   {
-    g_method_code = GC_strdup(expression);
+    g_method_code = expression;
     repl();
     yy_delete_buffer(buf);
     return 0;
