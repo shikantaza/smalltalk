@@ -1022,7 +1022,12 @@ void cleanup_for_repl()
 
   g_compile_time_method_selector = NIL;
 
-  g_debug_action = CONTINUE;
+  //if the debugger has been aborted, setting the
+  //debug action to CONTINUE here defeats the
+  //abort. a better option would be to
+  //set the debug action to CONTINUE only if
+  //the debug action is not ABORT
+  //g_debug_action = CONTINUE;
 
   g_eval_aborted = false;
 }

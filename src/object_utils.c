@@ -1642,11 +1642,11 @@ void cleanup()
 
   //free the CONS and other Lisp objects
   //created during compilation
-  /* while(!stack_is_empty(g_compiler_memory_objects)) */
-  /*   free(stack_pop(g_compiler_memory_objects)); */
+  while(!stack_is_empty(g_compiler_memory_objects))
+    free(stack_pop(g_compiler_memory_objects));
 
-  /* stack_empty(g_compiler_memory_objects); */
-  /* g_compiler_memory_objects = NULL; */
+  stack_empty(g_compiler_memory_objects);
+  g_compiler_memory_objects = NULL;
   //
 
   //auto_complete_words
