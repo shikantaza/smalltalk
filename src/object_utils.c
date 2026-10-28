@@ -1273,6 +1273,7 @@ void free_object_ptr(OBJECT_PTR obj)
     uintptr_t ptr = extract_ptr(obj);
     free_object_ptr(car(obj));
     free_object_ptr(cdr(obj));
+    hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
     free((void *)ptr);
   }
   else if(IS_ARRAY_OBJECT(obj))
@@ -1301,6 +1302,7 @@ void free_object_ptr(OBJECT_PTR obj)
     free_object_ptr(second(cons_form)); //closed_vals
     //no need to free arity as it's not a dynamic memory object
 
+    hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
     free((void *)ptr);
   }
   else if(IS_FLOAT_OBJECT(obj))
@@ -1355,10 +1357,14 @@ void free_closure(OBJECT_PTR obj)
   uintptr_t ptr = extract_ptr(obj);
   OBJECT_PTR cons_form = ptr + CONS_TAG;
 
-  free((native_fn_obj_t *)extract_ptr(first(cons_form)));
+  native_fn_obj_t *nativefn_obj = (native_fn_obj_t *)extract_ptr(first(cons_form));
+  hashtable_put(g_freed_pointers, nativefn_obj, (void *)1);
+  free(nativefn_obj);
+
   free_object_ptr(second(cons_form)); //closed_vals
   //no need to free arity as it's not a dynamic memory object
 
+  hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
   free((void *)ptr);
 }
 
@@ -1640,15 +1646,6 @@ void cleanup()
   free(g_native_fn_objects);
   //
 
-  //free the CONS and other Lisp objects
-  //created during compilation
-  while(!stack_is_empty(g_compiler_memory_objects))
-    free(stack_pop(g_compiler_memory_objects));
-
-  stack_empty(g_compiler_memory_objects);
-  g_compiler_memory_objects = NULL;
-  //
-
   //auto_complete_words
   for(i=0; i<nof_autocomplete_words; i++)
     free(autocomplete_words[i]);
@@ -1674,6 +1671,23 @@ void cleanup()
   }
   free(g_smalltalk_packages);
   g_smalltalk_packages = NULL;
+  //
+
+  //free the CONS and other Lisp objects
+  //created during compilation
+  while(!stack_is_empty(g_compiler_memory_objects))
+  {
+    void *ptr =stack_pop(g_compiler_memory_objects);
+
+    if(!hashtable_get(g_freed_pointers, ptr))
+    {
+      hashtable_put(g_freed_pointers, ptr, (void *)1);
+      free(ptr);
+    }
+  }
+
+  stack_empty(g_compiler_memory_objects);
+  g_compiler_memory_objects = NULL;
   //
 
   hashtable_delete(g_freed_pointers);
