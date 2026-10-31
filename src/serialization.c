@@ -2142,13 +2142,6 @@ void create_image(char *file_name)
     if(!queue_is_empty(native_ptr_print_queue))fprintf(fp, ", ");
   }
 
-  queue_delete(native_ptr_print_queue);
-  hashtable_delete(native_ptr_hashtable);
-  hashtable_delete(printed_native_objects);
-
-  hashtable_delete(obj_hashtable);
-  hashtable_delete(printed_objects);
-
   fprintf(fp, "] ");
   //end of heap
 
@@ -2162,6 +2155,13 @@ void create_image(char *file_name)
   fprintf(fp, "} ");
 
   fclose(fp);
+
+  queue_delete(native_ptr_print_queue);
+  hashtable_delete(native_ptr_hashtable);
+  hashtable_delete(printed_native_objects);
+
+  hashtable_delete(obj_hashtable);
+  hashtable_delete(printed_objects);
 
   char err_msg[200];
   memset(err_msg, '\0', 200);
