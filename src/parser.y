@@ -137,6 +137,8 @@ extern hashtable_t *g_freed_pointers;
 
 extern OBJECT_PTR g_new_object_closure;
 
+extern stack_type *g_compiler_memory_objects;
+
 char *loaded_image_file_name = NULL;
 %}
 
@@ -1013,9 +1015,11 @@ void cleanup_for_repl()
   while(!stack_is_empty(g_exception_environment))
   {
     exception_handler_t *eh = (exception_handler_t *)stack_pop(g_exception_environment);
-    //free_exception_handler(eh); //this frees underlying objects which is undesirable
-    hashtable_put(g_freed_pointers, (void *)eh, (void *)1);
-    free(eh);
+    //TODO: freeing the exception handler results in premature freeing of underlying
+    //objects; need to revisit this
+    //free_exception_handler(eh);
+    //hashtable_put(g_freed_pointers, (void *)eh, (void *)1);
+    //free(eh);
   }
 
   stack_empty(g_exception_contexts);
@@ -1121,6 +1125,7 @@ int main(int argc, char **argv)
   gtk_init(&argc, &argv);
 
   g_freed_pointers = hashtable_create(1000001);
+  g_compiler_memory_objects = stack_create();
 
   if(argc == 1) //no image
   {

@@ -110,6 +110,14 @@ extern unsigned int nof_autocomplete_words;
 
 extern stack_type *g_message_type_hierarchy;
 
+//this version is for use by cleanup() and its callees;
+//the validation check would fail if the underlying
+//objects have already been freed
+uintptr_t extract_ptr_no_validation_check(OBJECT_PTR obj)
+{
+  return obj & ~((1UL << OBJECT_SHIFT) - 1);
+}
+
 uintptr_t extract_ptr(OBJECT_PTR obj)
 {
   if(!is_valid_object_shallow(obj))
@@ -141,10 +149,7 @@ uintptr_t object_alloc(int size, int tag)
     exit(1);
   }
 
-  if(!g_compiler_memory_objects)
-    g_compiler_memory_objects = stack_create();
-
-  stack_push(g_compiler_memory_objects, (void *)ret);
+  stack_push(g_compiler_memory_objects, (void *)(ret+tag));
   
   return (uintptr_t)ret;
 }
@@ -714,12 +719,10 @@ OBJECT_PTR gensym()
 
 OBJECT_PTR convert_native_fn_to_object(nativefn nf)
 {
-  native_fn_obj_t *nfobj = (native_fn_obj_t *)GC_MALLOC(sizeof(native_fn_obj_t));
+  //native_fn_obj_t *nfobj = (native_fn_obj_t *)GC_MALLOC(sizeof(native_fn_obj_t));
 
-  if(!g_compiler_memory_objects)
-    g_compiler_memory_objects = stack_create();
-
-  stack_push(g_compiler_memory_objects, nfobj);
+  native_fn_obj_t *nfobj;
+  assert(!allocate_memory((void **)&nfobj, sizeof(native_fn_obj_t)));
 
   nfobj->nf = nf;
 
@@ -1268,9 +1271,14 @@ void free_object_ptr(OBJECT_PTR obj)
   if(!is_dynamic_memory_object(obj))
     return;
 
+  if(hashtable_get(g_freed_pointers, (void *)obj))
+    return;
+
+  hashtable_put(g_freed_pointers, (void *)obj, (void *)1);
+
   if(IS_CONS_OBJECT(obj))
   {
-    uintptr_t ptr = extract_ptr(obj);
+    uintptr_t ptr = extract_ptr_no_validation_check(obj);
     free_object_ptr(car(obj));
     free_object_ptr(cdr(obj));
     hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
@@ -1278,7 +1286,7 @@ void free_object_ptr(OBJECT_PTR obj)
   }
   else if(IS_ARRAY_OBJECT(obj))
   {
-    array_object_t *arr_obj = (array_object_t *)extract_ptr(obj);
+    array_object_t *arr_obj = (array_object_t *)extract_ptr_no_validation_check(obj);
 
     if(!hashtable_get(g_freed_pointers, (void *)arr_obj))
     {
@@ -1295,21 +1303,13 @@ void free_object_ptr(OBJECT_PTR obj)
   }
   else if(IS_CLOSURE_OBJECT(obj))
   {
-    uintptr_t ptr = extract_ptr(obj);
-    OBJECT_PTR cons_form = ptr + CONS_TAG;
-
-    free_object_ptr(first(cons_form)); //nativefn_obj
-    free_object_ptr(second(cons_form)); //closed_vals
-    //no need to free arity as it's not a dynamic memory object
-
-    hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
-    free((void *)ptr);
+    free_object_ptr(extract_ptr_no_validation_check(obj) + CONS_TAG);
   }
   else if(IS_FLOAT_OBJECT(obj))
-    free((double *)extract_ptr(obj));
+    free((double *)extract_ptr_no_validation_check(obj));
   else if(IS_OBJECT_OBJECT(obj))
   {
-    object_t *obj_int = (object_t *)extract_ptr(obj);
+    object_t *obj_int = (object_t *)extract_ptr_no_validation_check(obj);
 
     //class_object will be freed elsewhere
 
@@ -1322,10 +1322,20 @@ void free_object_ptr(OBJECT_PTR obj)
       free(obj_int);
     }
   }
-  //class objects will be freed elsewhere
+  else if(IS_CLASS_OBJECT(obj))
+  {
+    class_object_t *cls_obj = (class_object_t *)extract_ptr_no_validation_check(obj);
+
+    if(!hashtable_get(g_freed_pointers, (void *)cls_obj))
+    {
+      free_class_object(cls_obj);
+      hashtable_put(g_freed_pointers, (void *)cls_obj, (void *)1);
+      free(cls_obj);
+    }
+  }
   else if(IS_NATIVE_FN_OBJECT(obj))
   {
-    native_fn_obj_t *nf_obj = (native_fn_obj_t *)extract_ptr(obj);
+    native_fn_obj_t *nf_obj = (native_fn_obj_t *)extract_ptr_no_validation_check(obj);
 
     //this native fn object wasn't already freed
     if(!hashtable_get(g_freed_pointers, (void *)nf_obj))
@@ -1346,26 +1356,14 @@ void free_object_ptr(OBJECT_PTR obj)
 void free_native_fn_object_of_closure(OBJECT_PTR obj)
 {
   assert(IS_CLOSURE_OBJECT(obj));
-  OBJECT_PTR list_form = extract_ptr(obj) + CONS_TAG;
+  OBJECT_PTR list_form = extract_ptr_no_validation_check(obj) + CONS_TAG;
   free_object_ptr(first(list_form));
 }
 
 void free_closure(OBJECT_PTR obj)
 {
   assert(IS_CLOSURE_OBJECT(obj));
-
-  uintptr_t ptr = extract_ptr(obj);
-  OBJECT_PTR cons_form = ptr + CONS_TAG;
-
-  native_fn_obj_t *nativefn_obj = (native_fn_obj_t *)extract_ptr(first(cons_form));
-  hashtable_put(g_freed_pointers, nativefn_obj, (void *)1);
-  free(nativefn_obj);
-
-  free_object_ptr(second(cons_form)); //closed_vals
-  //no need to free arity as it's not a dynamic memory object
-
-  hashtable_put(g_freed_pointers, (void *)ptr, (void *)1);
-  free((void *)ptr);
+  free_object_ptr(extract_ptr_no_validation_check(obj) + CONS_TAG);
 }
 
 void free_binding_env(binding_env_t *env)
@@ -1525,8 +1523,9 @@ void free_package(smalltalk_package_t *pkg)
 
   for(i=0; i<pkg->nof_classes; i++)
   {
-    class_object_t *cls_obj = (class_object_t *)extract_ptr(pkg->member_classes[i]);
-    free_class_object(cls_obj);
+    //class_object_t *cls_obj = (class_object_t *)extract_ptr(pkg->member_classes[i]);
+    //free_class_object(cls_obj);
+    free_object_ptr(pkg->member_classes[i]);
   }
 
   free(pkg->children);
@@ -1585,20 +1584,6 @@ void cleanup()
   g_nof_debug_expressions = 0;
   //
 
-  free_object_ptr(g_message_selector);
-
-  //this should not be freed here,
-  //it will be taken care of when
-  //g_method_call_stack is freed
-  //free_object_ptr(g_idclo);
-
-  free_closure(g_msg_snd_closure);
-  free_closure(g_msg_snd_super_closure);
-  free_closure(g_idclo);
-  free_closure(g_new_object_closure);
-  free_object_ptr(g_compile_time_method_selector);
-  free_object_ptr(g_run_till_cont);
-
   free_exception_env(g_exception_environment);
   g_exception_environment = NULL;
 
@@ -1617,6 +1602,14 @@ void cleanup()
   g_active_handler = NULL;
 
   free_object_ptr(g_debug_cont);
+
+  free_object_ptr(g_message_selector);
+  free_closure(g_msg_snd_closure);
+  free_closure(g_msg_snd_super_closure);
+  free_closure(g_idclo);
+  free_closure(g_new_object_closure);
+  free_object_ptr(g_compile_time_method_selector);
+  free_object_ptr(g_run_till_cont);
 
   //not freeing it here; this will be handled
   //when the exception environments are freed
@@ -1677,12 +1670,12 @@ void cleanup()
   //created during compilation
   while(!stack_is_empty(g_compiler_memory_objects))
   {
-    void *ptr =stack_pop(g_compiler_memory_objects);
+    void *ptr = stack_pop(g_compiler_memory_objects);
 
     if(!hashtable_get(g_freed_pointers, ptr))
     {
       hashtable_put(g_freed_pointers, ptr, (void *)1);
-      free(ptr);
+      free_object_ptr((OBJECT_PTR)ptr);
     }
   }
 
